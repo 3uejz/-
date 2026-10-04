@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/goldfinger-def.schema.json",
+  "title": "GoldfingerDef",
+  "description": "金手指内容定义（可选元层，R100）。与运行时状态 schema goldfinger.schema.json 区分：本文件描述库中每一条金手指的静态定义，运行时状态见 goldfinger.schema.json。见 design「金手指系统」与 content-catalog 第 20 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["content_key", "name", "rarity", "category", "description", "effects"],
+  "properties": {
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "name": { "type": "string", "minLength": 1 },
+    "rarity": {
+      "type": "string",
+      "description": "稀有度，决定强度预算上限。",
+      "enum": ["common", "rare", "epic", "legendary"]
+    },
+    "category": {
+      "type": "string",
+      "description": "内核分类。",
+      "enum": ["info", "time", "resource", "growth", "system"]
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "modules": {
+      "type": "array",
+      "description": "该金手指启用哪些元层面板模块。",
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["quest", "shop", "checkin", "appraisal", "space", "craft"] }
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/effect" }
+    },
+    "growth": { "$ref": "#/$defs/growth" },
+    "points": { "$ref": "#/$defs/points" },
+    "constraints": { "$ref": "#/$defs/constraints" },
+    "draw": { "$ref": "#/$defs/draw" },
+    "meta": { "$ref": "#/$defs/meta" }
+  },
+  "$defs": {
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "op", "value", "mode", "cost"],
+      "properties": {
+        "target": { "type": "string", "description": "作用目标：属性、技能、系统能力或模块键。" },
+        "op": { "type": "string", "enum": ["add", "mul", "set", "grant", "unlock"] },
+        "value": { "type": "number", "description": "效果数值；grant/unlock 可为占位值。" },
+        "mode": {
+          "type": "string",
+          "description": "instant 一次性、continuous 持续型、conditional 条件触发。",
+          "enum": ["instant", "continuous", "conditional"]
+        },
+        "condition": { "type": "object", "additionalProperties": true, "description": "mode=conditional 时的触发条件。" },
+        "cost": { "type": "number", "minimum": 0, "description": "强度预算消耗；持续型按周期计费。" }
+      }
+    },
+    "growth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_level"],
+      "properties": {
+        "max_level": { "type": "integer", "minimum": 1 },
+        "upgrade_costs": {
+          "type": "array",
+          "description": "逐级升级所需积分；长度应为 max_level-1。",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "per_level_scale": { "type": "number", "minimum": 0, "description": "每级效果缩放，1.0 表示线性。" }
+      }
+    },
+    "points": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "daily_cap": { "type": "integer", "minimum": 0, "description": "每日积分产出上限。" },
+        "sources": { "type": "array", "items": { "type": "string", "enum": ["quest", "achievement", "checkin"] } },
+        "reroll_cost": { "type": "integer", "minimum": 0, "description": "免费重抽用尽后每次重抽消耗的积分。" },
+        "upgrade_cost_base": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "era_min": { "type": ["integer", "string"], "description": "时代下界（闭区间）。" },
+        "era_max": { "type": ["integer", "string"], "description": "时代上界（闭区间）。" },
+        "prerequisites": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+        "incompatible": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } }
+      }
+    },
+    "draw": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weight": { "type": "number", "minimum": 0, "description": "抽取权重，缺省按稀有度默认分布。" },
+        "pity_group": { "type": "string", "description": "保底分组，同组共享保底计数。" }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "icon": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

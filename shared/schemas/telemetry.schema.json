@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/telemetry.schema.json",
+  "title": "TelemetryEvent",
+  "description": "匿名遥测事件。离线本地缓存，恢复后按 event_id 去重补传；可在设置一键关闭。事件类型与上报策略见 shared/telemetry-events.md。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "event_type", "occurred_at", "schema_version"],
+  "properties": {
+    "event_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "event_type": {
+      "type": "string",
+      "description": "事件类型，如 life.death、career.promotion、balance.attribute。",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "occurred_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "schema_version": { "type": "integer", "minimum": 1, "description": "遥测 schema 版本。" },
+    "world_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "account_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "playthrough_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "session_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "client_version": { "type": "string" },
+    "has_context": { "type": "boolean", "description": "是否含上下文快照（抽样调试用）。" },
+    "payload": {
+      "type": "object",
+      "description": "事件负载。禁止包含可识别个人的信息。",
+      "additionalProperties": true
+    }
+  }
+}

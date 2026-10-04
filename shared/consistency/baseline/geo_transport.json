@@ -1,0 +1,193 @@
+{
+  "EARTH_RADIUS_KM": 6371.0,
+  "GEO_MIN_TOTAL_LOCATIONS": 1000,
+  "TRANSPORT_MODES": {
+    "walk": {
+      "name": "步行",
+      "speed_kmh": 5.0,
+      "base_fare": 0.0,
+      "per_km": 0.0,
+      "per_minute": 0.0,
+      "wait_minutes": 0.0,
+      "headway_minutes": 0.0,
+      "comfort": 40.0,
+      "category": "urban",
+      "hub_type": "",
+      "requires": []
+    },
+    "bicycle": {
+      "name": "自行车",
+      "speed_kmh": 15.0,
+      "base_fare": 1.0,
+      "per_km": 0.0,
+      "per_minute": 0.05,
+      "wait_minutes": 1.0,
+      "headway_minutes": 0.0,
+      "comfort": 50.0,
+      "category": "urban",
+      "hub_type": "",
+      "requires": []
+    },
+    "bus": {
+      "name": "公交",
+      "speed_kmh": 25.0,
+      "base_fare": 2.0,
+      "per_km": 0.1,
+      "per_minute": 0.0,
+      "wait_minutes": 6.0,
+      "headway_minutes": 12.0,
+      "comfort": 55.0,
+      "category": "urban",
+      "hub_type": "bus_stop",
+      "requires": []
+    },
+    "metro": {
+      "name": "地铁",
+      "speed_kmh": 40.0,
+      "base_fare": 3.0,
+      "per_km": 0.15,
+      "per_minute": 0.0,
+      "wait_minutes": 3.0,
+      "headway_minutes": 6.0,
+      "comfort": 70.0,
+      "category": "urban",
+      "hub_type": "metro_station",
+      "requires": []
+    },
+    "taxi": {
+      "name": "出租",
+      "speed_kmh": 35.0,
+      "base_fare": 13.0,
+      "per_km": 2.6,
+      "per_minute": 0.0,
+      "wait_minutes": 3.0,
+      "headway_minutes": 0.0,
+      "comfort": 80.0,
+      "category": "road",
+      "hub_type": "",
+      "requires": []
+    },
+    "ride_hailing": {
+      "name": "网约车",
+      "speed_kmh": 35.0,
+      "base_fare": 9.0,
+      "per_km": 2.2,
+      "per_minute": 0.3,
+      "wait_minutes": 5.0,
+      "headway_minutes": 0.0,
+      "comfort": 80.0,
+      "category": "road",
+      "hub_type": "",
+      "requires": []
+    },
+    "self_drive": {
+      "name": "自驾",
+      "speed_kmh": 50.0,
+      "base_fare": 0.0,
+      "per_km": 0.7,
+      "per_minute": 0.0,
+      "wait_minutes": 0.0,
+      "headway_minutes": 0.0,
+      "comfort": 85.0,
+      "category": "road",
+      "hub_type": "",
+      "requires": [
+        "driver_license",
+        "vehicle"
+      ]
+    },
+    "train": {
+      "name": "火车",
+      "speed_kmh": 90.0,
+      "base_fare": 5.0,
+      "per_km": 0.28,
+      "per_minute": 0.0,
+      "wait_minutes": 20.0,
+      "headway_minutes": 60.0,
+      "comfort": 75.0,
+      "category": "rail",
+      "hub_type": "train_station",
+      "requires": [
+        "id_card"
+      ]
+    },
+    "high_speed_rail": {
+      "name": "高铁",
+      "speed_kmh": 250.0,
+      "base_fare": 10.0,
+      "per_km": 0.45,
+      "per_minute": 0.0,
+      "wait_minutes": 25.0,
+      "headway_minutes": 30.0,
+      "comfort": 90.0,
+      "category": "rail",
+      "hub_type": "hsr_station",
+      "requires": [
+        "id_card"
+      ]
+    },
+    "coach": {
+      "name": "长途汽车",
+      "speed_kmh": 70.0,
+      "base_fare": 4.0,
+      "per_km": 0.22,
+      "per_minute": 0.0,
+      "wait_minutes": 15.0,
+      "headway_minutes": 45.0,
+      "comfort": 60.0,
+      "category": "coach",
+      "hub_type": "coach_station",
+      "requires": [
+        "id_card"
+      ]
+    },
+    "airplane": {
+      "name": "飞机",
+      "speed_kmh": 800.0,
+      "base_fare": 320.0,
+      "per_km": 0.55,
+      "per_minute": 0.0,
+      "wait_minutes": 90.0,
+      "headway_minutes": 120.0,
+      "comfort": 88.0,
+      "category": "air",
+      "hub_type": "airport",
+      "requires": [
+        "passport"
+      ]
+    },
+    "ship": {
+      "name": "轮船",
+      "speed_kmh": 40.0,
+      "base_fare": 8.0,
+      "per_km": 0.18,
+      "per_minute": 0.0,
+      "wait_minutes": 30.0,
+      "headway_minutes": 180.0,
+      "comfort": 82.0,
+      "category": "water",
+      "hub_type": "port",
+      "requires": []
+    }
+  },
+  "TRANSPORT_MODE_ORDER": [
+    "walk",
+    "bicycle",
+    "bus",
+    "metro",
+    "taxi",
+    "ride_hailing",
+    "self_drive",
+    "train",
+    "high_speed_rail",
+    "coach",
+    "airplane",
+    "ship"
+  ],
+  "TRANSPORT_CONGESTION_PEAK_FACTOR": 1.5,
+  "TRANSPORT_CONGESTION_CATEGORIES": [
+    "road",
+    "urban"
+  ],
+  "TRANSPORT_TRANSFER_MINUTES_DEFAULT": 8.0
+}

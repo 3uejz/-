@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/content-manifest.schema.json",
+  "title": "ContentManifest",
+  "description": "内容清单。客户端据此做差量下载、哈希校验与按区域挂载。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest_version", "generated_at", "packs"],
+  "properties": {
+    "manifest_version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "min_client_version": { "type": "string" },
+    "packs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/pack" }
+    }
+  },
+  "$defs": {
+    "pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "version", "hash", "size", "url"],
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "type": "string", "enum": ["core", "data", "art", "audio"] },
+        "version": { "type": "string" },
+        "hash": { "type": "string", "description": "sha256:<hex>。" },
+        "size": { "type": "integer", "minimum": 0, "description": "字节数。" },
+        "url": { "type": "string", "description": "私有服务器托管的下载地址。" },
+        "patch_of": { "type": ["string", "null"], "description": "若为差量包，指向基础包名。" },
+        "region_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "depends_on": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/player.schema.json",
+  "title": "Player",
+  "description": "玩家角色模型。属性组与区间见 design「全局数值基线·属性区间」。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "gender", "birth_minutes", "attrs", "skills"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "gender": { "type": "string", "enum": ["male", "female", "nonbinary", "other"] },
+    "sexuality": { "type": "string", "description": "性向设定，见开档向导。" },
+    "birth_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "nation": { "$ref": "common.schema.json#/$defs/content_key" },
+    "mother_tongue": { "$ref": "common.schema.json#/$defs/content_key" },
+    "appearance": { "$ref": "#/$defs/appearance" },
+    "attrs": { "$ref": "#/$defs/attributes" },
+    "skills": {
+      "type": "array",
+      "description": "已习得技能；等级 0..20。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content_key", "level"],
+        "properties": {
+          "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "level": { "type": "integer", "minimum": 0, "maximum": 20 },
+          "xp": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "talents": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/content_key" }
+    },
+    "education": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/credential"
+      }
+    },
+    "licenses": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/credential" }
+    },
+    "job": { "$ref": "#/$defs/job" },
+    "finances": { "$ref": "#/$defs/finances" },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "inventory": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/inventory_item" }
+    },
+    "equipment": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/content_key" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "health": { "$ref": "#/$defs/health" },
+    "legal": { "$ref": "#/$defs/legal" },
+    "achievements": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/content_key" }
+    },
+    "goldfinger": { "$ref": "goldfinger.schema.json" }
+  },
+  "$defs": {
+    "appearance": {
+      "type": "object",
+      "description": "3D 捏脸参数与形象属性。",
+      "additionalProperties": true,
+      "properties": {
+        "appearance_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "temperament": { "type": "number", "minimum": 0, "maximum": 100 },
+        "params": { "type": "object", "description": "脸型/五官/发型/体型滑块，键值由内容定义。", "additionalProperties": true }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "physiological": { "$ref": "#/$defs/group_physiological" },
+        "nutrition": { "$ref": "#/$defs/group_nutrition" },
+        "psychological": { "$ref": "#/$defs/group_psychological" },
+        "ability": { "$ref": "#/$defs/group_ability" },
+        "personality": { "$ref": "#/$defs/group_personality" },
+        "values": { "$ref": "#/$defs/group_values" }
+      }
+    },
+    "unit_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "group_physiological": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "health": { "$ref": "#/$defs/unit_score" },
+        "stamina": { "$ref": "#/$defs/unit_score" },
+        "hunger": { "$ref": "#/$defs/unit_score", "description": "0 为极度饥饿。" },
+        "thirst": { "$ref": "#/$defs/unit_score", "description": "0 为极度口渴。" },
+        "cleanliness": { "$ref": "#/$defs/unit_score" },
+        "sleep_debt": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "group_nutrition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "protein": { "$ref": "#/$defs/unit_score" },
+        "carbs": { "$ref": "#/$defs/unit_score" },
+        "fat": { "$ref": "#/$defs/unit_score" },
+        "vitamins": { "$ref": "#/$defs/unit_score" },
+        "minerals": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "group_psychological": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mood": { "$ref": "#/$defs/unit_score" },
+        "stress": { "$ref": "#/$defs/unit_score" },
+        "happiness": { "$ref": "#/$defs/unit_score" },
+        "meaning": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "group_ability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "intelligence": { "$ref": "#/$defs/unit_score" },
+        "charm": { "$ref": "#/$defs/unit_score" },
+        "physique": { "$ref": "#/$defs/unit_score" },
+        "willpower": { "$ref": "#/$defs/unit_score" },
+        "luck": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "group_personality": {
+      "type": "object",
+      "description": "大五人格，0..100。",
+      "additionalProperties": false,
+      "properties": {
+        "openness": { "$ref": "#/$defs/unit_score" },
+        "conscientiousness": { "$ref": "#/$defs/unit_score" },
+        "extraversion": { "$ref": "#/$defs/unit_score" },
+        "agreeableness": { "$ref": "#/$defs/unit_score" },
+        "neuroticism": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "group_values": {
+      "type": "object",
+      "description": "价值观三轴，0..100。",
+      "additionalProperties": false,
+      "properties": {
+        "selfish_altruistic": { "$ref": "#/$defs/unit_score" },
+        "conservative_open": { "$ref": "#/$defs/unit_score" },
+        "material_spiritual": { "$ref": "#/$defs/unit_score" }
+      }
+    },
+    "credential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key", "status"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "status": { "type": "string", "enum": ["in_progress", "graduated", "revoked", "expired"] },
+        "obtained_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "title": { "type": "string" },
+        "industry": { "$ref": "common.schema.json#/$defs/content_key" },
+        "salary": { "$ref": "common.schema.json#/$defs/money", "description": "月薪。" },
+        "hired_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "performance": { "type": "number", "minimum": 0, "maximum": 100 },
+        "internal_reputation": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "finances": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cash": { "$ref": "common.schema.json#/$defs/money" },
+        "bank": { "$ref": "common.schema.json#/$defs/money" },
+        "debt": { "$ref": "common.schema.json#/$defs/money" },
+        "investments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["content_key", "quantity"],
+            "properties": {
+              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "quantity": { "type": "number" },
+              "avg_cost": { "$ref": "common.schema.json#/$defs/money" }
+            }
+          }
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key", "kind"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "kind": { "type": "string", "enum": ["real_estate", "vehicle", "business", "collectible", "financial", "other"] },
+        "value": { "$ref": "common.schema.json#/$defs/money" },
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "mortgaged": { "type": "boolean" }
+      }
+    },
+    "inventory_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key", "quantity"],
+      "properties": {
+        "instance_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "quantity": { "type": "integer", "minimum": 0 },
+        "quality": { "type": "string", "enum": ["common", "fine", "rare", "legendary"] },
+        "durability": { "type": "number", "minimum": 0, "maximum": 100 },
+        "expires_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "description": "五维关系；好感/恩怨 −100..100，信任/敬畏/亲密度 0..100。",
+      "additionalProperties": false,
+      "required": ["target_id", "favor", "trust", "awe", "grudge", "intimacy"],
+      "properties": {
+        "target_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "favor": { "type": "number", "minimum": -100, "maximum": 100 },
+        "trust": { "type": "number", "minimum": 0, "maximum": 100 },
+        "awe": { "type": "number", "minimum": 0, "maximum": 100 },
+        "grudge": { "type": "number", "minimum": -100, "maximum": 100 },
+        "intimacy": { "type": "number", "minimum": 0, "maximum": 100 },
+        "circle": { "type": "string", "enum": ["friend", "classmate", "colleague", "neighbor", "online", "family", "other"] },
+        "tier": { "type": "string", "description": "关系分级，由好感主轴派生。" },
+        "last_interaction_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "diseases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["content_key"],
+            "properties": {
+              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "stage": { "type": "string" },
+              "diagnosed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+            }
+          }
+        },
+        "addictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["content_key", "craving"],
+            "properties": {
+              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "craving": { "type": "number", "minimum": 0, "maximum": 100 },
+              "tolerance": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "lifespan_estimate_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "legal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wanted_level": { "type": "integer", "minimum": 0 },
+        "criminal_record": { "type": "boolean" },
+        "in_prison": { "type": "boolean" },
+        "release_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    }
+  }
+}

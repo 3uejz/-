@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/save.schema.json",
+  "title": "Save",
+  "description": "存档文档。采用「种子 + 增量」策略；确定性世界不入档，只记录变化量。顶层结构见 design「存档 Schema 与体积」。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "clock", "player", "world_delta", "rng"],
+  "properties": {
+    "meta": { "$ref": "#/$defs/save_meta" },
+    "clock": { "$ref": "#/$defs/clock" },
+    "player": { "$ref": "player.schema.json" },
+    "world_delta": { "$ref": "#/$defs/world_delta" },
+    "rng": { "$ref": "#/$defs/rng" },
+    "legacy": { "$ref": "legacy.schema.json" }
+  },
+  "$defs": {
+    "save_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "game_version", "playthrough_id", "seed"],
+      "properties": {
+        "schema_version": { "type": "integer", "minimum": 1 },
+        "game_version": { "type": "string" },
+        "content_version": { "type": "integer", "minimum": 1 },
+        "playthrough_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "seed": { "type": "integer", "description": "确定性世界的随机种子。" },
+        "created_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "updated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "config": {
+          "type": "object",
+          "description": "难度/倍速/遥测/金手指模式等本地配置。",
+          "additionalProperties": true
+        },
+        "hash": { "type": "string", "description": "内容哈希（sha256），用于完整性校验；不加密。" }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["absolute_minutes"],
+      "properties": {
+        "absolute_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "speed": { "type": "number", "enum": [0, 1, 2, 4, 60, 3600, 86400], "description": "0 为暂停。" },
+        "paused": { "type": "boolean" },
+        "last_online_at": { "$ref": "common.schema.json#/$defs/timestamp" }
+      }
+    },
+    "world_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regions": {
+          "type": "array",
+          "description": "有变化的精细区域状态。",
+          "items": { "$ref": "#/$defs/region_delta" }
+        },
+        "npcs": {
+          "type": "array",
+          "description": "个体化 NPC 及其增量。",
+          "items": { "$ref": "npc.schema.json" }
+        },
+        "economy": { "type": "object", "additionalProperties": true },
+        "organizations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "world_events": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "news": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      }
+    },
+    "region_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_key"],
+      "properties": {
+        "region_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "population": { "type": "integer", "minimum": 0 },
+        "price_index": { "type": "number", "minimum": 0 },
+        "safety": { "type": "number", "minimum": 0, "maximum": 100 },
+        "last_simulated_minute": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "snapshot": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "rng": {
+      "type": "object",
+      "description": "按随机流隔离的状态，保证续算可复现。",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": { "type": ["integer", "string"] },
+          "counter": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

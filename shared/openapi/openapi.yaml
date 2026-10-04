@@ -1,0 +1,569 @@
+openapi: 3.1.0
+info:
+  title: 浮生录 Life Text Sandbox API
+  version: "1.0.0"
+  description: |
+    客户端（Godot）与后端（Go 模块化单体）之间的 REST 接口。
+    通用约定见 `../conventions.md`；数据结构见 `../schemas/`。
+    鉴权：`Authorization: Bearer <access JWT>`；refresh 用于换取新 access。
+servers:
+  - url: /api/v1
+    description: 私有服务器（同源，经反向代理）
+tags:
+  - name: auth
+  - name: saves
+  - name: content
+  - name: legacy
+  - name: telemetry
+  - name: world
+  - name: admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: 注册账号
+      security: []
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: 注册成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: 登录
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: 登录成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: 刷新令牌（轮换 refresh）
+      security: []
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: 新令牌对
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: 登出并撤销当前 refresh
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "204": { description: "已登出" }
+
+  /saves:
+    get:
+      tags: [saves]
+      summary: 列出存档槽
+      operationId: listSaves
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: 存档槽列表
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveSlotPage" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /saves/{slot}:
+    parameters:
+      - { $ref: "#/components/parameters/Slot" }
+    get:
+      tags: [saves]
+      summary: 下载指定槽最新存档
+      operationId: getSave
+      responses:
+        "200":
+          description: 存档文档
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "../schemas/save.schema.json" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+    put:
+      tags: [saves]
+      summary: 上传存档（乐观锁 + 幂等键）
+      operationId: putSave
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+        - { $ref: "#/components/parameters/IfMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/save.schema.json" }
+      responses:
+        "200":
+          description: 覆盖成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveSlot" }
+        "201":
+          description: 新建成功
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveSlot" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /saves/{slot}/versions:
+    get:
+      tags: [saves]
+      summary: 列出存档历史版本
+      operationId: listSaveVersions
+      parameters:
+        - { $ref: "#/components/parameters/Slot" }
+      responses:
+        "200":
+          description: 版本列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SaveVersion" }
+
+  /saves/{slot}/rollback:
+    post:
+      tags: [saves]
+      summary: 回滚到指定版本
+      operationId: rollbackSave
+      parameters:
+        - { $ref: "#/components/parameters/Slot" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: 回滚后的槽
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveSlot" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /saves/{slot}/resolve:
+    post:
+      tags: [saves]
+      summary: 解决本地/云端冲突
+      operationId: resolveSaveConflict
+      parameters:
+        - { $ref: "#/components/parameters/Slot" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [resolution]
+              properties:
+                resolution: { type: string, enum: [keep_local, keep_cloud, merge] }
+                cloud_version: { type: integer, minimum: 1 }
+                local_blob: { type: object }
+      responses:
+        "200":
+          description: 解决结果
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveSlot" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /content/manifest:
+    get:
+      tags: [content]
+      summary: 获取内容清单
+      operationId: getContentManifest
+      parameters:
+        - { $ref: "#/components/parameters/IfNoneMatch" }
+      responses:
+        "200":
+          description: 内容清单
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "../schemas/content-manifest.schema.json" }
+        "304": { description: "未修改" }
+
+  /config:
+    get:
+      tags: [content]
+      summary: 获取远程配置
+      operationId: getRemoteConfig
+      parameters:
+        - { $ref: "#/components/parameters/IfNoneMatch" }
+      responses:
+        "200":
+          description: 远程配置
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "../schemas/remote-config.schema.json" }
+        "304": { description: "未修改" }
+
+  /announcements:
+    get:
+      tags: [content]
+      summary: 获取生效公告
+      operationId: listAnnouncements
+      responses:
+        "200":
+          description: 公告列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Announcement" }
+
+  /legacy:
+    get:
+      tags: [legacy]
+      summary: 读取传承档案
+      operationId: getLegacy
+      responses:
+        "200":
+          description: 传承档案
+          content:
+            application/json:
+              schema: { $ref: "../schemas/legacy.schema.json" }
+    put:
+      tags: [legacy]
+      summary: 写入传承档案
+      operationId: putLegacy
+      parameters:
+        - { $ref: "#/components/parameters/IfMatch" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/legacy.schema.json" }
+      responses:
+        "200":
+          description: 已保存
+          content:
+            application/json:
+              schema: { $ref: "../schemas/legacy.schema.json" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /telemetry/events:
+    post:
+      tags: [telemetry]
+      summary: 批量上报遥测（按 event_id 去重）
+      operationId: postTelemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  maxItems: 500
+                  items: { $ref: "../schemas/telemetry.schema.json" }
+      responses:
+        "202":
+          description: 接收结果（逐条）
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [accepted, rejected]
+                properties:
+                  accepted: { type: array, items: { $ref: "../schemas/common.schema.json#/$defs/uuid" } }
+                  rejected:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [event_id, code]
+                      properties:
+                        event_id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+                        code: { type: string }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /world/summary:
+    get:
+      tags: [world]
+      summary: 获取全球人口与宏观摘要
+      operationId: getWorldSummary
+      parameters:
+        - { $ref: "#/components/parameters/IfNoneMatch" }
+      responses:
+        "200":
+          description: 世界摘要
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "../schemas/worldsim.schema.json" }
+        "304": { description: "未修改" }
+
+  /world/sync:
+    post:
+      tags: [world]
+      summary: 上传本地近似并合并权威结果
+      operationId: syncWorld
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/worldsim.schema.json" }
+      responses:
+        "200":
+          description: 合并后的权威摘要
+          content:
+            application/json:
+              schema: { $ref: "../schemas/worldsim.schema.json" }
+
+  /admin/accounts:
+    get:
+      tags: [admin]
+      summary: 账号列表（admin）
+      operationId: adminListAccounts
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: 账号分页
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Account" } }
+                  next_cursor: { type: [string, "null"] }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/publish:
+    post:
+      tags: [admin]
+      summary: 发布内容包（admin）
+      operationId: adminPublishContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/content-manifest.schema.json" }
+      responses:
+        "202": { description: 已受理发布" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/config:
+    put:
+      tags: [admin]
+      summary: 编辑远程配置（admin）
+      operationId: adminPutConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/remote-config.schema.json" }
+      responses:
+        "200":
+          description: 已更新
+          content:
+            application/json:
+              schema: { $ref: "../schemas/remote-config.schema.json" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Slot:
+      name: slot
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1, maximum: 99 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string, format: uuid }
+    IfMatch:
+      name: If-Match
+      in: header
+      schema: { type: string, description: "上次响应的 ETag。" }
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      schema: { type: string }
+
+  headers:
+    ETag:
+      schema: { type: string }
+
+  responses:
+    ValidationError:
+      description: 校验失败
+      content:
+        application/json:
+          schema: { $ref: "../schemas/common.schema.json#/$defs/error" }
+    Unauthenticated:
+      description: 未认证或令牌失效
+      content:
+        application/json:
+          schema: { $ref: "../schemas/common.schema.json#/$defs/error" }
+    Forbidden:
+      description: 无权限
+      content:
+        application/json:
+          schema: { $ref: "../schemas/common.schema.json#/$defs/error" }
+    NotFound:
+      description: 不存在
+      content:
+        application/json:
+          schema: { $ref: "../schemas/common.schema.json#/$defs/error" }
+    Conflict:
+      description: 冲突（版本、哈希、幂等或存档冲突）
+      content:
+        application/json:
+          schema: { $ref: "../schemas/common.schema.json#/$defs/error" }
+
+  schemas:
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 32 }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string }
+    AuthTokens:
+      type: object
+      additionalProperties: false
+      required: [access_token, refresh_token, expires_in]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        expires_in: { type: integer, description: "access 有效期（秒）。" }
+        account_id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+    SaveSlot:
+      type: object
+      additionalProperties: false
+      required: [slot, version, hash, updated_at]
+      properties:
+        slot: { type: integer, minimum: 1 }
+        version: { type: integer, minimum: 1 }
+        hash: { type: string }
+        playthrough_id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        updated_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    SaveSlotPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/SaveSlot" } }
+        next_cursor: { type: [string, "null"] }
+    SaveVersion:
+      type: object
+      additionalProperties: false
+      required: [version, hash, created_at]
+      properties:
+        version: { type: integer, minimum: 1 }
+        hash: { type: string }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    Announcement:
+      type: object
+      additionalProperties: false
+      required: [id, title, body]
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        title: { type: string }
+        body: { type: string }
+        start_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+        end_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    Account:
+      type: object
+      additionalProperties: false
+      required: [id, username, created_at]
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        username: { type: string }
+        role: { type: string, enum: [player, admin] }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }

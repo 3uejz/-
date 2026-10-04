@@ -1,0 +1,85 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/main.gd" id="1_main"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Root" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StatusBar" type="HBoxContainer" parent="Root"]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="Root/StatusBar"]
+layout_mode = 2
+text = "时间：----"
+
+[node name="MoneyLabel" type="Label" parent="Root/StatusBar"]
+layout_mode = 2
+text = "金钱：--"
+
+[node name="HealthLabel" type="Label" parent="Root/StatusBar"]
+layout_mode = 2
+text = "健康：--"
+
+[node name="MoodLabel" type="Label" parent="Root/StatusBar"]
+layout_mode = 2
+text = "心情：--"
+
+[node name="WeatherLabel" type="Label" parent="Root/StatusBar"]
+layout_mode = 2
+text = "天气：--"
+
+[node name="SpeedButton" type="Button" parent="Root/StatusBar"]
+layout_mode = 2
+text = "倍速：1x"
+
+[node name="PauseButton" type="Button" parent="Root/StatusBar"]
+layout_mode = 2
+text = "暂停"
+
+[node name="Body" type="HSplitContainer" parent="Root"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Messages" type="ScrollContainer" parent="Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MessageList" type="VBoxContainer" parent="Root/Body/Messages"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SidePanel" type="VBoxContainer" parent="Root/Body"]
+layout_mode = 2
+
+[node name="ActionTitle" type="Label" parent="Root/Body/SidePanel"]
+layout_mode = 2
+text = "动作"
+
+[node name="ActionPanel" type="VBoxContainer" parent="Root/Body/SidePanel"]
+layout_mode = 2
+
+[node name="InputBar" type="HBoxContainer" parent="Root"]
+layout_mode = 2
+
+[node name="Input" type="LineEdit" parent="Root/InputBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "输入中文指令，如：去北京、买两个苹果、睡8小时"
+
+[node name="SendButton" type="Button" parent="Root/InputBar"]
+layout_mode = 2
+text = "发送"

@@ -1,0 +1,67 @@
+name: engine-build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "engine-*"
+
+jobs:
+  linux-editor:
+    name: Linux 编辑器（可 headless）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装构建依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config python3-pip \
+            libx11-dev libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev libwayland-dev
+
+      - name: 安装 SCons
+        run: python3 -m pip install "scons>=4.8"
+
+      - name: 拉取引擎源码
+        run: bash scripts/setup-engine.sh
+
+      - name: 构建编辑器
+        run: bash scripts/build-engine.sh editor
+
+      - name: 上传编辑器产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifetext-editor-linux
+          path: engine/bin/godot.linuxbsd.editor.x86_64
+          if-no-files-found: error
+
+  windows-template:
+    name: Windows 导出模板
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装 SCons
+        run: python -m pip install "scons>=4.8"
+
+      - name: 拉取引擎源码
+        shell: bash
+        run: bash scripts/setup-engine.sh
+
+      - name: 构建 Windows 导出模板
+        shell: bash
+        env:
+          PLATFORM: windows
+        run: bash scripts/build-engine.sh template_release
+
+      - name: 上传导出模板产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifetext-template-windows
+          path: engine/bin/godot.windows.template_release.x86_64.exe
+          if-no-files-found: error

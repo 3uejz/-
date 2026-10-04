@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/legacy.schema.json",
+  "title": "Legacy",
+  "description": "跨代传承档案。随账号保存，新周目继承世界状态与家族史（金手指不继承）。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "generation": { "type": "integer", "minimum": 0 },
+    "talents": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+    "unlocks": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+    "lineage": {
+      "type": "array",
+      "description": "族谱，按代次记录。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "birth_minutes"],
+        "properties": {
+          "name": { "type": "string" },
+          "birth_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "death_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "history": {
+      "type": "array",
+      "description": "世界记忆载体：传说事件、世交世仇、称号纪念、隐藏事件。",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

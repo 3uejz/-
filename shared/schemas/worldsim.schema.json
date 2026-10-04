@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/worldsim.schema.json",
+  "title": "WorldSim",
+  "description": "后端权威的全球人口与宏观统计摘要。主要国家聚合到城市队列，其余国家仅维护总量指标。客户端离线时以本地近似推进，上线后合并。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "computed_at", "global"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "computed_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "global": { "$ref": "#/$defs/global_indicators" },
+    "regions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/region_cohort" }
+    }
+  },
+  "$defs": {
+    "global_indicators": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "absolute_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "population": { "type": "integer", "minimum": 0 },
+        "gdp_est": { "type": "number" },
+        "inflation_rate": { "type": "number" },
+        "unemployment_rate": { "type": "number" }
+      }
+    },
+    "region_cohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_key", "level"],
+      "properties": {
+        "region_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "level": { "type": "string", "enum": ["nation", "province", "city"] },
+        "population": { "type": "integer", "minimum": 0 },
+        "age_bands": {
+          "type": "object",
+          "description": "年龄段 → 人数。",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "sex_ratio": { "type": "number", "minimum": 0 },
+        "occupation_mix": {
+          "type": "object",
+          "description": "职业 → 占比 0..1。",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/ratio" }
+        },
+        "birth_rate": { "type": "number", "minimum": 0 },
+        "death_rate": { "type": "number", "minimum": 0 },
+        "migration_rate": { "type": "number" },
+        "price_index": { "type": "number", "minimum": 0 },
+        "authority": { "type": "string", "enum": ["server", "client_approx"] }
+      }
+    }
+  }
+}

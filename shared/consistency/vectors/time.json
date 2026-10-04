@@ -1,0 +1,112 @@
+{
+  "spec": "gregorian",
+  "version": 1,
+  "epoch_utc": "2000-01-01T00:00:00Z",
+  "note": "absolute_minutes 自 epoch 起；season 按北半球月份划分。",
+  "cases": [
+    {
+      "absolute_minutes": 0,
+      "expected": {
+        "date": "2000-01-01",
+        "year": 2000,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 6,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 41760,
+      "expected": {
+        "date": "2000-01-30",
+        "year": 2000,
+        "month": 1,
+        "day": 30,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 7,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 43200,
+      "expected": {
+        "date": "2000-01-31",
+        "year": 2000,
+        "month": 1,
+        "day": 31,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 1,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 44640,
+      "expected": {
+        "date": "2000-02-01",
+        "year": 2000,
+        "month": 2,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 2,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 84960,
+      "expected": {
+        "date": "2000-02-29",
+        "year": 2000,
+        "month": 2,
+        "day": 29,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 2,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 86400,
+      "expected": {
+        "date": "2000-03-01",
+        "year": 2000,
+        "month": 3,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 3,
+        "season_north": "spring"
+      }
+    },
+    {
+      "absolute_minutes": 527040,
+      "expected": {
+        "date": "2001-01-01",
+        "year": 2001,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "weekday_iso": 1,
+        "season_north": "winter"
+      }
+    },
+    {
+      "absolute_minutes": 14073575,
+      "expected": {
+        "date": "2026-10-04",
+        "year": 2026,
+        "month": 10,
+        "day": 4,
+        "hour": 7,
+        "minute": 35,
+        "weekday_iso": 7,
+        "season_north": "autumn"
+      }
+    }
+  ]
+}

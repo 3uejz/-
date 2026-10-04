@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/remote-config.schema.json",
+  "title": "RemoteConfig",
+  "description": "远程配置。键值覆盖 design 全局数值基线与各系统默认值；客户端与后端共用。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "values"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "updated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "values": {
+      "type": "object",
+      "description": "点分键 → 标量/对象，如 economy.inflation_rate。",
+      "additionalProperties": true,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$" }
+    },
+    "signature": { "type": "string", "description": "可选，服务端签名，客户端校验防篡改。" }
+  }
+}

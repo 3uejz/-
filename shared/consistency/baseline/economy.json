@@ -1,0 +1,180 @@
+{
+  "MONEY_MINOR_SCALE": 100,
+  "CURRENCIES": {
+    "USD": {
+      "name": "美元",
+      "rate": 1.0
+    },
+    "CNY": {
+      "name": "人民币",
+      "rate": 7.0
+    },
+    "EUR": {
+      "name": "欧元",
+      "rate": 0.92
+    },
+    "JPY": {
+      "name": "日元",
+      "rate": 150.0
+    },
+    "GBP": {
+      "name": "英镑",
+      "rate": 0.8
+    },
+    "KRW": {
+      "name": "韩元",
+      "rate": 1350.0
+    }
+  },
+  "CURRENCY_BASE": "USD",
+  "FX_ANNUAL_VOLATILITY": 0.08,
+  "FX_MEAN_REVERSION": 0.15,
+  "FX_SPREAD_BPS": 50.0,
+  "FX_FEE_RATE": 0.001,
+  "PRICE_FLOOR_RATIO": 0.2,
+  "PRICE_CEIL_RATIO": 5.0,
+  "PRICE_DEMAND_TO_PRICE": 0.5,
+  "PRICE_ELASTICITY": {
+    "necessity": 0.15,
+    "daily": 0.35,
+    "luxury": 0.9,
+    "financial": 1.2
+  },
+  "INDIVIDUAL_TRADE_INFLUENCE": 1e-06,
+  "ORG_TRADE_INFLUENCE": 0.001,
+  "PRICE_SEASONAL_FACTORS": {
+    "spring": 1.0,
+    "summer": 1.0,
+    "autumn": 1.05,
+    "winter": 1.1
+  },
+  "MACRO_QUARTERS_PER_YEAR": 4,
+  "MACRO_BASE_INFLATION": 0.02,
+  "MACRO_BASE_RATE": 0.03,
+  "MACRO_UNEMPLOYMENT_BASE": 0.05,
+  "MACRO_GDP_GROWTH_BASE": 0.03,
+  "MACRO_INFLATION_MIN": -0.05,
+  "MACRO_INFLATION_MAX": 3.0,
+  "MACRO_UNEMPLOYMENT_MIN": 0.0,
+  "MACRO_UNEMPLOYMENT_MAX": 1.0,
+  "MACRO_RATE_MIN": 0.0,
+  "MACRO_RATE_MAX": 0.5,
+  "MACRO_PMI_MIN": 0.0,
+  "MACRO_PMI_MAX": 100.0,
+  "MACRO_PMI_BASE": 50.0,
+  "MACRO_CYCLE_PHASES": [
+    "recession",
+    "recovery",
+    "boom",
+    "slowdown"
+  ],
+  "MACRO_CYCLE_GDP_EFFECT": {
+    "recession": -0.04,
+    "recovery": 0.02,
+    "boom": 0.05,
+    "slowdown": 0.01
+  },
+  "MACRO_CYCLE_MIN_QUARTERS": 4,
+  "MACRO_CYCLE_MAX_QUARTERS": 16,
+  "MACRO_RATE_UNEMPLOYMENT_SENSITIVITY": 0.8,
+  "MACRO_INFLATION_UNEMPLOYMENT_TRADEOFF": 0.4,
+  "MACRO_WAGE_LAG_QUARTERS": 1,
+  "GBM_DRIFT_DEFAULT": 0.08,
+  "GBM_VOLATILITY_DEFAULT": 0.3,
+  "GBM_DRIFT_MIN": 0.05,
+  "GBM_DRIFT_MAX": 0.15,
+  "GBM_VOLATILITY_MIN": 0.2,
+  "GBM_VOLATILITY_MAX": 0.5,
+  "GBM_CRYPTO_VOLATILITY": 0.8,
+  "GBM_PRICE_FLOOR": 1e-06,
+  "BANK_DEMAND_RATE_ANNUAL": 0.003,
+  "BANK_FIXED_RATE_ANNUAL": 0.02,
+  "BANK_LOAN_RATE_ANNUAL": 0.05,
+  "BANK_OVERDUE_DAYS_DOWNGRADE": 30,
+  "BANK_DEFAULT_OVERDUE_DAYS": 0,
+  "BANK_CREDIT_MIN": 0,
+  "BANK_CREDIT_MAX": 1000,
+  "BANK_CREDIT_START": 700,
+  "BANK_CREDIT_OVERDUE_PENALTY": 100,
+  "INSURANCE_PREMIUM_RATE": 0.02,
+  "INSURANCE_PAYOUT_RATE": 1.0,
+  "LOTTERY_TICKET_PRICE_MINOR": 200,
+  "LOTTERY_PAYOUT_MINOR": 10000,
+  "LOTTERY_WIN_CHANCE": 0.001,
+  "MARGIN_INITIAL_RATIO": 0.5,
+  "MARGIN_MAINTENANCE_RATIO": 0.25,
+  "MARGIN_LIQUIDATION_FEE": 0.01,
+  "TAX_STANDARD_DEDUCTION": 6000.0,
+  "TAX_INCOME_BRACKETS": [
+    {
+      "upper": 36000.0,
+      "rate": 0.03
+    },
+    {
+      "upper": 144000.0,
+      "rate": 0.1
+    },
+    {
+      "upper": 300000.0,
+      "rate": 0.2
+    },
+    {
+      "upper": 420000.0,
+      "rate": 0.25
+    },
+    {
+      "upper": 660000.0,
+      "rate": 0.3
+    },
+    {
+      "upper": 960000.0,
+      "rate": 0.35
+    },
+    {
+      "upper": -1.0,
+      "rate": 0.45
+    }
+  ],
+  "TAX_CORPORATE_RATE": 0.25,
+  "TAX_VAT_RATE": 0.13,
+  "TAX_CONSUMPTION_RATE": 0.1,
+  "TAX_PROPERTY_RATE_ANNUAL": 0.012,
+  "TAX_STAMP_RATE": 0.001,
+  "TAX_SOCIAL_SECURITY_RATE": 0.08,
+  "TAX_INHERITANCE_BRACKETS": [
+    {
+      "upper": 500000.0,
+      "rate": 0.0
+    },
+    {
+      "upper": 1000000.0,
+      "rate": 0.1
+    },
+    {
+      "upper": 3000000.0,
+      "rate": 0.2
+    },
+    {
+      "upper": 10000000.0,
+      "rate": 0.3
+    },
+    {
+      "upper": -1.0,
+      "rate": 0.45
+    }
+  ],
+  "TAX_TYPES": [
+    "income",
+    "corporate",
+    "vat",
+    "consumption",
+    "property",
+    "inheritance",
+    "stamp",
+    "social_security"
+  ],
+  "TAX_EVASION_AUDIT_CHANCE": 0.15,
+  "EMPLOYMENT_BASE_HIRE_DIFFICULTY": 0.7,
+  "EMPLOYMENT_UNEMPLOYMENT_SENSITIVITY": 3.0,
+  "EMPLOYMENT_WAGE_UNEMPLOYMENT_SENSITIVITY": 1.5
+}

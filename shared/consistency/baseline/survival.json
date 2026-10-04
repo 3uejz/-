@@ -1,0 +1,101 @@
+{
+  "HUNGER_DECAY_PER_MIN": 0.21,
+  "THIRST_DECAY_PER_MIN": 0.42,
+  "CLEANLINESS_DECAY_PER_MIN": 0.06944444444444445,
+  "SLEEP_DEBT_GAIN_PER_HOUR": 4.166666666666667,
+  "SLEEP_DEBT_RECOVER_PER_HOUR": 12.5,
+  "SLEEP_DEBT_THRESHOLD": 60.0,
+  "SLEEP_DEBT_INTELLIGENCE_PENALTY_PER_HOUR": 2.0,
+  "SLEEP_DEBT_MOOD_PENALTY_PER_HOUR": 3.0,
+  "MOOD_RECOVER_PER_HOUR": 1.0,
+  "STAMINA_REGEN_AWAKE_PER_HOUR": 5.0,
+  "STAMINA_REGEN_ASLEEP_PER_HOUR": 12.5,
+  "STAMINA_DRAIN_PER_HOUR": 20.0,
+  "STARVE_HEALTH_PER_HOUR": 2.0,
+  "DEHYDRATE_HEALTH_PER_HOUR": 4.0,
+  "HEALTH_REGEN_PER_HOUR": 1.0,
+  "HEALTH_REGEN_AGE_DECAY_PER_YEAR": 0.01,
+  "NUTRITION_DECAY_PER_DAY": {
+    "protein": 4.0,
+    "carbs": 6.0,
+    "fat": 3.0,
+    "vitamins": 5.0,
+    "minerals": 4.0
+  },
+  "NUTRITION_AGE_SCALE_PER_YEAR": 0.01,
+  "NUTRITION_AGE_BASE_YEARS": 20.0,
+  "NUTRITION_LABOR_SCALE": 0.3,
+  "NUTRITION_LIGHT_THRESHOLD": 30.0,
+  "NUTRITION_SEVERE_THRESHOLD": 15.0,
+  "NUTRITION_EXCESS_THRESHOLD": 85.0,
+  "NUTRITION_EXCESS_DAYS_REQUIRED": 30.0,
+  "ADDICTION_SPECIES": {
+    "tobacco": {
+      "dose_gain": 3.0,
+      "tolerance_growth": 0.02,
+      "withdrawal_intensity": 6.0,
+      "relapse_rate": 0.4,
+      "treatment_days": 30.0,
+      "withdrawal_days": 7.0,
+      "physiological": true
+    },
+    "alcohol": {
+      "dose_gain": 4.0,
+      "tolerance_growth": 0.03,
+      "withdrawal_intensity": 8.0,
+      "relapse_rate": 0.45,
+      "treatment_days": 30.0,
+      "withdrawal_days": 10.0,
+      "physiological": true
+    },
+    "drug": {
+      "dose_gain": 6.0,
+      "tolerance_growth": 0.05,
+      "withdrawal_intensity": 12.0,
+      "relapse_rate": 0.6,
+      "treatment_days": 60.0,
+      "withdrawal_days": 14.0,
+      "physiological": true
+    },
+    "gambling": {
+      "dose_gain": 2.5,
+      "tolerance_growth": 0.02,
+      "withdrawal_intensity": 5.0,
+      "relapse_rate": 0.5,
+      "treatment_days": 45.0,
+      "withdrawal_days": 14.0,
+      "physiological": false
+    },
+    "internet": {
+      "dose_gain": 2.0,
+      "tolerance_growth": 0.02,
+      "withdrawal_intensity": 4.0,
+      "relapse_rate": 0.35,
+      "treatment_days": 30.0,
+      "withdrawal_days": 14.0,
+      "physiological": false
+    }
+  },
+  "ADDICTION_CRAVING_DECAY_PER_DAY": 0.5,
+  "ADDICTION_DEPENDENT_MIN": 20.0,
+  "ADDICTION_SEVERE_MIN": 60.0,
+  "ADDICTION_WITHDRAWAL_TRIGGER_HOURS": 12.0,
+  "ADDICTION_TREATMENT": {
+    "counseling": {
+      "reduction": 0.2,
+      "success_bonus": 0.15
+    },
+    "substitution": {
+      "reduction": 0.3,
+      "success_bonus": 0.25
+    },
+    "inpatient": {
+      "reduction": 0.5,
+      "success_bonus": 0.4
+    }
+  },
+  "LIFESPAN_BASE_YEARS": 78.0,
+  "DYING_HEALTH_THRESHOLD": 10.0,
+  "DYING_LIFESPAN_MARGIN_YEARS": 2.0,
+  "DYING_HEALTH_MARGIN": 30.0
+}

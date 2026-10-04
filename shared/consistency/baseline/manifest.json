@@ -1,0 +1,14 @@
+{
+  "spec": "numeric_baseline_source",
+  "version": 2,
+  "note": "数值基线单一真源。每个分域文件为 {常量名: 值}，键名即生成代码中的常量名（GDScript 直接使用，Go 加 Baseline 前缀）。core.json 决定一致性快照 shared/consistency/vectors/baseline.json 的形状。运行 tools/genbaseline 重新生成代码。",
+  "core": "core.json",
+  "domains": [
+    "survival.json",
+    "region.json",
+    "geo_transport.json",
+    "climate_weather.json",
+    "era.json",
+    "economy.json"
+  ]
+}

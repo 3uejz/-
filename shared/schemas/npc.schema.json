@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/npc.schema.json",
+  "title": "NPC",
+  "description": "NPC 个体。关系触发的 NPC 永久个体化；其余按 LOD 重建。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "gender", "birth_minutes", "alive"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "name": { "type": "string" },
+    "gender": { "type": "string", "enum": ["male", "female", "nonbinary", "other"] },
+    "birth_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "alive": { "type": "boolean" },
+    "death_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "job": { "$ref": "common.schema.json#/$defs/content_key" },
+    "traits": { "type": "array", "items": { "type": "string" } },
+    "attributes": { "$ref": "player.schema.json#/$defs/attributes" },
+    "home": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "location_key": { "$ref": "common.schema.json#/$defs/content_key" }
+      }
+    },
+    "schedule": {
+      "type": "array",
+      "description": "日程片段，按世界分钟触发。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["start_minute_of_day", "end_minute_of_day", "activity"],
+        "properties": {
+          "start_minute_of_day": { "type": "integer", "minimum": 0, "maximum": 1439 },
+          "end_minute_of_day": { "type": "integer", "minimum": 0, "maximum": 1440 },
+          "activity": { "type": "string" },
+          "location_key": { "$ref": "common.schema.json#/$defs/content_key" }
+        }
+      }
+    },
+    "relations": { "$ref": "player.schema.json#/$defs/relation" },
+    "individualized": {
+      "type": "boolean",
+      "description": "true 表示与玩家产生关系，永久保存，不随 LOD 降级。"
+    },
+    "lod_tier": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "0 活动区精细、1 邻近按日聚合、2 远方队列统计。"
+    }
+  }
+}

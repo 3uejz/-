@@ -86,3 +86,17 @@ Entries discovered by the Agent during task execution should follow this format:
 - Context: 逐域深挖《浮生录》D1–D50 时，用户要求改变提问方式
 - Instructions:
   - 每次需要用户拍板决策时，必须使用 question 工具的选项形式提问，给出候选选项（可含推荐项）；不要用自由文本清单让用户手工回填。
+
+[User Instruction Summary]
+- Date: 2026-10-04
+- Context: M0 实现阶段，用户要求控制消耗
+- Instructions:
+  - 执行任务时节省 token：能委派给 subagent 的工作就委派，不要事事亲自动手；自身只保留必要的关键判断与汇总。
+
+[Project Knowledge Summary]
+- Date: 2026-10-04
+- Context: Discovered by Agent while validating shared/ 规格文件（JSON Schema 与 OpenAPI）
+- Category: Engineering & Debugging
+- Instructions:
+  - 本环境系统级未安装 PyYAML / jsonschema；校验 YAML 用仓库自带的 Node 包：`NODE_PATH=.opencode/node_modules node -e "require('yaml')..."`；校验 JSON 直接 `python3 -c json.load` 即可。
+  - `shared/` 是跨语言规格单一事实来源：约定见 `shared/conventions.md`，接口见 `shared/openapi/openapi.yaml`（前缀 `/api/v1`），数据结构见 `shared/schemas/`，一致性向量见 `shared/consistency/vectors/`。

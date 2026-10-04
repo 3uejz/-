@@ -1,0 +1,102 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/settings/settings.gd" id="1_settings"]
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Panel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 2
+text = "设置与无障碍"
+
+[node name="FontSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="FontLabel" type="Label" parent="Panel/FontSection"]
+layout_mode = 2
+text = "字号"
+
+[node name="FontScale" type="HSlider" parent="Panel/FontSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FontValue" type="Label" parent="Panel/FontSection"]
+layout_mode = 2
+text = "100%"
+
+[node name="ThemeSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="ThemeLabel" type="Label" parent="Panel/ThemeSection"]
+layout_mode = 2
+text = "配色"
+
+[node name="ThemeOption" type="OptionButton" parent="Panel/ThemeSection"]
+layout_mode = 2
+
+[node name="TTSSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="TTSLabel" type="Label" parent="Panel/TTSSection"]
+layout_mode = 2
+text = "文本朗读"
+
+[node name="TTSStatus" type="Label" parent="Panel/TTSSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "文本朗读：不可用"
+
+[node name="TTSButton" type="CheckBox" parent="Panel/TTSSection"]
+layout_mode = 2
+disabled = true
+
+[node name="SpeedSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="Panel/SpeedSection"]
+layout_mode = 2
+text = "倍速"
+
+[node name="SpeedOption" type="OptionButton" parent="Panel/SpeedSection"]
+layout_mode = 2
+
+[node name="KeysSection" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="KeysHint" type="Label" parent="Panel/KeysSection"]
+layout_mode = 2
+text = "键位重映射（输入新按键后回车）"
+
+[node name="KeysList" type="VBoxContainer" parent="Panel/KeysSection"]
+layout_mode = 2
+
+[node name="HelpSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="HelpLabel" type="Label" parent="Panel/HelpSection"]
+layout_mode = 2
+text = "动态过滤帮助"
+
+[node name="HelpFilter" type="CheckBox" parent="Panel/HelpSection"]
+layout_mode = 2
+text = "显示异常相关动词"
+
+[node name="CloseButton" type="Button" parent="Panel"]
+layout_mode = 2
+text = "关闭"

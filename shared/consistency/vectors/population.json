@@ -1,0 +1,23 @@
+{
+  "spec": "cohort_linear",
+  "version": 1,
+  "formula": "next = population * (1 + (birth_rate - death_rate + migration_rate) * years), years = minutes / (1440*365.25)",
+  "cases": [
+    {
+      "population": 1000000,
+      "birth_rate": 0.012,
+      "death_rate": 0.008,
+      "migration_rate": 0.001,
+      "minutes": 525600,
+      "expected_next": 1004996.578
+    },
+    {
+      "population": 50000,
+      "birth_rate": 0.02,
+      "death_rate": 0.01,
+      "migration_rate": -0.005,
+      "minutes": 43200,
+      "expected_next": 50020.534
+    }
+  ]
+}

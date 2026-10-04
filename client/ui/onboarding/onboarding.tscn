@@ -1,0 +1,99 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/onboarding/onboarding.gd" id="1_onboarding"]
+
+[node name="Onboarding" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_onboarding")
+
+[node name="Panel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 2
+text = "开档设定"
+
+[node name="AgeSection" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="AgeOption" type="OptionButton" parent="Panel/AgeSection"]
+layout_mode = 2
+
+[node name="AgeLabel" type="Label" parent="Panel/AgeSection"]
+layout_mode = 2
+text = "起始年龄：18 岁"
+
+[node name="AppearanceSection" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="AppearanceHint" type="Label" parent="Panel/AppearanceSection"]
+layout_mode = 2
+text = "外貌捏脸（3D 占位）"
+
+[node name="TalentSection" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="TalentPoints" type="Label" parent="Panel/TalentSection"]
+layout_mode = 2
+text = "剩余天赋点：2"
+
+[node name="TalentList" type="VBoxContainer" parent="Panel/TalentSection"]
+layout_mode = 2
+
+[node name="FamilySection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="FamilyLabel" type="Label" parent="Panel/FamilySection"]
+layout_mode = 2
+text = "家境"
+
+[node name="FamilyRandom" type="CheckBox" parent="Panel/FamilySection"]
+layout_mode = 2
+button_pressed = true
+text = "随机"
+
+[node name="FamilyTier" type="OptionButton" parent="Panel/FamilySection"]
+layout_mode = 2
+
+[node name="BirthSection" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="BirthLabel" type="Label" parent="Panel/BirthSection"]
+layout_mode = 2
+text = "出生地"
+
+[node name="BirthRandom" type="CheckBox" parent="Panel/BirthSection"]
+layout_mode = 2
+button_pressed = true
+text = "随机"
+
+[node name="BirthPlace" type="LineEdit" parent="Panel/BirthSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="RandomButton" type="Button" parent="Panel/Buttons"]
+layout_mode = 2
+text = "一键随机"
+
+[node name="SkipButton" type="Button" parent="Panel/Buttons"]
+layout_mode = 2
+text = "跳过引导"
+
+[node name="StartButton" type="Button" parent="Panel/Buttons"]
+layout_mode = 2
+text = "开始人生"

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/common.schema.json",
+  "title": "Common",
+  "description": "跨模块通用类型：标识、时间、金额、错误、分页、内容引用。",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv7（时间有序），36 字符小写带连字符。",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "content_key": {
+      "type": "string",
+      "description": "内容稳定标识，点分小写，如 occupation.engineer。",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC RFC3339/ISO8601，带 Z。"
+    },
+    "absolute_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "自世界纪元起的绝对分钟，世界时间唯一权威。"
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "时长（分钟）。"
+    },
+    "money": {
+      "type": "object",
+      "description": "金额，最小货币单位的整数，避免浮点误差。",
+      "additionalProperties": false,
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": { "type": "integer" },
+        "currency": {
+          "type": "string",
+          "description": "ISO 4217 货币代码。",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "比例/概率，0..1。"
+    },
+    "basis_points": {
+      "type": "integer",
+      "description": "基点，万分之几（10000 = 100%）。"
+    },
+    "geo_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lat", "lon"],
+      "properties": {
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "alt_m": { "type": "number", "description": "海拔（米），可选。" }
+      }
+    },
+    "time_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_minutes", "end_minutes"],
+      "properties": {
+        "start_minutes": { "$ref": "#/$defs/absolute_minutes" },
+        "end_minutes": { "$ref": "#/$defs/absolute_minutes" }
+      }
+    },
+    "content_ref": {
+      "type": "object",
+      "description": "对内容条目的引用；存档一律用 content_key，不用内容包的内部序号。",
+      "additionalProperties": false,
+      "required": ["content_key"],
+      "properties": {
+        "content_key": { "$ref": "#/$defs/content_key" },
+        "content_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "稳定机器错误码，见 conventions.md 第 6 节。",
+          "enum": [
+            "VALIDATION_FAILED",
+            "UNAUTHENTICATED",
+            "TOKEN_EXPIRED",
+            "FORBIDDEN",
+            "NOT_FOUND",
+            "CONFLICT",
+            "SAVE_VERSION_UNSUPPORTED",
+            "SAVE_CONFLICT",
+            "SAVE_HASH_MISMATCH",
+            "CONTENT_VERSION_UNSUPPORTED",
+            "IDEMPOTENCY_REPLAY",
+            "RATE_LIMITED",
+            "INTERNAL",
+            "UPSTREAM_UNAVAILABLE"
+          ]
+        },
+        "message": { "type": "string" },
+        "details": { "type": "object", "additionalProperties": true },
+        "request_id": { "$ref": "#/$defs/uuid" }
+      }
+    },
+    "cursor_page": {
+      "type": "object",
+      "description": "游标分页响应包装。",
+      "additionalProperties": false,
+      "required": ["items"],
+      "properties": {
+        "items": { "type": "array" },
+        "next_cursor": { "type": ["string", "null"] }
+      }
+    },
+    "audit_meta": {
+      "type": "object",
+      "description": "写入型对象的审计元数据。",
+      "additionalProperties": false,
+      "properties": {
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "revision": { "type": "integer", "minimum": 0, "description": "乐观锁版本。" }
+      }
+    }
+  }
+}

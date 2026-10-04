@@ -1,0 +1,113 @@
+{
+  "ERA_DEFINITIONS": [
+    {
+      "key": "stone",
+      "name": "石器",
+      "start_year": -10000,
+      "forecast_accuracy": 0.3,
+      "tags": [
+        "fire",
+        "stone_tools",
+        "tribe"
+      ],
+      "description": "以采集、狩猎与打制石器为生。"
+    },
+    {
+      "key": "agrarian",
+      "name": "农业",
+      "start_year": -3000,
+      "forecast_accuracy": 0.4,
+      "tags": [
+        "agriculture",
+        "pottery",
+        "early_writing"
+      ],
+      "description": "定居耕作、陶器与早期文字。"
+    },
+    {
+      "key": "classical",
+      "name": "古典",
+      "start_year": -800,
+      "forecast_accuracy": 0.46,
+      "tags": [
+        "philosophy",
+        "empire",
+        "coinage"
+      ],
+      "description": "城邦与帝国、哲学与铸币。"
+    },
+    {
+      "key": "medieval",
+      "name": "中世纪",
+      "start_year": 500,
+      "forecast_accuracy": 0.52,
+      "tags": [
+        "feudalism",
+        "compass",
+        "gunpowder_early"
+      ],
+      "description": "封建秩序、远洋航行与火药初现。"
+    },
+    {
+      "key": "industrial",
+      "name": "工业",
+      "start_year": 1700,
+      "forecast_accuracy": 0.62,
+      "tags": [
+        "steam",
+        "factory",
+        "railway"
+      ],
+      "description": "蒸汽、工厂与铁路。"
+    },
+    {
+      "key": "electric",
+      "name": "电气",
+      "start_year": 1870,
+      "forecast_accuracy": 0.7,
+      "tags": [
+        "electricity",
+        "telephone",
+        "automobile"
+      ],
+      "description": "电力、电话与汽车。"
+    },
+    {
+      "key": "information",
+      "name": "信息",
+      "start_year": 1970,
+      "forecast_accuracy": 0.85,
+      "tags": [
+        "computer",
+        "internet",
+        "satellite"
+      ],
+      "description": "计算机、互联网与卫星。"
+    },
+    {
+      "key": "intelligent",
+      "name": "智能",
+      "start_year": 2020,
+      "forecast_accuracy": 0.93,
+      "tags": [
+        "ai",
+        "biotech",
+        "renewable"
+      ],
+      "description": "人工智能、生物科技与新能源。"
+    },
+    {
+      "key": "interstellar",
+      "name": "星际",
+      "start_year": 2100,
+      "forecast_accuracy": 0.98,
+      "tags": [
+        "fusion",
+        "spacefaring",
+        "colony"
+      ],
+      "description": "聚变、星际航行与外星殖民。"
+    }
+  ],
+  "ERA_COUNT": 9
+}

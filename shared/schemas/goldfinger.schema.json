@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/goldfinger.schema.json",
+  "title": "Goldfinger",
+  "description": "可选元层金手指状态。模式默认关闭；每代轮回重新抽取，不继承，不进家族史。见 requirements R100 与 design「金手指系统」。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled"],
+  "properties": {
+    "enabled": { "type": "boolean" },
+    "points": { "type": "integer", "minimum": 0, "description": "系统积分。" },
+    "daily_points_gained": { "type": "integer", "minimum": 0, "description": "当日已获积分，用于上限判定。" },
+    "rerolls_used": { "type": "integer", "minimum": 0 },
+    "pity_counter": { "type": "integer", "minimum": 0, "description": "距上次高稀有度的抽取计数。" },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/goldfinger_item" }
+    }
+  },
+  "$defs": {
+    "goldfinger_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key", "rarity", "level", "enabled"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "rarity": { "type": "string", "enum": ["common", "rare", "epic", "legendary"] },
+        "level": { "type": "integer", "minimum": 1 },
+        "points_invested": { "type": "integer", "minimum": 0 },
+        "modules": {
+          "type": "array",
+          "description": "该金手指启用的面板模块。",
+          "items": { "type": "string", "enum": ["quest", "shop", "checkin", "appraisal", "space", "craft"] }
+        },
+        "enabled": { "type": "boolean", "description": "单个金手指可禁用；关闭后其效果即时失效。" },
+        "obtained_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    }
+  }
+}
