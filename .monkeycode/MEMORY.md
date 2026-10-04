@@ -100,3 +100,11 @@ Entries discovered by the Agent during task execution should follow this format:
 - Instructions:
   - 本环境系统级未安装 PyYAML / jsonschema；校验 YAML 用仓库自带的 Node 包：`NODE_PATH=.opencode/node_modules node -e "require('yaml')..."`；校验 JSON 直接 `python3 -c json.load` 即可。
   - `shared/` 是跨语言规格单一事实来源：约定见 `shared/conventions.md`，接口见 `shared/openapi/openapi.yaml`（前缀 `/api/v1`），数据结构见 `shared/schemas/`，一致性向量见 `shared/consistency/vectors/`。
+
+[Project Knowledge Summary]
+- Date: 2026-10-04
+- Context: Discovered by Agent while adding items/property/orders test suites (task 11)
+- Category: Testing Methods
+- Instructions:
+  - 客户端测试文件放入 `client/tests/*_test.gd` 即被 `scripts/test.sh` 按 glob 自动发现执行，无需注册；套件须 `extends "res://tests/test_base.gd"` 并实现 `_suite_name()` 与 `run_tests()`。
+  - 注意坑：`test_base` 仅在断言失败时累加 failures；若套件中出现运行时 `SCRIPT ERROR`（如空数组下标、参数类型不符），当前函数会中断但 failures 不增加，仍打印 `PASS`。因此看到 PASS 后仍需确认输出里没有 `SCRIPT ERROR`。
