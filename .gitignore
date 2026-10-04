@@ -1,0 +1,24 @@
+# 依赖与构建产物
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Godot
+client/.godot/
+client/export/
+*.import
+
+# Go
+server/bin/
+*.test
+
+# 本地工具链二进制（不入库）
+.toolchain/
+
+# 环境与密钥
+.env
+.env.local
+*.local
+
+# 系统
+.DS_Store
