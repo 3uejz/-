@@ -745,7 +745,7 @@ func wake(region_id: String, elapsed_minutes: int) -> void:
 
 ## 全局数值基线
 
-所有默认值由远程配置覆盖，属性统一 clamp 到定义区间。跨端/跨内核需要一致的常量以 `shared/consistency/vectors/baseline.json` 为单一真源，由生成器产出 `baseline_generated.gd` 与 `baseline_generated.go`，CI 校验生成物无 diff；运行时远程覆盖叠加在生成常量之上。
+所有默认值由远程配置覆盖，属性统一 clamp 到定义区间。跨端/跨内核需要一致的常量以 `shared/consistency/baseline/*.json`（按域拆分，`manifest.json` 汇总）为单一真源，由 `tools/genbaseline` 生成 `baseline_generated.gd` 与 `baseline_generated.go`（`vectors/baseline.json` 为生成快照），CI 与 `scripts/test.sh` 校验生成物无 diff；运行时远程覆盖叠加在生成常量之上。
 
 ### 时间
 

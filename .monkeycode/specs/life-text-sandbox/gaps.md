@@ -9,7 +9,7 @@
 
 ## 1. 系统性问题（跨全部域）
 
-1. **数值基线只覆盖核心域（高）**：`shared/consistency/vectors/baseline.json` 仅含属性/关系/速度/昼夜；D1–D50 的公式与系数（气候带、交通边、成瘾五参数、税制、SEIR、碳排、工程、医疗、联赛等）全部缺失，与 design 748「所有跨端常量以 baseline.json 为单一真源」矛盾。
+1. **数值基线覆盖仍不全（高）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济）；但 SEIR、碳排、工程、医疗、联赛等 D1–D50 系数表仍缺失，待 task 48 补齐。
 2. **存档/领域 schema 未扩展（高）**：`player` 缺 family/memory/pet/军籍/残障/土地/数字资产/案件/病症三维；`finances/legal/health` 过粗；`world_delta` 多为 `additionalProperties` 空壳；缺 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema。
 3. **内容目录与 R56 硬指标脱节（高）**：content-catalog 缺 D35–D43、D45–D50 专属节；多处「完整表」只有示例（精神疾病约 14、医美无节、技能约 46/目标 140、娱乐约 31/目标 100、金融标的仅类别/目标 40）。
 4. **UI 入口缺失（高）**：`ui.md` 仅 12 面板，design UI Inventory 另有经营面板/组织面板；案件、救援、环保、市政、债务、维权、救助、殡葬、玄学、高阶医疗、文娱、工程、专业/生活服务、交通基建、家庭/宠物、体育、活动、奖项、数字平台、疫情、战争、宏观行情、天气预报均无入口。
@@ -179,7 +179,7 @@
 
 按依赖顺序：
 
-1. **任务 48 — 全域数值基线与一致性向量**：把 D1–D50 的跨端常量迁入 `baseline.json` 单一真源，扩展生成器与一致性向量；补齐公式所需的系数表。
+1. **任务 48 — 全域数值基线与一致性向量**：把 D1–D50 余下跨端常量迁入 `shared/consistency/baseline/*.json` 单一真源，扩展生成器与一致性向量；补齐公式所需的系数表。
 2. **任务 49 — 领域状态 schema 一次大扩展 + 迁移**：扩展 `player`/`save`/`worldsim`/`npc`，新增 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema，统一 `schema_version` 迁移；修复 `npc.relations` 类型与 `family`/`memory` 缺失。
 3. **任务 50 — 内容目录补齐**：为 D35–D43、D45–D50 增补 content-catalog 专属节，对所有域补齐「完整表」的参数与 R56 数量目标。
 4. **任务 51 — UI 全量面板与动词表**：`ui.md` 扩到全量面板（含经营、组织、案件、救援、医疗、工程、文娱、专业/生活服务、福利、殡葬、玄学、数字、体育、活动、奖项、疫情、战争、宏观/预报等），`verb-registry.md` 补齐缺失动词。

@@ -131,7 +131,8 @@ func _apply_sleep_debt_effects(player: Dictionary, hours: float, asleep: bool) -
 	var p: Dictionary = _phys(player)
 	var excess: float = maxf(0.0, float(p["sleep_debt"]) - BaselineScript.SLEEP_DEBT_THRESHOLD)
 	if excess > 0.0:
-		var span: float = maxf(1.0, float(BaselineScript.ATTRIBUTE_MAX) - BaselineScript.SLEEP_DEBT_THRESHOLD)
+		var attr_max: float = float(BaselineScript.effective_range("attribute")[1])
+		var span: float = maxf(1.0, attr_max - BaselineScript.SLEEP_DEBT_THRESHOLD)
 		var drain: float = clampf(excess / span, 0.0, 1.0)
 		var ability: Dictionary = player["attrs"]["ability"]
 		var psych: Dictionary = player["attrs"]["psychological"]

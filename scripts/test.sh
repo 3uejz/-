@@ -7,6 +7,12 @@ GODOT_BIN="${GODOT_BIN:-/workspace/.toolchain/godot}"
 GO_BIN="${GO_BIN:-/usr/local/go/bin/go}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
+echo "== 数值基线生成物校验 =="
+(
+  cd "$ROOT/tools/genbaseline"
+  "$GO_BIN" run . -check
+)
+
 echo "== 共享 schema 校验 =="
 "$PYTHON_BIN" "$ROOT/scripts/validate_schemas.py"
 

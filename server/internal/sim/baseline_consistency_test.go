@@ -45,11 +45,11 @@ func TestBaselineConsistency(t *testing.T) {
 		}
 	}
 
-	if v.Defaults.MinutesPerDay != sim.MinutesPerDay {
-		t.Errorf("minutes_per_day: got=%d want=%d", sim.MinutesPerDay, v.Defaults.MinutesPerDay)
+	if v.Defaults.MinutesPerDay != sim.BaselineMinutesPerDay {
+		t.Errorf("minutes_per_day: got=%d want=%d", sim.BaselineMinutesPerDay, v.Defaults.MinutesPerDay)
 	}
-	if diff := sim.RelationAnnualDecayK - v.Defaults.RelationAnnualDecayK; diff > 1e-12 || diff < -1e-12 {
-		t.Errorf("relation_annual_decay_k: got=%v want=%v", sim.RelationAnnualDecayK, v.Defaults.RelationAnnualDecayK)
+	if diff := sim.BaselineRelationAnnualDecayK - v.Defaults.RelationAnnualDecayK; diff > 1e-12 || diff < -1e-12 {
+		t.Errorf("relation_annual_decay_k: got=%v want=%v", sim.BaselineRelationAnnualDecayK, v.Defaults.RelationAnnualDecayK)
 	}
 
 	if got, want := sim.ClampAttribute(150), 100; got != want {

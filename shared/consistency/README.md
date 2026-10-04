@@ -8,6 +8,29 @@
 - `vectors/time.json`：绝对分钟 → 公历日期/星期/季节
 - `vectors/economy.json`：几何布朗运动（GBM）单步价格
 - `vectors/population.json`：人口队列线性推进
+- `vectors/baseline.json`：数值基线快照（由生成器写出，勿手改）
+- `baseline/`：数值基线**单一真源**（手写 JSON）。`manifest.json` 列出 `core` 与各域文件，
+  `core.json` 存区间/默认值/速度档/昼夜相位，其余按域拆分（survival/region/geo_transport/
+  climate_weather/era/economy 等）。
+
+## 数值基线真源与代码生成
+
+数值默认的单一真源位于 `baseline/`；生成器 `tools/genbaseline`（Go）据此产出：
+
+- `client/sim/baseline_generated.gd`（`class_name BaselineGenerated`）
+- `server/internal/sim/baseline_generated.go`（`Baseline*` 前缀常量）
+- `shared/consistency/vectors/baseline.json`（快照）
+
+```bash
+# 重新生成生成物与快照
+cd tools/genbaseline && go run .
+
+# 仅校验生成物与真源一致（CI / scripts/test.sh 使用，不一致时退出码非零）
+cd tools/genbaseline && go run . -check
+```
+
+`client/sim/baseline.gd` 与 `server/internal/sim/baseline.go` 不再手写常量，只保留运行时
+remote override 与派生访问器；改默认值一律改 `baseline/` 下的 JSON 后重新生成。
 
 ## 1. 随机数规格（SplitMix64）
 
