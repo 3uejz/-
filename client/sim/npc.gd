@@ -91,7 +91,7 @@ func generate(index: int, opts: Dictionary = {}) -> Dictionary:
 		"traits": _pick_traits(),
 		"attributes": _make_attributes(age),
 		"home": {"region_id": region_id, "location_key": home_key},
-		"schedule": default_schedule(stage, age),
+		"schedule": default_schedule(stage, age, region_id),
 		"relations": [],
 		"individualized": bool(opts.get("individualized", false)),
 		"lod_tier": int(opts.get("lod_tier", 2)),
@@ -251,54 +251,84 @@ func life_stage(age: int) -> String:
 
 # --- 日程 ---
 
+## 活动 → 地点类型（生成 location_key 用）。
+const ACTIVITY_LOCATION: Dictionary = {
+	"sleep": "home", "breakfast": "home", "dinner": "home", "leisure": "home",
+	"play": "home", "nap": "home", "housework": "home",
+	"exercise": "public", "social": "public",
+	"work": "workplace", "school": "school", "study": "school",
+	"lunch": "restaurant", "commute": "transit",
+}
+
 ## 生成日程片段（start/end 分钟-of-day，activity，可选 location_key）。
-func default_schedule(stage: String, _age: int = 0) -> Array:
+## 传入 region_id 时为每段补上地点键，体现“按时间段驱动位置与行为”。
+func default_schedule(stage: String, _age: int = 0, region_id: String = "") -> Array:
 	match stage:
 		STAGE_CHILD:
-			return _sched_child()
+			return _sched_child(region_id)
 		STAGE_STUDENT:
-			return _sched_student()
+			return _sched_student(region_id)
 		STAGE_SENIOR:
-			return _sched_senior()
+			return _sched_senior(region_id)
 		_:
-			return _sched_worker()
+			return _sched_worker(region_id)
 
 
-func _seg(start: int, end: int, activity: String) -> Dictionary:
-	return {"start_minute_of_day": start, "end_minute_of_day": end, "activity": activity}
+func _location_for(activity: String, region_id: String) -> String:
+	if region_id == "":
+		return ""
+	var kind: String = str(ACTIVITY_LOCATION.get(activity, "public"))
+	return "loc.%s.%s" % [region_id, kind]
 
 
-func _sched_worker() -> Array:
+func _seg(start: int, end: int, activity: String, region_id: String = "") -> Dictionary:
+	var seg: Dictionary = {
+		"start_minute_of_day": start, "end_minute_of_day": end, "activity": activity,
+	}
+	var loc: String = _location_for(activity, region_id)
+	if loc != "":
+		seg["location_key"] = loc
+	return seg
+
+
+func _sched_worker(region_id: String = "") -> Array:
 	return [
-		_seg(0, 390, "sleep"), _seg(390, 450, "breakfast"), _seg(450, 540, "commute"),
-		_seg(540, 720, "work"), _seg(720, 780, "lunch"), _seg(780, 1080, "work"),
-		_seg(1080, 1140, "commute"), _seg(1140, 1200, "dinner"),
-		_seg(1200, 1320, "leisure"), _seg(1320, 1440, "sleep"),
+		_seg(0, 390, "sleep", region_id), _seg(390, 450, "breakfast", region_id),
+		_seg(450, 540, "commute", region_id), _seg(540, 720, "work", region_id),
+		_seg(720, 780, "lunch", region_id), _seg(780, 1080, "work", region_id),
+		_seg(1080, 1140, "commute", region_id), _seg(1140, 1200, "dinner", region_id),
+		_seg(1200, 1320, "leisure", region_id), _seg(1320, 1440, "sleep", region_id),
 	]
 
 
-func _sched_student() -> Array:
+func _sched_student(region_id: String = "") -> Array:
 	return [
-		_seg(0, 420, "sleep"), _seg(420, 480, "breakfast"), _seg(480, 720, "school"),
-		_seg(720, 780, "lunch"), _seg(780, 1020, "school"), _seg(1020, 1140, "study"),
-		_seg(1140, 1200, "dinner"), _seg(1200, 1320, "leisure"), _seg(1320, 1440, "sleep"),
+		_seg(0, 420, "sleep", region_id), _seg(420, 480, "breakfast", region_id),
+		_seg(480, 720, "school", region_id), _seg(720, 780, "lunch", region_id),
+		_seg(780, 1020, "school", region_id), _seg(1020, 1140, "study", region_id),
+		_seg(1140, 1200, "dinner", region_id), _seg(1200, 1320, "leisure", region_id),
+		_seg(1320, 1440, "sleep", region_id),
 	]
 
 
-func _sched_child() -> Array:
+func _sched_child(region_id: String = "") -> Array:
 	return [
-		_seg(0, 420, "sleep"), _seg(420, 480, "breakfast"), _seg(480, 720, "play"),
-		_seg(720, 780, "lunch"), _seg(780, 900, "nap"), _seg(900, 1140, "play"),
-		_seg(1140, 1200, "dinner"), _seg(1200, 1290, "leisure"), _seg(1290, 1440, "sleep"),
+		_seg(0, 420, "sleep", region_id), _seg(420, 480, "breakfast", region_id),
+		_seg(480, 720, "play", region_id), _seg(720, 780, "lunch", region_id),
+		_seg(780, 900, "nap", region_id), _seg(900, 1140, "play", region_id),
+		_seg(1140, 1200, "dinner", region_id), _seg(1200, 1290, "leisure", region_id),
+		_seg(1290, 1440, "sleep", region_id),
 	]
 
 
-func _sched_senior() -> Array:
+func _sched_senior(region_id: String = "") -> Array:
 	return [
-		_seg(0, 420, "sleep"), _seg(420, 480, "breakfast"), _seg(480, 600, "exercise"),
-		_seg(600, 720, "leisure"), _seg(720, 780, "lunch"), _seg(780, 900, "nap"),
-		_seg(900, 1080, "social"), _seg(1080, 1140, "housework"), _seg(1140, 1200, "dinner"),
-		_seg(1200, 1290, "leisure"), _seg(1290, 1440, "sleep"),
+		_seg(0, 420, "sleep", region_id), _seg(420, 480, "breakfast", region_id),
+		_seg(480, 600, "exercise", region_id), _seg(600, 720, "leisure", region_id),
+		_seg(720, 780, "lunch", region_id), _seg(780, 900, "nap", region_id),
+		_seg(900, 1080, "social", region_id), _seg(1080, 1140, "housework", region_id),
+		_seg(1140, 1200, "dinner", region_id), _seg(1200, 1290, "leisure", region_id),
+		_seg(1290, 1440, "sleep", region_id),
 	]
 
 

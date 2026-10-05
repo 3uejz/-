@@ -17,6 +17,7 @@ func run_tests() -> void:
 	_test_attributes_bounds()
 	_test_schedule_coverage()
 	_test_activity_lookup()
+	_test_schedule_locations()
 	_test_individualize_lod()
 	_test_life_events()
 	_test_cohort()
@@ -107,6 +108,18 @@ func _test_activity_lookup() -> void:
 	# 取模：1440 等价 0。
 	var e: Dictionary = sys.activity_at(worker, 1440)
 	check_eq(str(e.get("activity", "")), "sleep", "1440 取模为 0")
+
+
+func _test_schedule_locations() -> void:
+	var sys = NpcScript.new()
+	var n: Dictionary = sys.generate(5, {"age": 35, "region_id": "region.city.a"})
+	var work: Dictionary = sys.activity_at(n, 600)
+	check_eq(str(work.get("location_key", "")), "loc.region.city.a.workplace", "工作时在工作地")
+	var sleep: Dictionary = sys.activity_at(n, 100)
+	check_eq(str(sleep.get("location_key", "")), "loc.region.city.a.home", "睡觉在家")
+	# 未指定区域时不带地点键。
+	var sched: Array = sys.default_schedule("adult")
+	check(not (sched[0] as Dictionary).has("location_key"), "无区域时不带地点")
 
 
 func _test_individualize_lod() -> void:

@@ -19,6 +19,7 @@ func run_tests() -> void:
 	_test_decay()
 	_test_resolve_conflict()
 	_test_archive_on_death()
+	_test_dialogue_citations()
 
 
 func _test_add_and_count() -> void:
@@ -101,6 +102,18 @@ func _test_resolve_conflict() -> void:
 	var b: Dictionary = {"id": "b", "weight": -80.0, "severity": 10.0, "minute": 0, "refs": 0}
 	var win: Dictionary = sys.resolve_conflict([a, b], 0)
 	check_eq(str(win["id"]), "b", "冲突取情感权重绝对值高者")
+
+
+func _test_dialogue_citations() -> void:
+	var sys = MemScript.new()
+	var npc := {}
+	sys.add_memory(npc, {"type": "promise", "content": "答应带他去看海", "minute": 100,
+		"subjects": ["npc.a"], "weight": 30.0, "severity": 20.0})
+	sys.add_memory(npc, {"type": "favor", "content": "帮他搬过家", "minute": 100,
+		"subjects": ["npc.a"], "weight": 20.0, "severity": 10.0})
+	var cites: Array = sys.dialogue_citations(npc, {"subjects": ["npc.a"], "now_minute": 100}, 3)
+	check_eq(cites.size(), 2, "引用两条记忆")
+	check(cites.has("答应带他去看海"), "引用到承诺内容")
 
 
 func _test_archive_on_death() -> void:

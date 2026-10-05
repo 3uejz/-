@@ -55,6 +55,7 @@ func add_memory(npc: Dictionary, entry: Dictionary) -> Dictionary:
 	var mem: Dictionary = {
 		"id": str(entry.get("id", "mem.%d" % _seq)),
 		"type": str(entry.get("type", "shared_experience")),
+		"content": str(entry.get("content", "")),
 		"minute": int(entry.get("minute", 0)),
 		"subjects": (entry.get("subjects", []) as Array).duplicate(),
 		"weight": clampf(float(entry.get("weight", 0.0)), -100.0, 100.0),
@@ -166,6 +167,18 @@ func archive_on_death(npc: Dictionary) -> Array:
 		if str(m.get("visibility", "private")) == "public" or float(m.get("severity", 0.0)) >= 70.0:
 			archived.append(m.duplicate(true))
 	return archived
+
+
+## 生成对话可引用的记忆句子（叙事层用）。
+func dialogue_citations(npc: Dictionary, context: Dictionary, k: int = 3) -> Array:
+	var out: Array = []
+	for mem in retrieve(npc, context, k):
+		var m: Dictionary = mem
+		var text: String = str(m.get("content", ""))
+		if text == "":
+			text = str(m.get("type", ""))
+		out.append(text)
+	return out
 
 
 func count(npc: Dictionary) -> int:
