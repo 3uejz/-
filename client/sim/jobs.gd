@@ -21,6 +21,12 @@ const BaselineScript = preload("res://sim/baseline.gd")
 const MINUTES_PER_YEAR: float = 365.25 * 1440.0
 const DAYS_PER_MONTH: float = 30.0
 
+## 学历顺序（高学历满足低学历要求；与 EducationSystem 口径一致）。
+const DEGREE_ORDER: Array = [
+	"edu.kindergarten", "edu.primary", "edu.junior", "edu.high_school",
+	"edu.college", "edu.bachelor", "edu.master", "edu.doctor",
+]
+
 ## 行业（可随内容包扩展）。
 const INDUSTRIES: Array = [
 	"agriculture", "industry", "construction", "transport", "it", "finance",
@@ -203,6 +209,25 @@ func _credential_keys(player: Dictionary, which: String) -> Array:
 	return out
 
 
+## 学历是否达到要求：高学历满足低学历要求；非学历条目按精确匹配。
+func _has_degree_at_least(player: Dictionary, required: String) -> bool:
+	var req_rank: int = DEGREE_ORDER.find(required)
+	var creds: Variant = player.get("education", [])
+	if creds is Array:
+		for c in (creds as Array):
+			if not (c is Dictionary):
+				continue
+			if str((c as Dictionary).get("status", "")) != "graduated":
+				continue
+			var key: String = str((c as Dictionary).get("content_key", ""))
+			if req_rank < 0:
+				if key == required:
+					return true
+			elif DEGREE_ORDER.find(key) >= req_rank:
+				return true
+	return false
+
+
 func _age_years(player: Dictionary, now_minute: int) -> float:
 	if now_minute >= 0 and player.has("birth_minutes"):
 		return maxf(0.0, (float(now_minute) - float(player["birth_minutes"])) / MINUTES_PER_YEAR)
@@ -217,9 +242,8 @@ func matches_requirements(player: Dictionary, job_id: String, opts: Dictionary =
 	if def.is_empty():
 		return {"ok": false, "missing": ["job_not_found"]}
 	var missing: Array = []
-	var education: Array = _credential_keys(player, "education")
 	for e in (def["education"] as Array):
-		if not education.has(str(e)):
+		if not _has_degree_at_least(player, str(e)):
 			missing.append("education:" + str(e))
 	var licenses: Array = _credential_keys(player, "licenses")
 	for l in (def["licenses"] as Array):
