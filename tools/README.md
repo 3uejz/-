@@ -20,6 +20,7 @@ go test ./...
 go run . validate --catalog ../../content/catalog
 go run . build --catalog ../../content/catalog --out ../../build/content
 go run . diff --prev old/manifest.json --next new/manifest.json --prev-catalog ... --next-catalog ...
+go run . patch --prev-catalog ... --next-catalog ... --out ../../build/patch
 go run . sample --catalog ../../content/catalog
 ```
 
@@ -27,3 +28,5 @@ go run . sample --catalog ../../content/catalog
 - `.ltpack` 容器格式：`magic "LTPK" | version u16 | kind | category | entryCount | (key, payloadJSON)*`，客户端 `client/sim/content_pack.gd` 解码并校验 sha256。
 - `manifest.json` 对齐 `shared/schemas/content-manifest.schema.json`，含每包 `name/kind/version/hash/size/url`。
 - `diff` 输出包级（added/changed/removed/unchanged）与条目级差异，供差量发布。
+- `patch` 为每个变化类别生成 `<category>.patch-<version>.ltpack`（新增+变更条目）与 `.removals.json`（删除条目），并输出带 `patch_of` 的差量清单；差量应用后与全量发布等价（`applyPackPatch` 有单测）。
+- 回滚：包按内容哈希与版本命名并保留 `<name>-<version>` 历史文件与既往 `manifest.json`，回滚即切回旧清单并按旧哈希重新校验挂载。

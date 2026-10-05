@@ -40,6 +40,10 @@ type builtPack struct {
 	DependsOn []string
 	Category  string
 	Entries   map[string]map[string]any
+	// PatchOf 非空时表示这是基础包的差量包。
+	PatchOf string
+	// Removed 是差量包需要删除的 content_key（仅差量有意义）。
+	Removed []string
 }
 
 // contentVersion 依据条目内容计算稳定版本（与顺序无关）。
@@ -66,10 +70,15 @@ func buildManifest(packs []builtPack, generatedAt, minClientVersion, baseURL str
 	m := manifest{ManifestVersion: manifestVersion, GeneratedAt: generatedAt, MinClientVersion: minClientVersion}
 	for _, p := range packs {
 		url := baseURL + "/" + p.Name + ".ltpack"
-		m.Packs = append(m.Packs, manifestPack{
+		mp := manifestPack{
 			Name: p.Name, Kind: p.Kind, Version: p.Version, Hash: p.Hash,
 			Size: p.Size, URL: url, DependsOn: p.DependsOn,
-		})
+		}
+		if p.PatchOf != "" {
+			patchOf := p.PatchOf
+			mp.PatchOf = &patchOf
+		}
+		m.Packs = append(m.Packs, mp)
 	}
 	return m
 }

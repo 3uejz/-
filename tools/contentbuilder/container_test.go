@@ -111,3 +111,37 @@ func TestPatchEquivalence(t *testing.T) {
 		t.Fatalf("差量结果与全量不等价:\n got=%v\nwant=%v", got, next)
 	}
 }
+
+// TestBuildPatches 验证 buildPatches 生成的差量包可还原为全量发布。
+func TestBuildPatches(t *testing.T) {
+	prev := map[string]*rawCategory{
+		"items": {Name: "items", Entries: []entry{
+			{Key: "item.apple", Fields: map[string]any{"name": "苹果", "price": 100}},
+			{Key: "item.gone", Fields: map[string]any{"name": "停产", "price": 1}},
+		}},
+	}
+	next := map[string]*rawCategory{
+		"items": {Name: "items", Entries: []entry{
+			{Key: "item.apple", Fields: map[string]any{"name": "苹果", "price": 150}},
+			{Key: "item.banana", Fields: map[string]any{"name": "香蕉", "price": 80}},
+		}},
+	}
+	patches := buildPatches(prev, next)
+	if len(patches) != 1 {
+		t.Fatalf("应生成 1 个差量包, got=%d", len(patches))
+	}
+	p := patches[0]
+	if p.PatchOf != "items" {
+		t.Fatalf("patch_of 应为 items, got=%s", p.PatchOf)
+	}
+	base := entriesMap(prev["items"].Entries)
+	patchList := make([]entry, 0, len(p.Entries))
+	for k, v := range p.Entries {
+		patchList = append(patchList, entry{Key: k, Fields: v})
+	}
+	got := applyPackPatch(base, patchList, p.Removed)
+	want := entriesMap(next["items"].Entries)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("差量更新后与全量发布不等价:\n got=%v\nwant=%v", got, want)
+	}
+}

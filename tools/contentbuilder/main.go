@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 const (
@@ -25,6 +26,8 @@ func main() {
 		os.Exit(runBuild(os.Args[2:]))
 	case "diff":
 		os.Exit(runDiff(os.Args[2:]))
+	case "patch":
+		os.Exit(runPatch(os.Args[2:]))
 	case "sample":
 		os.Exit(runSample(os.Args[2:]))
 	case "-h", "--help", "help":
@@ -43,6 +46,7 @@ func usage() {
   contentbuilder validate [--catalog DIR]
   contentbuilder build    [--catalog DIR] [--out DIR] [--base-url URL] [--version N]
   contentbuilder diff     --prev MANIFEST --next MANIFEST [--prev-catalog DIR] [--next-catalog DIR]
+  contentbuilder patch    --prev-catalog DIR --next-catalog DIR [--out DIR] [--base-url URL] [--version N]
   contentbuilder sample   [--catalog DIR]
 `)
 }
@@ -125,6 +129,140 @@ func runBuild(args []string) int {
 	}
 	fmt.Printf("构建完成：%d 个内容包 -> %s\n", len(packs), manifestPath)
 	return 0
+}
+
+// buildPatches 对比新旧内容源，为每个发生变化的类别生成差量包。
+func buildPatches(prev, next map[string]*rawCategory) []builtPack {
+	names := map[string]bool{}
+	for n := range next {
+		names[n] = true
+	}
+	for n := range prev {
+		names[n] = true
+	}
+	ordered := make([]string, 0, len(names))
+	for n := range names {
+		if _, ok := categorySpecs[n]; ok {
+			ordered = append(ordered, n)
+		}
+	}
+	sort.Strings(ordered)
+
+	var out []builtPack
+	for _, name := range ordered {
+		spec := categorySpecs[name]
+		var prevEntries, nextEntries []entry
+		if c, ok := prev[name]; ok {
+			prevEntries = c.Entries
+		}
+		if c, ok := next[name]; ok {
+			nextEntries = c.Entries
+		}
+		pe := entriesMap(prevEntries)
+		ne := entriesMap(nextEntries)
+		added, changed, removed := diffEntries(pe, ne)
+		if len(added)+len(changed)+len(removed) == 0 {
+			continue
+		}
+		delta := patchEntries(ne, changed, added)
+		data, err := EncodePack(name, spec.kind, delta)
+		if err != nil {
+			continue
+		}
+		out = append(out, builtPack{
+			Name:     fmt.Sprintf("%s.patch-%s", name, contentVersion(name, spec.kind, nextEntries)),
+			Kind:     spec.kind,
+			Version:  contentVersion(name, spec.kind, delta),
+			Hash:     sha256Hex(data),
+			Size:     len(data),
+			Category: name,
+			PatchOf:  name,
+			Removed:  removed,
+			Entries:  entriesMap(delta),
+		})
+	}
+	return out
+}
+
+func runPatch(args []string) int {
+	fs := flag.NewFlagSet("patch", flag.ContinueOnError)
+	prevCatalog := fs.String("prev-catalog", "", "旧内容源目录")
+	nextCatalog := fs.String("next-catalog", "", "新内容源目录")
+	outDir := fs.String("out", defaultOutDir, "差量包输出目录")
+	baseURL := fs.String("base-url", "/content", "内容包下载地址前缀")
+	version := fs.Int("version", 1, "清单版本号")
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	if *prevCatalog == "" || *nextCatalog == "" {
+		fmt.Fprintln(os.Stderr, "patch 需要 --prev-catalog 与 --next-catalog")
+		return 2
+	}
+	prev, prevIssues := LoadCatalog(*prevCatalog)
+	if len(prevIssues) > 0 {
+		for _, is := range prevIssues {
+			fmt.Fprintln(os.Stderr, "错误:", is.String())
+		}
+		return 1
+	}
+	next, issues := loadAndValidate(*nextCatalog)
+	if len(issues) > 0 {
+		for _, is := range issues {
+			fmt.Fprintln(os.Stderr, "错误:", is.String())
+		}
+		fmt.Fprintf(os.Stderr, "拒绝构建：%d 个校验问题\n", len(issues))
+		return 1
+	}
+	patches := buildPatches(prev, next)
+	if len(patches) == 0 {
+		fmt.Println("无内容变化，无需差量包")
+		return 0
+	}
+	var manifestPacks []builtPack
+	for _, p := range patches {
+		spec := categorySpecs[p.Category]
+		var srcEntries []entry
+		if c, ok := next[p.Category]; ok {
+			srcEntries = c.Entries
+		}
+		delta := patchEntries(entriesMap(srcEntries), nil, keysFromMap(p.Entries))
+		data, err := EncodePack(p.Category, spec.kind, delta)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "编码差量失败:", err)
+			return 1
+		}
+		p.Hash = sha256Hex(data)
+		p.Size = len(data)
+		path := filepath.Join(*outDir, p.Name+".ltpack")
+		if _, err := writeFile(path, data); err != nil {
+			fmt.Fprintln(os.Stderr, "写入差量失败:", err)
+			return 1
+		}
+		meta, _ := json.MarshalIndent(map[string]any{"patch_of": p.PatchOf, "removed": p.Removed}, "", "  ")
+		meta = append(meta, '\n')
+		if _, err := writeFile(filepath.Join(*outDir, p.Name+".removals.json"), meta); err != nil {
+			fmt.Fprintln(os.Stderr, "写入移除清单失败:", err)
+			return 1
+		}
+		manifestPacks = append(manifestPacks, p)
+	}
+	m := buildManifest(manifestPacks, nowUTC(), "", *baseURL, *version)
+	manifestPath := filepath.Join(*outDir, "patch-manifest.json")
+	if err := writeManifest(manifestPath, m); err != nil {
+		fmt.Fprintln(os.Stderr, "写入差量清单失败:", err)
+		return 1
+	}
+	fmt.Printf("生成差量包：%d 个 -> %s\n", len(manifestPacks), manifestPath)
+	return 0
+}
+
+func keysFromMap(m map[string]map[string]any) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func runDiff(args []string) int {
