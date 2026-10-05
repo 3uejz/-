@@ -6,7 +6,7 @@ dist/
 # Godot
 client/.godot/
 client/export/
-*.import
+*.translation
 
 # Go
 server/bin/
