@@ -144,4 +144,12 @@ func TestBuildPatches(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("差量更新后与全量发布不等价:\n got=%v\nwant=%v", got, want)
 	}
+	// 删除列表应自包含于差量包，便于客户端无需额外 sidecar 即可应用。
+	_, _, decoded, err := DecodePack(p.data)
+	if err != nil {
+		t.Fatalf("差量包应可解码: %v", err)
+	}
+	if _, ok := decoded[ReservedRemovedKey]; !ok {
+		t.Fatalf("差量包应内嵌 %s 删除列表", ReservedRemovedKey)
+	}
 }

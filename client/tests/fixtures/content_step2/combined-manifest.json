@@ -1,0 +1,87 @@
+{
+  "manifest_version": 2,
+  "generated_at": "2026-10-05T20:08:46Z",
+  "packs": [
+    {
+      "name": "achievements",
+      "kind": "data",
+      "version": "d3f7164126652d74",
+      "hash": "sha256:e42b97563d24b6a0c916efe5354f217cabe3d271b9f5aed0a669bf9d89505cd2",
+      "size": 3274,
+      "url": "/content/achievements.ltpack"
+    },
+    {
+      "name": "certificates",
+      "kind": "data",
+      "version": "400c9b6af27d6fc6",
+      "hash": "sha256:e7a9598c2109dcd4916be2cdc58e3686ba2978714a3e763d0d6c617e3c152c07",
+      "size": 1664,
+      "url": "/content/certificates.ltpack"
+    },
+    {
+      "name": "codex",
+      "kind": "data",
+      "version": "f6040eb4f73ba3a3",
+      "hash": "sha256:8d8f41866163c732ef51eaebcea17524421ba5922b99c745ffc92c9274835dc9",
+      "size": 3743,
+      "url": "/content/codex.ltpack"
+    },
+    {
+      "name": "diseases",
+      "kind": "data",
+      "version": "043419fdf3aa174b",
+      "hash": "sha256:e917b036094283c105374c53a8df3efb0be85ca420a11ad00e2008ac6a3e6f9f",
+      "size": 2032,
+      "url": "/content/diseases.ltpack"
+    },
+    {
+      "name": "events",
+      "kind": "data",
+      "version": "57d84f59e9c5f2c1",
+      "hash": "sha256:a98db18102fd5a4e58cb2786bc1f1688480cda7ae60cde7047e176cd945b4abd",
+      "size": 2989,
+      "url": "/content/events.ltpack"
+    },
+    {
+      "name": "finance",
+      "kind": "data",
+      "version": "5ac4586864a04b16",
+      "hash": "sha256:b2d2695f256656ce08f7775a35dec4fc0293a19af202e003a7a2c14d7da56166",
+      "size": 1735,
+      "url": "/content/finance.ltpack"
+    },
+    {
+      "name": "items",
+      "kind": "data",
+      "version": "65000ccb673d611c",
+      "hash": "sha256:ca3827fd3eb46a4018b9393fb036089ea65df060ce77bf491cf723e21864ca60",
+      "size": 3321,
+      "url": "/content/items.ltpack"
+    },
+    {
+      "name": "jobs",
+      "kind": "data",
+      "version": "1855ee94dff20a4b",
+      "hash": "sha256:66a8bfe5bcb019bc4f1cc6192816d1ba606bb2b9e15301cb033ec5e16e7bccc2",
+      "size": 6656,
+      "url": "/content/jobs.ltpack"
+    },
+    {
+      "name": "skills",
+      "kind": "data",
+      "version": "7b7fab58fbf164a9",
+      "hash": "sha256:82c98c6d645770057f5ac351a3cf2739b962564b3b6a2c4d0efa2b360eb61bb9",
+      "size": 2793,
+      "url": "/content/skills.ltpack"
+    },
+    {
+      "name": "items.patch-65000ccb673d611c",
+      "kind": "data",
+      "version": "485637e973b06702",
+      "hash": "sha256:881d2ca89aeb923c545f13409af1e78e4d6d72a6b5c56fa763bb9410b1446a60",
+      "size": 267,
+      "url": "/content/items.patch-65000ccb673d611c.ltpack",
+      "patch_of": "items"
+    }
+  ]
+}

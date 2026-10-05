@@ -21,6 +21,8 @@ func run_tests() -> void:
 	_test_lru_eviction()
 	_test_lod_resolution()
 	_test_unregistered_place()
+	_test_place_bindings()
+	_test_presentation_root()
 
 
 func _test_event_bus() -> void:
@@ -109,3 +111,25 @@ func _test_unregistered_place() -> void:
 	check(not mgr.switch_place("nowhere"), "未注册场所切换应失败")
 	check_eq(failures.size(), 1, "应报告加载失败")
 	mgr.queue_free()
+
+
+func _test_place_bindings() -> void:
+	var mgr := _make_manager()
+	check_eq(PlaceBindings.register_all(mgr), 13, "应注册 13 个场所分组")
+	check(PlaceBindings.has_group("medical"), "应包含医疗分组")
+	check(PlaceBindings.scene_for("medical").ends_with("placeholder_place.tscn"), "首发使用占位场景")
+	# 默认加载器直接加载占位场景，验证绑定可实际实例化。
+	check(mgr.switch_place("medical"), "绑定场景应可加载")
+	check(mgr.get_instance("medical") != null, "应实例化医疗场所")
+	mgr.queue_free()
+
+
+func _test_presentation_root() -> void:
+	var pr := PresentationRoot.new()
+	root.add_child(pr)
+	check_eq(pr.binding_count(), 13, "表现层根应完成场所绑定")
+	var got: Array = []
+	pr.bus.subscribe("evt", func(p): got.append(p))
+	check_eq(pr.publish("evt", 42), 1, "表现层根应转发事件")
+	check_eq(got.size(), 1, "订阅者应收到事件")
+	pr.queue_free()

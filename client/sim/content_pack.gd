@@ -8,6 +8,8 @@ extends RefCounted
 
 const MAGIC := "LTPK"
 const FORMAT_VERSION := 1
+## 差量包内承载删除列表的保留条目键。
+const REMOVED_KEY := "__removed__"
 
 var category: String = ""
 var kind: String = ""
@@ -86,6 +88,22 @@ static func encode_bytes(category: String, kind: String, entries: Dictionary) ->
 		_put_u32(buf, payload_bytes.size())
 		buf.append_array(payload_bytes)
 	return buf
+
+
+## 在基础条目上应用差量条目与删除列表，返回与全量发布等价的条目集合。
+static func apply_patch(base: Dictionary, patch: Dictionary) -> Dictionary:
+	var out := base.duplicate(true)
+	var removed: Array = []
+	var removed_field: Variant = patch.get(REMOVED_KEY, null)
+	if typeof(removed_field) == TYPE_DICTIONARY:
+		removed = removed_field.get("keys", [])
+	for key in patch:
+		if key == REMOVED_KEY:
+			continue
+		out[key] = patch[key]
+	for key in removed:
+		out.erase(str(key))
+	return out
 
 
 static func sha256_hex(data: PackedByteArray) -> String:

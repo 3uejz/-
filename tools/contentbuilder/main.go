@@ -30,6 +30,8 @@ func main() {
 		os.Exit(runPatch(os.Args[2:]))
 	case "sample":
 		os.Exit(runSample(os.Args[2:]))
+	case "assets":
+		os.Exit(runAssets(os.Args[2:]))
 	case "-h", "--help", "help":
 		usage()
 	default:
@@ -48,6 +50,7 @@ func usage() {
   contentbuilder diff     --prev MANIFEST --next MANIFEST [--prev-catalog DIR] [--next-catalog DIR]
   contentbuilder patch    --prev-catalog DIR --next-catalog DIR [--out DIR] [--base-url URL] [--version N]
   contentbuilder sample   [--catalog DIR]
+  contentbuilder assets   --dir ART_DIR [--out LEDGER.json]
 `)
 }
 
@@ -165,7 +168,18 @@ func buildPatches(prev, next map[string]*rawCategory) []builtPack {
 			continue
 		}
 		delta := patchEntries(ne, changed, added)
-		data, err := EncodePack(name, spec.kind, delta)
+		encoded := delta
+		if len(removed) > 0 {
+			keys := make([]any, len(removed))
+			for i, r := range removed {
+				keys[i] = r
+			}
+			encoded = append(append([]entry{}, delta...), entry{
+				Key:    ReservedRemovedKey,
+				Fields: map[string]any{"keys": keys},
+			})
+		}
+		data, err := EncodePack(name, spec.kind, encoded)
 		if err != nil {
 			continue
 		}
@@ -179,6 +193,7 @@ func buildPatches(prev, next map[string]*rawCategory) []builtPack {
 			PatchOf:  name,
 			Removed:  removed,
 			Entries:  entriesMap(delta),
+			data:     data,
 		})
 	}
 	return out
@@ -220,21 +235,8 @@ func runPatch(args []string) int {
 	}
 	var manifestPacks []builtPack
 	for _, p := range patches {
-		spec := categorySpecs[p.Category]
-		var srcEntries []entry
-		if c, ok := next[p.Category]; ok {
-			srcEntries = c.Entries
-		}
-		delta := patchEntries(entriesMap(srcEntries), nil, keysFromMap(p.Entries))
-		data, err := EncodePack(p.Category, spec.kind, delta)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "编码差量失败:", err)
-			return 1
-		}
-		p.Hash = sha256Hex(data)
-		p.Size = len(data)
 		path := filepath.Join(*outDir, p.Name+".ltpack")
-		if _, err := writeFile(path, data); err != nil {
+		if _, err := writeFile(path, p.data); err != nil {
 			fmt.Fprintln(os.Stderr, "写入差量失败:", err)
 			return 1
 		}
@@ -254,15 +256,6 @@ func runPatch(args []string) int {
 	}
 	fmt.Printf("生成差量包：%d 个 -> %s\n", len(manifestPacks), manifestPath)
 	return 0
-}
-
-func keysFromMap(m map[string]map[string]any) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 func runDiff(args []string) int {
@@ -351,5 +344,34 @@ func runSample(args []string) int {
 		return 1
 	}
 	fmt.Println("已生成示例:", path)
+	return 0
+}
+
+func runAssets(args []string) int {
+	fs := flag.NewFlagSet("assets", flag.ContinueOnError)
+	dir := fs.String("dir", "", "待扫描的资产目录")
+	out := fs.String("out", "", "台账输出路径（默认写到 stdout）")
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	if *dir == "" {
+		fmt.Fprintln(os.Stderr, "缺少 --dir")
+		return 2
+	}
+	ledger, err := scanAssets(*dir)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "扫描失败:", err)
+		return 1
+	}
+	if *out != "" {
+		if err := writeLedger(*out, ledger); err != nil {
+			fmt.Fprintln(os.Stderr, "写入台账失败:", err)
+			return 1
+		}
+		fmt.Printf("资产台账已写入 %s（%d 项）\n", *out, len(ledger.Assets))
+		return 0
+	}
+	data, _ := json.MarshalIndent(ledger, "", "  ")
+	fmt.Println(string(data))
 	return 0
 }

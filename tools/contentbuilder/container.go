@@ -15,6 +15,9 @@ import (
 const packMagic = "LTPK"
 const packVersion uint16 = 1
 
+// ReservedRemovedKey 是差量包内承载删除列表的保留条目键（自包含，无需额外 sidecar）。
+const ReservedRemovedKey = "__removed__"
+
 // EncodePack 生成轻量二进制容器：magic|version|kind|category|entryCount|(id,payload)*。
 func EncodePack(category, kind string, entries []entry) ([]byte, error) {
 	var buf bytes.Buffer

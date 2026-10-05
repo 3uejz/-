@@ -44,6 +44,8 @@ type builtPack struct {
 	PatchOf string
 	// Removed 是差量包需要删除的 content_key（仅差量有意义）。
 	Removed []string
+	// data 是已编码的内容包字节（构建期使用，不序列化）。
+	data []byte
 }
 
 // contentVersion 依据条目内容计算稳定版本（与顺序无关）。

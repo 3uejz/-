@@ -28,6 +28,10 @@ window/size/viewport_height=900
 
 locale/fallback="zh_CN"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/content_preview/plugin.cfg")
+
 [rendering]
 
 renderer/rendering_method="forward_plus"

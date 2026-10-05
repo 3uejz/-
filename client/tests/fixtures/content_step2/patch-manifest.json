@@ -1,0 +1,15 @@
+{
+  "manifest_version": 1,
+  "generated_at": "2026-10-05T20:06:56Z",
+  "packs": [
+    {
+      "name": "items.patch-65000ccb673d611c",
+      "kind": "data",
+      "version": "485637e973b06702",
+      "hash": "sha256:881d2ca89aeb923c545f13409af1e78e4d6d72a6b5c56fa763bb9410b1446a60",
+      "size": 267,
+      "url": "/content/items.patch-65000ccb673d611c.ltpack",
+      "patch_of": "items"
+    }
+  ]
+}
