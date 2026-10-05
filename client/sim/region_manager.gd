@@ -17,6 +17,10 @@ extends RefCounted
 const RngScript = preload("res://sim/rng.gd")
 const BaselineScript = preload("res://sim/baseline.gd")
 const GregorianScript = preload("res://sim/gregorian.gd")
+const NpcScript = preload("res://sim/npc.gd")
+
+## 活动区域精细模拟人口上限（design 默认 2000）。
+const ACTIVE_POP_CAP: int = 2000
 
 
 ## 单个区域的状态与休眠快照（design.md Data Models: RegionState）。
@@ -155,6 +159,9 @@ var _active: Dictionary = {}    # region_id -> true
 var _clock = null               # 鸭子类型：提供 total_minutes 的时钟对象（可选）
 var _now_minute: int = 0
 var _rng = null                 # SplitMix64，确定性事件采样
+var _npc_system = null          # 全人口生成器（惰性创建）
+var _world_seed: int = 0
+var _active_pop_cap: int = ACTIVE_POP_CAP
 
 func _init(clock: Object = null, seed: int = 0) -> void:
 	_clock = clock
@@ -215,6 +222,104 @@ func snapshot(region_id: String) -> Dictionary:
 	return region.snapshot.duplicate(true)
 
 
+# --- 全人口与三级 LOD（R50.7–R50.9）---
+
+## 配置全人口生成：世界种子决定确定性重建，cap 为活动区精细模拟上限。
+func configure_population(world_seed: int, cap: int = ACTIVE_POP_CAP) -> void:
+	_world_seed = world_seed
+	_active_pop_cap = maxi(0, cap)
+
+
+func population_cap() -> int:
+	return _active_pop_cap
+
+
+## 为区域物化全人口（Tier0 精细）。保留已个体化 NPC，其余按世界种子确定性重建。
+## 人口物化为显式调用，不随 enter 自动触发（避免无谓开销）。
+func materialize_population(region_id: String, at_minute: int = -1) -> Array:
+	var region := _ensure_region(region_id)
+	var now: int = at_minute if at_minute >= 0 else now_minute()
+	var limit: int = mini(maxi(0, region.population), _active_pop_cap)
+	if _npc_system == null:
+		_npc_system = NpcScript.new()
+	var kept: Dictionary = {}
+	var out: Array = []
+	for npc in region.npcs:
+		if npc is Dictionary and bool(npc.get("individualized", false)):
+			kept[str(npc.get("id", ""))] = true
+			out.append(npc)
+	var opts: Dictionary = {
+		"world_seed": _world_seed, "region_id": region_id,
+		"now_minute": now, "lod_tier": 0,
+	}
+	var index: int = 0
+	var guard: int = 0
+	while out.size() < limit and guard < limit * 2 + 16:
+		guard += 1
+		var npc: Dictionary = _npc_system.generate(index, opts)
+		index += 1
+		if kept.has(str(npc["id"])):
+			continue
+		out.append(npc)
+	region.npcs = out
+	region.snapshot["npc_count"] = out.size()
+	return out
+
+
+## 个体化指定 NPC（与玩家产生关系或被目击），使其不受 LOD 降级影响。
+func individualize_npc(region_id: String, npc_id: String) -> Dictionary:
+	var region: RegionState = _regions.get(region_id)
+	if region == null:
+		return {}
+	for npc in region.npcs:
+		if npc is Dictionary and str(npc.get("id", "")) == npc_id:
+			npc["individualized"] = true
+			npc["lod_tier"] = 0
+			return npc
+	return {}
+
+
+## 休眠卸载：仅保留个体化 NPC，其余丢弃（唤醒时按种子重建）。
+func dematerialize_population(region_id: String) -> int:
+	var region: RegionState = _regions.get(region_id)
+	if region == null:
+		return 0
+	var kept: Array = []
+	for npc in region.npcs:
+		if npc is Dictionary and bool(npc.get("individualized", false)):
+			kept.append(npc)
+	region.npcs = kept
+	region.snapshot["npc_count"] = region.population
+	region.snapshot["individualized_count"] = kept.size()
+	return kept.size()
+
+
+func population_npcs(region_id: String) -> Array:
+	var region: RegionState = _regions.get(region_id)
+	if region == null:
+		return []
+	return region.npcs.duplicate()
+
+
+func individualize_count(region_id: String) -> int:
+	var region: RegionState = _regions.get(region_id)
+	if region == null:
+		return 0
+	var n: int = 0
+	for npc in region.npcs:
+		if npc is Dictionary and bool(npc.get("individualized", false)):
+			n += 1
+	return n
+
+
+func _individualized_npcs(region: RegionState) -> Array:
+	var out: Array = []
+	for npc in region.npcs:
+		if npc is Dictionary and bool(npc.get("individualized", false)):
+			out.append(npc)
+	return out
+
+
 # --- 激活 / 休眠 ---
 
 ## 玩家进入区域：若为休眠则统计快进补算到当前时刻，然后置为活动。
@@ -245,6 +350,7 @@ func leave(region_id: String, at_minute: int = -1) -> Dictionary:
 		_advance_active_to(region, now)
 	region.dormant()
 	_active.erase(region_id)
+	dematerialize_population(region_id)
 	_write_snapshot(region)
 	return {
 		"region_id": region_id, "state": "dormant",
@@ -444,6 +550,7 @@ func to_delta(region_id: String) -> Dictionary:
 		"safety": region.safety,
 		"last_simulated_minute": region.last_simulated_minute,
 		"snapshot": region.snapshot.duplicate(true),
+		"npcs": _individualized_npcs(region),
 	}
 
 func dump_deltas() -> Array:
