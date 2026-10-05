@@ -1,0 +1,21 @@
+{
+  "category": "finance",
+  "entries": [
+    { "content_key": "finance.savings", "name": "活期存款", "kind": "deposit", "risk": 0.0 },
+    { "content_key": "finance.time_deposit", "name": "定期存款", "kind": "deposit", "risk": 0.0 },
+    { "content_key": "finance.bond_government", "name": "国债", "kind": "bond", "risk": 0.02 },
+    { "content_key": "finance.bond_corporate", "name": "企业债", "kind": "bond", "risk": 0.08 },
+    { "content_key": "finance.fund_money", "name": "货币基金", "kind": "fund", "risk": 0.01 },
+    { "content_key": "finance.fund_mixed", "name": "混合基金", "kind": "fund", "risk": 0.15 },
+    { "content_key": "finance.stock_blue", "name": "蓝筹股", "kind": "stock", "risk": 0.2 },
+    { "content_key": "finance.stock_growth", "name": "成长股", "kind": "stock", "risk": 0.35 },
+    { "content_key": "finance.futures", "name": "期货", "kind": "derivative", "risk": 0.6 },
+    { "content_key": "finance.forex", "name": "外汇", "kind": "derivative", "risk": 0.5 },
+    { "content_key": "finance.gold", "name": "黄金", "kind": "commodity", "risk": 0.12 },
+    { "content_key": "finance.real_estate", "name": "房产", "kind": "real_estate", "risk": 0.1 },
+    { "content_key": "finance.crypto", "name": "加密货币", "kind": "crypto", "risk": 0.85 },
+    { "content_key": "finance.insurance_life", "name": "人寿保险", "kind": "insurance", "risk": 0.0 },
+    { "content_key": "finance.insurance_health", "name": "健康保险", "kind": "insurance", "risk": 0.0 },
+    { "content_key": "finance.p2p", "name": "网络借贷", "kind": "credit", "risk": 0.9 }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "category": "items",
+  "entries": [
+    { "content_key": "item.rice", "name": "大米", "category": "food", "quality": "common", "price": 500, "weight": 5.0 },
+    { "content_key": "item.noodles", "name": "面条", "category": "food", "quality": "common", "price": 400, "weight": 1.0 },
+    { "content_key": "item.pork", "name": "猪肉", "category": "food", "quality": "common", "price": 1500, "weight": 1.0 },
+    { "content_key": "item.apple", "name": "苹果", "category": "food", "quality": "common", "price": 600, "weight": 0.2 },
+    { "content_key": "item.milk", "name": "牛奶", "category": "food", "quality": "common", "price": 300, "weight": 1.0 },
+    { "content_key": "item.instant_noodles", "name": "方便面", "category": "food", "quality": "common", "price": 350, "weight": 0.15 },
+    { "content_key": "item.toothpaste", "name": "牙膏", "category": "daily", "quality": "common", "price": 1200, "weight": 0.1 },
+    { "content_key": "item.detergent", "name": "洗衣液", "category": "daily", "quality": "common", "price": 2000, "weight": 1.5 },
+    { "content_key": "item.tissue", "name": "纸巾", "category": "daily", "quality": "common", "price": 800, "weight": 0.3 },
+    { "content_key": "item.wok", "name": "炒锅", "category": "cookware", "quality": "good", "price": 12000, "weight": 2.0 },
+    { "content_key": "item.electric_kettle", "name": "电热水壶", "category": "appliance", "quality": "good", "price": 8900, "weight": 1.2 },
+    { "content_key": "item.smartphone", "name": "智能手机", "category": "electronic", "quality": "good", "price": 299900, "weight": 0.2 },
+    { "content_key": "item.laptop", "name": "笔记本电脑", "category": "electronic", "quality": "good", "price": 599900, "weight": 1.5 },
+    { "content_key": "item.bicycle", "name": "自行车", "category": "transport", "quality": "common", "price": 39900, "weight": 15.0 },
+    { "content_key": "item.car", "name": "家用轿车", "category": "transport", "quality": "good", "price": 12000000, "weight": 1300.0 },
+    { "content_key": "item.sneakers", "name": "运动鞋", "category": "apparel", "quality": "common", "price": 39900, "weight": 0.8 },
+    { "content_key": "item.coat", "name": "外套", "category": "apparel", "quality": "common", "price": 25900, "weight": 0.9 },
+    { "content_key": "item.book", "name": "书籍", "category": "culture", "quality": "common", "price": 4500, "weight": 0.5 },
+    { "content_key": "item.guitar", "name": "吉他", "category": "instrument", "quality": "good", "price": 89900, "weight": 3.0 },
+    { "content_key": "item.watch_luxury", "name": "名表", "category": "luxury", "quality": "rare", "price": 8990000, "weight": 0.1 },
+    { "content_key": "item.ring_gold", "name": "金戒指", "category": "luxury", "quality": "rare", "price": 4500000, "weight": 0.02 },
+    { "content_key": "item.painting_famous", "name": "名家字画", "category": "collectible", "quality": "legendary", "price": 50000000, "weight": 2.0 },
+    { "content_key": "item.camera", "name": "相机", "category": "electronic", "quality": "good", "price": 699900, "weight": 1.0 },
+    { "content_key": "item.medkit", "name": "急救包", "category": "medical", "quality": "common", "price": 6800, "weight": 1.0 }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "category": "skills",
+  "entries": [
+    { "content_key": "skill.cooking", "name": "烹饪", "domain": "life", "max_level": 10 },
+    { "content_key": "skill.cleaning", "name": "清洁", "domain": "life", "max_level": 8 },
+    { "content_key": "skill.finance", "name": "理财", "domain": "life", "max_level": 10, "prereq": ["skill.cooking"] },
+    { "content_key": "skill.driving", "name": "驾驶", "domain": "life", "max_level": 6 },
+    { "content_key": "skill.first_aid", "name": "急救", "domain": "life", "max_level": 6 },
+    { "content_key": "skill.coding", "name": "编程", "domain": "career", "max_level": 20 },
+    { "content_key": "skill.design", "name": "设计", "domain": "career", "max_level": 15 },
+    { "content_key": "skill.writing", "name": "写作", "domain": "career", "max_level": 15 },
+    { "content_key": "skill.accounting", "name": "会计", "domain": "career", "max_level": 12 },
+    { "content_key": "skill.sales", "name": "销售", "domain": "career", "max_level": 12 },
+    { "content_key": "skill.negotiation", "name": "谈判", "domain": "career", "max_level": 12 },
+    { "content_key": "skill.management", "name": "管理", "domain": "career", "max_level": 15 },
+    { "content_key": "skill.speaking", "name": "演讲", "domain": "career", "max_level": 10 },
+    { "content_key": "skill.math", "name": "数学", "domain": "academic", "max_level": 20 },
+    { "content_key": "skill.physics", "name": "物理", "domain": "academic", "max_level": 20, "prereq": ["skill.math"] },
+    { "content_key": "skill.english", "name": "英语", "domain": "academic", "max_level": 15 },
+    { "content_key": "skill.painting", "name": "绘画", "domain": "art", "max_level": 15 },
+    { "content_key": "skill.instrument", "name": "乐器", "domain": "art", "max_level": 15 },
+    { "content_key": "skill.photography", "name": "摄影", "domain": "art", "max_level": 12 },
+    { "content_key": "skill.swimming", "name": "游泳", "domain": "sports", "max_level": 10 },
+    { "content_key": "skill.fighting", "name": "格斗", "domain": "sports", "max_level": 12 },
+    { "content_key": "skill.etiquette", "name": "社交礼仪", "domain": "social", "max_level": 10 },
+    { "content_key": "skill.empathy", "name": "共情", "domain": "social", "max_level": 10 },
+    { "content_key": "skill.persuasion", "name": "说服", "domain": "social", "max_level": 12 },
+    { "content_key": "skill.lockpicking", "name": "开锁", "domain": "crime", "max_level": 12 },
+    { "content_key": "skill.pickpocket", "name": "扒窃", "domain": "crime", "max_level": 12 },
+    { "content_key": "skill.hacking", "name": "黑客", "domain": "crime", "max_level": 15 }
+  ]
+}

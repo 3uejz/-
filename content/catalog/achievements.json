@@ -1,0 +1,30 @@
+{
+  "category": "achievements",
+  "entries": [
+    { "content_key": "ach.first_steps", "name": "初来乍到", "category": "life", "metric": "age", "threshold": 1 },
+    { "content_key": "ach.school_graduate", "name": "学有所成", "category": "education", "metric": "highest_degree", "threshold": 4 },
+    { "content_key": "ach.doctorate", "name": "博士", "category": "education", "metric": "highest_degree", "threshold": 7 },
+    { "content_key": "ach.first_salary", "name": "第一桶金", "category": "career", "metric": "income", "threshold": 1 },
+    { "content_key": "ach.millionaire", "name": "百万富翁", "category": "wealth", "metric": "net_worth", "threshold": 100000000 },
+    { "content_key": "ach.billionaire", "name": "亿万富翁", "category": "wealth", "metric": "net_worth", "threshold": 100000000000 },
+    { "content_key": "ach.married", "name": "成家", "category": "family", "metric": "married", "threshold": 1 },
+    { "content_key": "ach.parent", "name": "为人父母", "category": "family", "metric": "children", "threshold": 1 },
+    { "content_key": "ach.grandparent", "name": "儿孙满堂", "category": "family", "metric": "grandchildren", "threshold": 1 },
+    { "content_key": "ach.longevity", "name": "长命百岁", "category": "life", "metric": "age", "threshold": 100 },
+    { "content_key": "ach.skill_master", "name": "一技之长", "category": "skill", "metric": "max_skill_level", "threshold": 10 },
+    { "content_key": "ach.skill_grandmaster", "name": "登峰造极", "category": "skill", "metric": "max_skill_level", "threshold": 20 },
+    { "content_key": "ach.famous", "name": "名声在外", "category": "social", "metric": "fame", "threshold": 80 },
+    { "content_key": "ach.notorious", "name": "臭名昭著", "category": "social", "metric": "infamy", "threshold": 80 },
+    { "content_key": "ach.traveler", "name": "走南闯北", "category": "travel", "metric": "cities_visited", "threshold": 20 },
+    { "content_key": "ach.world_traveler", "name": "环游世界", "category": "travel", "metric": "countries_visited", "threshold": 10 },
+    { "content_key": "ach.collector", "name": "收藏家", "category": "collection", "metric": "items_owned", "threshold": 200 },
+    { "content_key": "ach.artist", "name": "艺术家", "category": "art", "metric": "art_works", "threshold": 50 },
+    { "content_key": "ach.athlete", "name": "运动健将", "category": "sport", "metric": "sport_medals", "threshold": 10 },
+    { "content_key": "ach.politician", "name": "位极人臣", "category": "career", "metric": "political_rank", "threshold": 5 },
+    { "content_key": "ach.survivor", "name": "大难不死", "category": "life", "metric": "near_death", "threshold": 1 },
+    { "content_key": "ach.second_life", "name": "轮回转世", "category": "legacy", "metric": "rebirths", "threshold": 1 },
+    { "content_key": "ach.dynasty", "name": "百年世家", "category": "legacy", "metric": "generations", "threshold": 5 },
+    { "content_key": "ach.hermit", "name": "归隐山林", "category": "life", "metric": "years_offgrid", "threshold": 10 },
+    { "content_key": "ach.legend", "name": "传奇一生", "category": "life", "metric": "legend_score", "threshold": 1000 }
+  ]
+}

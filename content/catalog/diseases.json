@@ -1,0 +1,23 @@
+{
+  "category": "diseases",
+  "entries": [
+    { "content_key": "disease.cold", "name": "感冒", "category": "respiratory", "severity": 1 },
+    { "content_key": "disease.influenza", "name": "流感", "category": "respiratory", "severity": 3 },
+    { "content_key": "disease.pneumonia", "name": "肺炎", "category": "respiratory", "severity": 6 },
+    { "content_key": "disease.gastritis", "name": "胃炎", "category": "digestive", "severity": 4 },
+    { "content_key": "disease.ulcer", "name": "胃溃疡", "category": "digestive", "severity": 6 },
+    { "content_key": "disease.hypertension", "name": "高血压", "category": "cardiovascular", "severity": 6 },
+    { "content_key": "disease.heart_disease", "name": "冠心病", "category": "cardiovascular", "severity": 8 },
+    { "content_key": "disease.diabetes", "name": "糖尿病", "category": "metabolic", "severity": 7 },
+    { "content_key": "disease.fracture", "name": "骨折", "category": "injury", "severity": 6 },
+    { "content_key": "disease.burn", "name": "烧伤", "category": "injury", "severity": 7 },
+    { "content_key": "disease.depression", "name": "抑郁症", "category": "mental", "severity": 7 },
+    { "content_key": "disease.anxiety", "name": "焦虑症", "category": "mental", "severity": 5 },
+    { "content_key": "disease.insomnia", "name": "失眠症", "category": "mental", "severity": 3 },
+    { "content_key": "disease.cancer_lung", "name": "肺癌", "category": "oncological", "severity": 10 },
+    { "content_key": "disease.cancer_stomach", "name": "胃癌", "category": "oncological", "severity": 10 },
+    { "content_key": "disease.arthritis", "name": "关节炎", "category": "musculoskeletal", "severity": 5 },
+    { "content_key": "disease.myopia", "name": "近视", "category": "sensory", "severity": 2 },
+    { "content_key": "disease.dental_caries", "name": "龋齿", "category": "dental", "severity": 3 }
+  ]
+}

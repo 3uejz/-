@@ -1,0 +1,33 @@
+{
+  "category": "codex",
+  "entries": [
+    { "content_key": "codex.apple", "name": "苹果", "category": "food", "description": "常见水果，富含维生素。" },
+    { "content_key": "codex.pork", "name": "猪肉", "category": "food", "description": "常见肉类食材。" },
+    { "content_key": "codex.tea", "name": "茶", "category": "culture", "description": "传统饮品，讲究冲泡。" },
+    { "content_key": "codex.dumpling", "name": "饺子", "category": "culture", "description": "节庆食物，象征团圆。" },
+    { "content_key": "codex.bicycle", "name": "自行车", "category": "transport", "description": "两轮人力交通工具。" },
+    { "content_key": "codex.umbrella", "name": "雨伞", "category": "daily", "description": "遮雨工具。" },
+    { "content_key": "codex.wallet", "name": "钱包", "category": "daily", "description": "存放现金与证件的物件。" },
+    { "content_key": "codex.spectacles", "name": "眼镜", "category": "daily", "description": "矫正视力的工具。" },
+    { "content_key": "codex.bank_card", "name": "银行卡", "category": "finance", "description": "银行发行的支付凭证。" },
+    { "content_key": "codex.id_card", "name": "身份证", "category": "legal", "description": "证明公民身份的法定证件。" },
+    { "content_key": "codex.contract", "name": "合同", "category": "legal", "description": "约定双方权利义务的书面文件。" },
+    { "content_key": "codex.driver_license", "name": "驾照", "category": "legal", "description": "准许驾驶机动车的证件。" },
+    { "content_key": "codex.hospital", "name": "医院", "category": "place", "description": "诊治疾病的场所。" },
+    { "content_key": "codex.school", "name": "学校", "category": "place", "description": "进行教育的场所。" },
+    { "content_key": "codex.market", "name": "菜市场", "category": "place", "description": "买卖生鲜食材的场所。" },
+    { "content_key": "codex.park", "name": "公园", "category": "place", "description": "公共休闲绿地。" },
+    { "content_key": "codex.temple", "name": "寺庙", "category": "place", "description": "宗教活动场所。" },
+    { "content_key": "codex.festival_spring", "name": "春节", "category": "festival", "description": "最重要的传统节日。" },
+    { "content_key": "codex.festival_midautumn", "name": "中秋", "category": "festival", "description": "赏月团圆的传统节日。" },
+    { "content_key": "codex.rain", "name": "雨", "category": "nature", "description": "常见天气现象。" },
+    { "content_key": "codex.snow", "name": "雪", "category": "nature", "description": "冬季降水现象。" },
+    { "content_key": "codex.river", "name": "河流", "category": "nature", "description": "地表水汇集流动形成的水道。" },
+    { "content_key": "codex.mountain", "name": "山", "category": "nature", "description": "显著隆起的地貌。" },
+    { "content_key": "codex.stars", "name": "星空", "category": "nature", "description": "夜空中可见的天体。" },
+    { "content_key": "codex.internet", "name": "互联网", "category": "technology", "description": "全球互联的信息网络。" },
+    { "content_key": "codex.mobile_phone", "name": "手机", "category": "technology", "description": "随身通讯与计算设备。" },
+    { "content_key": "codex.train", "name": "火车", "category": "technology", "description": "沿轨道行驶的交通工具。" },
+    { "content_key": "codex.airplane", "name": "飞机", "category": "technology", "description": "在大气层内飞行的航空器。" }
+  ]
+}

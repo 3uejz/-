@@ -24,6 +24,17 @@ jobs:
       - name: 共享 schema 校验
         run: python3 scripts/validate_schemas.py
 
+      - name: 内容工具链测试与校验
+        run: |
+          cd tools/contentbuilder
+          go test ./...
+          go run . validate --catalog "$GITHUB_WORKSPACE/content/catalog"
+
+      - name: 内容包构建
+        run: |
+          cd tools/contentbuilder
+          go run . build --catalog "$GITHUB_WORKSPACE/content/catalog" --out "$RUNNER_TEMP/content"
+
       - name: Go 后端测试
         working-directory: server
         run: go test ./...

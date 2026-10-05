@@ -3,6 +3,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# 内容构建产物（由 tools/contentbuilder 生成）
+build/
+
 # Godot
 client/.godot/
 client/export/

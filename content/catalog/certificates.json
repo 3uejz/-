@@ -1,0 +1,23 @@
+{
+  "category": "certificates",
+  "entries": [
+    { "content_key": "cert.id_card", "name": "身份证", "issuer": "government" },
+    { "content_key": "cert.household", "name": "户口本", "issuer": "government" },
+    { "content_key": "cert.driver_license", "name": "驾照", "issuer": "government" },
+    { "content_key": "cert.passport", "name": "护照", "issuer": "government" },
+    { "content_key": "cert.teacher", "name": "教师资格证", "issuer": "education" },
+    { "content_key": "cert.accounting", "name": "会计证", "issuer": "finance" },
+    { "content_key": "cert.lawyer", "name": "律师执业证", "issuer": "justice" },
+    { "content_key": "cert.physician", "name": "医师资格证", "issuer": "medical" },
+    { "content_key": "cert.nurse", "name": "护士证", "issuer": "medical" },
+    { "content_key": "cert.chef", "name": "厨师证", "issuer": "labor" },
+    { "content_key": "cert.pilot", "name": "飞行执照", "issuer": "aviation" },
+    { "content_key": "cert.psychologist", "name": "心理咨询师", "issuer": "medical" },
+    { "content_key": "cert.builder", "name": "建造师", "issuer": "construction" },
+    { "content_key": "cert.electrician", "name": "电工证", "issuer": "labor" },
+    { "content_key": "cert.welder", "name": "焊工证", "issuer": "labor" },
+    { "content_key": "cert.guide", "name": "导游证", "issuer": "tourism" },
+    { "content_key": "cert.translator", "name": "翻译证", "issuer": "education" },
+    { "content_key": "cert.fitness_coach", "name": "健身教练证", "issuer": "sports" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "category": "events",
+  "entries": [
+    { "content_key": "event.birthday", "name": "生日", "type": "life", "weight": 100, "priority": 1 },
+    { "content_key": "event.first_school", "name": "入学", "type": "life", "weight": 100, "priority": 5 },
+    { "content_key": "event.graduation", "name": "毕业", "type": "life", "weight": 100, "priority": 5 },
+    { "content_key": "event.first_job", "name": "第一份工作", "type": "career", "weight": 100, "priority": 5 },
+    { "content_key": "event.promotion", "name": "升职", "type": "career", "weight": 60, "priority": 3 },
+    { "content_key": "event.layoff", "name": "裁员", "type": "career", "weight": 40, "priority": 4 },
+    { "content_key": "event.marriage", "name": "结婚", "type": "family", "weight": 80, "priority": 5 },
+    { "content_key": "event.childbirth", "name": "生子", "type": "family", "weight": 80, "priority": 5 },
+    { "content_key": "event.divorce", "name": "离婚", "type": "family", "weight": 30, "priority": 4 },
+    { "content_key": "event.illness", "name": "患病", "type": "health", "weight": 50, "priority": 4 },
+    { "content_key": "event.accident", "name": "意外事故", "type": "health", "weight": 20, "priority": 5 },
+    { "content_key": "event.recovery", "name": "康复", "type": "health", "weight": 50, "priority": 3 },
+    { "content_key": "event.lottery_win", "name": "中奖", "type": "fortune", "weight": 5, "priority": 3 },
+    { "content_key": "event.investment_gain", "name": "投资获利", "type": "fortune", "weight": 40, "priority": 2 },
+    { "content_key": "event.investment_loss", "name": "投资亏损", "type": "fortune", "weight": 40, "priority": 2 },
+    { "content_key": "event.meet_friend", "name": "结识好友", "type": "social", "weight": 70, "priority": 2 },
+    { "content_key": "event.conflict", "name": "冲突", "type": "social", "weight": 30, "priority": 3 },
+    { "content_key": "event.gossip", "name": "流言", "type": "social", "weight": 40, "priority": 2 },
+    { "content_key": "event.festival", "name": "节庆", "type": "life", "weight": 60, "priority": 2 },
+    { "content_key": "event.weather_disaster", "name": "自然灾害", "type": "fortune", "weight": 8, "priority": 5 },
+    { "content_key": "event.move_house", "name": "搬家", "type": "life", "weight": 45, "priority": 3 },
+    { "content_key": "event.legal_trouble", "name": "惹上官司", "type": "legal", "weight": 15, "priority": 5 },
+    { "content_key": "event.travel", "name": "旅行", "type": "life", "weight": 55, "priority": 2 },
+    { "content_key": "event.study_abroad", "name": "留学", "type": "career", "weight": 20, "priority": 4 },
+    { "content_key": "event.pet_adopt", "name": "收养宠物", "type": "life", "weight": 35, "priority": 2 },
+    { "content_key": "event.retirement", "name": "退休", "type": "career", "weight": 100, "priority": 5 }
+  ]
+}

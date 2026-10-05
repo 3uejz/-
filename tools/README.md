@@ -2,8 +2,28 @@
 
 内容的导入、校验、打包，以及 Godot 资源/二进制容器的生成。
 
-- 输入：`content/` 下的源数据
-- 输出：客户端内容包（差量、哈希校验）
-- 语言：优先 Go 或 Python 脚本，保持可 CI 化
+- 输入：`content/catalog/` 下的源数据（JSON/CSV）
+- 输出：`build/content/` 下的轻量二进制内容包（`.ltpack`）与 `manifest.json` 差量清单
+- 语言：Go，保持可 CI 化；纳入 `scripts/test.sh` 与 `.github/workflows/ci.yml`
 
-> 工具待内容格式定稿后实现。
+## genbaseline/
+
+数值基线生成器：由 `shared/consistency/baseline/*.json` 真源生成客户端 `baseline_generated.gd`，`-check` 校验生成物与真源一致（CI 硬阻断）。
+
+## contentbuilder/
+
+内容构建与校验工具，模块 `lifetextsandbox/tools/contentbuilder`。
+
+```bash
+cd tools/contentbuilder
+go test ./...
+go run . validate --catalog ../../content/catalog
+go run . build --catalog ../../content/catalog --out ../../build/content
+go run . diff --prev old/manifest.json --next new/manifest.json --prev-catalog ... --next-catalog ...
+go run . sample --catalog ../../content/catalog
+```
+
+- 硬阻断式校验器：必填、类型、`content_key` 格式与全局重复、跨类别引用、`name`（i18n 键）非空，问题定位到 `文件#content_key`。
+- `.ltpack` 容器格式：`magic "LTPK" | version u16 | kind | category | entryCount | (key, payloadJSON)*`，客户端 `client/sim/content_pack.gd` 解码并校验 sha256。
+- `manifest.json` 对齐 `shared/schemas/content-manifest.schema.json`，含每包 `name/kind/version/hash/size/url`。
+- `diff` 输出包级（added/changed/removed/unchanged）与条目级差异，供差量发布。

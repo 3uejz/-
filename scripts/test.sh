@@ -16,6 +16,13 @@ echo "== 数值基线生成物校验 =="
 echo "== 共享 schema 校验 =="
 "$PYTHON_BIN" "$ROOT/scripts/validate_schemas.py"
 
+echo "== 内容工具链测试与内容校验 =="
+(
+  cd "$ROOT/tools/contentbuilder"
+  "$GO_BIN" test ./...
+  "$GO_BIN" run . validate --catalog "$ROOT/content/catalog"
+)
+
 echo "== Godot 客户端测试 =="
 # 先导入以生成全局类缓存与资源索引（.godot/ 不入库，CI 首次运行必需）
 "$GODOT_BIN" --headless --path "$ROOT/client" --import >/dev/null 2>&1 || true
