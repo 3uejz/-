@@ -39,7 +39,10 @@
         }
       }
     },
-    "relations": { "$ref": "player.schema.json#/$defs/relation" },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "player.schema.json#/$defs/relation" }
+    },
     "individualized": {
       "type": "boolean",
       "description": "true 表示与玩家产生关系，永久保存，不随 LOD 降级。"
