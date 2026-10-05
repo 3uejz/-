@@ -1,0 +1,49 @@
+name: export-client-windows
+
+# 手动触发，或推送 v* 标签时导出 Windows 客户端并上传产物。
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  windows:
+    name: 导出 Windows 客户端
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Godot 4.7.2 编辑器与官方导出模板
+        run: |
+          set -euo pipefail
+          GODOT_VER="4.7.2-stable"
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VER}"
+          TPL_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$HOME/godot/editor" "$TPL_DIR"
+          curl -fL -o "$HOME/godot/editor.zip" "${BASE}/Godot_v4.7.2-stable_linux.x86_64.zip"
+          unzip -q "$HOME/godot/editor.zip" -d "$HOME/godot/editor"
+          curl -fL -o "$HOME/godot/templates.tpz" "${BASE}/Godot_v4.7.2-stable_export_templates.tpz"
+          unzip -q "$HOME/godot/templates.tpz" -d "$HOME/godot/tpz"
+          cp -r "$HOME/godot/tpz/templates/." "$TPL_DIR/"
+          echo "GODOT_BIN=$HOME/godot/editor/Godot_v4.7.2-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: 导入项目资源
+        run: |
+          set -euo pipefail
+          mkdir -p client/build/windows
+          "$GODOT_BIN" --headless --path client --import || true
+
+      - name: 导出 Windows 发行版
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --path client --export-release "Windows Desktop" "build/windows/lifetext.exe"
+          ls -lh client/build/windows
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifetext-windows-client
+          path: client/build/windows/
+          if-no-files-found: error
