@@ -8,6 +8,7 @@
 - `vectors/time.json`：绝对分钟 → 公历日期/星期/季节
 - `vectors/economy.json`：几何布朗运动（GBM）单步价格
 - `vectors/population.json`：人口队列线性推进
+- `vectors/worldsim.json`：宏观季度序列（人口/通胀/失业/基准利率/物价指数/PMI/相位/绝对分钟）
 - `vectors/baseline.json`：数值基线快照（由生成器写出，勿手改）
 - `baseline/`：数值基线**单一真源**（手写 JSON）。`manifest.json` 列出 `core` 与各域文件，
   `core.json` 存区间/默认值/速度档/昼夜相位，其余按域拆分（survival/region/geo_transport/
@@ -70,6 +71,8 @@ function next_float():
 
 - GBM 与人口推进公式见各自 vector 文件的 `formula` 字段。
 - 浮点比较使用容差 `1e-6`（相对误差）；整数与时间必须精确相等。
+- `worldsim.json` 为宏观季度序列，向量仅覆盖不触发周期切换的季度区间（不依赖 RNG），
+  两端浮点比较容差 `1e-9`；实现见 `server/internal/worldsim/macro.go` 与 `client/sim/macro.gd`。
 
 ## 4. 运行方式
 

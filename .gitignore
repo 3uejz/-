@@ -13,7 +13,12 @@ client/export/
 
 # Go
 server/bin/
+server/data/
+server/backups/
 *.test
+
+# Redis 本地持久化文件
+dump.rdb
 
 # 本地工具链二进制（不入库）
 .toolchain/

@@ -38,6 +38,17 @@ const (
 
 	MacroCycleMinQuarters = 4
 	MacroCycleMaxQuarters = 16
+
+	// 人口队列默认参数（与客户端 client/sim/macro.gd 一致）。
+	MacroBirthRate     = 0.012
+	MacroDeathRate     = 0.008
+	MacroMigrationRate = 0.0002
+)
+
+// MacroMinutesPerYear / MacroMinutesPerQuarter 是宏观时钟的粒度（与客户端一致）。
+const (
+	MacroMinutesPerYear    = 1440.0 * 365.25
+	MacroMinutesPerQuarter = MacroMinutesPerYear / float64(MacroQuartersPerYear)
 )
 
 // CyclePhases 产业周期阶段：萧条/复苏/繁荣/放缓。
@@ -95,6 +106,13 @@ type Simulator struct {
 	QuartersLeft int
 	MoneySupply  float64
 
+	// 人口队列与宏观时钟。
+	PopulationF    float64
+	BirthRate      float64
+	DeathRate      float64
+	MigrationRate  float64
+	AbsoluteMinute int64
+
 	rng            *sim.SplitMix64
 	quarterPrinted float64
 }
@@ -102,18 +120,23 @@ type Simulator struct {
 // NewSimulator 以种子创建模拟器，指标从基准值出发。
 func NewSimulator(seed uint64, population int64) *Simulator {
 	return &Simulator{
-		Version:      1,
-		Global:       GlobalIndicators{Population: population, GdpEst: 100.0},
-		PriceIndex:   1.0,
-		BaseRate:     MacroBaseRate,
-		Inflation:    MacroBaseInflation,
-		Unemployment: MacroUnemployment,
-		GDP:          100.0,
-		PMI:          MacroPMIBase,
-		Phase:        "recovery",
-		QuartersLeft: 8,
-		MoneySupply:  1.0,
-		rng:          sim.NewSplitMix64(seed),
+		Version:        1,
+		Global:         GlobalIndicators{Population: population, GdpEst: 100.0},
+		PriceIndex:     1.0,
+		BaseRate:       MacroBaseRate,
+		Inflation:      MacroBaseInflation,
+		Unemployment:   MacroUnemployment,
+		GDP:            100.0,
+		PMI:            MacroPMIBase,
+		Phase:          "recovery",
+		QuartersLeft:   8,
+		MoneySupply:    1.0,
+		PopulationF:    float64(population),
+		BirthRate:      MacroBirthRate,
+		DeathRate:      MacroDeathRate,
+		MigrationRate:  MacroMigrationRate,
+		AbsoluteMinute: 0,
+		rng:            sim.NewSplitMix64(seed),
 	}
 }
 
@@ -153,6 +176,10 @@ func (s *Simulator) Tick() GlobalIndicators {
 	s.Global.GdpEst = s.GDP
 	s.Global.InflationRate = s.Inflation
 	s.Global.UnemploymentRate = s.Unemployment
+	s.PopulationF = sim.PopulationCohortNext(s.PopulationF, s.BirthRate, s.DeathRate, s.MigrationRate, MacroMinutesPerQuarter)
+	s.Global.Population = int64(math.Round(s.PopulationF))
+	s.AbsoluteMinute += int64(math.Round(MacroMinutesPerQuarter))
+	s.Global.AbsoluteMinutes = s.AbsoluteMinute
 	s.quarterPrinted = 0
 	return s.Global
 }

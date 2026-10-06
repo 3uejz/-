@@ -1,0 +1,75 @@
+{
+  "spec": "macro_quarterly",
+  "version": 1,
+  "seed": 12345,
+  "population": 1000000,
+  "quarters": 6,
+  "cases": [
+    {
+      "quarter": 1,
+      "population": 1001050,
+      "inflation_rate": 0.03,
+      "unemployment_rate": 0.04800000000000001,
+      "base_rate": 0.0325,
+      "price_index": 1.0075,
+      "pmi": 50.7,
+      "phase": "recovery",
+      "absolute_minutes": 131490
+    },
+    {
+      "quarter": 2,
+      "population": 1002101,
+      "inflation_rate": 0.029249999999999998,
+      "unemployment_rate": 0.04915,
+      "base_rate": 0.033562499999999995,
+      "price_index": 1.0148673437500002,
+      "pmi": 50.5475,
+      "phase": "recovery",
+      "absolute_minutes": 262980
+    },
+    {
+      "quarter": 3,
+      "population": 1003153,
+      "inflation_rate": 0.02893125,
+      "unemployment_rate": 0.04963875,
+      "base_rate": 0.0340140625,
+      "price_index": 1.0222076889597171,
+      "pmi": 50.4826875,
+      "phase": "recovery",
+      "absolute_minutes": 394470
+    },
+    {
+      "quarter": 4,
+      "population": 1004207,
+      "inflation_rate": 0.02879578125,
+      "unemployment_rate": 0.04984646875,
+      "base_rate": 0.0342059765625,
+      "price_index": 1.0295665062105552,
+      "pmi": 50.455142187499995,
+      "phase": "recovery",
+      "absolute_minutes": 525960
+    },
+    {
+      "quarter": 5,
+      "population": 1005261,
+      "inflation_rate": 0.028738207031250004,
+      "unemployment_rate": 0.04993474921875,
+      "base_rate": 0.034287540039062495,
+      "price_index": 1.0369634800625351,
+      "pmi": 50.443435429687504,
+      "phase": "recovery",
+      "absolute_minutes": 657450
+    },
+    {
+      "quarter": 6,
+      "population": 1006317,
+      "inflation_rate": 0.02871373798828125,
+      "unemployment_rate": 0.04997226841796875,
+      "base_rate": 0.03432220451660156,
+      "price_index": 1.044407254480018,
+      "pmi": 50.43846005761719,
+      "phase": "recovery",
+      "absolute_minutes": 788940
+    }
+  ]
+}

@@ -19,7 +19,7 @@ Godot 4 桌面端 + Go 后端的开放式人生文字沙盒。本文件面向在
 | 组件 | 位置 / 说明 |
 |------|-------------|
 | 操作系统 | Debian 12 (bookworm), x86_64, 2 核 |
-| Go | 1.25.x（`/usr/local/go`） |
+| Go | 1.25.x（`/usr/local/go`）；`server` 模块依赖 `golang.org/x/sys` 要求 ≥1.26，构建时经 GOTOOLCHAIN 自动下载 1.26 工具链 |
 | Node | 22.x + npm / pnpm / yarn |
 | Godot | 4.7.2-stable，`/workspace/.toolchain/godot`（headless 加 `--headless`） |
 | Python | 3.11 |

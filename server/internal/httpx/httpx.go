@@ -2,6 +2,7 @@
 package httpx
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -139,6 +140,11 @@ func AccessLog(logger *slog.Logger, next http.Handler) http.Handler {
 	})
 }
 
+// Limiter 抽象限流后端，便于在内存实现与 Redis 实现间切换。
+type Limiter interface {
+	Allow(ctx context.Context, key string) bool
+}
+
 // RateLimiter 是进程内固定窗口限流（单机单实例足够；多实例可换 Redis）。
 type RateLimiter struct {
 	mu       sync.Mutex
@@ -147,6 +153,8 @@ type RateLimiter struct {
 	counters map[string]*counter
 	now      func() time.Time
 }
+
+var _ Limiter = (*RateLimiter)(nil)
 
 type counter struct {
 	n     int
@@ -164,7 +172,7 @@ func NewRateLimiter(limitPerMinute int) *RateLimiter {
 }
 
 // Allow 判断 key（通常为账号或客户端 IP）当前是否放行。
-func (l *RateLimiter) Allow(key string) bool {
+func (l *RateLimiter) Allow(_ context.Context, key string) bool {
 	if l.limit <= 0 {
 		return true
 	}
@@ -183,10 +191,10 @@ func (l *RateLimiter) Allow(key string) bool {
 	return true
 }
 
-// Middleware 返回限流中间件；超限返回 429 RATE_LIMITED。
-func (l *RateLimiter) Middleware(next http.Handler) http.Handler {
+// Limit 返回限流中间件；超限返回 429 RATE_LIMITED。
+func Limit(l Limiter, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !l.Allow(clientKey(r)) {
+		if l != nil && !l.Allow(r.Context(), clientKey(r)) {
 			WriteError(w, r, http.StatusTooManyRequests, CodeRateLimited, "请求过于频繁")
 			return
 		}

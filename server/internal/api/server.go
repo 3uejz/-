@@ -26,12 +26,14 @@ type Deps struct {
 	Legacy    *legacy.Service
 	Telemetry *telemetry.Service
 	World     *worldsim.Simulator
+	// Limiter 为可选限流后端；为 nil 时使用进程内默认实现。
+	Limiter httpx.Limiter
 }
 
 // Server 持有依赖并提供路由。
 type Server struct {
 	deps    Deps
-	limiter *httpx.RateLimiter
+	limiter httpx.Limiter
 	world   *worldsim.Simulator
 
 	worldMu    sync.Mutex
@@ -48,9 +50,13 @@ func New(deps Deps) *Server {
 	if world == nil {
 		world = worldsim.NewSimulator(1, 8_000_000_000)
 	}
+	limiter := deps.Limiter
+	if limiter == nil {
+		limiter = httpx.NewRateLimiter(deps.Config.RateLimitRPS * 60)
+	}
 	return &Server{
 		deps:    deps,
-		limiter: httpx.NewRateLimiter(deps.Config.RateLimitRPS * 60),
+		limiter: limiter,
 		world:   world,
 	}
 }
@@ -94,7 +100,7 @@ func (s *Server) Router() http.Handler {
 
 	var h http.Handler = mux
 	h = httpx.MaxBody(s.deps.Config.SaveMaxBytes, h)
-	h = s.limiter.Middleware(h)
+	h = httpx.Limit(s.limiter, h)
 	h = httpx.AccessLog(s.deps.Logger, h)
 	h = httpx.Recover(s.deps.Logger, h)
 	h = httpx.RequestID(h)
