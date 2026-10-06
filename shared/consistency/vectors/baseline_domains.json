@@ -1,0 +1,80 @@
+{
+  "spec": "baseline_domains",
+  "version": 1,
+  "note": "从 shared/consistency/baseline/ 抽取的代表常量，用于 Go 与 GDScript 逐值对齐测试。",
+  "domains": {
+    "survival": {
+      "HUNGER_DECAY_PER_MIN": 0.21,
+      "THIRST_DECAY_PER_MIN": 0.42,
+      "CLEANLINESS_DECAY_PER_MIN": 0.06944444444444445,
+      "SLEEP_DEBT_THRESHOLD": 60.0,
+      "MOOD_RECOVER_PER_HOUR": 1.0,
+      "LIFESPAN_BASE_YEARS": 78.0,
+      "DYING_HEALTH_THRESHOLD": 10.0,
+      "ADDICTION_DEPENDENT_MIN": 20.0,
+      "NUTRITION_LIGHT_THRESHOLD": 30.0
+    },
+    "region": {
+      "REGION_BIRTH_RATE_ANNUAL": 0.012,
+      "REGION_DEATH_RATE_ANNUAL": 0.009,
+      "REGION_MIGRATION_RATE_ANNUAL": 0.0,
+      "REGION_ECONOMY_GROWTH_ANNUAL": 0.02,
+      "REGION_DAYS_PER_YEAR": 365.25
+    },
+    "geo_transport": {
+      "EARTH_RADIUS_KM": 6371.0,
+      "GEO_MIN_TOTAL_LOCATIONS": 1000,
+      "TRANSPORT_CONGESTION_PEAK_FACTOR": 1.5,
+      "TRANSPORT_TRANSFER_MINUTES_DEFAULT": 8.0,
+      "TRANSPORT_MODE_ORDER": [
+        "walk",
+        "bicycle",
+        "bus",
+        "metro",
+        "taxi",
+        "ride_hailing",
+        "self_drive",
+        "train",
+        "high_speed_rail",
+        "coach",
+        "airplane",
+        "ship"
+      ]
+    },
+    "climate_weather": {
+      "WEATHER_TEMP_MIN": -60.0,
+      "WEATHER_TEMP_MAX": 60.0,
+      "WEATHER_HUMIDITY_MAX": 100.0,
+      "WEATHER_FORECAST_DAYS": 7,
+      "WEATHER_MARKOV_PERSISTENCE": 2.5,
+      "WEATHER_DAYS_PER_YEAR": 365.25,
+      "CLIMATE_ZONE_ORDER": [
+        "tropical_rainforest",
+        "tropical_monsoon",
+        "tropical_savanna",
+        "tropical_desert",
+        "subtropical_monsoon",
+        "mediterranean",
+        "temperate_oceanic",
+        "temperate_continental",
+        "subarctic_conifer",
+        "polar_highland"
+      ]
+    },
+    "era": {
+      "ERA_COUNT": 9
+    },
+    "economy": {
+      "MONEY_MINOR_SCALE": 100,
+      "FX_ANNUAL_VOLATILITY": 0.08,
+      "PRICE_FLOOR_RATIO": 0.2,
+      "PRICE_CEIL_RATIO": 5.0,
+      "TAX_CORPORATE_RATE": 0.25,
+      "TAX_VAT_RATE": 0.13,
+      "LOTTERY_WIN_CHANCE": 0.001,
+      "MACRO_BASE_INFLATION": 0.02,
+      "GBM_DRIFT_DEFAULT": 0.08,
+      "BANK_CREDIT_START": 700
+    }
+  }
+}
