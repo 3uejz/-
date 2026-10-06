@@ -18,7 +18,7 @@ func carriers() -> Array:
 
 
 func new_store() -> Dictionary:
-	return {"memories": [], "seq": 0}
+	return {"memories": [], "seq": 0, "unlocks": []}
 
 
 ## 生成世界记忆（R29/R31）。gravity 0..100，重大度越高衰减越慢。
@@ -92,9 +92,50 @@ func top_memories(store: Dictionary, now_minute: int, limit: int = 10) -> Array:
 	return out
 
 
+## 注册一条记忆所解锁的专属事件（R97.3；design「解锁专属事件与选项」）。
+func register_unlock(store: Dictionary, memory_id: String, event_id: String, threshold: float = 1.0, name: String = "") -> Dictionary:
+	if not _find(store, memory_id):
+		return {"ok": false, "reason": "memory_not_found"}
+	if "unlocks" not in store:
+		store["unlocks"] = []
+	for u in store["unlocks"]:
+		if str(u["event_id"]) == event_id:
+			return {"ok": false, "reason": "duplicate_event", "event_id": event_id}
+	store["unlocks"].append({
+		"memory_id": memory_id, "event_id": event_id,
+		"threshold": clampf(threshold, 0.0, 100.0), "name": name,
+	})
+	return {"ok": true, "event_id": event_id}
+
+
+## 当前时点因世界记忆而解锁的事件（可按主体过滤；权重仍需高于阈值）。
+func unlocked_events(store: Dictionary, now_minute: int, subject: String = "") -> Array:
+	var out: Array = []
+	for u in store.get("unlocks", []):
+		var mem: Dictionary = _find(store, str(u["memory_id"]))
+		if mem.is_empty():
+			continue
+		if subject != "" and not (mem["subjects"] as Array).has(subject):
+			continue
+		if current_weight(mem, now_minute) >= float(u["threshold"]):
+			out.append({"event_id": str(u["event_id"]), "name": str(u["name"]), "memory_id": str(u["memory_id"])})
+	return out
+
+
+func _find(store: Dictionary, memory_id: String) -> Dictionary:
+	for m in store["memories"]:
+		if str(m["id"]) == memory_id:
+			return m
+	return {}
+
+
 func to_dict(store: Dictionary) -> Dictionary:
 	return store.duplicate(true)
 
 
 func from_dict(data: Dictionary) -> Dictionary:
-	return {"memories": (data.get("memories", []) as Array).duplicate(true), "seq": int(data.get("seq", 0))}
+	return {
+		"memories": (data.get("memories", []) as Array).duplicate(true),
+		"seq": int(data.get("seq", 0)),
+		"unlocks": (data.get("unlocks", []) as Array).duplicate(true),
+	}
