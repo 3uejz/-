@@ -69,6 +69,54 @@ func (m *MemoryStore) DeleteRefresh(_ context.Context, hash string) error {
 	return nil
 }
 
+func (m *MemoryStore) SetDisabled(_ context.Context, accountID string, disabled bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	a, ok := m.byID[accountID]
+	if !ok {
+		return ErrInvalidToken
+	}
+	a.Disabled = disabled
+	m.byID[accountID] = a
+	m.byName[a.Username] = a
+	return nil
+}
+
+func (m *MemoryStore) Devices(_ context.Context, accountID string) []RefreshRecord {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var out []RefreshRecord
+	for _, r := range m.refreshes {
+		if r.AccountID == accountID {
+			out = append(out, r)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
+	return out
+}
+
+func (m *MemoryStore) RevokeDevice(_ context.Context, accountID, deviceID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for hash, r := range m.refreshes {
+		if r.AccountID == accountID && r.DeviceID == deviceID {
+			delete(m.refreshes, hash)
+		}
+	}
+	return nil
+}
+
+func (m *MemoryStore) RevokeAllDevices(_ context.Context, accountID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for hash, r := range m.refreshes {
+		if r.AccountID == accountID {
+			delete(m.refreshes, hash)
+		}
+	}
+	return nil
+}
+
 // ListAccounts 返回按创建时间倒序的账号分页；afterID 为上一页最后一项 ID。
 func (m *MemoryStore) ListAccounts(_ context.Context, limit int, afterID string) ([]Account, string) {
 	m.mu.Lock()
@@ -102,4 +150,16 @@ func (m *MemoryStore) ListAccounts(_ context.Context, limit int, afterID string)
 		next = page[len(page)-1].ID
 	}
 	return page, next
+}
+
+func (m *MemoryStore) Count(_ context.Context) (int, int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	disabled := 0
+	for _, a := range m.byID {
+		if a.Disabled {
+			disabled++
+		}
+	}
+	return len(m.byID), disabled
 }

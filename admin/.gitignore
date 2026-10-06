@@ -1,0 +1,8 @@
+# 依赖与构建产物不入库；dist 由 Go 服务托管，保留于磁盘
+node_modules/
+dist/
+*.local
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*

@@ -113,6 +113,15 @@ func (d *DB) appliedVersions(ctx context.Context) (map[string]bool, error) {
 	return out, rows.Err()
 }
 
+// MigrationNames 返回编译内置的迁移文件名（升序），供管理后台展示。
+func MigrationNames() []string {
+	names, err := migrationFiles()
+	if err != nil {
+		return nil
+	}
+	return names
+}
+
 func migrationFiles() ([]string, error) {
 	entries, err := fs.ReadDir(migrationsFS, "migrations")
 	if err != nil {

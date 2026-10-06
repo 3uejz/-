@@ -64,6 +64,32 @@ func (s *PGStore) ByAccount(ctx context.Context, accountID string) []Event {
 	return out
 }
 
+func (s *PGStore) List(ctx context.Context, eventType string, limit int) []Event {
+	if limit <= 0 {
+		limit = 100
+	}
+	rows, err := s.pool.Query(ctx,
+		`SELECT event_id, event_type, occurred_at, account_id, payload
+		 FROM telemetry_events
+		 WHERE ($1 = '' OR event_type = $1)
+		 ORDER BY occurred_at DESC LIMIT $2`, eventType, limit)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []Event
+	for rows.Next() {
+		var e Event
+		var raw []byte
+		if err := rows.Scan(&e.EventID, &e.EventType, &e.OccurredAt, &e.AccountID, &raw); err != nil {
+			return out
+		}
+		e.Raw = json.RawMessage(raw)
+		out = append(out, e)
+	}
+	return out
+}
+
 func (s *PGStore) DeleteAccount(ctx context.Context, accountID string) int {
 	tag, err := s.pool.Exec(ctx, `DELETE FROM telemetry_events WHERE account_id=$1`, accountID)
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"lifetextsandbox/server/internal/admin"
 	"lifetextsandbox/server/internal/api"
 	"lifetextsandbox/server/internal/auth"
 	"lifetextsandbox/server/internal/backup"
@@ -63,6 +64,8 @@ func main() {
 		Legacy:    legacy.NewService(stores.Legacy),
 		Telemetry: telemetry.NewService(stores.Telemetry, cfg.TelemetryDays),
 		World:     worldsim.NewSimulator(1, 8_000_000_000),
+		Admin:     admin.NewService(stores.Admin),
+		Backup:    backup.New(cfg.DatabaseURL, cfg.BackupDir, 7),
 		Limiter:   stores.Limiter,
 	})
 

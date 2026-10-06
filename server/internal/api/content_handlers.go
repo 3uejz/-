@@ -41,34 +41,21 @@ func (s *Server) handleAnnouncements(w http.ResponseWriter, _ *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, list)
 }
 
-func (s *Server) handleAdminPublish(w http.ResponseWriter, r *http.Request, _ auth.Account) {
+func (s *Server) handleAdminPublish(w http.ResponseWriter, r *http.Request, actor auth.Account) {
 	doc, err := io.ReadAll(r.Body)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "读取请求体失败")
 		return
 	}
-	if _, err := s.deps.Content.PublishManifest(doc); err != nil {
+	tag, err := s.deps.Content.PublishManifest(doc)
+	if err != nil {
+		s.recordAudit(r, actor, "content.publish", "content_manifest", "", nil, nil, "error")
 		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "内容清单非法")
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
-}
-
-func (s *Server) handleAdminPutConfig(w http.ResponseWriter, r *http.Request, _ auth.Account) {
-	doc, err := io.ReadAll(r.Body)
-	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "读取请求体失败")
-		return
-	}
-	tag, err := s.deps.Content.PutConfig(doc)
-	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "配置非法")
-		return
-	}
+	s.recordAudit(r, actor, "content.publish", "content_manifest", tag, nil, map[string]any{"etag": tag}, "ok")
 	w.Header().Set("ETag", tag)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(doc)
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func matchTag(r *http.Request, tag string) bool {

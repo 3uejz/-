@@ -39,6 +39,16 @@ type Version struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// ScopedSlot 是带账号信息的槽位快照（后台存档运维用）。
+type ScopedSlot struct {
+	AccountID     string    `json:"account_id"`
+	Slot          int       `json:"slot"`
+	Version       int       `json:"version"`
+	Hash          string    `json:"hash"`
+	PlaythroughID string    `json:"playthrough_id,omitempty"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
 // Record 是槽内某版本的完整数据（doc 为加密后或明文 JSON 字节）。
 type Record struct {
 	Slot          int
@@ -57,6 +67,11 @@ type Store interface {
 	Versions(ctx context.Context, accountID string, slot int) ([]Version, error)
 	Slots(ctx context.Context, accountID string) []int
 	Append(ctx context.Context, accountID string, rec Record) error
+
+	// AdminSlots 返回全库最新槽位快照（按更新时间倒序，最多 limit 条），用于后台存档运维。
+	AdminSlots(ctx context.Context, limit int) []ScopedSlot
+	// AdminStats 返回全库存档统计：槽位数、版本数、文档体字节数（未知时为 0）。
+	AdminStats(ctx context.Context) (slots int, versions int, bytes int64)
 }
 
 // Service 编排存档逻辑。
@@ -112,6 +127,19 @@ func (s *Service) GetVersion(ctx context.Context, accountID string, slot, versio
 // Versions 返回历史版本列表（倒序）。
 func (s *Service) Versions(ctx context.Context, accountID string, slot int) ([]Version, error) {
 	return s.store.Versions(ctx, accountID, slot)
+}
+
+// AdminSlots 返回全库最新槽位快照（后台）。
+func (s *Service) AdminSlots(ctx context.Context, limit int) []ScopedSlot {
+	if limit <= 0 {
+		limit = 100
+	}
+	return s.store.AdminSlots(ctx, limit)
+}
+
+// AdminStats 返回全库存档统计（后台）。
+func (s *Service) AdminStats(ctx context.Context) (int, int, int64) {
+	return s.store.AdminStats(ctx)
 }
 
 // Put 写入新版本：If-Match 命中当前 ETag 才允许覆盖；Idempotency-Key 重放返回原结果。
@@ -313,4 +341,52 @@ func (m *MemoryStore) Slots(_ context.Context, accountID string) []int {
 	}
 	sort.Ints(slots)
 	return slots
+}
+
+func (m *MemoryStore) AdminSlots(_ context.Context, limit int) []ScopedSlot {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if limit <= 0 {
+		limit = 100
+	}
+	var out []ScopedSlot
+	for accountID, list := range m.records {
+		latest := map[int]Record{}
+		for _, r := range list {
+			if cur, ok := latest[r.Slot]; !ok || r.Version > cur.Version {
+				latest[r.Slot] = r
+			}
+		}
+		for _, r := range latest {
+			out = append(out, ScopedSlot{
+				AccountID:     accountID,
+				Slot:          r.Slot,
+				Version:       r.Version,
+				Hash:          r.Hash,
+				PlaythroughID: r.PlaythroughID,
+				UpdatedAt:     r.CreatedAt,
+			})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].UpdatedAt.After(out[j].UpdatedAt) })
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	return out
+}
+
+func (m *MemoryStore) AdminStats(_ context.Context) (int, int, int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	scoped := map[string]bool{}
+	versions := 0
+	var bytes int64
+	for accountID, list := range m.records {
+		for _, r := range list {
+			scoped[fmt.Sprintf("%s/%d", accountID, r.Slot)] = true
+			versions++
+			bytes += int64(len(r.Doc))
+		}
+	}
+	return len(scoped), versions, bytes
 }

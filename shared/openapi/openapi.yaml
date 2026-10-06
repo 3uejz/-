@@ -382,6 +382,28 @@ paths:
             application/json:
               schema: { $ref: "../schemas/worldsim.schema.json" }
 
+  /admin/me:
+    get:
+      tags: [admin]
+      summary: 当前管理员信息与权限
+      operationId: adminMe
+      responses:
+        "200":
+          description: 当前管理员
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/dashboard/summary:
+    get:
+      tags: [admin]
+      summary: 仪表盘汇总
+      operationId: adminDashboardSummary
+      responses:
+        "200": { description: 仪表盘汇总 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
   /admin/accounts:
     get:
       tags: [admin]
@@ -390,6 +412,12 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/Limit" }
         - { $ref: "#/components/parameters/Cursor" }
+        - name: q
+          in: query
+          schema: { type: string, description: 按用户名模糊搜索 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, disabled] }
       responses:
         "200":
           description: 账号分页
@@ -402,10 +430,192 @@ paths:
                   next_cursor: { type: [string, "null"] }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /admin/accounts/{id}:
+    get:
+      tags: [admin]
+      summary: 账号详情
+      operationId: adminAccountDetail
+      parameters:
+        - { $ref: "#/components/parameters/AdminId" }
+      responses:
+        "200": { description: 账号详情 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/accounts/{id}/disable:
+    post:
+      tags: [admin]
+      summary: 封禁账号
+      operationId: adminDisableAccount
+      parameters:
+        - { $ref: "#/components/parameters/AdminId" }
+      responses:
+        "200":
+          description: 已封禁
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/accounts/{id}/enable:
+    post:
+      tags: [admin]
+      summary: 解封账号
+      operationId: adminEnableAccount
+      parameters:
+        - { $ref: "#/components/parameters/AdminId" }
+      responses:
+        "200":
+          description: 已解封
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/accounts/{id}/devices:
+    get:
+      tags: [admin]
+      summary: 账号设备列表
+      operationId: adminAccountDevices
+      parameters:
+        - { $ref: "#/components/parameters/AdminId" }
+      responses:
+        "200": { description: 设备列表 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/accounts/{id}/devices/{device_id}/revoke:
+    post:
+      tags: [admin]
+      summary: 吊销设备 refresh
+      operationId: adminRevokeDevice
+      parameters:
+        - { $ref: "#/components/parameters/AdminId" }
+        - { $ref: "#/components/parameters/DeviceId" }
+      responses:
+        "204": { description: 已吊销 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/saves:
+    get:
+      tags: [admin]
+      summary: 存档列表（全库）
+      operationId: adminListSaves
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+      responses:
+        "200": { description: 存档槽位快照 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/saves/{id}:
+    get:
+      tags: [admin]
+      summary: 存档详情（id 为 account_id:slot）
+      operationId: adminSaveDetail
+      parameters:
+        - { $ref: "#/components/parameters/AdminSaveId" }
+      responses:
+        "200": { description: 存档详情 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/saves/{id}/versions:
+    get:
+      tags: [admin]
+      summary: 存档历史版本
+      operationId: adminSaveVersions
+      parameters:
+        - { $ref: "#/components/parameters/AdminSaveId" }
+      responses:
+        "200":
+          description: 版本列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/SaveVersion" } }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/saves/{id}/rollback:
+    post:
+      tags: [admin]
+      summary: 回滚存档到指定版本
+      operationId: adminSaveRollback
+      parameters:
+        - { $ref: "#/components/parameters/AdminSaveId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+      responses:
+        "200": { description: 已回滚 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/storage/usage:
+    get:
+      tags: [admin]
+      summary: 存储占用
+      operationId: adminStorageUsage
+      responses:
+        "200": { description: 占用统计 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/storage/gc:
+    post:
+      tags: [admin]
+      summary: 孤儿对象清理
+      operationId: adminStorageGC
+      responses:
+        "202": { description: 已受理 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/packs:
+    get:
+      tags: [admin]
+      summary: 内容包列表
+      operationId: adminContentPacks
+      responses:
+        "200": { description: 内容包列表 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [admin]
+      summary: 上传内容包并合入清单
+      operationId: adminContentPackUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentPack" }
+      responses:
+        "201": { description: 已上传 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/packs/{name}/validate:
+    post:
+      tags: [admin]
+      summary: 校验内容包
+      operationId: adminContentValidate
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: 校验报告 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
   /admin/content/publish:
     post:
       tags: [admin]
-      summary: 发布内容包（admin）
+      summary: 发布内容包清单（admin）
       operationId: adminPublishContent
       requestBody:
         required: true
@@ -413,25 +623,325 @@ paths:
           application/json:
             schema: { $ref: "../schemas/content-manifest.schema.json" }
       responses:
-        "202": { description: 已受理发布" }
+        "202": { description: 已受理发布 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/releases:
+    get:
+      tags: [admin]
+      summary: 发布批次列表
+      operationId: adminListReleases
+      responses:
+        "200": { description: 发布批次列表 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [admin]
+      summary: 创建灰度发布批次
+      operationId: adminCreateRelease
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentRelease" }
+      responses:
+        "201": { description: 已创建 }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/releases/{id}/pause:
+    post:
+      tags: [admin]
+      summary: 暂停放量
+      operationId: adminPauseRelease
+      parameters: [ { $ref: "#/components/parameters/ReleaseId" } ]
+      responses:
+        "200": { description: 已暂停 }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/releases/{id}/resume:
+    post:
+      tags: [admin]
+      summary: 继续放量
+      operationId: adminResumeRelease
+      parameters: [ { $ref: "#/components/parameters/ReleaseId" } ]
+      responses:
+        "200": { description: 已继续 }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/content/releases/{id}/rollback:
+    post:
+      tags: [admin]
+      summary: 回滚发布
+      operationId: adminRollbackRelease
+      parameters: [ { $ref: "#/components/parameters/ReleaseId" } ]
+      responses:
+        "200": { description: 已回滚 }
+        "409": { $ref: "#/components/responses/Conflict" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /admin/config:
+    get:
+      tags: [admin]
+      summary: 读取远程配置（含当前版本与 revision）
+      operationId: adminGetConfig
+      responses:
+        "200":
+          description: 当前配置版本
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfigVersion" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     put:
       tags: [admin]
-      summary: 编辑远程配置（admin）
+      summary: 编辑并发布远程配置（乐观锁）
       operationId: adminPutConfig
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "../schemas/remote-config.schema.json" }
+            schema:
+              type: object
+              required: [values]
+              properties:
+                revision: { type: integer, minimum: 0 }
+                values:
+                  type: object
+                  additionalProperties: true
       responses:
         "200":
-          description: 已更新
+          description: 已发布
           content:
             application/json:
-              schema: { $ref: "../schemas/remote-config.schema.json" }
+              schema: { $ref: "#/components/schemas/ConfigVersion" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/config/versions:
+    get:
+      tags: [admin]
+      summary: 配置版本历史
+      operationId: adminConfigVersions
+      responses:
+        "200": { description: 版本历史 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/config/rollback:
+    post:
+      tags: [admin]
+      summary: 回滚配置到历史版本
+      operationId: adminConfigRollback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+      responses:
+        "200": { description: 已回滚 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/announcements:
+    get:
+      tags: [admin]
+      summary: 公告列表
+      operationId: adminListAnnouncements
+      responses:
+        "200": { description: 公告列表 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [admin]
+      summary: 新建公告
+      operationId: adminCreateAnnouncement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminAnnouncement" }
+      responses:
+        "201": { description: 已创建 }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/announcements/{id}:
+    put:
+      tags: [admin]
+      summary: 编辑公告
+      operationId: adminUpdateAnnouncement
+      parameters: [ { $ref: "#/components/parameters/AdminId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminAnnouncement" }
+      responses:
+        "200": { description: 已更新 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [admin]
+      summary: 删除公告
+      operationId: adminDeleteAnnouncement
+      parameters: [ { $ref: "#/components/parameters/AdminId" } ]
+      responses:
+        "204": { description: 已删除 }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/telemetry/events:
+    get:
+      tags: [admin]
+      summary: 遥测明细
+      operationId: adminTelemetryEvents
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - name: event_type
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: 遥测明细 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/telemetry/aggregates:
+    get:
+      tags: [admin]
+      summary: 遥测日聚合
+      operationId: adminTelemetryAggregates
+      responses:
+        "200": { description: 聚合结果 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/telemetry/life-stats:
+    get:
+      tags: [admin]
+      summary: 人生统计
+      operationId: adminTelemetryLifeStats
+      responses:
+        "200": { description: 人生统计 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/telemetry/export:
+    post:
+      tags: [admin]
+      summary: 导出遥测
+      operationId: adminTelemetryExport
+      parameters:
+        - name: format
+          in: query
+          schema: { type: string, enum: [json, csv], default: json }
+        - name: account_id
+          in: query
+          schema: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+      responses:
+        "200": { description: 导出结果 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/telemetry/purge:
+    post:
+      tags: [admin]
+      summary: 合规删除遥测
+      operationId: adminTelemetryPurge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+                before: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+      responses:
+        "200": { description: 已删除 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/audit-logs:
+    get:
+      tags: [admin]
+      summary: 审计日志
+      operationId: adminAuditLogs
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: actor
+          in: query
+          schema: { type: string }
+        - name: target
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: 审计日志 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/assistant/status:
+    get:
+      tags: [admin]
+      summary: 运营助手状态
+      operationId: adminAssistantStatus
+      responses:
+        "200": { description: 状态（默认关闭） }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/assistant/query:
+    post:
+      tags: [admin]
+      summary: 运营助手查询
+      operationId: adminAssistantQuery
+      responses:
+        "200": { description: 查询结果 }
+        "503": { description: 运营助手未启用 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/assistant/draft:
+    post:
+      tags: [admin]
+      summary: 生成内容草稿
+      operationId: adminAssistantDraft
+      responses:
+        "200": { description: 草稿 }
+        "503": { description: 运营助手未启用 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/system/status:
+    get:
+      tags: [admin]
+      summary: 系统状态
+      operationId: adminSystemStatus
+      responses:
+        "200": { description: 组件状态与密钥存在性 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/system/backups:
+    get:
+      tags: [admin]
+      summary: 备份列表
+      operationId: adminSystemBackups
+      responses:
+        "200": { description: 备份列表 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/system/backup:
+    post:
+      tags: [admin]
+      summary: 手动触发备份
+      operationId: adminSystemBackup
+      responses:
+        "202": { description: 已触发 }
+        "503": { description: 备份未启用 }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /admin/system/migrations:
+    get:
+      tags: [admin]
+      summary: 迁移版本
+      operationId: adminSystemMigrations
+      responses:
+        "200": { description: 已内置迁移列表 }
         "403": { $ref: "#/components/responses/Forbidden" }
 
 components:
@@ -455,6 +965,26 @@ components:
       name: cursor
       in: query
       schema: { type: string }
+    AdminId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, description: "资源 ID。" }
+    DeviceId:
+      name: device_id
+      in: path
+      required: true
+      schema: { type: string }
+    AdminSaveId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, description: "存档 ID，形如 account_id:slot。" }
+    ReleaseId:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -566,4 +1096,73 @@ components:
         id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
         username: { type: string }
         role: { type: string, enum: [player, admin] }
+        disabled: { type: boolean }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    ContentPack:
+      type: object
+      additionalProperties: false
+      required: [name, kind, version, hash, size, url]
+      properties:
+        name: { type: string }
+        kind: { type: string, enum: [core, data, art, audio] }
+        version: { type: string }
+        hash: { type: string, description: "sha256:<hex>。" }
+        size: { type: integer, minimum: 0 }
+        url: { type: string }
+        status: { type: string }
+    ContentRelease:
+      type: object
+      additionalProperties: false
+      required: [pack_name, pack_version]
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        pack_name: { type: string }
+        pack_version: { type: string }
+        strategy: { type: string, enum: [all, percent, accounts] }
+        rollout_percent: { type: integer, minimum: 0, maximum: 100 }
+        account_list: { type: array, items: { $ref: "../schemas/common.schema.json#/$defs/uuid" } }
+        status: { type: string, enum: [scheduled, rolling, paused, completed, rolled_back] }
+        manifest_version: { type: integer, minimum: 0 }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+        updated_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    ConfigVersion:
+      type: object
+      additionalProperties: false
+      required: [version, values]
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        version: { type: integer, minimum: 0 }
+        revision: { type: integer, minimum: 0 }
+        values: { type: object, additionalProperties: true }
+        created_by: { type: string }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    AdminAnnouncement:
+      type: object
+      additionalProperties: false
+      required: [title]
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        title: { type: string }
+        body: { type: string }
+        audience: { type: string, enum: [all, accounts] }
+        account_list: { type: array, items: { $ref: "../schemas/common.schema.json#/$defs/uuid" } }
+        start_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+        end_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+        status: { type: string, enum: [draft, scheduled, published, offline] }
+        created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+        updated_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }
+    AuditEntry:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        actor_account_id: { $ref: "../schemas/common.schema.json#/$defs/uuid" }
+        action: { type: string }
+        target_type: { type: string }
+        target_id: { type: string }
+        before: { type: object, additionalProperties: true }
+        after: { type: object, additionalProperties: true }
+        result: { type: string, enum: [ok, error] }
+        ip: { type: string }
+        user_agent: { type: string }
         created_at: { $ref: "../schemas/common.schema.json#/$defs/timestamp" }

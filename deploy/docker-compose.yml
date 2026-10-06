@@ -1,5 +1,4 @@
 # 私有服务器部署（本开发容器内不可用 Docker，请在私有服务器执行）
-# 后端与 Admin 的 service 定义随后端骨架就绪后补齐。
 services:
   postgres:
     image: postgres:16-alpine
@@ -12,6 +11,11 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-life}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -35,7 +39,38 @@ services:
       - "127.0.0.1:9001:9001"
     restart: unless-stopped
 
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?必须在 .env 中提供 JWT_SECRET（至少 32 字节）}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DATABASE_URL: postgres://${POSTGRES_USER:-life}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-life}?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      OBJECT_ENDPOINT: minio:9000
+      OBJECT_ACCESS_KEY: ${MINIO_ROOT_USER:-life}
+      OBJECT_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me}
+      OBJECT_BUCKET: ${OBJECT_BUCKET:-lifetext}
+      DATA_DIR: /app/data
+      BACKUP_DIR: /app/backups
+      ADMIN_DIR: /app/admin/dist
+      TELEMETRY_RETENTION_DAYS: ${TELEMETRY_RETENTION_DAYS:-90}
+    volumes:
+      - serverdata:/app/data
+      - backups:/app/backups
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+
 volumes:
   pgdata:
   redisdata:
   miniodata:
+  serverdata:
+  backups:

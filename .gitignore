@@ -17,6 +17,10 @@ server/data/
 server/backups/
 *.test
 
+# Go 工具链构建产物（由 go build 生成，不入库）
+tools/genbaseline/genbaseline
+tools/contentbuilder/contentbuilder
+
 # Redis 本地持久化文件
 dump.rdb
 

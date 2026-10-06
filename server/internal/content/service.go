@@ -126,6 +126,13 @@ func (s *Service) AddAnnouncement(a Announcement) Announcement {
 	return a
 }
 
+// ReplaceAnnouncements 用给定列表替换当前公告（admin 发布/下线时同步面向玩家的视图）。
+func (s *Service) ReplaceAnnouncements(list []Announcement) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.announcements = append([]Announcement(nil), list...)
+}
+
 func etag(doc []byte) string {
 	sum := sha256.Sum256(doc)
 	return `"` + hex.EncodeToString(sum[:8]) + `"`

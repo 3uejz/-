@@ -25,6 +25,7 @@ type Account struct {
 	Username     string    `json:"username"`
 	PasswordHash string    `json:"-"`
 	Role         string    `json:"role"`
+	Disabled     bool      `json:"disabled"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 
@@ -50,10 +51,15 @@ type Store interface {
 	CreateAccount(ctx context.Context, a Account) error
 	AccountByUsername(ctx context.Context, username string) (Account, bool)
 	AccountByID(ctx context.Context, id string) (Account, bool)
+	SetDisabled(ctx context.Context, accountID string, disabled bool) error
 	SaveRefresh(ctx context.Context, r RefreshRecord) error
 	RefreshByHash(ctx context.Context, hash string) (RefreshRecord, bool)
 	DeleteRefresh(ctx context.Context, hash string) error
+	Devices(ctx context.Context, accountID string) []RefreshRecord
+	RevokeDevice(ctx context.Context, accountID, deviceID string) error
+	RevokeAllDevices(ctx context.Context, accountID string) error
 	ListAccounts(ctx context.Context, limit int, afterID string) ([]Account, string)
+	Count(ctx context.Context) (total int, disabled int)
 }
 
 // Service 编排账号与令牌逻辑。
@@ -105,7 +111,7 @@ func (s *Service) Register(ctx context.Context, username, password, deviceID str
 // Login 校验口令并签发令牌对。
 func (s *Service) Login(ctx context.Context, username, password, deviceID string) (Tokens, error) {
 	account, ok := s.store.AccountByUsername(ctx, strings.TrimSpace(username))
-	if !ok || !VerifyPassword(password, account.PasswordHash) {
+	if !ok || account.Disabled || !VerifyPassword(password, account.PasswordHash) {
 		return Tokens{}, ErrInvalidCredential
 	}
 	return s.issue(ctx, account, deviceID)
@@ -144,7 +150,7 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) (Account
 		return Account{}, err
 	}
 	account, ok := s.store.AccountByID(ctx, claims.Sub)
-	if !ok {
+	if !ok || account.Disabled {
 		return Account{}, ErrInvalidToken
 	}
 	return account, nil
@@ -153,6 +159,47 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) (Account
 // ListAccounts 返回账号分页（admin）。
 func (s *Service) ListAccounts(ctx context.Context, limit int, afterID string) ([]Account, string) {
 	return s.store.ListAccounts(ctx, limit, afterID)
+}
+
+// Count 返回账号总数与封禁数（admin 仪表盘）。
+func (s *Service) Count(ctx context.Context) (total int, disabled int) {
+	return s.store.Count(ctx)
+}
+
+// Account 返回单个账号（admin）。
+func (s *Service) Account(ctx context.Context, accountID string) (Account, bool) {
+	return s.store.AccountByID(ctx, accountID)
+}
+
+// SetDisabled 封禁/解封账号（admin）。封禁后吊销其全部 refresh。
+func (s *Service) SetDisabled(ctx context.Context, accountID string, disabled bool) (Account, error) {
+	account, ok := s.store.AccountByID(ctx, accountID)
+	if !ok {
+		return Account{}, ErrInvalidToken
+	}
+	if err := s.store.SetDisabled(ctx, accountID, disabled); err != nil {
+		return Account{}, err
+	}
+	if disabled {
+		_ = s.store.RevokeAllDevices(ctx, accountID)
+	}
+	account.Disabled = disabled
+	return account, nil
+}
+
+// Devices 返回账号的在线设备（refresh 记录）。
+func (s *Service) Devices(ctx context.Context, accountID string) []RefreshRecord {
+	return s.store.Devices(ctx, accountID)
+}
+
+// RevokeDevice 吊销指定设备的 refresh。
+func (s *Service) RevokeDevice(ctx context.Context, accountID, deviceID string) error {
+	return s.store.RevokeDevice(ctx, accountID, deviceID)
+}
+
+// RevokeAllDevices 吊销账号全部 refresh。
+func (s *Service) RevokeAllDevices(ctx context.Context, accountID string) error {
+	return s.store.RevokeAllDevices(ctx, accountID)
 }
 
 // EnsureAdmin 幂等创建管理员账号（首次启动时用密钥初始化）。

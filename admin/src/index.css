@@ -1,0 +1,17 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+}
+
+/* 暗色模式下滚动条与页面底色保持协调 */
+html[data-theme='dark'] {
+  color-scheme: dark;
+}

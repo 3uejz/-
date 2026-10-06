@@ -132,3 +132,33 @@ func (s *PGStore) Slots(ctx context.Context, accountID string) []int {
 	}
 	return out
 }
+
+func (s *PGStore) AdminSlots(ctx context.Context, limit int) []ScopedSlot {
+	if limit <= 0 {
+		limit = 100
+	}
+	rows, err := s.pool.Query(ctx,
+		`SELECT account_id, slot, latest_version, hash, playthrough_id, updated_at
+		 FROM save_slots ORDER BY updated_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []ScopedSlot
+	for rows.Next() {
+		var sc ScopedSlot
+		if err := rows.Scan(&sc.AccountID, &sc.Slot, &sc.Version, &sc.Hash, &sc.PlaythroughID, &sc.UpdatedAt); err != nil {
+			return out
+		}
+		out = append(out, sc)
+	}
+	return out
+}
+
+func (s *PGStore) AdminStats(ctx context.Context) (int, int, int64) {
+	var slots, versions int
+	_ = s.pool.QueryRow(ctx, `SELECT count(*) FROM save_slots`).Scan(&slots)
+	_ = s.pool.QueryRow(ctx, `SELECT count(*) FROM save_versions`).Scan(&versions)
+	// 文档体存放于对象存储，PG 不持有字节数；字节数由对象存储统计补充。
+	return slots, versions, 0
+}

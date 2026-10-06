@@ -33,6 +33,7 @@ type Config struct {
 	ObjectBucket   string
 	DataDir        string
 	BackupDir      string
+	AdminDir       string
 	TelemetryDays  int
 }
 
@@ -58,6 +59,7 @@ func Load(getenv func(string) string) (Config, error) {
 		ObjectBucket:   getOr(getenv, "OBJECT_BUCKET", "lifetext"),
 		DataDir:        getOr(getenv, "DATA_DIR", "data"),
 		BackupDir:      getOr(getenv, "BACKUP_DIR", "backups"),
+		AdminDir:       getOr(getenv, "ADMIN_DIR", "admin/dist"),
 		TelemetryDays:  intval(getenv, "TELEMETRY_RETENTION_DAYS", 90),
 	}
 	if cfg.JWTSecret == "" {

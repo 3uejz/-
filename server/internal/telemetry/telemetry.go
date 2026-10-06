@@ -24,6 +24,8 @@ type Store interface {
 	Purge(ctx context.Context, before time.Time) int
 	// ByAccount 返回账号的事件（用于导出）。
 	ByAccount(ctx context.Context, accountID string) []Event
+	// List 返回最近事件（eventType 为空时不过滤），按发生时间倒序，最多 limit 条。
+	List(ctx context.Context, eventType string, limit int) []Event
 	// DeleteAccount 删除账号的全部事件，返回条数。
 	DeleteAccount(ctx context.Context, accountID string) int
 }
@@ -97,6 +99,24 @@ func (s *Service) Export(ctx context.Context, accountID string) []json.RawMessag
 // Delete 删除账号遥测（R37.13 数据删除权）。
 func (s *Service) Delete(ctx context.Context, accountID string) int {
 	return s.store.DeleteAccount(ctx, accountID)
+}
+
+// List 返回最近事件（admin）。
+func (s *Service) List(ctx context.Context, eventType string, limit int) []Event {
+	if limit <= 0 {
+		limit = 100
+	}
+	return s.store.List(ctx, eventType, limit)
+}
+
+// PurgeBefore 删除 before 之前的事件（admin），返回条数。
+func (s *Service) PurgeBefore(ctx context.Context, before time.Time) int {
+	return s.store.Purge(ctx, before)
+}
+
+// Retention 返回明细保留时长。
+func (s *Service) Retention() time.Duration {
+	return s.retention
 }
 
 // AggregateByType 按事件类型聚合计费，用于人生统计看板（R39.3）。
@@ -206,6 +226,23 @@ func (m *MemoryStore) ByAccount(_ context.Context, accountID string) []Event {
 		if e.AccountID == accountID {
 			out = append(out, e)
 		}
+	}
+	return out
+}
+
+func (m *MemoryStore) List(_ context.Context, eventType string, limit int) []Event {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if limit <= 0 {
+		limit = 100
+	}
+	out := make([]Event, 0, limit)
+	for i := len(m.order) - 1; i >= 0 && len(out) < limit; i-- {
+		e := m.order[i]
+		if eventType != "" && e.EventType != eventType {
+			continue
+		}
+		out = append(out, e)
 	}
 	return out
 }

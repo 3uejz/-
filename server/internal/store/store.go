@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"path/filepath"
 
+	"lifetextsandbox/server/internal/admin"
 	"lifetextsandbox/server/internal/auth"
 	"lifetextsandbox/server/internal/blob"
 	"lifetextsandbox/server/internal/config"
@@ -25,6 +26,7 @@ type Deps struct {
 	Saves     saves.Store
 	Legacy    legacy.Store
 	Telemetry telemetry.Store
+	Admin     admin.Store
 	Limiter   httpx.Limiter
 	Close     func()
 }
@@ -39,6 +41,7 @@ func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, e
 			Saves:     saves.NewMemoryStore(),
 			Legacy:    legacy.NewMemoryStore(),
 			Telemetry: telemetry.NewMemoryStore(),
+			Admin:     admin.NewMemoryStore(),
 			Limiter:   limiter,
 			Close:     closeCache,
 		}, nil
@@ -78,6 +81,7 @@ func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, e
 		Saves:     saves.NewPGStore(database.Pool, blobs),
 		Legacy:    legacy.NewPGStore(database.Pool),
 		Telemetry: telemetry.NewPGStore(database.Pool),
+		Admin:     admin.NewPGStore(database.Pool),
 		Limiter:   limiter,
 		Close: func() {
 			closeCache()
