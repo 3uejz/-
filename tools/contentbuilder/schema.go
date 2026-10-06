@@ -98,6 +98,10 @@ var categorySpecs = map[string]categorySpec{
 	"activities": {name: "activities", kind: "data", fields: []fieldSpec{
 		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true},
 	}},
+	"goldfingers": {name: "goldfingers", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"rarity", tString, true},
+		{"category", tString, true}, {"description", tString, true},
+	}},
 }
 
 // categoryOrder 稳定输出顺序。

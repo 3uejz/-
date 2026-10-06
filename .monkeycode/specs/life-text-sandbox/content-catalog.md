@@ -209,3 +209,4 @@
 - 强度预算：每稀有度设 power budget，效果带 cost（持续型按周期计费），总 cost 不超预算。
 - 面板模块复用：任务、积分商城、签到抽奖、属性可视化/鉴定、空间与合成；由 `MetaSystem` 统一注册表管理，金手指仅声明启用哪些模块。
 - 全部金手指独立于 D44 异常体系，世界内不可感知，不进家族史；每代轮回重新抽取。
+- 骨架：`content/catalog/goldfingers.json`（当前 60 条：普通 30 / 稀有 18 / 史诗 9 / 传说 3），类别由 `tools/contentbuilder` 的 `goldfingers` spec 校验；结构支持扩展至 300+。

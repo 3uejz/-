@@ -12,6 +12,9 @@
     "daily_points_gained": { "type": "integer", "minimum": 0, "description": "当日已获积分，用于上限判定。" },
     "rerolls_used": { "type": "integer", "minimum": 0 },
     "pity_counter": { "type": "integer", "minimum": 0, "description": "距上次高稀有度的抽取计数。" },
+    "draw_count": { "type": "integer", "minimum": 0, "description": "本代累计抽取次数。" },
+    "gen": { "type": "integer", "minimum": 1, "description": "当前世代；每代轮回重新抽取。" },
+    "meta_achievements": { "type": "boolean", "description": "启用金手指的存档其成就单独标记（R100.7）。" },
     "items": {
       "type": "array",
       "items": { "$ref": "#/$defs/goldfinger_item" }

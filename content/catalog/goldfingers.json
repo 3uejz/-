@@ -1,0 +1,1536 @@
+{
+  "category": "goldfingers",
+  "entries": [
+    {
+      "content_key": "goldfinger.regen",
+      "name": "自愈之躯",
+      "rarity": "common",
+      "category": "growth",
+      "description": "身体恢复速度略快于常人。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.physique",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.memory",
+      "name": "过目不忘",
+      "rarity": "common",
+      "category": "info",
+      "description": "对读过的文字过目不忘。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.memory",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.charm",
+      "name": "亲和光环",
+      "rarity": "common",
+      "category": "growth",
+      "description": "初识者更容易对你产生好感。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.charm",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.focus",
+      "name": "心如止水",
+      "rarity": "common",
+      "category": "growth",
+      "description": "情绪波动更小，专注更持久。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.willpower",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.luck",
+      "name": "小确幸",
+      "rarity": "common",
+      "category": "resource",
+      "description": "日常小事常有好运。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.luck",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.sleepless",
+      "name": "少眠",
+      "rarity": "common",
+      "category": "resource",
+      "description": "每天所需睡眠减少两成。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "need.sleep",
+          "op": "mul",
+          "value": 0.8,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.metabolism",
+      "name": "强健代谢",
+      "rarity": "common",
+      "category": "growth",
+      "description": "食量需求略降，不易发胖。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "need.food",
+          "op": "mul",
+          "value": 0.85,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.pain_tol",
+      "name": "耐痛",
+      "rarity": "common",
+      "category": "growth",
+      "description": "对疼痛的耐受高于常人。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.pain_tolerance",
+          "op": "add",
+          "value": 5,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.voice",
+      "name": "悦耳嗓音",
+      "rarity": "common",
+      "category": "growth",
+      "description": "声音自带说服力。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.voice",
+          "op": "add",
+          "value": 5,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.hands",
+      "name": "巧手",
+      "rarity": "common",
+      "category": "growth",
+      "description": "手工与操作更灵巧。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.dexterity",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.appraise",
+      "name": "火眼金睛",
+      "rarity": "common",
+      "category": "info",
+      "description": "可大致鉴别物品价值与品质。",
+      "modules": [
+        "appraisal"
+      ],
+      "effects": [
+        {
+          "target": "capability.appraise",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 30
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.map",
+      "name": "活地图",
+      "rarity": "common",
+      "category": "info",
+      "description": "对去过的地方记忆清晰。",
+      "modules": [
+        "appraisal"
+      ],
+      "effects": [
+        {
+          "target": "capability.local_map",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.language",
+      "name": "语感",
+      "rarity": "common",
+      "category": "info",
+      "description": "学外语比常人更快。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.language",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 30
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.empathy",
+      "name": "共情",
+      "rarity": "common",
+      "category": "info",
+      "description": "容易读懂他人情绪。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.empathy",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.calm",
+      "name": "泰山崩于前",
+      "rarity": "common",
+      "category": "growth",
+      "description": "危急时刻保持冷静。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.composure",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.digest",
+      "name": "铁胃",
+      "rarity": "common",
+      "category": "growth",
+      "description": "对变质食物不易吃坏肚子。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "resistance.food",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.immune",
+      "name": "少病",
+      "rarity": "common",
+      "category": "growth",
+      "description": "感染疾病概率降低。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "resistance.disease",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.wealth_sense",
+      "name": "财商",
+      "rarity": "common",
+      "category": "resource",
+      "description": "对数字与钱财更敏感。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.finance",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 30
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.tidiness",
+      "name": "井井有条",
+      "rarity": "common",
+      "category": "growth",
+      "description": "办事条理清晰。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.organize",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.drawing",
+      "name": "丹青手",
+      "rarity": "common",
+      "category": "growth",
+      "description": "初通绘画。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.painting",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.cooking",
+      "name": "厨艺入门",
+      "rarity": "common",
+      "category": "growth",
+      "description": "家常菜得心应手。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.cooking",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.music_ear",
+      "name": "乐感",
+      "rarity": "common",
+      "category": "growth",
+      "description": "对旋律与节拍敏感。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.music",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.writing",
+      "name": "文笔",
+      "rarity": "common",
+      "category": "growth",
+      "description": "行文通顺。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.writing",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.repair",
+      "name": "手到擒来",
+      "rarity": "common",
+      "category": "growth",
+      "description": "简单器物损坏可自行修理。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.repair",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.plant",
+      "name": "绿手指",
+      "rarity": "common",
+      "category": "growth",
+      "description": "种什么活什么。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.gardening",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.first_aid",
+      "name": "急救常识",
+      "rarity": "common",
+      "category": "info",
+      "description": "掌握基础急救。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.first_aid",
+          "op": "add",
+          "value": 5,
+          "mode": "instant",
+          "cost": 15
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.navigation",
+      "name": "方向感",
+      "rarity": "common",
+      "category": "info",
+      "description": "极少迷路。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.navigate",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.night_eye",
+      "name": "夜眼",
+      "rarity": "common",
+      "category": "growth",
+      "description": "暗处视物比常人清楚。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.night_vision",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 25
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.steady_hand",
+      "name": "稳",
+      "rarity": "common",
+      "category": "growth",
+      "description": "双手稳定不易抖。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.stability",
+          "op": "add",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 20
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.horn",
+      "name": "灵光一闪",
+      "rarity": "common",
+      "category": "growth",
+      "description": "偶在卡壳时冒出灵感。",
+      "modules": [
+        "checkin"
+      ],
+      "effects": [
+        {
+          "target": "capability.insight",
+          "op": "grant",
+          "value": 1,
+          "mode": "conditional",
+          "cost": 30
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.photographic",
+      "name": "摄像记忆",
+      "rarity": "rare",
+      "category": "info",
+      "description": "对场景细节近乎图像化记忆。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.memory",
+          "op": "add",
+          "value": 2,
+          "mode": "continuous",
+          "cost": 60
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.polyglot",
+      "name": "语言天才",
+      "rarity": "rare",
+      "category": "info",
+      "description": "两三月可掌握一门外语。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.language",
+          "op": "add",
+          "value": 15,
+          "mode": "instant",
+          "cost": 80
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.medical",
+      "name": "医学天赋",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "对医理领悟极快。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.medicine",
+          "op": "add",
+          "value": 15,
+          "mode": "instant",
+          "cost": 90
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.combat",
+      "name": "武道根基",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "习武事半功倍。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.combat",
+          "op": "add",
+          "value": 15,
+          "mode": "instant",
+          "cost": 90
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.art",
+      "name": "艺术细胞",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "审美与创作俱佳。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "skill.art",
+          "op": "add",
+          "value": 15,
+          "mode": "instant",
+          "cost": 80
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.fortune",
+      "name": "鸿运",
+      "rarity": "rare",
+      "category": "resource",
+      "description": "重要节点常有意外转机。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.luck",
+          "op": "add",
+          "value": 3,
+          "mode": "continuous",
+          "cost": 70
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.charisma",
+      "name": "领袖气质",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "更容易赢得追随。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.leadership",
+          "op": "add",
+          "value": 3,
+          "mode": "continuous",
+          "cost": 75
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.appraise_plus",
+      "name": "鉴宝之眼",
+      "rarity": "rare",
+      "category": "info",
+      "description": "鉴定精准度大幅提升。",
+      "modules": [
+        "appraisal"
+      ],
+      "effects": [
+        {
+          "target": "capability.appraise",
+          "op": "add",
+          "value": 2,
+          "mode": "continuous",
+          "cost": 90
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.danger",
+      "name": "危机直觉",
+      "rarity": "rare",
+      "category": "info",
+      "description": "对临近的危险有预感。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.danger_sense",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 100
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.healing",
+      "name": "回春",
+      "rarity": "rare",
+      "category": "resource",
+      "description": "伤势恢复明显更快。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "hp_regen",
+          "op": "mul",
+          "value": 1.5,
+          "mode": "continuous",
+          "cost": 90
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.vitality",
+      "name": "龙精虎猛",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "体魄强健不易疲惫。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.physique",
+          "op": "add",
+          "value": 3,
+          "mode": "continuous",
+          "cost": 70
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.will",
+      "name": "百折不挠",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "挫折后更快重整旗鼓。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.willpower",
+          "op": "add",
+          "value": 3,
+          "mode": "continuous",
+          "cost": 70
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.learn",
+      "name": "举一反三",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "学习任何技能都快。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.learning",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 100
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.invest",
+      "name": "点石成金",
+      "rarity": "rare",
+      "category": "resource",
+      "description": "对投资机会嗅觉敏锐。",
+      "modules": [
+        "shop"
+      ],
+      "effects": [
+        {
+          "target": "capability.invest",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 100
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.network",
+      "name": "人脉通",
+      "rarity": "rare",
+      "category": "resource",
+      "description": "容易结识有用之人。",
+      "modules": [
+        "shop"
+      ],
+      "effects": [
+        {
+          "target": "capability.network",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 90
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.craft_basic",
+      "name": "能工巧匠",
+      "rarity": "rare",
+      "category": "growth",
+      "description": "各门手艺上手极快。",
+      "modules": [
+        "craft"
+      ],
+      "effects": [
+        {
+          "target": "skill.craft",
+          "op": "add",
+          "value": 15,
+          "mode": "instant",
+          "cost": 80
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.space_basic",
+      "name": "储物空间",
+      "rarity": "rare",
+      "category": "system",
+      "description": "获得一格随身储物空间。",
+      "modules": [
+        "space"
+      ],
+      "effects": [
+        {
+          "target": "system.space",
+          "op": "unlock",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 110
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.quest_basic",
+      "name": "系统任务",
+      "rarity": "rare",
+      "category": "system",
+      "description": "开启任务系统，可赚取积分。",
+      "modules": [
+        "quest"
+      ],
+      "effects": [
+        {
+          "target": "system.quest",
+          "op": "unlock",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 100
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.perfect",
+      "name": "过目成诵",
+      "rarity": "epic",
+      "category": "info",
+      "description": "记忆近乎永不失真。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.memory",
+          "op": "set",
+          "value": 100,
+          "mode": "continuous",
+          "cost": 250
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.body_refine",
+      "name": "伐毛洗髓",
+      "rarity": "epic",
+      "category": "growth",
+      "description": "体质脱胎换骨。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.physique",
+          "op": "add",
+          "value": 8,
+          "mode": "continuous",
+          "cost": 300
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.precog",
+      "name": "先知",
+      "rarity": "epic",
+      "category": "info",
+      "description": "对未来短期事件有模糊预感。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.foresee",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 400
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.alchemy",
+      "name": "炼丹术",
+      "rarity": "epic",
+      "category": "growth",
+      "description": "通晓丹道，可炼制灵药。",
+      "modules": [
+        "craft"
+      ],
+      "effects": [
+        {
+          "target": "skill.alchemy",
+          "op": "add",
+          "value": 30,
+          "mode": "instant",
+          "cost": 350
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.space_large",
+      "name": "芥子空间",
+      "rarity": "epic",
+      "category": "system",
+      "description": "储物空间扩大并可合成。",
+      "modules": [
+        "space",
+        "craft"
+      ],
+      "effects": [
+        {
+          "target": "system.space",
+          "op": "set",
+          "value": 2,
+          "mode": "continuous",
+          "cost": 450
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.system_shop",
+      "name": "系统商城",
+      "rarity": "epic",
+      "category": "system",
+      "description": "系统商城解锁高级兑换。",
+      "modules": [
+        "shop"
+      ],
+      "effects": [
+        {
+          "target": "system.shop",
+          "op": "unlock",
+          "value": 2,
+          "mode": "continuous",
+          "cost": 400
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.leadership",
+      "name": "王者之气",
+      "rarity": "epic",
+      "category": "growth",
+      "description": "天生领袖，万众归心。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.leadership",
+          "op": "add",
+          "value": 10,
+          "mode": "continuous",
+          "cost": 350
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.omniscient_ear",
+      "name": "顺风耳",
+      "rarity": "epic",
+      "category": "info",
+      "description": "远处私语亦可听闻。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "capability.hearing",
+          "op": "grant",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 300
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "info"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.time_flow",
+      "name": "时间褶皱",
+      "rarity": "epic",
+      "category": "time",
+      "description": "主观时间稍慢，行动更从容。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "system.time",
+          "op": "mul",
+          "value": 1.2,
+          "mode": "continuous",
+          "cost": 500
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "time"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.immortal",
+      "name": "长生久视",
+      "rarity": "legendary",
+      "category": "resource",
+      "description": "寿元远超常人。",
+      "modules": [],
+      "effects": [
+        {
+          "target": "attr.lifespan",
+          "op": "mul",
+          "value": 3.0,
+          "mode": "continuous",
+          "cost": 1200
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "resource"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.rewind",
+      "name": "时光倒流",
+      "rarity": "legendary",
+      "category": "time",
+      "description": "可回溯片刻光阴，机会一生数次。",
+      "modules": [
+        "checkin"
+      ],
+      "effects": [
+        {
+          "target": "system.rewind",
+          "op": "grant",
+          "value": 1,
+          "mode": "conditional",
+          "cost": 1300
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "time"
+        ]
+      }
+    },
+    {
+      "content_key": "goldfinger.protagonist",
+      "name": "天命之子",
+      "rarity": "legendary",
+      "category": "system",
+      "description": "气运加身，主线机遇不断。",
+      "modules": [
+        "quest",
+        "shop",
+        "craft"
+      ],
+      "effects": [
+        {
+          "target": "system.protagonist",
+          "op": "unlock",
+          "value": 1,
+          "mode": "continuous",
+          "cost": 1400
+        }
+      ],
+      "draw": {
+        "weight": 1.0
+      },
+      "meta": {
+        "tags": [
+          "system"
+        ]
+      }
+    }
+  ]
+}
