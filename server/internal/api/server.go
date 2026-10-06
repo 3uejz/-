@@ -162,6 +162,8 @@ func (s *Server) Router() http.Handler {
 	// 管理后台静态资源（React 构建产物，SPA fallback）。
 	mux.Handle("GET /admin", s.adminStaticHandler())
 	mux.Handle("GET /admin/", s.adminStaticHandler())
+	// 站点根路径重定向到管理后台，避免预览入口 404。
+	mux.Handle("GET /{$}", s.adminRootRedirect())
 
 	var h http.Handler = mux
 	h = httpx.MaxBody(s.deps.Config.SaveMaxBytes, h)

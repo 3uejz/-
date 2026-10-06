@@ -49,4 +49,20 @@ func TestAdminStaticServing(t *testing.T) {
 	if cc := rec.Header().Get("Cache-Control"); cc != "no-cache" {
 		t.Fatalf("index 缓存头错误: %q", cc)
 	}
+	// 站点根路径重定向到管理后台，避免预览入口 404。
+	rec = doJSON(t, h, http.MethodGet, "/", "", nil, nil)
+	if rec.Code != http.StatusFound || rec.Header().Get("Location") != "/admin/" {
+		t.Fatalf("根路径期望 302 -> /admin/，得到 %d %q", rec.Code, rec.Header().Get("Location"))
+	}
+}
+
+// 未启用管理后台时站点根路径返回 404，不产生误导性重定向。
+func TestAdminRootRedirectDisabled(t *testing.T) {
+	srv, _ := newTestServer(t)
+	srv.deps.Config.AdminDir = ""
+	h := srv.Router()
+	rec := doJSON(t, h, http.MethodGet, "/", "", nil, nil)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("未启用管理后台时根路径期望 404，得到 %d", rec.Code)
+	}
 }

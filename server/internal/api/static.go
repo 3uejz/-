@@ -43,6 +43,19 @@ func (s *Server) adminStaticHandler() http.Handler {
 	})
 }
 
+// adminRootRedirect 将站点根路径重定向到管理后台（便于预览与直接访问）；
+// 未启用管理后台时返回 404。
+func (s *Server) adminRootRedirect() http.Handler {
+	enabled := s.deps.Config.AdminDir != ""
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !enabled {
+			http.NotFound(w, r)
+			return
+		}
+		http.Redirect(w, r, "/admin/", http.StatusFound)
+	})
+}
+
 // setAdminCache 带哈希指纹的资源长缓存，index.html 不缓存。
 func setAdminCache(w http.ResponseWriter, rel string) {
 	if strings.HasPrefix(rel, "assets/") {
