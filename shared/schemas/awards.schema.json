@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/awards.schema.json",
+  "title": "Award",
+  "description": "奖项与荣誉（D50）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "content_key"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "category": { "type": "string" },
+    "issuer": { "type": "string" },
+    "year": { "type": "integer" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "level": { "type": "string", "enum": ["local", "national", "international", "global"] },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "role": { "type": "string" },
+          "rank": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "awarded_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "prestige": { "type": "number", "minimum": 0, "maximum": 100 }
+  }
+}

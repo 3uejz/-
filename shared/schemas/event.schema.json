@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/event.schema.json",
+  "title": "WorldEvent",
+  "description": "跨域统一世界事件（天气/中断/罢工/泄露/能源价格/荣誉等修饰符载体），见任务 52。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "content_key", "started_minutes"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "kind": { "type": "string" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "scope": { "type": "string", "enum": ["local", "regional", "national", "global"] },
+    "started_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "ended_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "severity": { "type": "number", "minimum": 0, "maximum": 100 },
+    "status": { "type": "string", "enum": ["scheduled", "active", "ended", "cancelled"] },
+    "affected": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "player": { "type": "boolean" },
+        "npc_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "org_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } }
+      }
+    },
+    "modifiers": { "type": "object", "additionalProperties": true },
+    "payload": { "type": "object", "additionalProperties": true },
+    "source": { "type": "string", "enum": ["world", "npc", "player", "system"] }
+  }
+}

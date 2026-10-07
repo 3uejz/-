@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/case.schema.json",
+  "title": "Case",
+  "description": "法律案件（D12）。状态机见 design「法律与案件」。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "status", "opened_minutes"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "type": "string", "enum": ["criminal", "civil", "administrative", "family", "labor", "other"] },
+    "status": { "type": "string", "enum": ["open", "investigating", "trial", "sentenced", "appealed", "closed", "dropped"] },
+    "title": { "type": "string" },
+    "charge_keys": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+    "jurisdiction": { "$ref": "common.schema.json#/$defs/content_key" },
+    "court": { "type": "string" },
+    "parties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["plaintiff", "defendant", "witness", "victim", "suspect", "lawyer", "judge", "prosecutor"] }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content_key", "kind"],
+        "properties": {
+          "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "kind": { "type": "string", "enum": ["physical", "testimony", "digital", "forensic", "circumstantial"] },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+          "obtained_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "chain_valid": { "type": "boolean" }
+        }
+      }
+    },
+    "lawyer_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "judge_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "sentence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verdict": { "type": "string", "enum": ["guilty", "not_guilty", "settled", "dismissed"] },
+        "term_minutes": { "$ref": "common.schema.json#/$defs/duration_minutes" },
+        "fine": { "$ref": "common.schema.json#/$defs/money" },
+        "probation_minutes": { "$ref": "common.schema.json#/$defs/duration_minutes" },
+        "community_service_minutes": { "$ref": "common.schema.json#/$defs/duration_minutes" }
+      }
+    },
+    "opened_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "closed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "appeal_of": { "$ref": "common.schema.json#/$defs/uuid" },
+    "public": { "type": "boolean" },
+    "notes": { "type": "string" }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/factory.schema.json",
+  "title": "Factory",
+  "description": "经营实体：工厂/农场/店铺/公司等生产与经营状态（D18）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "content_key", "kind", "status"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "kind": { "type": "string", "enum": ["factory", "farm", "shop", "restaurant", "office", "warehouse", "mine", "other"] },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "owner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "status": { "type": "string", "enum": ["planned", "construction", "operating", "suspended", "bankrupt", "closed"] },
+    "capacity": { "type": "number", "minimum": 0 },
+    "utilization": { "type": "number", "minimum": 0, "maximum": 1 },
+    "employees": { "type": "integer", "minimum": 0 },
+    "wage_bill": { "$ref": "common.schema.json#/$defs/money" },
+    "input_inventory": { "type": "object", "additionalProperties": true },
+    "output_inventory": { "type": "object", "additionalProperties": true },
+    "order_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+    "carbon_account": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emissions": { "type": "number", "minimum": 0 },
+        "quota": { "type": "number", "minimum": 0 },
+        "fine": { "$ref": "common.schema.json#/$defs/money" }
+      }
+    },
+    "started_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+  }
+}

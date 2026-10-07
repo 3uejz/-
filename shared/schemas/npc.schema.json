@@ -43,6 +43,15 @@
       "type": "array",
       "items": { "$ref": "player.schema.json#/$defs/relation" }
     },
+    "family": { "$ref": "player.schema.json#/$defs/family" },
+    "memory": {
+      "type": "array",
+      "description": "NPC 个人记忆（design Data Models 要求）。",
+      "items": { "$ref": "player.schema.json#/$defs/memory_entry" }
+    },
+    "personality": { "$ref": "player.schema.json#/$defs/group_personality" },
+    "health": { "$ref": "player.schema.json#/$defs/health" },
+    "military": { "$ref": "player.schema.json#/$defs/military" },
     "individualized": {
       "type": "boolean",
       "description": "true 表示与玩家产生关系，永久保存，不随 LOD 降级。"

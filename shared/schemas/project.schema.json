@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/project.schema.json",
+  "title": "Project",
+  "description": "工程/科研/规划项目（D48）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "status"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "type": "string", "enum": ["construction", "research", "planning", "it", "other"] },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "owner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "contractor_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "status": { "type": "string", "enum": ["proposed", "approved", "bidding", "construction", "testing", "operational", "suspended", "completed", "failed", "cancelled"] },
+    "budget": { "$ref": "common.schema.json#/$defs/money" },
+    "spent": { "$ref": "common.schema.json#/$defs/money" },
+    "progress": { "type": "number", "minimum": 0, "maximum": 100 },
+    "quality": { "type": "number", "minimum": 0, "maximum": 100 },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content_key"],
+        "properties": {
+          "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "due_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "done": { "type": "boolean" }
+        }
+      }
+    },
+    "start_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "due_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "completed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+  }
+}

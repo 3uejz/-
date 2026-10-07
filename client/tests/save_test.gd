@@ -75,6 +75,8 @@ func _test_migration() -> void:
 	sm.register_migration(1, func(doc: Dictionary) -> Dictionary:
 		doc["player"]["name"] = "迁移后"
 		return doc)
+	# 模拟旧版（v1）存档：GameState 当前版本已升至 v2，需显式降级以触发迁移。
+	gs.meta["schema_version"] = 1
 	sm.save("m", gs.to_dict())
 	var loaded: Dictionary = sm.load("m")
 	check(loaded["ok"], "迁移读取成功")

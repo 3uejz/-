@@ -61,9 +61,20 @@
           "items": { "$ref": "npc.schema.json" }
         },
         "economy": { "type": "object", "additionalProperties": true },
-        "organizations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-        "world_events": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-        "news": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+        "organizations": { "type": "array", "items": { "$ref": "org.schema.json" } },
+        "world_events": { "type": "array", "items": { "$ref": "event.schema.json" } },
+        "news": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "cases": { "type": "array", "items": { "$ref": "case.schema.json" } },
+        "disasters": { "type": "array", "items": { "$ref": "disaster.schema.json" } },
+        "anomalies": { "type": "array", "items": { "$ref": "anomaly.schema.json" } },
+        "factories": { "type": "array", "items": { "$ref": "factory.schema.json" } },
+        "ips": { "type": "array", "items": { "$ref": "ip.schema.json" } },
+        "sports": { "type": "array", "items": { "$ref": "sports.schema.json" } },
+        "orders": { "type": "array", "items": { "$ref": "order.schema.json" } },
+        "itineraries": { "type": "array", "items": { "$ref": "itinerary.schema.json" } },
+        "medical_records": { "type": "array", "items": { "$ref": "medical.schema.json" } },
+        "projects": { "type": "array", "items": { "$ref": "project.schema.json" } },
+        "awards": { "type": "array", "items": { "$ref": "awards.schema.json" } }
       }
     },
     "region_delta": {
@@ -75,6 +86,38 @@
         "population": { "type": "integer", "minimum": 0 },
         "price_index": { "type": "number", "minimum": 0 },
         "safety": { "type": "number", "minimum": 0, "maximum": 100 },
+        "unemployment": { "type": "number", "minimum": 0, "maximum": 1 },
+        "crime_rate": { "type": "number", "minimum": 0 },
+        "education_level": { "type": "number", "minimum": 0, "maximum": 100 },
+        "economy": { "type": "object", "additionalProperties": true },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pollution": { "type": "number", "minimum": 0 },
+            "carbon": { "type": "number", "minimum": 0 },
+            "aqi": { "type": "number", "minimum": 0 }
+          }
+        },
+        "healthcare": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "level": { "type": "number", "minimum": 0, "maximum": 100 },
+            "capacity": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "power": { "type": "number", "minimum": 0, "maximum": 100 },
+            "transport": { "type": "number", "minimum": 0, "maximum": 100 },
+            "water": { "type": "number", "minimum": 0, "maximum": 100 }
+          }
+        },
+        "active_disaster_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "active_project_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
         "last_simulated_minute": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
         "snapshot": { "type": "object", "additionalProperties": true }
       }

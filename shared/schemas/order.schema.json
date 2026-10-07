@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/order.schema.json",
+  "title": "Order",
+  "description": "商品/服务订单与物流（D9/D18/D40）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "status", "placed_minutes"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "buyer_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "seller_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "type": "string", "enum": ["goods", "food", "service", "digital", "other"] },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content_key", "quantity"],
+        "properties": {
+          "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "quantity": { "type": "number", "minimum": 0 },
+          "unit_price": { "$ref": "common.schema.json#/$defs/money" }
+        }
+      }
+    },
+    "total": { "$ref": "common.schema.json#/$defs/money" },
+    "status": { "type": "string", "enum": ["created", "paid", "shipped", "in_transit", "delivered", "cancelled", "refunded", "disputed"] },
+    "payment_status": { "type": "string", "enum": ["unpaid", "paid", "refunded", "failed"] },
+    "placed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "promised_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "logistics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "carrier": { "type": "string" },
+        "tracking": { "type": "string" },
+        "status": { "type": "string", "enum": ["label_created", "picked_up", "in_transit", "out_for_delivery", "delivered", "failed_returned"] },
+        "eta_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "updated_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "last_location": { "type": "string" }
+      }
+    },
+    "address": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "location_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "detail": { "type": "string" }
+      }
+    },
+    "dispute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["open", "resolved", "rejected"] },
+        "resolution": { "type": "string" }
+      }
+    }
+  }
+}

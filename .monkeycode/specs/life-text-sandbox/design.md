@@ -267,9 +267,9 @@ func wake(region_id: String, elapsed_minutes: int) -> void:
 ### 客户端核心类型
 
 - `GameState`：`version`、`time`、`weather`、`player`、`regions`、`stocks`、`events`、`stats`、`meta`、`seed`
-- `Player`：`name`、`gender`、`age`、`attrs`（生理/心理/能力五组）、`skills`、`education`、`licenses`、`job`、`money`、`assets`、`family`、`relations`、`legal`、`health`
-- `RegionState`：`id`、`level`（国/省/市/区/街/建筑）、`population`、`economy`、`price_index`、`safety`、`climate`、`locations`、`npcs`、`last_simulated_minute`、`state`
-- `NPC`：`id`、`name`、`gender`、`age`、`job`、`traits`、`schedule`、`relations`、`home`、`alive`、`memory`
+- `Player`：`name`、`gender`、`age`、`attrs`（生理/心理/能力五组）、`skills`、`education`、`licenses`、`job`、`money`、`assets`、`family`、`relations`、`legal`、`health`、`memory`、`pets`、`military`、`disabilities`、`lands`、`digital_assets`、`cases`、`orders`、`itineraries`、`awards`、`medical_records`、`credit_score`、`will`
+- `RegionState`：`id`、`level`（国/省/市/区/街/建筑）、`population`、`economy`、`price_index`、`safety`、`climate`、`locations`、`npcs`、`last_simulated_minute`、`state`、`environment`、`healthcare`、`infrastructure`、`unemployment`、`crime_rate`、`education_level`
+- `NPC`：`id`、`name`、`gender`、`age`、`job`、`traits`、`schedule`、`relations`、`home`、`alive`、`memory`、`family`、`personality`、`health`、`military`
 - `Relation`：`favor`、`trust`、`awe`、`grudge`、`intimacy`
 - `Item`：`id`、`name`、`category`、`base_price`、`effect`、`expiry_days`、`durable`
 - `Job`：`id`、`title`、`industry`、`salary`、`hours`、`require`、`promotion`
@@ -279,6 +279,8 @@ func wake(region_id: String, elapsed_minutes: int) -> void:
 - `CommandIntent`：`verb`、`objects`、`params`、`source`（text/panel/hotkey）、`raw`
 - `CommandOption`：`index`、`label`、`target`、`reason`
 - `Legacy`：`talents`、`lineage`、`history`、`unlocks`
+
+领域实体 schema（`shared/schemas/`）：`case`（案件）、`disaster`（灾害与救援）、`anomaly`（异常收容）、`factory`（经营）、`ip`（文娱 IP）、`sports`（体育联赛）、`org`（组织）、`order`（订单与物流）、`itinerary`（行程）、`medical`（就医）、`project`（工程/科研）、`event`（统一世界事件与修饰符）、`awards`（奖项）。存档 `world_delta` 按域持有这些实体数组，`schema_version` 迁移见 `client/sim/save_migrations.gd`。
 
 ### 后端数据模型
 

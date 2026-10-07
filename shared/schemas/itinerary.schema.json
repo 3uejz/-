@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/itinerary.schema.json",
+  "title": "Itinerary",
+  "description": "旅行行程与预订（D30）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "owner_id", "mode"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "owner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "location_key": { "$ref": "common.schema.json#/$defs/content_key" }
+      }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "location_key": { "$ref": "common.schema.json#/$defs/content_key" }
+      }
+    },
+    "depart_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "arrive_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "mode": { "type": "string", "enum": ["walk", "bike", "bus", "metro", "train", "car", "taxi", "ferry", "plane", "mixed"] },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode"],
+        "properties": {
+          "mode": { "type": "string" },
+          "from_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "to_key": { "$ref": "common.schema.json#/$defs/content_key" },
+          "depart_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "arrive_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "carrier": { "type": "string" },
+          "booking_ref": { "type": "string" },
+          "cost": { "$ref": "common.schema.json#/$defs/money" }
+        }
+      }
+    },
+    "booking_status": { "type": "string", "enum": ["none", "reserved", "ticketed", "checked_in", "completed", "cancelled"] },
+    "cost": { "$ref": "common.schema.json#/$defs/money" },
+    "companions": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+    "luggage": { "type": "array", "items": { "type": "string" } }
+  }
+}

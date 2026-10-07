@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/sports.schema.json",
+  "title": "Sports",
+  "description": "体育联赛/赛事/赛季（D47）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "name"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "type": "string", "enum": ["league", "club", "tournament", "match", "season"] },
+    "name": { "type": "string" },
+    "sport": { "type": "string" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "season": { "type": "string" },
+    "organizer_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "teams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["team_id"],
+        "properties": {
+          "team_id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "name": { "type": "string" },
+          "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+          "points": { "type": "integer" },
+          "wins": { "type": "integer", "minimum": 0 },
+          "draws": { "type": "integer", "minimum": 0 },
+          "losses": { "type": "integer", "minimum": 0 },
+          "goals_for": { "type": "integer", "minimum": 0 },
+          "goals_against": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "standings": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "scheduled_minutes"],
+        "properties": {
+          "event_id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "home_team": { "$ref": "common.schema.json#/$defs/uuid" },
+          "away_team": { "$ref": "common.schema.json#/$defs/uuid" },
+          "scheduled_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "home_score": { "type": "integer", "minimum": 0 },
+          "away_score": { "type": "integer", "minimum": 0 },
+          "status": { "type": "string", "enum": ["scheduled", "live", "finished", "postponed", "cancelled"] }
+        }
+      }
+    },
+    "prize_pool": { "$ref": "common.schema.json#/$defs/money" }
+  }
+}

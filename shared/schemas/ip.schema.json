@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/ip.schema.json",
+  "title": "IP",
+  "description": "文娱知识产权作品：游戏/动漫/网文/影视/综艺/音乐等（D46）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "title", "status"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "type": "string", "enum": ["game", "anime", "novel", "film", "show", "music", "variety", "comic"] },
+    "title": { "type": "string" },
+    "owner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "creator_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+    "quality": { "type": "number", "minimum": 0, "maximum": 100 },
+    "reputation": { "type": "number", "minimum": 0, "maximum": 100 },
+    "rating": { "type": "number", "minimum": 0, "maximum": 10 },
+    "status": { "type": "string", "enum": ["planning", "development", "published", "running", "ended", "cancelled"] },
+    "revenue_model": { "type": "string", "enum": ["sales", "box_office", "subscription", "ad", "licensing", "mixed"] },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["region_id", "released_minutes"],
+        "properties": {
+          "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+          "released_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "units": { "type": "number", "minimum": 0 },
+          "revenue": { "$ref": "common.schema.json#/$defs/money" }
+        }
+      }
+    },
+    "licensees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["licensee_id"],
+        "properties": {
+          "licensee_id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "scope": { "type": "string" },
+          "royalty_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+          "start_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "end_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+        }
+      }
+    },
+    "review_flags": { "type": "array", "items": { "type": "string" } }
+  }
+}

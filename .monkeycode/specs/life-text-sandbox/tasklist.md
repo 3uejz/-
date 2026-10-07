@@ -377,14 +377,14 @@
   - [x] 48.1 迁移核心域常量并保持三端一致性测试全绿
   - [x] 48.2 为每个新增向量编写 Go/GDScript 对齐测试
 
-- [ ] 49. 领域状态 schema 一次大扩展与迁移（横切）
+- [x] 49. 领域状态 schema 一次大扩展与迁移（横切）
   - 扩展 `player`（family/memory/pet/军籍/残障/土地/数字资产/病症三维/信用分/案件）与 `finances/legal/health`
   - 扩展 `save.world_delta`/`region_delta` 领域状态，新增 case/disaster/anomaly/factory/IP/sports/org/order/itinerary/medical/project/event/awards 等 schema
   - 修复 `npc.relations` 数组类型与 `Player.family`/`NPC.memory` 缺失
   - 统一 `schema_version` 迁移，保证旧档可升级
   - 对应 `gaps.md` 系统性问题 2、10；OI-5
-  - [ ] 49.1 编写 schema 扩展与迁移测试
-  - [ ] 49.2 对齐 design Data Models 与 schema，消除漂移
+  - [x] 49.1 编写 schema 扩展与迁移测试
+  - [x] 49.2 对齐 design Data Models 与 schema，消除漂移
 
 - [ ] 50. 内容目录补齐与 R56 对齐（横切）
   - 为 D35–D43、D45–D50 增补 content-catalog 专属节

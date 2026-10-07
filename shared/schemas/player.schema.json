@@ -67,7 +67,56 @@
       "type": "array",
       "items": { "$ref": "common.schema.json#/$defs/content_key" }
     },
-    "goldfinger": { "$ref": "goldfinger.schema.json" }
+    "goldfinger": { "$ref": "goldfinger.schema.json" },
+    "family": { "$ref": "#/$defs/family" },
+    "memory": {
+      "type": "array",
+      "description": "个人事件记忆，结构与世界记忆一致，用于态度修正与专属事件解锁。",
+      "items": { "$ref": "#/$defs/memory_entry" }
+    },
+    "pets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/pet" }
+    },
+    "military": { "$ref": "#/$defs/military" },
+    "disabilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/disability" }
+    },
+    "lands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/land_parcel" }
+    },
+    "digital_assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/digital_asset" }
+    },
+    "cases": {
+      "type": "array",
+      "description": "本人涉及的法律案件（作为当事人/证人/被告等）。",
+      "items": { "$ref": "case.schema.json" }
+    },
+    "credit_score": { "type": "integer", "minimum": 0, "maximum": 1000, "description": "信用分，300..1000。" },
+    "will": { "$ref": "#/$defs/will" },
+    "orders": {
+      "type": "array",
+      "description": "进行中的订单/物流。",
+      "items": { "$ref": "order.schema.json" }
+    },
+    "itineraries": {
+      "type": "array",
+      "description": "旅行行程。",
+      "items": { "$ref": "itinerary.schema.json" }
+    },
+    "awards": {
+      "type": "array",
+      "items": { "$ref": "awards.schema.json" }
+    },
+    "medical_records": {
+      "type": "array",
+      "items": { "$ref": "medical.schema.json" }
+    },
+    "disability_level": { "type": "integer", "minimum": 0, "maximum": 4, "description": "残疾等级 0 无、1..4 递增。" }
   },
   "$defs": {
     "appearance": {
@@ -189,6 +238,24 @@
         "cash": { "$ref": "common.schema.json#/$defs/money" },
         "bank": { "$ref": "common.schema.json#/$defs/money" },
         "debt": { "$ref": "common.schema.json#/$defs/money" },
+        "monthly_income": { "$ref": "common.schema.json#/$defs/money" },
+        "monthly_expense": { "$ref": "common.schema.json#/$defs/money" },
+        "credit_limit": { "$ref": "common.schema.json#/$defs/money" },
+        "loans": {
+          "type": "array",
+          "description": "贷款（房贷/车贷/消费贷/经营贷）。",
+          "items": { "$ref": "#/$defs/loan" }
+        },
+        "leases": {
+          "type": "array",
+          "description": "租约（作为租客或房东）。",
+          "items": { "$ref": "#/$defs/lease" }
+        },
+        "insurances": {
+          "type": "array",
+          "description": "保险合同（医疗/寿险/车险/财产险等）。",
+          "items": { "$ref": "#/$defs/insurance" }
+        },
         "investments": {
           "type": "array",
           "items": {
@@ -202,6 +269,57 @@
             }
           }
         }
+      }
+    },
+    "loan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "principal", "rate_annual"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "kind": { "type": "string", "enum": ["mortgage", "auto", "consumer", "business", "student", "other"] },
+        "lender": { "type": "string" },
+        "principal": { "$ref": "common.schema.json#/$defs/money" },
+        "balance": { "$ref": "common.schema.json#/$defs/money" },
+        "rate_annual": { "type": "number", "minimum": 0, "description": "年利率。" },
+        "term_months": { "type": "integer", "minimum": 1 },
+        "monthly_payment": { "$ref": "common.schema.json#/$defs/money" },
+        "started_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "overdue_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes", "description": "逾期起点。" },
+        "status": { "type": "string", "enum": ["active", "repaid", "defaulted", "restructured"] },
+        "collateral_key": { "$ref": "common.schema.json#/$defs/content_key" }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "role": { "type": "string", "enum": ["tenant", "landlord"] },
+        "asset_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "monthly_rent": { "$ref": "common.schema.json#/$defs/money" },
+        "deposit": { "$ref": "common.schema.json#/$defs/money" },
+        "start_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "end_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "tenant_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "status": { "type": "string", "enum": ["active", "expired", "terminated"] }
+      }
+    },
+    "insurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "kind": { "type": "string", "enum": ["medical", "life", "auto", "property", "travel", "other"] },
+        "provider": { "type": "string" },
+        "premium_annual": { "$ref": "common.schema.json#/$defs/money" },
+        "coverage": { "$ref": "common.schema.json#/$defs/money" },
+        "start_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "end_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "status": { "type": "string", "enum": ["active", "lapsed", "claimed", "expired"] }
       }
     },
     "asset": {
@@ -252,16 +370,13 @@
       "properties": {
         "diseases": {
           "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["content_key"],
-            "properties": {
-              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
-              "stage": { "type": "string" },
-              "diagnosed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
-            }
-          }
+          "description": "躯体疾病，三维：严重度 severity、病程阶段 phase、确诊时长 diagnosed_minutes。",
+          "items": { "$ref": "#/$defs/disease" }
+        },
+        "mental": {
+          "type": "array",
+          "description": "精神疾病，见 D22 心理健康。",
+          "items": { "$ref": "#/$defs/mental_condition" }
         },
         "addictions": {
           "type": "array",
@@ -272,11 +387,75 @@
             "properties": {
               "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
               "craving": { "type": "number", "minimum": 0, "maximum": 100 },
-              "tolerance": { "type": "number", "minimum": 0 }
+              "tolerance": { "type": "number", "minimum": 0 },
+              "dependent": { "type": "boolean", "description": "是否已达依赖阈值。" },
+              "relapse_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+              "recovering": { "type": "boolean" },
+              "since_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
             }
           }
         },
+        "treatments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["content_key"],
+            "properties": {
+              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "target_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "started_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+              "course_days": { "type": "integer", "minimum": 0 },
+              "adherence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "injuries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/injury" }
+        },
+        "nutrition_excess_days": { "type": "integer", "minimum": 0, "description": "营养过量累计天数，超阈值致病。" },
         "lifespan_estimate_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "disease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "severity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "phase": { "type": "string", "enum": ["acute", "chronic", "recovering", "remission", "recovered"] },
+        "stage": { "type": "string", "description": "分期（如癌症 I/II/III/IV），内容定义。" },
+        "diagnosed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "onset_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "contagious": { "type": "boolean" }
+      }
+    },
+    "mental_condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "severity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "phase": { "type": "string", "enum": ["acute", "chronic", "recovering", "remission", "recovered"] },
+        "relapse_risk": { "type": "number", "minimum": 0, "maximum": 1 },
+        "diagnosed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "in_treatment": { "type": "boolean" }
+      }
+    },
+    "injury": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "severity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "body_part": { "type": "string" },
+        "occurred_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "healed_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "permanent": { "type": "boolean" }
       }
     },
     "legal": {
@@ -286,7 +465,169 @@
         "wanted_level": { "type": "integer", "minimum": 0 },
         "criminal_record": { "type": "boolean" },
         "in_prison": { "type": "boolean" },
-        "release_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+        "release_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "prison": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "facility_key": { "$ref": "common.schema.json#/$defs/content_key" },
+            "sentence_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+            "good_behavior": { "type": "number", "minimum": 0, "maximum": 100 },
+            "parole_eligible": { "type": "boolean" }
+          }
+        },
+        "active_case_ids": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/uuid" }
+        },
+        "record_entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["content_key"],
+            "properties": {
+              "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+              "country": { "$ref": "common.schema.json#/$defs/content_key" },
+              "convicted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+              "sentence": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "description": "家庭成员引用，指向 NPC/玩家个体 id。",
+      "additionalProperties": false,
+      "properties": {
+        "spouse_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "partner_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "children_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "parent_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "sibling_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "guardian_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "adopted_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } },
+        "pregnancy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "partner_id": { "$ref": "common.schema.json#/$defs/uuid" },
+            "conceived_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+            "due_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+          }
+        }
+      }
+    },
+    "memory_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "kind"],
+      "properties": {
+        "event_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "kind": { "type": "string", "enum": ["personal", "legend", "feud", "title", "hidden"] },
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "weight": { "type": "number", "minimum": 0 },
+        "created_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "last_cited_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "references": { "type": "integer", "minimum": 0 },
+        "unlock": { "type": "boolean", "description": "是否已解锁专属事件。" },
+        "payload": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "pet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "content_key"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "name": { "type": "string" },
+        "species_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "age_days": { "type": "integer", "minimum": 0 },
+        "bond": { "type": "number", "minimum": 0, "maximum": 100 },
+        "health": { "type": "number", "minimum": 0, "maximum": 100 },
+        "adopted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "alive": { "type": "boolean" }
+      }
+    },
+    "military": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": { "type": "string", "enum": ["none", "enlisted", "active", "reserve", "discharged", "retired", "deserted", "decorated"] },
+        "branch": { "type": "string" },
+        "rank": { "type": "string" },
+        "unit": { "type": "string" },
+        "service_start_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "service_end_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "decorations": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+        "conscripted": { "type": "boolean" }
+      }
+    },
+    "disability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_key"],
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "cause": { "type": "string", "enum": ["congenital", "illness", "injury", "war", "work", "other"] },
+        "certified": { "type": "boolean" },
+        "certified_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "compensation": { "$ref": "common.schema.json#/$defs/money" }
+      }
+    },
+    "land_parcel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "region_id"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+        "area_sqm": { "type": "number", "minimum": 0 },
+        "use": { "type": "string", "enum": ["residential", "commercial", "industrial", "agricultural", "mixed", "other"] },
+        "tenure": { "type": "string", "enum": ["freehold", "leasehold", "collective", "allocated", "rented"] },
+        "lease_end_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "value": { "$ref": "common.schema.json#/$defs/money" },
+        "mortgaged": { "type": "boolean" },
+        "tenant_id": { "$ref": "common.schema.json#/$defs/uuid" }
+      }
+    },
+    "digital_asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "kind": { "type": "string", "enum": ["account", "crypto", "nft", "domain", "virtual_item", "digital_identity", "other"] },
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "platform": { "type": "string" },
+        "value": { "$ref": "common.schema.json#/$defs/money" },
+        "security_level": { "type": "number", "minimum": 0, "maximum": 100 },
+        "leaked": { "type": "boolean" },
+        "acquired_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "will": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "written_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "executor_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "beneficiaries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "share"],
+            "properties": {
+              "id": { "$ref": "common.schema.json#/$defs/uuid" },
+              "share": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "notes": { "type": "string" }
       }
     }
   }

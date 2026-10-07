@@ -3,7 +3,7 @@ extends Node
 ## 字段结构以 shared/schemas/save.schema.json 为准（additionalProperties=false，勿加顶层字段）。
 ## 供模拟层与存档层共享；业务系统按 tasklist 逐步挂载。
 
-const SCHEMA_VERSION: int = 1
+const SCHEMA_VERSION: int = 2
 const GAME_VERSION: String = "0.0.1"
 
 var meta: Dictionary = {}
@@ -34,6 +34,17 @@ func new_game(seed: int, playthrough_id: String = "") -> void:
 		"organizations": [],
 		"world_events": [],
 		"news": [],
+		"cases": [],
+		"disasters": [],
+		"anomalies": [],
+		"factories": [],
+		"ips": [],
+		"sports": [],
+		"orders": [],
+		"itineraries": [],
+		"medical_records": [],
+		"projects": [],
+		"awards": [],
 	}
 	rng = {"streams": {}}
 	legacy = {"generation": 0, "talents": [], "unlocks": [], "lineage": [], "history": []}
@@ -97,12 +108,27 @@ static func default_player() -> Dictionary:
 		"education": [],
 		"licenses": [],
 		"job": {},
-		"finances": {"cash": 1000.0, "bank": 0.0, "debt": 0.0, "investments": []},
+		"finances": {"cash": 1000.0, "bank": 0.0, "debt": 0.0, "loans": [], "leases": [], "insurances": [], "investments": []},
 		"assets": [],
 		"inventory": [],
 		"equipment": [],
 		"relations": [],
-		"health": {"diseases": [], "addictions": []},
-		"legal": {"wanted_level": 0, "criminal_record": false, "in_prison": false},
+		"health": {"diseases": [], "mental": [], "addictions": [], "treatments": [], "injuries": []},
+		"legal": {"wanted_level": 0, "criminal_record": false, "in_prison": false, "active_case_ids": [], "record_entries": []},
 		"achievements": [],
+		"family": {},
+		"memory": [],
+		"pets": [],
+		"military": {},
+		"disabilities": [],
+		"lands": [],
+		"digital_assets": [],
+		"cases": [],
+		"credit_score": 650,
+		"will": {},
+		"orders": [],
+		"itineraries": [],
+		"awards": [],
+		"medical_records": [],
+		"disability_level": 0,
 	}

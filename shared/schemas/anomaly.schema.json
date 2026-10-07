@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/anomaly.schema.json",
+  "title": "Anomaly",
+  "description": "异常实体与收容状态（D44）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "content_key", "status"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "status": { "type": "string", "enum": ["uncontained", "observation", "contained", "breached", "destroyed"] },
+    "threat_level": { "type": "integer", "minimum": 0, "maximum": 5 },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "location_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "containment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "method": { "type": "string" },
+        "integrity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "escort_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" } }
+      }
+    },
+    "exposure_count": { "type": "integer", "minimum": 0 },
+    "memory_deletion_applied": { "type": "boolean" },
+    "faction_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "discovered_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "ability_tags": { "type": "array", "items": { "type": "string" } }
+  }
+}

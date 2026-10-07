@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/org.schema.json",
+  "title": "Organization",
+  "description": "组织实体：公司/NGO/政府/社团/帮派/工会/宗教等（D43）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "content_key", "kind", "name"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "kind": { "type": "string", "enum": ["company", "ngo", "government", "club", "gang", "union", "religious", "military", "other"] },
+    "name": { "type": "string" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "founder_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "founded_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "role": { "type": "string" },
+          "joined_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+          "contribution": { "type": "number" },
+          "status": { "type": "string", "enum": ["active", "left", "expelled"] }
+        }
+      }
+    },
+    "roles": { "type": "object", "additionalProperties": true },
+    "funds": { "$ref": "common.schema.json#/$defs/money" },
+    "reputation": { "type": "number", "minimum": 0, "maximum": 100 },
+    "influence": { "type": "number", "minimum": 0, "maximum": 100 },
+    "policies": { "type": "object", "additionalProperties": true }
+  }
+}

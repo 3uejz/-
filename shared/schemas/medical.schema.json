@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/medical.schema.json",
+  "title": "Medical",
+  "description": "就医记录：门诊/急诊/住院/手术/体检/疫苗/临床试验（D45）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "patient_id", "kind"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "patient_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "doctor_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "hospital_key": { "$ref": "common.schema.json#/$defs/content_key" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key" },
+    "department": { "type": "string", "enum": ["internal", "surgery", "pediatrics", "obgyn", "emergency", "psychiatry", "dental", "oncology", "other"] },
+    "kind": { "type": "string", "enum": ["outpatient", "emergency", "inpatient", "surgery", "exam", "vaccination", "clinical_trial"] },
+    "diagnosis_keys": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+    "treatment_keys": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+    "surgery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "success": { "type": "boolean" },
+        "complications": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/content_key" } },
+        "duration_minutes": { "$ref": "common.schema.json#/$defs/duration_minutes" }
+      }
+    },
+    "admitted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "discharged_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+    "cost": { "$ref": "common.schema.json#/$defs/money" },
+    "insurance_claimed": { "$ref": "common.schema.json#/$defs/money" },
+    "out_of_pocket": { "$ref": "common.schema.json#/$defs/money" },
+    "outcome": { "type": "string", "enum": ["cured", "improved", "stable", "worsened", "died", "ongoing"] }
+  }
+}
