@@ -210,3 +210,11 @@
 - 面板模块复用：任务、积分商城、签到抽奖、属性可视化/鉴定、空间与合成；由 `MetaSystem` 统一注册表管理，金手指仅声明启用哪些模块。
 - 全部金手指独立于 D44 异常体系，世界内不可感知，不进家族史；每代轮回重新抽取。
 - 骨架：`content/catalog/goldfingers.json`（当前 60 条：普通 30 / 稀有 18 / 史诗 9 / 传说 3），类别由 `tools/contentbuilder` 的 `goldfingers` spec 校验；结构支持扩展至 300+。
+
+## 21. 3D 表现层与占位资产（任务 23）
+
+- **地点 → 3D 场景绑定**：`content/catalog/sites.json` 的 `sites` 类别（`content_key`、`name`、`scene`、`category`、`radius`），由 `Site3DManager.load_from_registry()` 在启动时注册。
+- **局部 3D 场景**：按当前场所加载/卸载，异步加载与 LRU 缓存池，场景级 LOD（0 近 / 1 中 / 2 远，阈值 15m/40m）。跨场所切换由文字/地图指令驱动，不做无缝开放世界流式加载。
+- **占位资产约定**：在真实美术资产进场前，任何内容键经 `PlaceholderAssets` 确定性映射到基础几何体（box/sphere/cylinder/capsule/prism）与颜色，路径统一为 `res://assets/placeholder/<key>.tscn`；真实资产到位后由 `sites` 内容条目覆盖即可，逻辑层无需改动。
+- **通用内容 Resource**：`ContentDef`（`content_key`/`category`/`fields`）包装容器条目，供编辑器与运行时统一使用。
+- **资产台账**：`contentbuilder assets --dir ART_DIR --out ledger.json` 扫描模型/贴图/音频，记录大小、sha256、LOD 分层与许可证旁注（`<asset>.license.json`），对齐 R36.11。

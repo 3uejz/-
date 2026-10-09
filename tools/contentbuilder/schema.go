@@ -102,6 +102,10 @@ var categorySpecs = map[string]categorySpec{
 		{"content_key", tString, true}, {"name", tString, true}, {"rarity", tString, true},
 		{"category", tString, true}, {"description", tString, true},
 	}},
+	"sites": {name: "sites", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"scene", tString, true},
+		{"category", tString, false}, {"radius", tFloat, false},
+	}},
 }
 
 // categoryOrder 稳定输出顺序。

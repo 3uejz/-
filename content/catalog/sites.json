@@ -1,0 +1,13 @@
+{
+  "category": "sites",
+  "entries": [
+    {"content_key": "site.home", "name": "家", "scene": "res://assets/placeholder/site_home.tscn", "category": "residence", "radius": 8.0},
+    {"content_key": "site.cafe", "name": "咖啡馆", "scene": "res://assets/placeholder/site_cafe.tscn", "category": "food", "radius": 6.0},
+    {"content_key": "site.office", "name": "写字楼", "scene": "res://assets/placeholder/site_office.tscn", "category": "work", "radius": 12.0},
+    {"content_key": "site.market", "name": "集市", "scene": "res://assets/placeholder/site_market.tscn", "category": "commerce", "radius": 10.0},
+    {"content_key": "site.park", "name": "公园", "scene": "res://assets/placeholder/site_park.tscn", "category": "leisure", "radius": 20.0},
+    {"content_key": "site.clinic", "name": "诊所", "scene": "res://assets/placeholder/site_clinic.tscn", "category": "medical", "radius": 8.0},
+    {"content_key": "site.school", "name": "学校", "scene": "res://assets/placeholder/site_school.tscn", "category": "education", "radius": 15.0},
+    {"content_key": "site.station", "name": "车站", "scene": "res://assets/placeholder/site_station.tscn", "category": "transport", "radius": 18.0}
+  ]
+}

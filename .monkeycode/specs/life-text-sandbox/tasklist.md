@@ -192,6 +192,7 @@
   - [x] 23.1 编写内容清单差量与哈希校验测试
   - [x] 23.2 编写内容校验器测试（重复 ID、缺失引用、类型错误、硬阻断）
   - [x] 23.3 编写差量更新后与全量发布等价测试
+  - [x] 23.4 实现地点 3D 绑定管理器（加载/卸载/LRU 缓存池/LOD）、占位资产解析与通用内容 Resource；新增 `sites` 内容类别与 ContentRegistry 对接
 
 - [x] 24. 实现 Go 后端账号、云存档、内容、传承、遥测与运营
   - 实现 `/api/auth`、`/api/saves`、`/api/content`、`/api/config`、`/api/legacy`、`/api/telemetry`

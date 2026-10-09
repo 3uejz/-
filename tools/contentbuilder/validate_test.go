@@ -97,6 +97,30 @@ func TestValidateAcceptsValidCatalog(t *testing.T) {
 	}
 }
 
+func TestLoadCSVCategory(t *testing.T) {
+	dir := t.TempDir()
+	csvBody := "content_key,name,domain,max_level,prereq\n" +
+		"skill.coding,编程,technology,5,\n" +
+		"skill.debug,调试,technology,3,skill.coding\n"
+	if err := os.WriteFile(filepath.Join(dir, "skills.csv"), []byte(csvBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cat, loadIssues := LoadCatalog(dir)
+	if len(loadIssues) > 0 {
+		t.Fatalf("CSV 加载不应报错: %v", loadIssues)
+	}
+	skills := cat["skills"]
+	if skills == nil || len(skills.Entries) != 2 {
+		t.Fatalf("应加载 2 条技能, got %+v", skills)
+	}
+	if skills.File != filepath.Join(dir, "skills.csv") {
+		t.Fatalf("来源文件应为 csv, got %s", skills.File)
+	}
+	if issues := Validate(cat); len(issues) > 0 {
+		t.Fatalf("CSV 目录不应报错: %v", issues)
+	}
+}
+
 func hasIssue(issues []issue, substr string) bool {
 	for _, is := range issues {
 		if strings.Contains(is.Message, substr) {
