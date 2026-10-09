@@ -121,6 +121,50 @@ func TestLoadCSVCategory(t *testing.T) {
 	}
 }
 
+func TestValidateNewDomainCategories(t *testing.T) {
+	dir := t.TempDir()
+	// 任务 50 新增类别：债务产品、医疗分科、交通基建。
+	writeJSON(t, dir, "debt_products.json", map[string]any{
+		"category": "debt_products",
+		"entries": []map[string]any{
+			{"content_key": "debt.pawn", "name": "典当", "kind": "pawn", "annual_rate": 0.24},
+		},
+	})
+	writeJSON(t, dir, "medical_services.json", map[string]any{
+		"category": "medical_services",
+		"entries": []map[string]any{
+			{"content_key": "medical.ivf", "name": "辅助生殖", "department": "fertility", "base_success": 0.45},
+		},
+	})
+	writeJSON(t, dir, "infra_projects.json", map[string]any{
+		"category": "infra_projects",
+		"entries": []map[string]any{
+			{"content_key": "infra.railway", "name": "铁路", "mode": "rail", "capacity": 1.0},
+		},
+	})
+	cat, loadIssues := LoadCatalog(dir)
+	if len(loadIssues) > 0 {
+		t.Fatalf("加载不应报错: %v", loadIssues)
+	}
+	if cat["debt_products"] == nil || cat["medical_services"] == nil || cat["infra_projects"] == nil {
+		t.Fatalf("应加载三个新类别")
+	}
+	if issues := Validate(cat); len(issues) > 0 {
+		t.Fatalf("新类别合法目录不应报错: %v", issues)
+	}
+	// 缺必填字段应被硬阻断。
+	writeJSON(t, dir, "funeral_services.json", map[string]any{
+		"category": "funeral_services",
+		"entries": []map[string]any{
+			{"content_key": "funeral.cremation", "name": "火化", "kind": "cremation"},
+		},
+	})
+	cat2, _ := LoadCatalog(dir)
+	if issues := Validate(cat2); !hasIssue(issues, "缺少必填字段 cost") {
+		t.Fatalf("新类别缺字段应报错, issues=%v", issues)
+	}
+}
+
 func hasIssue(issues []issue, substr string) bool {
 	for _, is := range issues {
 		if strings.Contains(is.Message, substr) {

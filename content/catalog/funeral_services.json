@@ -1,0 +1,10 @@
+{
+  "category": "funeral_services",
+  "entries": [
+    {"content_key": "funeral.cremation", "name": "火化", "kind": "cremation", "cost": 500000},
+    {"content_key": "funeral.burial_plot", "name": "墓地", "kind": "burial", "cost": 5000000},
+    {"content_key": "funeral.sea_burial", "name": "海葬", "kind": "sea", "cost": 200000},
+    {"content_key": "funeral.memorial", "name": "纪念碑", "kind": "memorial", "cost": 3000000},
+    {"content_key": "funeral.organ_donation", "name": "器官捐献", "kind": "donation", "cost": 0}
+  ]
+}

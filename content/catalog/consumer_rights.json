@@ -1,0 +1,10 @@
+{
+  "category": "consumer_rights",
+  "entries": [
+    {"content_key": "consumer.return", "name": "七日退货", "kind": "return", "remedy": "refund"},
+    {"content_key": "consumer.repair", "name": "三包维修", "kind": "repair", "remedy": "repair"},
+    {"content_key": "consumer.replace", "name": "换代", "kind": "replace", "remedy": "replace"},
+    {"content_key": "consumer.recall", "name": "缺陷召回", "kind": "recall", "remedy": "recall"},
+    {"content_key": "consumer.class_action", "name": "集体维权", "kind": "class_action", "remedy": "compensation"}
+  ]
+}

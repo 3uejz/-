@@ -1,0 +1,10 @@
+{
+  "category": "engineering_types",
+  "entries": [
+    {"content_key": "engineering.residential", "name": "住宅工程", "qualification": "second", "scale": 10000000},
+    {"content_key": "engineering.road", "name": "道路工程", "qualification": "first", "scale": 50000000},
+    {"content_key": "engineering.bridge", "name": "桥梁工程", "qualification": "first", "scale": 80000000},
+    {"content_key": "engineering.subway", "name": "地铁工程", "qualification": "special", "scale": 500000000},
+    {"content_key": "engineering.industrial_plant", "name": "工业厂房", "qualification": "first", "scale": 60000000}
+  ]
+}

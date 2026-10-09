@@ -1,0 +1,11 @@
+{
+  "category": "content_works",
+  "entries": [
+    {"content_key": "work.game", "name": "游戏", "medium": "game", "quality": 0.6},
+    {"content_key": "work.anime", "name": "动漫", "medium": "anime", "quality": 0.6},
+    {"content_key": "work.web_novel", "name": "网文", "medium": "novel", "quality": 0.55},
+    {"content_key": "work.film", "name": "影视", "medium": "film", "quality": 0.65},
+    {"content_key": "work.variety", "name": "综艺", "medium": "variety", "quality": 0.55},
+    {"content_key": "work.music", "name": "音乐", "medium": "music", "quality": 0.6}
+  ]
+}

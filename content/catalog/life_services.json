@@ -1,0 +1,11 @@
+{
+  "category": "life_services",
+  "entries": [
+    {"content_key": "life.matchmaking", "name": "婚介相亲", "kind": "matchmaking", "price": 200000},
+    {"content_key": "life.cleaning", "name": "保洁", "kind": "cleaning", "price": 15000},
+    {"content_key": "life.moving", "name": "搬家", "kind": "moving", "price": 50000},
+    {"content_key": "life.repair", "name": "维修", "kind": "repair", "price": 20000},
+    {"content_key": "life.confinement_nanny", "name": "月嫂", "kind": "nanny", "price": 1500000},
+    {"content_key": "life.pet_grooming", "name": "宠物服务", "kind": "pet", "price": 30000}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "category": "infra_projects",
+  "entries": [
+    {"content_key": "infra.railway", "name": "铁路", "mode": "rail", "capacity": 1.0},
+    {"content_key": "infra.highway", "name": "高速公路", "mode": "road", "capacity": 0.9},
+    {"content_key": "infra.port", "name": "港口", "mode": "sea", "capacity": 1.2},
+    {"content_key": "infra.airport", "name": "机场", "mode": "air", "capacity": 1.5},
+    {"content_key": "infra.metro", "name": "地铁", "mode": "metro", "capacity": 1.3},
+    {"content_key": "infra.logistics_hub", "name": "物流枢纽", "mode": "logistics", "capacity": 1.1}
+  ]
+}

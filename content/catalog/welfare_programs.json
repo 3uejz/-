@@ -1,0 +1,10 @@
+{
+  "category": "welfare_programs",
+  "entries": [
+    {"content_key": "welfare.minimum_living", "name": "最低生活保障", "category": "poverty", "benefit": 120000},
+    {"content_key": "welfare.foster_care", "name": "寄养补助", "category": "child", "benefit": 150000},
+    {"content_key": "welfare.adoption_subsidy", "name": "收养补贴", "category": "child", "benefit": 200000},
+    {"content_key": "welfare.disability_allowance", "name": "残疾人补贴", "category": "disability", "benefit": 100000},
+    {"content_key": "welfare.charity_fund", "name": "慈善基金", "category": "charity", "benefit": 0}
+  ]
+}

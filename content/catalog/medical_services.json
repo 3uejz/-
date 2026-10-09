@@ -1,0 +1,11 @@
+{
+  "category": "medical_services",
+  "entries": [
+    {"content_key": "medical.general_surgery", "name": "普通外科", "department": "surgery", "base_success": 0.9},
+    {"content_key": "medical.cardiology", "name": "心血管内科", "department": "cardiology", "base_success": 0.85},
+    {"content_key": "medical.organ_transplant", "name": "器官移植", "department": "transplant", "base_success": 0.7},
+    {"content_key": "medical.ivf", "name": "辅助生殖", "department": "fertility", "base_success": 0.45},
+    {"content_key": "medical.gene_test", "name": "基因检测", "department": "genetics", "base_success": 0.95},
+    {"content_key": "medical.clinical_trial", "name": "临床试验", "department": "research", "base_success": 0.3}
+  ]
+}

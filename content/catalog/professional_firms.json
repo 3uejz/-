@@ -1,0 +1,11 @@
+{
+  "category": "professional_firms",
+  "entries": [
+    {"content_key": "firm.accounting", "name": "会计师事务所", "sector": "accounting", "license": "cpa"},
+    {"content_key": "firm.audit", "name": "审计事务所", "sector": "audit", "license": "audit"},
+    {"content_key": "firm.consulting", "name": "咨询公司", "sector": "consulting", "license": "business"},
+    {"content_key": "firm.headhunting", "name": "猎头公司", "sector": "headhunting", "license": "hr"},
+    {"content_key": "firm.pr", "name": "公关公司", "sector": "pr", "license": "business"},
+    {"content_key": "firm.certification", "name": "认证机构", "sector": "certification", "license": "cma"}
+  ]
+}

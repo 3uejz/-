@@ -1,0 +1,11 @@
+{
+  "category": "municipal_services",
+  "entries": [
+    {"content_key": "municipal.water", "name": "自来水", "kind": "utility", "fee": 300},
+    {"content_key": "municipal.electricity", "name": "电力", "kind": "utility", "fee": 500},
+    {"content_key": "municipal.gas", "name": "燃气", "kind": "utility", "fee": 260},
+    {"content_key": "municipal.heating", "name": "供暖", "kind": "utility", "fee": 1800},
+    {"content_key": "municipal.maintenance", "name": "道路养护", "kind": "maintenance", "fee": 0},
+    {"content_key": "municipal.postal", "name": "邮政包裹", "kind": "postal", "fee": 1200}
+  ]
+}

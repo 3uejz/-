@@ -1,0 +1,11 @@
+{
+  "category": "rescue_ops",
+  "entries": [
+    {"content_key": "rescue.fire", "name": "消防救援", "profession": "fire", "base_response": 10.0},
+    {"content_key": "rescue.ems", "name": "急救医疗", "profession": "ems", "base_response": 8.0},
+    {"content_key": "rescue.coast_guard", "name": "海警救援", "profession": "coast_guard", "base_response": 15.0},
+    {"content_key": "rescue.mountain", "name": "山地救援", "profession": "mountain_rescue", "base_response": 20.0},
+    {"content_key": "rescue.earthquake", "name": "地震救援", "profession": "earthquake_rescue", "base_response": 18.0},
+    {"content_key": "rescue.flood", "name": "洪涝救援", "profession": "flood_rescue", "base_response": 16.0}
+  ]
+}

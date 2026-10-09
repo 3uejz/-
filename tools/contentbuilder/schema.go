@@ -106,6 +106,46 @@ var categorySpecs = map[string]categorySpec{
 		{"content_key", tString, true}, {"name", tString, true}, {"scene", tString, true},
 		{"category", tString, false}, {"radius", tFloat, false},
 	}},
+	// 以下类别覆盖 gaps D35–D50 的领域内容骨架（任务 50）。
+	"rescue_ops": {name: "rescue_ops", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"profession", tString, true}, {"base_response", tFloat, true},
+	}},
+	"municipal_services": {name: "municipal_services", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"fee", tInt, true},
+	}},
+	"debt_products": {name: "debt_products", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"annual_rate", tFloat, true},
+	}},
+	"consumer_rights": {name: "consumer_rights", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"remedy", tString, true},
+	}},
+	"welfare_programs": {name: "welfare_programs", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"category", tString, true}, {"benefit", tInt, true},
+	}},
+	"funeral_services": {name: "funeral_services", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"cost", tInt, true},
+	}},
+	"metaphysics_services": {name: "metaphysics_services", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"base_success", tFloat, true},
+	}},
+	"medical_services": {name: "medical_services", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"department", tString, true}, {"base_success", tFloat, true},
+	}},
+	"content_works": {name: "content_works", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"medium", tString, true}, {"quality", tFloat, true},
+	}},
+	"engineering_types": {name: "engineering_types", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"qualification", tString, true}, {"scale", tInt, true},
+	}},
+	"professional_firms": {name: "professional_firms", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"sector", tString, true}, {"license", tString, true},
+	}},
+	"life_services": {name: "life_services", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"kind", tString, true}, {"price", tInt, true},
+	}},
+	"infra_projects": {name: "infra_projects", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"mode", tString, true}, {"capacity", tFloat, true},
+	}},
 }
 
 // categoryOrder 稳定输出顺序。

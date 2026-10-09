@@ -1,0 +1,11 @@
+{
+  "category": "metaphysics_services",
+  "entries": [
+    {"content_key": "metaphysics.fortune", "name": "算命", "kind": "fortune", "base_success": 0.55},
+    {"content_key": "metaphysics.fengshui", "name": "风水", "kind": "fengshui", "base_success": 0.5},
+    {"content_key": "metaphysics.astrology", "name": "占星", "kind": "astrology", "base_success": 0.5},
+    {"content_key": "metaphysics.talisman", "name": "护身符", "kind": "talisman", "base_success": 0.4},
+    {"content_key": "metaphysics.wish", "name": "许愿", "kind": "wish", "base_success": 0.3},
+    {"content_key": "metaphysics.scam", "name": "神棍诈骗", "kind": "scam", "base_success": 0.6}
+  ]
+}

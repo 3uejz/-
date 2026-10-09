@@ -218,3 +218,25 @@
 - **占位资产约定**：在真实美术资产进场前，任何内容键经 `PlaceholderAssets` 确定性映射到基础几何体（box/sphere/cylinder/capsule/prism）与颜色，路径统一为 `res://assets/placeholder/<key>.tscn`；真实资产到位后由 `sites` 内容条目覆盖即可，逻辑层无需改动。
 - **通用内容 Resource**：`ContentDef`（`content_key`/`category`/`fields`）包装容器条目，供编辑器与运行时统一使用。
 - **资产台账**：`contentbuilder assets --dir ART_DIR --out ledger.json` 扫描模型/贴图/音频，记录大小、sha256、LOD 分层与许可证旁注（`<asset>.license.json`），对齐 R36.11。
+
+## 22. 领域内容骨架（D35–D50；任务 50）
+
+下列类别由 `tools/contentbuilder` 的 categorySpecs 校验，源文件位于 `content/catalog/<类别>.json`；当前为满足校验与联调的骨架，数量按 R56 目标逐步填充。完整表参数（分科成功率、债券利率、工程资质规模、班期准点率等）由各域模拟模块的数值基线提供。
+
+| 域 | 类别 | 源文件 | R56 目标 |
+|----|------|--------|----------|
+| D36 应急救援 | `rescue_ops` | 应急专业与基准响应时间 | 随场所与灾害扩展 |
+| D38 市政邮政 | `municipal_services` | 水电燃气养护与邮政 | 场所类型 ≥100 |
+| D39 债务服务 | `debt_products` | 银行贷/抵押/典当/小贷/众筹/灰色催收 | 金融标的 40 |
+| D40 消费者保护 | `consumer_rights` | 退货/三包/召回/集体维权 | 随物品目录扩展 |
+| D41 社会救助 | `welfare_programs` | 低保/寄养/收养/残补/慈善 | 随区域扩展 |
+| D42 殡葬捐献 | `funeral_services` | 火化/墓地/海葬/纪念/器官捐献 | 随区域扩展 |
+| D43 玄学民俗 | `metaphysics_services` | 算命/风水/占星/护身符/许愿/诈骗 | 随民俗扩展 |
+| D45 医疗生命科技 | `medical_services` | 分科/移植/辅助生殖/基因/试验 | 疾病 80、证书 30 |
+| D46 文娱内容 | `content_works` | 游戏/动漫/网文/影视/综艺/音乐 | 图鉴 500、娱乐 100 |
+| D47 工程规划 | `engineering_types` | 住宅/道路/桥梁/地铁/厂房 | 随城市规划扩展 |
+| D48 专业服务 | `professional_firms` | 会计/审计/咨询/猎头/公关/认证 | 组织 30 |
+| D49 生活服务 | `life_services` | 相亲/保洁/搬家/维修/月嫂/宠物 | 娱乐 100 |
+| D50 交通基建 | `infra_projects` | 铁路/高速/港口/机场/地铁/物流 | 交通方式 12 |
+
+- 新增/扩展内容时先补 `categorySpecs` 字段与跨引用，再落内容文件；`scripts/test.sh` 与 CI 会对 `content/catalog` 全量硬阻断校验。

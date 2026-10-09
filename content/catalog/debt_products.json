@@ -1,0 +1,11 @@
+{
+  "category": "debt_products",
+  "entries": [
+    {"content_key": "debt.bank_loan", "name": "银行信用贷", "kind": "credit", "annual_rate": 0.06},
+    {"content_key": "debt.mortgage", "name": "不动产抵押", "kind": "mortgage", "annual_rate": 0.045},
+    {"content_key": "debt.pawn", "name": "典当", "kind": "pawn", "annual_rate": 0.24},
+    {"content_key": "debt.micro_loan", "name": "小额贷", "kind": "micro", "annual_rate": 0.18},
+    {"content_key": "debt.crowdfunding", "name": "众筹借款", "kind": "crowdfunding", "annual_rate": 0.10},
+    {"content_key": "debt.gray_collection", "name": "灰色催收", "kind": "gray", "annual_rate": 0.36}
+  ]
+}
