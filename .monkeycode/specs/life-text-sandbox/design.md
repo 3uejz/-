@@ -209,6 +209,14 @@ graph TD
 - 暴露反噬走独立事件链：收容、猎杀、封禁、认知污染、精神崩溃，可接入 D4 精神疾病。
 - 异常数据默认不写入普通界面；仅当局内接触后开放异常图鉴。
 
+### 跨域接口与权威边界（R52）
+
+横切全部 50 个域，统一三件事，避免各域私藏字段与权威漂移：
+
+- **统一修饰符字典**（`client/sim/modifiers.gd`）：天气、交通/物流中断、罢工、数据泄露、能源价格、需求、荣誉、犯罪率、疫情、医疗承载力等以 `weather.rain` / `strike.logistics` / `energy.price` / `health.epidemic` 形式登记，模式为 `add`/`mul`/`set`，带来源与过期分钟。跨域事件只写修饰符，消费域按 `apply(base, key, now)` 取值，`KNOWN_KEYS` 为内容与事件必须引用的权威命名。
+- **逐域权威登记**（`client/sim/authority.gd`）：每域声明 `authority`（client/server/shared）、`offline`（是否允许离线近似）、`policy`（server_wins / client_wins / server_if_present）与 `anchor`（`absolute_minutes`）。上线按 `merge(local, server)` 逐域裁决并透传锚点，全球人口与宏观指标由服务端覆盖，本地精细玩法保留。
+- **领域休眠补算**（`client/sim/domain_wake.gd`）：`RegionManager.wake` 除区域人口/经济统计快进外，注入 `domain_wake` 后同步推进案件、灾害、在建工程、逾期催收、异常暴露、手术/试验等条目，规则确定性且满足**时间守恒**（累计推进分钟等于休眠窗口）与**幂等**（同点重复推进不改变状态）。
+
 ## Components and Interfaces
 
 ### 客户端组件

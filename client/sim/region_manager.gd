@@ -163,6 +163,9 @@ var _npc_system = null          # 全人口生成器（惰性创建）
 var _world_seed: int = 0
 var _active_pop_cap: int = ACTIVE_POP_CAP
 
+## 领域状态休眠补算器（DomainWake，可选注入）。区域 wake 时同步推进其条目（案件/灾害/工程/催收/异常/手术）。
+var domain_wake = null
+
 func _init(clock: Object = null, seed: int = 0) -> void:
 	_clock = clock
 	_rng = RngScript.new(seed)
@@ -383,6 +386,9 @@ func wake(region_id: String, elapsed_minutes: int = -1) -> Dictionary:
 	# 时间守恒：已模拟时刻恰前移 elapsed，不重复结算。
 	region.last_simulated_minute += elapsed
 	region.activate()
+	# 领域状态补算：与区域人口/经济共用同一次休眠窗口（R52）。
+	if domain_wake != null and domain_wake.has_method("advance_to"):
+		summary["domains"] = domain_wake.advance_to(region.last_simulated_minute)
 	summary["last_simulated_minute"] = region.last_simulated_minute
 	return summary
 
