@@ -154,6 +154,8 @@ client/ui/
 - 视图与模拟解耦，headless 下可加载 UI 壳。
 - 主题 token 与 `shared/consistency/vectors/baseline.json` 无关；纯视觉常量走主题资源。
 
+已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（12 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
+
 ## 12. 测试策略
 
 - 主题：亮/暗与三套无障碍配色的对比度校验通过；切换幂等；token 无硬编码遗漏。

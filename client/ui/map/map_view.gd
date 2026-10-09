@@ -8,6 +8,7 @@ extends Control
 
 const GeoDataScript = preload("res://sim/geo.gd")
 const PlaceManagerScript = preload("res://sim/place_manager.gd")
+const ThemeTokensScript = preload("res://ui/theme/theme_tokens.gd")
 
 const MIN_ZOOM: float = 0.25
 const MAX_ZOOM: float = 8.0
@@ -29,6 +30,8 @@ var _center_lon: float = 0.0
 var _current_geo_id: String = ""
 var _is_3d: bool = false
 var _markers: Array = []        # 收藏/自定义标记：{id, lat, lon, label}
+var _theme_scheme: String = "dark"
+var _theme_variant: String = "default"
 var _draw_levels: Array = [GeoDataScript.GeographicLevel.COUNTRY, GeoDataScript.GeographicLevel.PROVINCE, GeoDataScript.GeographicLevel.CITY]
 var _viewport: SubViewport = null
 var _world_3d: Node3D = null
@@ -109,11 +112,12 @@ func _draw() -> void:
 			var node = _geo.get_node(id)
 			var p: Vector2 = _project(float(node.location.get("lat", 0.0)), float(node.location.get("lon", 0.0)))
 			var radius: float = 2.0 + float(level) * 1.5
-			var color: Color = Color(0.9, 0.75, 0.3) if level == GeoDataScript.GeographicLevel.CITY else Color(0.6, 0.6, 0.6)
+			var palette: Dictionary = ThemeTokensScript.colors(_theme_scheme, _theme_variant)
+			var color: Color = palette["color.accent"] if level == GeoDataScript.GeographicLevel.CITY else palette["color.text.secondary"]
 			draw_circle(p, radius, color)
 	for marker in _markers:
 		var mp: Vector2 = _project(float(marker["lat"]), float(marker["lon"]))
-		draw_rect(Rect2(mp - Vector2(3, 3), Vector2(6, 6)), Color(0.9, 0.2, 0.2))
+		draw_rect(Rect2(mp - Vector2(3, 3), Vector2(6, 6)), ThemeTokensScript.colors(_theme_scheme, _theme_variant)["color.state.danger"])
 
 # --- 3D 局部探索壳 ---
 
