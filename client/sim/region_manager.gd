@@ -20,7 +20,7 @@ const GregorianScript = preload("res://sim/gregorian.gd")
 const NpcScript = preload("res://sim/npc.gd")
 
 ## 活动区域精细模拟人口上限（design 默认 2000）。
-const ACTIVE_POP_CAP: int = 2000
+const ACTIVE_POP_CAP: int = BaselineScript.REGION_ACTIVE_POP_CAP
 
 
 ## 单个区域的状态与休眠快照（design.md Data Models: RegionState）。

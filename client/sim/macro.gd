@@ -6,31 +6,33 @@ extends RefCounted
 ## 权威边界（design 混合权威）：全球人口与宏观指标后端权威；客户端离线用同一模型近似推进，
 ## 记录 server_tick（=服务端 absolute_minutes）锚点；上线后宏观以服务端为准，本地精细区域变更保留。
 
-const QUARTERS_PER_YEAR: int = 4
+const BaselineScript = preload("res://sim/baseline.gd")
 
-const BASE_INFLATION: float = 0.02
-const BASE_RATE: float = 0.03
-const UNEMPLOYMENT: float = 0.05
-const GDP_GROWTH_BASE: float = 0.03
-const INFLATION_MIN: float = -0.05
-const INFLATION_MAX: float = 3.0
-const UNEMPLOYMENT_LO: float = 0.0
-const UNEMPLOYMENT_HI: float = 1.0
-const RATE_MIN: float = 0.0
-const RATE_MAX: float = 0.5
-const PMI_MIN: float = 0.0
-const PMI_MAX: float = 100.0
-const PMI_BASE: float = 50.0
+const QUARTERS_PER_YEAR: int = BaselineScript.MACRO_QUARTERS_PER_YEAR
 
-const RATE_UNEMPLOYMENT_SENSITIVITY: float = 0.8
-const INFLATION_TRADEOFF: float = 0.4
+const BASE_INFLATION: float = BaselineScript.MACRO_BASE_INFLATION
+const BASE_RATE: float = BaselineScript.MACRO_BASE_RATE
+const UNEMPLOYMENT: float = BaselineScript.MACRO_UNEMPLOYMENT_BASE
+const GDP_GROWTH_BASE: float = BaselineScript.MACRO_GDP_GROWTH_BASE
+const INFLATION_MIN: float = BaselineScript.MACRO_INFLATION_MIN
+const INFLATION_MAX: float = BaselineScript.MACRO_INFLATION_MAX
+const UNEMPLOYMENT_LO: float = BaselineScript.MACRO_UNEMPLOYMENT_MIN
+const UNEMPLOYMENT_HI: float = BaselineScript.MACRO_UNEMPLOYMENT_MAX
+const RATE_MIN: float = BaselineScript.MACRO_RATE_MIN
+const RATE_MAX: float = BaselineScript.MACRO_RATE_MAX
+const PMI_MIN: float = BaselineScript.MACRO_PMI_MIN
+const PMI_MAX: float = BaselineScript.MACRO_PMI_MAX
+const PMI_BASE: float = BaselineScript.MACRO_PMI_BASE
 
-const CYCLE_MIN_QUARTERS: int = 4
-const CYCLE_MAX_QUARTERS: int = 16
+const RATE_UNEMPLOYMENT_SENSITIVITY: float = BaselineScript.MACRO_RATE_UNEMPLOYMENT_SENSITIVITY
+const INFLATION_TRADEOFF: float = BaselineScript.MACRO_INFLATION_UNEMPLOYMENT_TRADEOFF
 
-const BIRTH_RATE: float = 0.012
-const DEATH_RATE: float = 0.008
-const MIGRATION_RATE: float = 0.0002
+const CYCLE_MIN_QUARTERS: int = BaselineScript.MACRO_CYCLE_MIN_QUARTERS
+const CYCLE_MAX_QUARTERS: int = BaselineScript.MACRO_CYCLE_MAX_QUARTERS
+
+const BIRTH_RATE: float = BaselineScript.MACRO_BIRTH_RATE
+const DEATH_RATE: float = BaselineScript.MACRO_DEATH_RATE
+const MIGRATION_RATE: float = BaselineScript.MACRO_MIGRATION_RATE
 
 const CYCLE_PHASES: Array[String] = ["recession", "recovery", "boom", "slowdown"]
 const CYCLE_GDP_EFFECT: Dictionary = {

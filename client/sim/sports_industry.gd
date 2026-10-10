@@ -15,6 +15,8 @@ extends RefCounted
 ##   - 比赛结果默认按双方实力确定性推导（主场优势），额外随机只由外部 rng 注入，可复现；
 ##   - 丑闻后果集中在 SCANDALS 表（禁赛天数/罚款/是否涉法），investigate 统一裁决。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CAREER_STAGES: Array = ["youth", "pro_contract", "transfer", "peak", "retire"]
 const CAREER_STAGE_NAMES: Dictionary = {
 	"youth": "青训", "pro_contract": "职业合同", "transfer": "转会",
@@ -53,14 +55,14 @@ const INJURIES: Dictionary = {
 	"career_ending": {"name": "致残", "days": 0.0, "form_penalty": 100.0, "permanent": true},
 }
 
-const PEAK_AGE_MIN: int = 24
-const PEAK_AGE_MAX: int = 30
-const HOME_ADVANTAGE: float = 5.0
-const BASE_MARKET_VALUE: int = 5000000
-const AGENT_FEE_RATE: float = 0.10
-const CLUB_BASE_SPONSOR: int = 5000000
-const BROADCAST_BASE: int = 8000000
-const TICKET_BASE_PRICE: int = 10000
+const PEAK_AGE_MIN: int = BaselineScript.SPORTSI_PEAK_AGE_MIN
+const PEAK_AGE_MAX: int = BaselineScript.SPORTSI_PEAK_AGE_MAX
+const HOME_ADVANTAGE: float = BaselineScript.SPORTSI_HOME_ADVANTAGE
+const BASE_MARKET_VALUE: int = BaselineScript.SPORTSI_BASE_MARKET_VALUE
+const AGENT_FEE_RATE: float = BaselineScript.SPORTSI_AGENT_FEE_RATE
+const CLUB_BASE_SPONSOR: int = BaselineScript.SPORTSI_CLUB_BASE_SPONSOR
+const BROADCAST_BASE: int = BaselineScript.SPORTSI_BROADCAST_BASE
+const TICKET_BASE_PRICE: int = BaselineScript.SPORTSI_TICKET_BASE_PRICE
 
 
 # --- 数据表 ---

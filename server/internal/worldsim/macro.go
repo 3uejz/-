@@ -15,34 +15,34 @@ import (
 	"lifetextsandbox/server/internal/sim"
 )
 
-// 宏观默认参数（与客户端 baseline.gd 经济段一致）。
+// 宏观默认参数（单一真源：shared/consistency/baseline/economy.json，经 sim 包生成）。
 const (
-	MacroQuartersPerYear = 4
+	MacroQuartersPerYear = sim.BaselineMacroQuartersPerYear
 
-	MacroBaseInflation  = 0.02
-	MacroBaseRate       = 0.03
-	MacroUnemployment   = 0.05
-	MacroGDPGrowthBase  = 0.03
-	MacroInflationMin   = -0.05
-	MacroInflationMax   = 3.0
-	MacroUnemploymentLo = 0.0
-	MacroUnemploymentHi = 1.0
-	MacroRateMin        = 0.0
-	MacroRateMax        = 0.5
-	MacroPMIMin         = 0.0
-	MacroPMIMax         = 100.0
-	MacroPMIBase        = 50.0
+	MacroBaseInflation  = sim.BaselineMacroBaseInflation
+	MacroBaseRate       = sim.BaselineMacroBaseRate
+	MacroUnemployment   = sim.BaselineMacroUnemploymentBase
+	MacroGDPGrowthBase  = sim.BaselineMacroGdpGrowthBase
+	MacroInflationMin   = sim.BaselineMacroInflationMin
+	MacroInflationMax   = sim.BaselineMacroInflationMax
+	MacroUnemploymentLo = sim.BaselineMacroUnemploymentMin
+	MacroUnemploymentHi = sim.BaselineMacroUnemploymentMax
+	MacroRateMin        = sim.BaselineMacroRateMin
+	MacroRateMax        = sim.BaselineMacroRateMax
+	MacroPMIMin         = sim.BaselineMacroPmiMin
+	MacroPMIMax         = sim.BaselineMacroPmiMax
+	MacroPMIBase        = sim.BaselineMacroPmiBase
 
-	MacroRateUnemploymentSensitivity = 0.8
-	MacroInflationTradeoff           = 0.4
+	MacroRateUnemploymentSensitivity = sim.BaselineMacroRateUnemploymentSensitivity
+	MacroInflationTradeoff           = sim.BaselineMacroInflationUnemploymentTradeoff
 
-	MacroCycleMinQuarters = 4
-	MacroCycleMaxQuarters = 16
+	MacroCycleMinQuarters = sim.BaselineMacroCycleMinQuarters
+	MacroCycleMaxQuarters = sim.BaselineMacroCycleMaxQuarters
 
-	// 人口队列默认参数（与客户端 client/sim/macro.gd 一致）。
-	MacroBirthRate     = 0.012
-	MacroDeathRate     = 0.008
-	MacroMigrationRate = 0.0002
+	// 人口队列默认参数（单一真源同上）。
+	MacroBirthRate     = sim.BaselineMacroBirthRate
+	MacroDeathRate     = sim.BaselineMacroDeathRate
+	MacroMigrationRate = sim.BaselineMacroMigrationRate
 )
 
 // MacroMinutesPerYear / MacroMinutesPerQuarter 是宏观时钟的粒度（与客户端一致）。

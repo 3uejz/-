@@ -15,11 +15,13 @@ extends RefCounted
 ##   - 学习增益随当前水平递减，避免无脑刷满；遗忘由调用方给出闲置天数；
 ##   - 节日与文化表为常量数据表，效果按当日汇总，便于与其他系统（商铺/交通/心情）对接。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const COMPONENTS: Array = ["speaking", "listening", "literacy"]
 const COMPONENT_NAMES: Dictionary = {"speaking": "口语", "listening": "听力", "literacy": "读写"}
 const COMPONENT_WEIGHTS: Dictionary = {"speaking": 0.4, "listening": 0.3, "literacy": 0.3}
-const MAX_LEVEL: float = 100.0
-const BASE_STUDY_GAIN: float = 1.2
+const MAX_LEVEL: float = BaselineScript.LANG_MAX_LEVEL
+const BASE_STUDY_GAIN: float = BaselineScript.LANG_BASE_STUDY_GAIN
 
 ## 官方语言与区域方言。
 const LANGUAGES: Dictionary = {

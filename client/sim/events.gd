@@ -6,12 +6,14 @@ extends RefCounted
 ## 优先级可打断低优先级事件与当前动作；每事件独立冷却叠加全局限流，支持互斥组；
 ## 抉择事件暂停时间；离线按同一调度补算并以挂机日志汇总（不逐事件回放）。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const TYPES: Array = ["opportunity", "accident", "social", "environment", "story"]
 const TYPE_NAMES: Dictionary = {"opportunity": "机遇", "accident": "意外", "social": "社会", "environment": "环境", "story": "剧情"}
 const TRIGGERS: Array = ["random", "condition", "chain", "schedule"]
 
-const DEFAULT_GLOBAL_DAILY_CAP: int = 3
-const MINUTES_PER_DAY: int = 1440
+const DEFAULT_GLOBAL_DAILY_CAP: int = BaselineScript.EVENT_DEFAULT_GLOBAL_DAILY_CAP
+const MINUTES_PER_DAY: int = BaselineScript.EVENT_MINUTES_PER_DAY
 
 ## 事件库（示例基线，可由内容包/远程配置覆盖）。
 const EVENTS: Dictionary = {

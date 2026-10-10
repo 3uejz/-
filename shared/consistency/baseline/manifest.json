@@ -71,6 +71,14 @@
     "npc.json",
     "npc_memory.json",
     "trade.json",
-    "market.json"
+    "market.json",
+    "sports_industry.json",
+    "organizations.json",
+    "relations.json",
+    "language.json",
+    "events.json",
+    "goldfinger.json",
+    "gregorian.json",
+    "region_manager.json"
   ]
 }

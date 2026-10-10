@@ -3,8 +3,10 @@ extends RefCounted
 ## 真实公历时间映射（客户端/后端一致性，见 shared/consistency/README.md）。
 ## epoch：2000-01-01T00:00:00Z 记为 absolute_minutes = 0。
 
-const EPOCH_UNIX_DAYS: int = 10957  # 2000-01-01 距 1970-01-01 的天数
-const MINUTES_PER_DAY: int = 1440
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const EPOCH_UNIX_DAYS: int = BaselineScript.CALENDAR_EPOCH_UNIX_DAYS  # 2000-01-01 距 1970-01-01 的天数
+const MINUTES_PER_DAY: int = BaselineScript.CALENDAR_MINUTES_PER_DAY
 
 ## 把绝对分钟映射为日历字段。
 ## 返回：date/year/month/day/hour/minute/weekday_iso(1=周一..7=周日)/season_north。

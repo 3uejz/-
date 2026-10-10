@@ -3,11 +3,12 @@ package sim
 import "fmt"
 
 // 时间常量。epoch：2000-01-01T00:00:00Z 记为 absolute_minutes = 0。
+// 单一真源：shared/consistency/baseline/gregorian.json（经本包生成）。
 const (
 	// EpochUnixDays 是 2000-01-01 距 1970-01-01 的天数。
-	EpochUnixDays = 10957
+	EpochUnixDays = BaselineCalendarEpochUnixDays
 	// MinutesPerDay 每日分钟数。
-	MinutesPerDay = 1440
+	MinutesPerDay = BaselineCalendarMinutesPerDay
 )
 
 // Calendar 是绝对分钟映射出的日历字段。

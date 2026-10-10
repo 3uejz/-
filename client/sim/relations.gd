@@ -16,8 +16,8 @@ const BaselineScript = preload("res://sim/baseline.gd")
 const DIMS: Array = ["favor", "trust", "awe", "grudge", "intimacy"]
 
 ## 单次互动上限（普通 / 重大事件）。
-const INTERACTION_CAP: float = 15.0
-const MAJOR_CAP: float = 60.0
+const INTERACTION_CAP: float = BaselineScript.RELATION_INTERACTION_CAP
+const MAJOR_CAP: float = BaselineScript.RELATION_MAJOR_CAP
 
 ## 关系分级（按好感主轴，其余维度修正）。
 const LEVEL_STRANGER: String = "stranger"

@@ -16,6 +16,8 @@ extends RefCounted
 ##   - 集体行动与派系斗争的随机项由外部注入 roll/rng，缺省时确定化（roll=0），便于测试；
 ##   - “暴露”由被查热度 heat 与反侦察 counter_intel 共同决定，超阈后由 handle_exposure 统一清算。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const LEGAL: String = "legal"
 const GRAY: String = "gray"
 const ILLEGAL: String = "illegal"
@@ -49,8 +51,8 @@ const ACTIONS: Dictionary = {
 	"boycott": {"name": "抵制", "base": 0.40, "w_members": 0.22, "w_support": 0.25, "w_pressure": -0.15, "w_opinion": 0.33, "industry_halt": false, "unemployment": false, "resource_gain": 0.0},
 }
 
-const EXPOSE_HEAT_THRESHOLD: float = 100.0
-const EXPOSE_HEAT_MAX: float = 200.0
+const EXPOSE_HEAT_THRESHOLD: float = BaselineScript.ORG_EXPOSE_HEAT_THRESHOLD
+const EXPOSE_HEAT_MAX: float = BaselineScript.ORG_EXPOSE_HEAT_MAX
 
 
 # --- 类型表 ---

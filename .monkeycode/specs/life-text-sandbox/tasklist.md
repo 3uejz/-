@@ -371,7 +371,7 @@
   - [x] 47.3 编写打字机、键位重映射、TTS 开关与通知分类测试
   - [x] 47.4 主壳应用主题并打通角色/背包两个验证面板端到端（抽屉开合、多开、快捷动词同源）
 
-- [ ] 48. 补齐全域数值基线与一致性向量（横切，见 `gaps.md`）
+- [x] 48. 补齐全域数值基线与一致性向量（横切，见 `gaps.md`）
   - 把 D1–D50 的跨端常量与公式系数迁入 `shared/consistency/vectors/baseline.json` 单一真源
   - 扩展生成器产出 `baseline_generated.gd/.go`，并扩 `shared/consistency/vectors` 覆盖率/时间/经济/人口之外的向量
   - 覆盖气候带、交通边、成瘾、税制、SEIR、碳排、工程、医疗、联赛等系数表
@@ -381,6 +381,7 @@
   - [x] 48.3 迁移 SEIR/碳排环保/工程/医疗/体育/医美系数表入真源并接入 Baseline 消费，扩 baseline_domains 对齐测试
   - [x] 48.4 迁移心理/残障养老/数字/消费者保护/民间借贷/应急系数表入真源，扩对齐测试并增强 Go 字典递归比对
   - [x] 48.5 迁移婚育/育儿/职场/房产/农业/宠物系数表入真源，扩对齐测试并归一化强类型 map/array
+  - [x] 48.6 批量迁移剩余全部系数型标量域（jobs/war/research/skills/financing/dining/fashion/anomaly/personality/reputation/military/arts/happiness/manufacturing/infrastructure/education/honors/company/municipal/events_expo/prison/justice/police/mining_energy/social_welfare/immigration/orders/inheritance/domain_wake/metaphysics/legacy/appearance/world_memory/social_network/documents/gray_market/primary_industry/entertainment/wishes/civil/npc/npc_memory/trade/market 及 macro 的 3 项人口率/体育产业/组织/关系/语言/事件/金手指/公历/区域等）入真源；域代码经 `Baseline` 消费；令 `worldsim.macro`、`sim.gregorian` 改为引用生成基线单一真源；把两端对齐测试改为遍历 `BASELINE_DOMAINS`/`BaselineDomains` 的数据驱动比对（现 76 域，新增域无需改测试）
 
 - [x] 49. 领域状态 schema 一次大扩展与迁移（横切）
   - 扩展 `player`（family/memory/pet/军籍/残障/土地/数字资产/病症三维/信用分/案件）与 `finances/legal/health`

@@ -1175,6 +1175,45 @@
     "market": {
       "MARKET_MIN_SUPPLY": 0.01,
       "MARKET_FX_EPSILON": 1e-09
+    },
+    "sports_industry": {
+      "SPORTSI_PEAK_AGE_MIN": 24,
+      "SPORTSI_PEAK_AGE_MAX": 30,
+      "SPORTSI_HOME_ADVANTAGE": 5.0,
+      "SPORTSI_BASE_MARKET_VALUE": 5000000,
+      "SPORTSI_AGENT_FEE_RATE": 0.1,
+      "SPORTSI_CLUB_BASE_SPONSOR": 5000000,
+      "SPORTSI_BROADCAST_BASE": 8000000,
+      "SPORTSI_TICKET_BASE_PRICE": 10000
+    },
+    "organizations": {
+      "ORG_EXPOSE_HEAT_THRESHOLD": 100.0,
+      "ORG_EXPOSE_HEAT_MAX": 200.0
+    },
+    "relations": {
+      "RELATION_INTERACTION_CAP": 15.0,
+      "RELATION_MAJOR_CAP": 60.0
+    },
+    "language": {
+      "LANG_MAX_LEVEL": 100.0,
+      "LANG_BASE_STUDY_GAIN": 1.2
+    },
+    "events": {
+      "EVENT_DEFAULT_GLOBAL_DAILY_CAP": 3,
+      "EVENT_MINUTES_PER_DAY": 1440
+    },
+    "goldfinger": {
+      "GOLDFINGER_FREE_REROLLS": 3,
+      "GOLDFINGER_PITY_EPIC_AT": 20,
+      "GOLDFINGER_PITY_LEGENDARY_AT": 60,
+      "GOLDFINGER_DEFAULT_DAILY_CAP": 1000
+    },
+    "gregorian": {
+      "CALENDAR_EPOCH_UNIX_DAYS": 10957,
+      "CALENDAR_MINUTES_PER_DAY": 1440
+    },
+    "region_manager": {
+      "REGION_ACTIVE_POP_CAP": 2000
     }
   }
 }

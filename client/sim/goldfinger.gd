@@ -9,6 +9,8 @@ extends RefCounted
 ## 内容不硬编码：库由外部传入 def 数组（content/catalog/goldfingers.json → GoldfingerDef）。
 ## 随机性由注入 roll/rng 决定，缺省确定化（roll=0.0），便于复现与测试。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const RARITIES: Array = ["common", "rare", "epic", "legendary"]
 const RARITY_NAMES: Dictionary = {"common": "普通", "rare": "稀有", "epic": "史诗", "legendary": "传说"}
 const BASE_DISTRIBUTION: Dictionary = {"common": 0.60, "rare": 0.25, "epic": 0.12, "legendary": 0.03}
@@ -20,10 +22,10 @@ const MODULE_NAMES: Dictionary = {
 	"appraisal": "属性可视化/鉴定", "space": "空间", "craft": "合成",
 }
 
-const FREE_REROLLS: int = 3
-const PITY_EPIC_AT: int = 20
-const PITY_LEGENDARY_AT: int = 60
-const DEFAULT_DAILY_CAP: int = 1000
+const FREE_REROLLS: int = BaselineScript.GOLDFINGER_FREE_REROLLS
+const PITY_EPIC_AT: int = BaselineScript.GOLDFINGER_PITY_EPIC_AT
+const PITY_LEGENDARY_AT: int = BaselineScript.GOLDFINGER_PITY_LEGENDARY_AT
+const DEFAULT_DAILY_CAP: int = BaselineScript.GOLDFINGER_DEFAULT_DAILY_CAP
 
 
 func rarities() -> Array:

@@ -41,6 +41,8 @@ const (
 	BaselineBankFixedRateAnnual                   = 0.02
 	BaselineBankLoanRateAnnual                    = 0.05
 	BaselineBankOverdueDaysDowngrade              = 30
+	BaselineCalendarEpochUnixDays                 = 10957
+	BaselineCalendarMinutesPerDay                 = 1440
 	BaselineCivilLawyerFeePerLevel                = 200000
 	BaselineCleanlinessDecayPerMin                = 0.06944444444444445
 	BaselineCompanyBaseConversion                 = 0.5
@@ -104,6 +106,8 @@ const (
 	BaselineEnvFootprintScope2                    = 0.3
 	BaselineEnvFootprintScope3                    = 0.2
 	BaselineEraCount                              = 9
+	BaselineEventDefaultGlobalDailyCap            = 3
+	BaselineEventMinutesPerDay                    = 1440
 	BaselineExpoBaseLiability                     = 500000
 	BaselineExpoExpPerEvent                       = 20
 	BaselineExpoSecuritySafeLevel                 = 0.6
@@ -144,6 +148,10 @@ const (
 	BaselineGbmVolatilityMax                      = 0.5
 	BaselineGbmVolatilityMin                      = 0.2
 	BaselineGeoMinTotalLocations                  = 1000
+	BaselineGoldfingerDefaultDailyCap             = 1000
+	BaselineGoldfingerFreeRerolls                 = 3
+	BaselineGoldfingerPityEpicAt                  = 20
+	BaselineGoldfingerPityLegendaryAt             = 60
 	BaselineGrayGamblingAddictionThreshold        = 60.0
 	BaselineGrayLoanInterestDaily                 = 0.01
 	BaselineHappyExtremeLow                       = 15.0
@@ -183,6 +191,8 @@ const (
 	BaselineJobWorkMoodPerHour                    = 1.5
 	BaselineJobWorkStaminaPerHour                 = 6.0
 	BaselineJusticeLawyerFeePerLevel              = 200000
+	BaselineLangBaseStudyGain                     = 1.2
+	BaselineLangMaxLevel                          = 100.0
 	BaselineLegacyAssetCarryRatio                 = 0.3
 	BaselineLegacyBloodlinePerGen                 = 0.05
 	BaselineLegacyMaxBloodline                    = 1.0
@@ -194,12 +204,15 @@ const (
 	BaselineLotteryWinChance                      = 0.001
 	BaselineMacroBaseInflation                    = 0.02
 	BaselineMacroBaseRate                         = 0.03
+	BaselineMacroBirthRate                        = 0.012
 	BaselineMacroCycleMaxQuarters                 = 16
 	BaselineMacroCycleMinQuarters                 = 4
+	BaselineMacroDeathRate                        = 0.008
 	BaselineMacroGdpGrowthBase                    = 0.03
 	BaselineMacroInflationMax                     = 3.0
 	BaselineMacroInflationMin                     = -0.05
 	BaselineMacroInflationUnemploymentTradeoff    = 0.4
+	BaselineMacroMigrationRate                    = 0.0002
 	BaselineMacroPmiBase                          = 50.0
 	BaselineMacroPmiMax                           = 100.0
 	BaselineMacroPmiMin                           = 0.0
@@ -254,6 +267,8 @@ const (
 	BaselineOrderAutoCompleteDays                 = 3
 	BaselineOrderMonthDays                        = 30
 	BaselineOrderReturnWindowDays                 = 7
+	BaselineOrgExposeHeatMax                      = 200.0
+	BaselineOrgExposeHeatThreshold                = 100.0
 	BaselineOrgTradeInfluence                     = 0.001
 	BaselineParentCareWeight                      = 0.2
 	BaselineParentEarlyDeathRate                  = 0.002
@@ -290,6 +305,7 @@ const (
 	BaselinePropPriceCeilRatio                    = 3.0
 	BaselinePropPriceFloorRatio                   = 0.5
 	BaselinePropRentYieldAnnual                   = 0.02
+	BaselineRegionActivePopCap                    = 2000
 	BaselineRegionBirthRateAnnual                 = 0.012
 	BaselineRegionDaysPerYear                     = 365.25
 	BaselineRegionDeathRateAnnual                 = 0.009
@@ -297,6 +313,8 @@ const (
 	BaselineRegionEventRateAnnual                 = 1.0
 	BaselineRegionInflationRateAnnual             = 0.02
 	BaselineRegionMigrationRateAnnual             = 0.0
+	BaselineRelationInteractionCap                = 15.0
+	BaselineRelationMajorCap                      = 60.0
 	BaselineReputationHostileThreshold            = 40.0
 	BaselineReputationMaxReputation               = 100.0
 	BaselineReputationMinutesPerDay               = 1440.0
@@ -349,6 +367,14 @@ const (
 	BaselineSleepDebtThreshold                    = 60.0
 	BaselineSocnetReachCircle                     = 0.3
 	BaselineSocnetReachRegion                     = 0.7
+	BaselineSportsiAgentFeeRate                   = 0.1
+	BaselineSportsiBaseMarketValue                = 5000000
+	BaselineSportsiBroadcastBase                  = 8000000
+	BaselineSportsiClubBaseSponsor                = 5000000
+	BaselineSportsiHomeAdvantage                  = 5.0
+	BaselineSportsiPeakAgeMax                     = 30
+	BaselineSportsiPeakAgeMin                     = 24
+	BaselineSportsiTicketBasePrice                = 10000
 	BaselineSportsAgeDeclineRate                  = 0.97
 	BaselineSportsAgeFloor                        = 0.3
 	BaselineSportsDopingBanChance                 = 0.3
@@ -1897,14 +1923,17 @@ var (
 			"LOTTERY_WIN_CHANCE":                       0.001,
 			"MACRO_BASE_INFLATION":                     0.02,
 			"MACRO_BASE_RATE":                          0.03,
+			"MACRO_BIRTH_RATE":                         0.012,
 			"MACRO_CYCLE_GDP_EFFECT":                   map[string]any{"boom": 0.05, "recession": -0.04, "recovery": 0.02, "slowdown": 0.01},
 			"MACRO_CYCLE_MAX_QUARTERS":                 16,
 			"MACRO_CYCLE_MIN_QUARTERS":                 4,
 			"MACRO_CYCLE_PHASES":                       []any{"recession", "recovery", "boom", "slowdown"},
+			"MACRO_DEATH_RATE":                         0.008,
 			"MACRO_GDP_GROWTH_BASE":                    0.03,
 			"MACRO_INFLATION_MAX":                      3.0,
 			"MACRO_INFLATION_MIN":                      -0.05,
 			"MACRO_INFLATION_UNEMPLOYMENT_TRADEOFF":    0.4,
+			"MACRO_MIGRATION_RATE":                     0.0002,
 			"MACRO_PMI_BASE":                           50.0,
 			"MACRO_PMI_MAX":                            100.0,
 			"MACRO_PMI_MIN":                            0.0,
@@ -2144,6 +2173,10 @@ var (
 				},
 			},
 		},
+		"events": {
+			"EVENT_DEFAULT_GLOBAL_DAILY_CAP": 3,
+			"EVENT_MINUTES_PER_DAY":          1440,
+		},
 		"events_expo": {
 			"EXPO_BASE_LIABILITY":      500000,
 			"EXPO_EXP_PER_EVENT":       20,
@@ -2345,9 +2378,19 @@ var (
 			"TRANSPORT_MODE_ORDER":               []any{"walk", "bicycle", "bus", "metro", "taxi", "ride_hailing", "self_drive", "train", "high_speed_rail", "coach", "airplane", "ship"},
 			"TRANSPORT_TRANSFER_MINUTES_DEFAULT": 8.0,
 		},
+		"goldfinger": {
+			"GOLDFINGER_DEFAULT_DAILY_CAP": 1000,
+			"GOLDFINGER_FREE_REROLLS":      3,
+			"GOLDFINGER_PITY_EPIC_AT":      20,
+			"GOLDFINGER_PITY_LEGENDARY_AT": 60,
+		},
 		"gray_market": {
 			"GRAY_GAMBLING_ADDICTION_THRESHOLD": 60.0,
 			"GRAY_LOAN_INTEREST_DAILY":          0.01,
+		},
+		"gregorian": {
+			"CALENDAR_EPOCH_UNIX_DAYS": 10957,
+			"CALENDAR_MINUTES_PER_DAY": 1440,
 		},
 		"happiness": {
 			"HAPPY_EXTREME_LOW":       15.0,
@@ -2393,6 +2436,10 @@ var (
 		},
 		"justice": {
 			"JUSTICE_LAWYER_FEE_PER_LEVEL": 200000,
+		},
+		"language": {
+			"LANG_BASE_STUDY_GAIN": 1.2,
+			"LANG_MAX_LEVEL":       100.0,
 		},
 		"legacy": {
 			"LEGACY_ASSET_CARRY_RATIO":  0.3,
@@ -2509,6 +2556,10 @@ var (
 			"ORDER_MONTH_DAYS":         30,
 			"ORDER_RETURN_WINDOW_DAYS": 7,
 		},
+		"organizations": {
+			"ORG_EXPOSE_HEAT_MAX":       200.0,
+			"ORG_EXPOSE_HEAT_THRESHOLD": 100.0,
+		},
 		"parenting": {
 			"PARENT_CARE_WEIGHT": 0.2,
 			"PARENT_DAILY_COST": map[string]any{
@@ -2606,6 +2657,13 @@ var (
 			"REGION_INFLATION_RATE_ANNUAL": 0.02,
 			"REGION_MIGRATION_RATE_ANNUAL": 0.0,
 		},
+		"region_manager": {
+			"REGION_ACTIVE_POP_CAP": 2000,
+		},
+		"relations": {
+			"RELATION_INTERACTION_CAP": 15.0,
+			"RELATION_MAJOR_CAP":       60.0,
+		},
 		"reputation": {
 			"REPUTATION_HOSTILE_THRESHOLD":        40.0,
 			"REPUTATION_MAX_REPUTATION":           100.0,
@@ -2655,6 +2713,16 @@ var (
 			"SPORTS_PEAK_MAX_AGE":      28,
 			"SPORTS_PEAK_MIN_AGE":      22,
 			"SPORTS_TRAIN_RATE":        0.4,
+		},
+		"sports_industry": {
+			"SPORTSI_AGENT_FEE_RATE":    0.1,
+			"SPORTSI_BASE_MARKET_VALUE": 5000000,
+			"SPORTSI_BROADCAST_BASE":    8000000,
+			"SPORTSI_CLUB_BASE_SPONSOR": 5000000,
+			"SPORTSI_HOME_ADVANTAGE":    5.0,
+			"SPORTSI_PEAK_AGE_MAX":      30,
+			"SPORTSI_PEAK_AGE_MIN":      24,
+			"SPORTSI_TICKET_BASE_PRICE": 10000,
 		},
 		"survival": {
 			"ADDICTION_CRAVING_DECAY_PER_DAY": 0.5,
