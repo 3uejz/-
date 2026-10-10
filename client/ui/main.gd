@@ -9,6 +9,7 @@ const PaletteScript = preload("res://ui/settings/accessibility_palette.gd")
 const ThemeManagerScript = preload("res://ui/theme/theme_manager.gd")
 const PanelContentScript = preload("res://ui/panels/panel_content.gd")
 const PanelRegistryScript = preload("res://ui/components/panel_registry.gd")
+const DialogRegistryScript = preload("res://ui/components/dialog_registry.gd")
 
 ## 常驻快捷动作：未输入即可游玩（R35.5）。
 const QUICK_ACTIONS: Array = [
@@ -39,8 +40,11 @@ var _palette
 var _command_handler: Callable = Callable()
 var _theme_manager
 var _panel_registry
+var _dialog_registry
 var _drawers: Dictionary = {}          ## 面板 id -> 抽屉节点
 var _drawer_row: HBoxContainer
+var _dialog_layer: Control
+var _dialog_box: PanelContainer
 
 ## 快捷动词 -> 侧边面板映射，使按钮与文字指令同源打开面板（R35.5）。
 const VERB_PANELS: Dictionary = {
@@ -59,10 +63,12 @@ func _ready() -> void:
 	_theme_manager = ThemeManagerScript.new()
 	_theme_manager.apply_to(self)
 	_panel_registry = PanelRegistryScript.new()
+	_dialog_registry = DialogRegistryScript.new()
 	_connect_nodes()
 	_build_actions()
 	_ensure_drawer_row()
 	_build_panel_buttons()
+	_ensure_dialog_layer()
 	refresh_status()
 	append_message("浮生录：输入中文指令开始你的一生。", "info")
 
@@ -380,6 +386,102 @@ func _settings_summary() -> Dictionary:
 		"body_font_scale": _theme_manager.body_font_scale(),
 		"reduce_motion": _theme_manager.reduce_motion(),
 	}
+
+# --- 关键弹窗（任务 47/51） ---
+
+## 弹窗覆盖层：遮罩 + 居中面板，层级高于侧边抽屉（ui.md 3）。
+func _ensure_dialog_layer() -> void:
+	if is_instance_valid(_dialog_layer):
+		return
+	_dialog_layer = Control.new()
+	_dialog_layer.name = "DialogLayer"
+	_dialog_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dialog_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_dialog_layer)
+	var shade := ColorRect.new()
+	shade.color = _theme_manager.color("color.bg.overlay")
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	_dialog_layer.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dialog_layer.add_child(center)
+	_dialog_box = PanelContainer.new()
+	_dialog_box.custom_minimum_size = Vector2(420, 0)
+	center.add_child(_dialog_box)
+	_dialog_layer.visible = false
+
+func _dialog_title(id: String) -> String:
+	return String((DialogRegistryScript.DIALOGS.get(id, {}) as Dictionary).get("title", id))
+
+## 打开关键弹窗。已有模态时返回 modal_busy；危险弹窗返回 needs_confirm。
+func open_dialog(id: String, payload: Dictionary = {}) -> Dictionary:
+	if _dialog_registry == null:
+		return {"ok": false, "reason": "no_registry"}
+	var result: Dictionary = _dialog_registry.open(id, payload)
+	if not bool(result.get("ok", false)):
+		return result
+	_ensure_dialog_layer()
+	_render_dialog(id, payload)
+	return result
+
+func _render_dialog(id: String, payload: Dictionary) -> void:
+	for child in _dialog_box.get_children():
+		child.queue_free()
+	var column := VBoxContainer.new()
+	_dialog_box.add_child(column)
+	var title := Label.new()
+	title.text = _dialog_title(id)
+	column.add_child(title)
+	column.add_child(HSeparator.new())
+	for key in payload.keys():
+		column.add_child(_row_node(str(key), str(payload[key])))
+	column.add_child(HSeparator.new())
+	var actions := HBoxContainer.new()
+	column.add_child(actions)
+	var needs_confirm := bool((DialogRegistryScript.DIALOGS.get(id, {}) as Dictionary).get("confirm", false))
+	if needs_confirm and not _dialog_registry.is_confirmed():
+		var confirm_button := Button.new()
+		confirm_button.text = "确认"
+		confirm_button.pressed.connect(func() -> void: confirm_dialog())
+		actions.add_child(confirm_button)
+	var dismissible := bool((DialogRegistryScript.DIALOGS.get(id, {}) as Dictionary).get("dismissible", true))
+	var close_button := Button.new()
+	close_button.text = "关闭"
+	close_button.disabled = not dismissible
+	close_button.pressed.connect(func() -> void: close_dialog())
+	actions.add_child(close_button)
+	_dialog_layer.visible = true
+
+func confirm_dialog() -> Dictionary:
+	if _dialog_registry == null:
+		return {"ok": false, "reason": "no_registry"}
+	var result: Dictionary = _dialog_registry.confirm()
+	if bool(result.get("ok", false)):
+		_dialog_registry.close()
+		_hide_dialog()
+	return result
+
+func close_dialog(force: bool = false) -> Dictionary:
+	if _dialog_registry == null:
+		return {"ok": false, "reason": "no_registry"}
+	var result: Dictionary = _dialog_registry.close(force)
+	if bool(result.get("ok", false)):
+		_hide_dialog()
+	return result
+
+func _hide_dialog() -> void:
+	if is_instance_valid(_dialog_box):
+		for child in _dialog_box.get_children():
+			child.queue_free()
+	if is_instance_valid(_dialog_layer):
+		_dialog_layer.visible = false
+
+func has_dialog() -> bool:
+	return _dialog_registry != null and _dialog_registry.is_open()
+
+func current_dialog() -> String:
+	return "" if _dialog_registry == null else _dialog_registry.current()
 
 # --- 叙事流 ---
 

@@ -33,6 +33,7 @@ func _process(_delta: float) -> bool:
 func run_tests() -> void:
 	_test_scene_ready()
 	_test_panel_open_close()
+	_test_dialogs()
 
 func _test_scene_ready() -> void:
 	check(_main.is_node_ready(), "主壳进入就绪态")
@@ -52,4 +53,18 @@ func _test_panel_open_close() -> void:
 	check(not _main.open_panel("does_not_exist"), "未知面板拒绝打开")
 	check(_main.open_panel("settings"), "打开设置面板")
 	check(_main.has_panel("settings"), "设置面板存在")
+
+func _test_dialogs() -> void:
+	var opened: Dictionary = _main.open_dialog("event_choice", {"场景": "街头"})
+	check(bool(opened.get("ok", false)), "打开事件选项弹窗")
+	check(_main.has_dialog(), "当前有弹窗")
+	check_eq(_main.current_dialog(), "event_choice", "弹窗类型正确")
+	check(bool(_main.close_dialog().get("ok", false)), "关闭事件弹窗")
+	check(not _main.has_dialog(), "弹窗已关闭")
+	# 危险弹窗需二次确认。
+	_main.open_dialog("trial", {"指控": "挪用公款"})
+	check(not bool(_main.close_dialog().get("ok", true)), "危险弹窗未确认不可关闭")
+	check(_main.has_dialog(), "危险弹窗仍打开")
+	check(bool(_main.confirm_dialog().get("ok", false)), "二次确认成功")
+	check(not _main.has_dialog(), "确认后自动关闭")
 	_main.free()
