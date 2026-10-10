@@ -1,5 +1,7 @@
 class_name PropertySystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 完整房产系统（R16、R49；design D9）。
 ##
 ## 职责：
@@ -13,16 +15,17 @@ extends RefCounted
 
 const EconomyFieldDebt: String = "debt"
 
-const DOWN_PAYMENT_RATIO: float = 0.3
-const MORTGAGE_RATE_ANNUAL: float = 0.045
-const DEFAULT_TERM_YEARS: int = 30
-const DEED_TAX_RATE: float = 0.015
-const MAINTENANCE_RATE_ANNUAL: float = 0.005
-const DEPRECIATION_RATE_ANNUAL: float = 0.02
-const RENT_YIELD_ANNUAL: float = 0.02
-const FORECLOSE_ARREARS_MONTHS: int = 3
-const PRICE_FLOOR_RATIO: float = 0.5
-const PRICE_CEIL_RATIO: float = 3.0
+## 房产数值真源：shared/consistency/baseline/property.json。
+const DOWN_PAYMENT_RATIO: float = BaselineScript.PROP_DOWN_PAYMENT_RATIO
+const MORTGAGE_RATE_ANNUAL: float = BaselineScript.PROP_MORTGAGE_RATE_ANNUAL
+const DEFAULT_TERM_YEARS: int = BaselineScript.PROP_DEFAULT_TERM_YEARS
+const DEED_TAX_RATE: float = BaselineScript.PROP_DEED_TAX_RATE
+const MAINTENANCE_RATE_ANNUAL: float = BaselineScript.PROP_MAINTENANCE_RATE_ANNUAL
+const DEPRECIATION_RATE_ANNUAL: float = BaselineScript.PROP_DEPRECIATION_RATE_ANNUAL
+const RENT_YIELD_ANNUAL: float = BaselineScript.PROP_RENT_YIELD_ANNUAL
+const FORECLOSE_ARREARS_MONTHS: int = BaselineScript.PROP_FORECLOSE_ARREARS_MONTHS
+const PRICE_FLOOR_RATIO: float = BaselineScript.PROP_PRICE_FLOOR_RATIO
+const PRICE_CEIL_RATIO: float = BaselineScript.PROP_PRICE_CEIL_RATIO
 
 const PROP_REQUIRED: Array = ["id", "name", "city", "district", "area_sqm", "base_price"]
 

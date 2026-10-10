@@ -51,6 +51,31 @@ const AESTHETICS_OVER_MEDICALIZATION_THRESHOLD: int = 5
 
 const AESTHETICS_STIFFNESS_PER_PROCEDURE: float = 8.0
 
+const AGRI_CROPS: Dictionary = {
+	"cotton": {"base_yield": 300.0, "fertility_cost": 0.18, "growth_days": 180.0, "name": "棉花", "price": 8000, "spoil_rate": 0.001, "use": "cash", "water_need": 0.9},
+	"herb": {"base_yield": 200.0, "fertility_cost": 0.1, "growth_days": 240.0, "name": "药材", "price": 20000, "spoil_rate": 0.005, "use": "herbal", "water_need": 0.9},
+	"rapeseed": {"base_yield": 250.0, "fertility_cost": 0.12, "growth_days": 160.0, "name": "油菜", "price": 6000, "spoil_rate": 0.001, "use": "cash", "water_need": 0.7},
+	"rice": {"base_yield": 600.0, "fertility_cost": 0.15, "growth_days": 120.0, "name": "水稻", "price": 3000, "spoil_rate": 0.002, "use": "grain", "water_need": 1.2},
+	"vegetable": {"base_yield": 2000.0, "fertility_cost": 0.2, "growth_days": 60.0, "name": "蔬菜", "price": 2500, "spoil_rate": 0.02, "use": "vegetable", "water_need": 1.3},
+	"wheat": {"base_yield": 500.0, "fertility_cost": 0.1, "growth_days": 150.0, "name": "小麦", "price": 3200, "spoil_rate": 0.002, "use": "grain", "water_need": 0.8},
+}
+
+const AGRI_LIVESTOCK: Dictionary = {
+	"cattle": {"breed_rate": 0.03, "disease_risk": 0.05, "feed_per_day": 6.0, "kind": "livestock", "market_price": 15000, "name": "肉牛"},
+	"chicken": {"breed_rate": 0.15, "disease_risk": 0.12, "feed_per_day": 0.15, "kind": "poultry", "market_price": 60, "name": "肉鸡"},
+	"duck": {"breed_rate": 0.12, "disease_risk": 0.12, "feed_per_day": 0.2, "kind": "poultry", "market_price": 80, "name": "鸭"},
+	"fish": {"breed_rate": 0.1, "disease_risk": 0.15, "feed_per_day": 0.05, "kind": "aquaculture", "market_price": 25, "name": "鱼"},
+	"pig": {"breed_rate": 0.06, "disease_risk": 0.08, "feed_per_day": 2.5, "kind": "livestock", "market_price": 4000, "name": "生猪"},
+}
+
+const AGRI_MARKET_CHANNELS: Dictionary = {
+	"cooperative": {"name": "合作社", "price_mult": 1.08},
+	"futures": {"name": "期货", "price_mult": 1.25},
+	"market": {"name": "集市", "price_mult": 1.0},
+	"order": {"name": "订单农业", "price_mult": 1.15},
+	"self_supply": {"name": "自给", "price_mult": 0.0},
+}
+
 const BANK_CREDIT_MAX: int = 1000
 
 const BANK_CREDIT_MIN: int = 0
@@ -396,6 +421,24 @@ const ERA_DEFINITIONS: Array = [
 	},
 ]
 
+const FAM_CHILD_DAILY_EXPENSE: int = 10000
+
+const FAM_CONFESS_BASE: float = 0.25
+
+const FAM_DIVORCE_ASSET_SPLIT: float = 0.5
+
+const FAM_DIVORCE_MOOD_PENALTY: float = 25.0
+
+const FAM_ELDER_DAILY_EXPENSE: int = 8000
+
+const FAM_GENE_NOISE: float = 10.0
+
+const FAM_HEREDITY_WEIGHT: float = 0.5
+
+const FAM_MARRIAGE_FAVOR_MIN: float = 70.0
+
+const FAM_MARRIAGE_INTIMACY_MIN: float = 70.0
+
 const FX_ANNUAL_VOLATILITY: float = 0.08
 
 const FX_FEE_RATE: float = 0.001
@@ -579,6 +622,72 @@ const NUTRITION_SEVERE_THRESHOLD: float = 15.0
 
 const ORG_TRADE_INFLUENCE: float = 0.001
 
+const PARENT_CARE_WEIGHT: float = 0.2
+
+const PARENT_DAILY_COST: Dictionary = {
+	"child": {"minutes": 180, "money": 10000},
+	"infant": {"minutes": 300, "money": 15000},
+	"teen": {"minutes": 120, "money": 12000},
+	"toddler": {"minutes": 240, "money": 12000},
+}
+
+const PARENT_EARLY_DEATH_RATE: float = 0.002
+
+const PARENT_EDU_WEIGHT: float = 0.2
+
+const PARENT_EVENTS: Dictionary = {
+	"academic_pressure": {
+		"ability": {"intelligence": 3.0},
+		"personality": {"neuroticism": 2.0},
+	},
+	"bullying": {
+		"personality": {"neuroticism": 4.0},
+	},
+	"illness": {
+		"ability": {"physique": -3.0},
+	},
+	"injury": {
+		"ability": {"physique": -5.0},
+	},
+	"rebellion": {
+		"personality": {"agreeableness": -4.0, "extraversion": 2.0},
+	},
+	"talent_emerge": {
+		"ability": {"intelligence": 5.0},
+	},
+}
+
+const PARENT_GENE_WEIGHT: float = 0.5
+
+const PARENT_RANDOM_WEIGHT: float = 0.1
+
+const PARENT_STAGE_RANGE: Dictionary = {
+	"child": [6, 12],
+	"infant": [0, 3],
+	"teen": [12, 18],
+	"toddler": [3, 6],
+}
+
+const PET_DEATH_HAPPINESS_DELTA: float = -15.0
+
+const PET_DEATH_MOOD_DELTA: float = -20.0
+
+const PET_HUNGER_DECAY_PER_DAY: float = 12.0
+
+const PET_LOST_BASE_RISK: float = 0.01
+
+const PET_SPECIES: Dictionary = {
+	"bird": {"buy_cost": 80000, "daily_minutes": 20, "feed_cost": 1000, "lifespan": 10.0, "name": "鸟", "trainability": 0.6},
+	"cat": {"buy_cost": 150000, "daily_minutes": 30, "feed_cost": 2500, "lifespan": 15.0, "name": "猫", "trainability": 0.5},
+	"dog": {"buy_cost": 200000, "daily_minutes": 60, "feed_cost": 3000, "lifespan": 13.0, "name": "狗", "trainability": 0.9},
+	"fish": {"buy_cost": 20000, "daily_minutes": 10, "feed_cost": 500, "lifespan": 5.0, "name": "鱼", "trainability": 0.1},
+	"hamster": {"buy_cost": 30000, "daily_minutes": 10, "feed_cost": 800, "lifespan": 3.0, "name": "仓鼠", "trainability": 0.2},
+	"rabbit": {"buy_cost": 60000, "daily_minutes": 20, "feed_cost": 1200, "lifespan": 8.0, "name": "兔", "trainability": 0.3},
+	"reptile": {"buy_cost": 500000, "daily_minutes": 15, "feed_cost": 2000, "lifespan": 20.0, "name": "爬宠", "trainability": 0.2},
+}
+
+const PET_STARVATION_HEALTH_LOSS: float = 8.0
+
 const PRICE_CEIL_RATIO: float = 5.0
 
 const PRICE_DEMAND_TO_PRICE: float = 0.5
@@ -588,6 +697,26 @@ const PRICE_ELASTICITY: Dictionary = {"daily": 0.35, "financial": 1.2, "luxury":
 const PRICE_FLOOR_RATIO: float = 0.2
 
 const PRICE_SEASONAL_FACTORS: Dictionary = {"autumn": 1.05, "spring": 1.0, "summer": 1.0, "winter": 1.1}
+
+const PROP_DEED_TAX_RATE: float = 0.015
+
+const PROP_DEFAULT_TERM_YEARS: int = 30
+
+const PROP_DEPRECIATION_RATE_ANNUAL: float = 0.02
+
+const PROP_DOWN_PAYMENT_RATIO: float = 0.3
+
+const PROP_FORECLOSE_ARREARS_MONTHS: int = 3
+
+const PROP_MAINTENANCE_RATE_ANNUAL: float = 0.005
+
+const PROP_MORTGAGE_RATE_ANNUAL: float = 0.045
+
+const PROP_PRICE_CEIL_RATIO: float = 3.0
+
+const PROP_PRICE_FLOOR_RATIO: float = 0.5
+
+const PROP_RENT_YIELD_ANNUAL: float = 0.02
 
 const REGION_BIRTH_RATE_ANNUAL: float = 0.012
 
@@ -1257,3 +1386,21 @@ const WEATHER_VISIBILITY_MIN: float = 0.0
 const WEATHER_WIND_MAX: float = 60.0
 
 const WEATHER_WIND_MIN: float = 0.0
+
+const WORK_DIM_MAX: float = 100.0
+
+const WORK_EVENT_WEIGHTS: Dictionary = {"blame": 0.3, "credit_grab": 0.3, "report": 0.2, "take_sides": 0.2}
+
+const WORK_FACTION_POWER_MAX: float = 100.0
+
+const WORK_PROMOTION_INDUSTRY_WEIGHT: float = 0.05
+
+const WORK_PROMOTION_LUCK_WEIGHT: float = 0.1
+
+const WORK_PROMOTION_PERFORMANCE_WEIGHT: float = 0.4
+
+const WORK_PROMOTION_REPUTATION_WEIGHT: float = 0.2
+
+const WORK_PROMOTION_SUPERVISOR_WEIGHT: float = 0.25
+
+const WORK_PROMOTION_THRESHOLD: float = 65.0

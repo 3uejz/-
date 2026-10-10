@@ -21,6 +21,12 @@
     "digital.json",
     "consumer_protection.json",
     "debt_service.json",
-    "emergency.json"
+    "emergency.json",
+    "family.json",
+    "parenting.json",
+    "workplace.json",
+    "property.json",
+    "agriculture.json",
+    "pet.json"
   ]
 }

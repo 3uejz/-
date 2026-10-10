@@ -1,26 +1,22 @@
 class_name PetSystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 宠物独立子系统：领养/购买、喂养、就医、训练、走失与死亡（R51.6、R51.7）。
 ##
 ## 宠物为独立实体，拥有生命周期、属性与日程影响；存活时影响心情与日常，
 ## 死亡触发情绪事件。
 
 ## 物种表：寿命（年）、购买费用、日粮费用、可训练度 0..1、每日照护分钟。
-const SPECIES: Dictionary = {
-	"dog": {"name": "狗", "lifespan": 13.0, "buy_cost": 200000, "feed_cost": 3000, "trainability": 0.9, "daily_minutes": 60},
-	"cat": {"name": "猫", "lifespan": 15.0, "buy_cost": 150000, "feed_cost": 2500, "trainability": 0.5, "daily_minutes": 30},
-	"bird": {"name": "鸟", "lifespan": 10.0, "buy_cost": 80000, "feed_cost": 1000, "trainability": 0.6, "daily_minutes": 20},
-	"fish": {"name": "鱼", "lifespan": 5.0, "buy_cost": 20000, "feed_cost": 500, "trainability": 0.1, "daily_minutes": 10},
-	"rabbit": {"name": "兔", "lifespan": 8.0, "buy_cost": 60000, "feed_cost": 1200, "trainability": 0.3, "daily_minutes": 20},
-	"hamster": {"name": "仓鼠", "lifespan": 3.0, "buy_cost": 30000, "feed_cost": 800, "trainability": 0.2, "daily_minutes": 10},
-	"reptile": {"name": "爬宠", "lifespan": 20.0, "buy_cost": 500000, "feed_cost": 2000, "trainability": 0.2, "daily_minutes": 15},
-}
+## 数值真源：shared/consistency/baseline/pet.json。
+const SPECIES: Dictionary = BaselineScript.PET_SPECIES
 
-const HUNGER_DECAY_PER_DAY: float = 12.0
-const STARVATION_HEALTH_LOSS: float = 8.0
-const LOST_BASE_RISK: float = 0.01
-const DEATH_MOOD_DELTA: float = -20.0
-const DEATH_HAPPINESS_DELTA: float = -15.0
+## 数值真源：shared/consistency/baseline/pet.json。
+const HUNGER_DECAY_PER_DAY: float = BaselineScript.PET_HUNGER_DECAY_PER_DAY
+const STARVATION_HEALTH_LOSS: float = BaselineScript.PET_STARVATION_HEALTH_LOSS
+const LOST_BASE_RISK: float = BaselineScript.PET_LOST_BASE_RISK
+const DEATH_MOOD_DELTA: float = BaselineScript.PET_DEATH_MOOD_DELTA
+const DEATH_HAPPINESS_DELTA: float = BaselineScript.PET_DEATH_HAPPINESS_DELTA
 
 
 func _clamp100(v: float) -> float:

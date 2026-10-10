@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"reflect"
 	"testing"
 
 	"lifetextsandbox/server/internal/sim"
@@ -161,6 +162,63 @@ func TestBaselineDomainsConsistency(t *testing.T) {
 			"EM_COMMAND_FAULT_LINE":   sim.BaselineEmCommandFaultLine,
 			"EM_PROFESSIONS":          sim.BaselineEmProfessions,
 		},
+		"family": {
+			"FAM_CONFESS_BASE":          sim.BaselineFamConfessBase,
+			"FAM_MARRIAGE_FAVOR_MIN":    sim.BaselineFamMarriageFavorMin,
+			"FAM_MARRIAGE_INTIMACY_MIN": sim.BaselineFamMarriageIntimacyMin,
+			"FAM_HEREDITY_WEIGHT":       sim.BaselineFamHeredityWeight,
+			"FAM_GENE_NOISE":            sim.BaselineFamGeneNoise,
+			"FAM_DIVORCE_ASSET_SPLIT":   sim.BaselineFamDivorceAssetSplit,
+			"FAM_DIVORCE_MOOD_PENALTY":  sim.BaselineFamDivorceMoodPenalty,
+			"FAM_CHILD_DAILY_EXPENSE":   sim.BaselineFamChildDailyExpense,
+			"FAM_ELDER_DAILY_EXPENSE":   sim.BaselineFamElderDailyExpense,
+		},
+		"parenting": {
+			"PARENT_GENE_WEIGHT":      sim.BaselineParentGeneWeight,
+			"PARENT_CARE_WEIGHT":      sim.BaselineParentCareWeight,
+			"PARENT_EDU_WEIGHT":       sim.BaselineParentEduWeight,
+			"PARENT_RANDOM_WEIGHT":    sim.BaselineParentRandomWeight,
+			"PARENT_STAGE_RANGE":      sim.BaselineParentStageRange,
+			"PARENT_DAILY_COST":       sim.BaselineParentDailyCost,
+			"PARENT_EVENTS":           sim.BaselineParentEvents,
+			"PARENT_EARLY_DEATH_RATE": sim.BaselineParentEarlyDeathRate,
+		},
+		"workplace": {
+			"WORK_DIM_MAX":                      sim.BaselineWorkDimMax,
+			"WORK_EVENT_WEIGHTS":                sim.BaselineWorkEventWeights,
+			"WORK_PROMOTION_PERFORMANCE_WEIGHT": sim.BaselineWorkPromotionPerformanceWeight,
+			"WORK_PROMOTION_SUPERVISOR_WEIGHT":  sim.BaselineWorkPromotionSupervisorWeight,
+			"WORK_PROMOTION_REPUTATION_WEIGHT":  sim.BaselineWorkPromotionReputationWeight,
+			"WORK_PROMOTION_LUCK_WEIGHT":        sim.BaselineWorkPromotionLuckWeight,
+			"WORK_PROMOTION_INDUSTRY_WEIGHT":    sim.BaselineWorkPromotionIndustryWeight,
+			"WORK_PROMOTION_THRESHOLD":          sim.BaselineWorkPromotionThreshold,
+			"WORK_FACTION_POWER_MAX":            sim.BaselineWorkFactionPowerMax,
+		},
+		"property": {
+			"PROP_DOWN_PAYMENT_RATIO":       sim.BaselinePropDownPaymentRatio,
+			"PROP_MORTGAGE_RATE_ANNUAL":     sim.BaselinePropMortgageRateAnnual,
+			"PROP_DEFAULT_TERM_YEARS":       sim.BaselinePropDefaultTermYears,
+			"PROP_DEED_TAX_RATE":            sim.BaselinePropDeedTaxRate,
+			"PROP_MAINTENANCE_RATE_ANNUAL":  sim.BaselinePropMaintenanceRateAnnual,
+			"PROP_DEPRECIATION_RATE_ANNUAL": sim.BaselinePropDepreciationRateAnnual,
+			"PROP_RENT_YIELD_ANNUAL":        sim.BaselinePropRentYieldAnnual,
+			"PROP_FORECLOSE_ARREARS_MONTHS": sim.BaselinePropForecloseArrearsMonths,
+			"PROP_PRICE_FLOOR_RATIO":        sim.BaselinePropPriceFloorRatio,
+			"PROP_PRICE_CEIL_RATIO":         sim.BaselinePropPriceCeilRatio,
+		},
+		"agriculture": {
+			"AGRI_CROPS":           sim.BaselineAgriCrops,
+			"AGRI_LIVESTOCK":       sim.BaselineAgriLivestock,
+			"AGRI_MARKET_CHANNELS": sim.BaselineAgriMarketChannels,
+		},
+		"pet": {
+			"PET_SPECIES":                sim.BaselinePetSpecies,
+			"PET_HUNGER_DECAY_PER_DAY":   sim.BaselinePetHungerDecayPerDay,
+			"PET_STARVATION_HEALTH_LOSS": sim.BaselinePetStarvationHealthLoss,
+			"PET_LOST_BASE_RISK":         sim.BaselinePetLostBaseRisk,
+			"PET_DEATH_MOOD_DELTA":       sim.BaselinePetDeathMoodDelta,
+			"PET_DEATH_HAPPINESS_DELTA":  sim.BaselinePetDeathHappinessDelta,
+		},
 	}
 
 	for domain, expected := range v.Domains {
@@ -182,6 +240,7 @@ func TestBaselineDomainsConsistency(t *testing.T) {
 
 func compareVectorValue(t *testing.T, label string, got, want any) {
 	t.Helper()
+	got = normalizeValue(got)
 	switch w := want.(type) {
 	case []any:
 		g, ok := got.([]any)
@@ -225,6 +284,31 @@ func compareVectorValue(t *testing.T, label string, got, want any) {
 		if fmt.Sprint(got) != fmt.Sprint(want) {
 			t.Errorf("%s: got=%v want=%v", label, got, want)
 		}
+	}
+}
+
+// normalizeValue 将生成常量中的强类型 map/array（如 map[string][2]int）统一为
+// map[string]any / []any，以便与 JSON 解码结果做逐值比较。
+func normalizeValue(v any) any {
+	if v == nil {
+		return nil
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Map:
+		out := make(map[string]any, rv.Len())
+		for _, k := range rv.MapKeys() {
+			out[fmt.Sprint(k.Interface())] = normalizeValue(rv.MapIndex(k).Interface())
+		}
+		return out
+	case reflect.Slice, reflect.Array:
+		out := make([]any, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			out[i] = normalizeValue(rv.Index(i).Interface())
+		}
+		return out
+	default:
+		return v
 	}
 }
 

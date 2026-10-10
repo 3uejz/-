@@ -64,6 +64,15 @@ const (
 	BaselineEnvFootprintScope2                    = 0.3
 	BaselineEnvFootprintScope3                    = 0.2
 	BaselineEraCount                              = 9
+	BaselineFamChildDailyExpense                  = 10000
+	BaselineFamConfessBase                        = 0.25
+	BaselineFamDivorceAssetSplit                  = 0.5
+	BaselineFamDivorceMoodPenalty                 = 25.0
+	BaselineFamElderDailyExpense                  = 8000
+	BaselineFamGeneNoise                          = 10.0
+	BaselineFamHeredityWeight                     = 0.5
+	BaselineFamMarriageFavorMin                   = 70.0
+	BaselineFamMarriageIntimacyMin                = 70.0
 	BaselineFxAnnualVolatility                    = 0.08
 	BaselineFxFeeRate                             = 0.001
 	BaselineFxMeanReversion                       = 0.15
@@ -123,9 +132,29 @@ const (
 	BaselineNutritionLightThreshold               = 30.0
 	BaselineNutritionSevereThreshold              = 15.0
 	BaselineOrgTradeInfluence                     = 0.001
+	BaselineParentCareWeight                      = 0.2
+	BaselineParentEarlyDeathRate                  = 0.002
+	BaselineParentEduWeight                       = 0.2
+	BaselineParentGeneWeight                      = 0.5
+	BaselineParentRandomWeight                    = 0.1
+	BaselinePetDeathHappinessDelta                = -15.0
+	BaselinePetDeathMoodDelta                     = -20.0
+	BaselinePetHungerDecayPerDay                  = 12.0
+	BaselinePetLostBaseRisk                       = 0.01
+	BaselinePetStarvationHealthLoss               = 8.0
 	BaselinePriceCeilRatio                        = 5.0
 	BaselinePriceDemandToPrice                    = 0.5
 	BaselinePriceFloorRatio                       = 0.2
+	BaselinePropDeedTaxRate                       = 0.015
+	BaselinePropDefaultTermYears                  = 30
+	BaselinePropDepreciationRateAnnual            = 0.02
+	BaselinePropDownPaymentRatio                  = 0.3
+	BaselinePropForecloseArrearsMonths            = 3
+	BaselinePropMaintenanceRateAnnual             = 0.005
+	BaselinePropMortgageRateAnnual                = 0.045
+	BaselinePropPriceCeilRatio                    = 3.0
+	BaselinePropPriceFloorRatio                   = 0.5
+	BaselinePropRentYieldAnnual                   = 0.02
 	BaselineRegionBirthRateAnnual                 = 0.012
 	BaselineRegionDaysPerYear                     = 365.25
 	BaselineRegionDeathRateAnnual                 = 0.009
@@ -206,6 +235,14 @@ const (
 	BaselineWeatherVisibilityMin                  = 0.0
 	BaselineWeatherWindMax                        = 60.0
 	BaselineWeatherWindMin                        = 0.0
+	BaselineWorkDimMax                            = 100.0
+	BaselineWorkFactionPowerMax                   = 100.0
+	BaselineWorkPromotionIndustryWeight           = 0.05
+	BaselineWorkPromotionLuckWeight               = 0.1
+	BaselineWorkPromotionPerformanceWeight        = 0.4
+	BaselineWorkPromotionReputationWeight         = 0.2
+	BaselineWorkPromotionSupervisorWeight         = 0.25
+	BaselineWorkPromotionThreshold                = 65.0
 )
 
 var (
@@ -233,6 +270,28 @@ var (
 		"counseling":   map[string]any{"reduction": 0.2, "success_bonus": 0.15},
 		"inpatient":    map[string]any{"reduction": 0.5, "success_bonus": 0.4},
 		"substitution": map[string]any{"reduction": 0.3, "success_bonus": 0.25},
+	}
+	BaselineAgriCrops map[string]any = map[string]any{
+		"cotton":    map[string]any{"base_yield": 300.0, "fertility_cost": 0.18, "growth_days": 180.0, "name": "棉花", "price": 8000, "spoil_rate": 0.001, "use": "cash", "water_need": 0.9},
+		"herb":      map[string]any{"base_yield": 200.0, "fertility_cost": 0.1, "growth_days": 240.0, "name": "药材", "price": 20000, "spoil_rate": 0.005, "use": "herbal", "water_need": 0.9},
+		"rapeseed":  map[string]any{"base_yield": 250.0, "fertility_cost": 0.12, "growth_days": 160.0, "name": "油菜", "price": 6000, "spoil_rate": 0.001, "use": "cash", "water_need": 0.7},
+		"rice":      map[string]any{"base_yield": 600.0, "fertility_cost": 0.15, "growth_days": 120.0, "name": "水稻", "price": 3000, "spoil_rate": 0.002, "use": "grain", "water_need": 1.2},
+		"vegetable": map[string]any{"base_yield": 2000.0, "fertility_cost": 0.2, "growth_days": 60.0, "name": "蔬菜", "price": 2500, "spoil_rate": 0.02, "use": "vegetable", "water_need": 1.3},
+		"wheat":     map[string]any{"base_yield": 500.0, "fertility_cost": 0.1, "growth_days": 150.0, "name": "小麦", "price": 3200, "spoil_rate": 0.002, "use": "grain", "water_need": 0.8},
+	}
+	BaselineAgriLivestock map[string]any = map[string]any{
+		"cattle":  map[string]any{"breed_rate": 0.03, "disease_risk": 0.05, "feed_per_day": 6.0, "kind": "livestock", "market_price": 15000, "name": "肉牛"},
+		"chicken": map[string]any{"breed_rate": 0.15, "disease_risk": 0.12, "feed_per_day": 0.15, "kind": "poultry", "market_price": 60, "name": "肉鸡"},
+		"duck":    map[string]any{"breed_rate": 0.12, "disease_risk": 0.12, "feed_per_day": 0.2, "kind": "poultry", "market_price": 80, "name": "鸭"},
+		"fish":    map[string]any{"breed_rate": 0.1, "disease_risk": 0.15, "feed_per_day": 0.05, "kind": "aquaculture", "market_price": 25, "name": "鱼"},
+		"pig":     map[string]any{"breed_rate": 0.06, "disease_risk": 0.08, "feed_per_day": 2.5, "kind": "livestock", "market_price": 4000, "name": "生猪"},
+	}
+	BaselineAgriMarketChannels map[string]any = map[string]any{
+		"cooperative": map[string]any{"name": "合作社", "price_mult": 1.08},
+		"futures":     map[string]any{"name": "期货", "price_mult": 1.25},
+		"market":      map[string]any{"name": "集市", "price_mult": 1.0},
+		"order":       map[string]any{"name": "订单农业", "price_mult": 1.15},
+		"self_supply": map[string]any{"name": "自给", "price_mult": 0.0},
 	}
 	BaselineClimateZones map[string]any = map[string]any{
 		"mediterranean":         map[string]any{"amp_diurnal": 9.0, "amp_temp": 9.0, "arid": 0.5, "base_temp": 17.0, "can_snow": false, "humidity": 55.0, "monsoon": false, "name": "地中海", "phase": 0.0, "precip_scale": 3.0, "pressure": 1013.0, "visibility": 18.0, "wind": 3.5},
@@ -519,7 +578,49 @@ var (
 		"medication":          map[string]any{"adherence": 0.65, "cost": 20000, "cure": 0.15, "minutes": 30, "name": "药物治疗", "remit": 0.6, "side_effect": 0.35},
 		"psychotherapy":       map[string]any{"adherence": 0.8, "cost": 30000, "cure": 0.25, "minutes": 90, "name": "心理咨询", "remit": 0.5, "side_effect": 0.02},
 	}
-	BaselineNutritionDecayPerDay    map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
+	BaselineNutritionDecayPerDay map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
+	BaselineParentDailyCost      map[string]any = map[string]any{
+		"child":   map[string]any{"minutes": 180, "money": 10000},
+		"infant":  map[string]any{"minutes": 300, "money": 15000},
+		"teen":    map[string]any{"minutes": 120, "money": 12000},
+		"toddler": map[string]any{"minutes": 240, "money": 12000},
+	}
+	BaselineParentEvents map[string]any = map[string]any{
+		"academic_pressure": map[string]any{
+			"ability":     map[string]any{"intelligence": 3.0},
+			"personality": map[string]any{"neuroticism": 2.0},
+		},
+		"bullying": map[string]any{
+			"personality": map[string]any{"neuroticism": 4.0},
+		},
+		"illness": map[string]any{
+			"ability": map[string]any{"physique": -3.0},
+		},
+		"injury": map[string]any{
+			"ability": map[string]any{"physique": -5.0},
+		},
+		"rebellion": map[string]any{
+			"personality": map[string]any{"agreeableness": -4.0, "extraversion": 2.0},
+		},
+		"talent_emerge": map[string]any{
+			"ability": map[string]any{"intelligence": 5.0},
+		},
+	}
+	BaselineParentStageRange map[string][2]int = map[string][2]int{
+		"child":   {6, 12},
+		"infant":  {0, 3},
+		"teen":    {12, 18},
+		"toddler": {3, 6},
+	}
+	BaselinePetSpecies map[string]any = map[string]any{
+		"bird":    map[string]any{"buy_cost": 80000, "daily_minutes": 20, "feed_cost": 1000, "lifespan": 10.0, "name": "鸟", "trainability": 0.6},
+		"cat":     map[string]any{"buy_cost": 150000, "daily_minutes": 30, "feed_cost": 2500, "lifespan": 15.0, "name": "猫", "trainability": 0.5},
+		"dog":     map[string]any{"buy_cost": 200000, "daily_minutes": 60, "feed_cost": 3000, "lifespan": 13.0, "name": "狗", "trainability": 0.9},
+		"fish":    map[string]any{"buy_cost": 20000, "daily_minutes": 10, "feed_cost": 500, "lifespan": 5.0, "name": "鱼", "trainability": 0.1},
+		"hamster": map[string]any{"buy_cost": 30000, "daily_minutes": 10, "feed_cost": 800, "lifespan": 3.0, "name": "仓鼠", "trainability": 0.2},
+		"rabbit":  map[string]any{"buy_cost": 60000, "daily_minutes": 20, "feed_cost": 1200, "lifespan": 8.0, "name": "兔", "trainability": 0.3},
+		"reptile": map[string]any{"buy_cost": 500000, "daily_minutes": 15, "feed_cost": 2000, "lifespan": 20.0, "name": "爬宠", "trainability": 0.2},
+	}
 	BaselinePriceElasticity         map[string]any = map[string]any{"daily": 0.35, "financial": 1.2, "luxury": 0.9, "necessity": 0.15}
 	BaselinePriceSeasonalFactors    map[string]any = map[string]any{"autumn": 1.05, "spring": 1.0, "summer": 1.0, "winter": 1.1}
 	BaselineSeirDefaultParams       map[string]any = map[string]any{"beta": 0.5, "gamma": 0.1, "immunity_days": 180.0, "mortality": 0.01, "mutation_rate": 0.001, "sigma": 0.2}
@@ -1016,5 +1117,6 @@ var (
 			"wind_mod":       5.0,
 		},
 	}
-	BaselineWeatherStateOrder []any = []any{"clear", "partly_cloudy", "overcast", "light_rain", "moderate_rain", "heavy_rain", "rainstorm", "thunderstorm", "hail", "freezing_rain", "light_snow", "moderate_snow", "heavy_snow", "snowstorm", "fog", "haze", "dust", "heat", "cold_wave", "gale"}
+	BaselineWeatherStateOrder []any          = []any{"clear", "partly_cloudy", "overcast", "light_rain", "moderate_rain", "heavy_rain", "rainstorm", "thunderstorm", "hail", "freezing_rain", "light_snow", "moderate_snow", "heavy_snow", "snowstorm", "fog", "haze", "dust", "heat", "cold_wave", "gale"}
+	BaselineWorkEventWeights  map[string]any = map[string]any{"blame": 0.3, "credit_grab": 0.3, "report": 0.2, "take_sides": 0.2}
 )

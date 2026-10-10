@@ -1,5 +1,7 @@
 class_name FamilySystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 恋爱、婚姻、离婚、出轨与繁衍（R19；design D11）。
 ##
 ## 表白按关系、魅力与心情判定；恋人关系与亲密度达标解锁求婚；婚后配偶纳入家庭；
@@ -14,15 +16,16 @@ extends RefCounted
 const ABILITY_KEYS: Array = ["intelligence", "charm", "physique", "willpower", "luck"]
 const BIG_FIVE: Array = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"]
 
-const CONFESS_BASE: float = 0.25
-const MARRIAGE_FAVOR_MIN: float = 70.0
-const MARRIAGE_INTIMACY_MIN: float = 70.0
-const HEREDITY_WEIGHT: float = 0.5
-const GENE_NOISE: float = 10.0
-const DIVORCE_ASSET_SPLIT: float = 0.5
-const DIVORCE_MOOD_PENALTY: float = 25.0
-const CHILD_DAILY_EXPENSE: int = 10000
-const ELDER_DAILY_EXPENSE: int = 8000
+## 婚育数值真源：shared/consistency/baseline/family.json。
+const CONFESS_BASE: float = BaselineScript.FAM_CONFESS_BASE
+const MARRIAGE_FAVOR_MIN: float = BaselineScript.FAM_MARRIAGE_FAVOR_MIN
+const MARRIAGE_INTIMACY_MIN: float = BaselineScript.FAM_MARRIAGE_INTIMACY_MIN
+const HEREDITY_WEIGHT: float = BaselineScript.FAM_HEREDITY_WEIGHT
+const GENE_NOISE: float = BaselineScript.FAM_GENE_NOISE
+const DIVORCE_ASSET_SPLIT: float = BaselineScript.FAM_DIVORCE_ASSET_SPLIT
+const DIVORCE_MOOD_PENALTY: float = BaselineScript.FAM_DIVORCE_MOOD_PENALTY
+const CHILD_DAILY_EXPENSE: int = BaselineScript.FAM_CHILD_DAILY_EXPENSE
+const ELDER_DAILY_EXPENSE: int = BaselineScript.FAM_ELDER_DAILY_EXPENSE
 
 var _state: Dictionary = {}
 var _rng = null

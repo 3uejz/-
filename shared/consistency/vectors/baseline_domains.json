@@ -593,6 +593,317 @@
           ]
         }
       }
+    },
+    "family": {
+      "FAM_CONFESS_BASE": 0.25,
+      "FAM_MARRIAGE_FAVOR_MIN": 70.0,
+      "FAM_MARRIAGE_INTIMACY_MIN": 70.0,
+      "FAM_HEREDITY_WEIGHT": 0.5,
+      "FAM_GENE_NOISE": 10.0,
+      "FAM_DIVORCE_ASSET_SPLIT": 0.5,
+      "FAM_DIVORCE_MOOD_PENALTY": 25.0,
+      "FAM_CHILD_DAILY_EXPENSE": 10000,
+      "FAM_ELDER_DAILY_EXPENSE": 8000
+    },
+    "parenting": {
+      "PARENT_GENE_WEIGHT": 0.5,
+      "PARENT_CARE_WEIGHT": 0.2,
+      "PARENT_EDU_WEIGHT": 0.2,
+      "PARENT_RANDOM_WEIGHT": 0.1,
+      "PARENT_STAGE_RANGE": {
+        "infant": [
+          0,
+          3
+        ],
+        "toddler": [
+          3,
+          6
+        ],
+        "child": [
+          6,
+          12
+        ],
+        "teen": [
+          12,
+          18
+        ]
+      },
+      "PARENT_DAILY_COST": {
+        "infant": {
+          "minutes": 300,
+          "money": 15000
+        },
+        "toddler": {
+          "minutes": 240,
+          "money": 12000
+        },
+        "child": {
+          "minutes": 180,
+          "money": 10000
+        },
+        "teen": {
+          "minutes": 120,
+          "money": 12000
+        }
+      },
+      "PARENT_EVENTS": {
+        "illness": {
+          "ability": {
+            "physique": -3.0
+          }
+        },
+        "injury": {
+          "ability": {
+            "physique": -5.0
+          }
+        },
+        "rebellion": {
+          "personality": {
+            "agreeableness": -4.0,
+            "extraversion": 2.0
+          }
+        },
+        "talent_emerge": {
+          "ability": {
+            "intelligence": 5.0
+          }
+        },
+        "bullying": {
+          "personality": {
+            "neuroticism": 4.0
+          }
+        },
+        "academic_pressure": {
+          "ability": {
+            "intelligence": 3.0
+          },
+          "personality": {
+            "neuroticism": 2.0
+          }
+        }
+      },
+      "PARENT_EARLY_DEATH_RATE": 0.002
+    },
+    "workplace": {
+      "WORK_DIM_MAX": 100.0,
+      "WORK_EVENT_WEIGHTS": {
+        "credit_grab": 0.3,
+        "blame": 0.3,
+        "take_sides": 0.2,
+        "report": 0.2
+      },
+      "WORK_PROMOTION_PERFORMANCE_WEIGHT": 0.4,
+      "WORK_PROMOTION_SUPERVISOR_WEIGHT": 0.25,
+      "WORK_PROMOTION_REPUTATION_WEIGHT": 0.2,
+      "WORK_PROMOTION_LUCK_WEIGHT": 0.1,
+      "WORK_PROMOTION_INDUSTRY_WEIGHT": 0.05,
+      "WORK_PROMOTION_THRESHOLD": 65.0,
+      "WORK_FACTION_POWER_MAX": 100.0
+    },
+    "property": {
+      "PROP_DOWN_PAYMENT_RATIO": 0.3,
+      "PROP_MORTGAGE_RATE_ANNUAL": 0.045,
+      "PROP_DEFAULT_TERM_YEARS": 30,
+      "PROP_DEED_TAX_RATE": 0.015,
+      "PROP_MAINTENANCE_RATE_ANNUAL": 0.005,
+      "PROP_DEPRECIATION_RATE_ANNUAL": 0.02,
+      "PROP_RENT_YIELD_ANNUAL": 0.02,
+      "PROP_FORECLOSE_ARREARS_MONTHS": 3,
+      "PROP_PRICE_FLOOR_RATIO": 0.5,
+      "PROP_PRICE_CEIL_RATIO": 3.0
+    },
+    "agriculture": {
+      "AGRI_CROPS": {
+        "rice": {
+          "name": "水稻",
+          "use": "grain",
+          "base_yield": 600.0,
+          "price": 3000,
+          "growth_days": 120.0,
+          "water_need": 1.2,
+          "fertility_cost": 0.15,
+          "spoil_rate": 0.002
+        },
+        "wheat": {
+          "name": "小麦",
+          "use": "grain",
+          "base_yield": 500.0,
+          "price": 3200,
+          "growth_days": 150.0,
+          "water_need": 0.8,
+          "fertility_cost": 0.1,
+          "spoil_rate": 0.002
+        },
+        "cotton": {
+          "name": "棉花",
+          "use": "cash",
+          "base_yield": 300.0,
+          "price": 8000,
+          "growth_days": 180.0,
+          "water_need": 0.9,
+          "fertility_cost": 0.18,
+          "spoil_rate": 0.001
+        },
+        "rapeseed": {
+          "name": "油菜",
+          "use": "cash",
+          "base_yield": 250.0,
+          "price": 6000,
+          "growth_days": 160.0,
+          "water_need": 0.7,
+          "fertility_cost": 0.12,
+          "spoil_rate": 0.001
+        },
+        "vegetable": {
+          "name": "蔬菜",
+          "use": "vegetable",
+          "base_yield": 2000.0,
+          "price": 2500,
+          "growth_days": 60.0,
+          "water_need": 1.3,
+          "fertility_cost": 0.2,
+          "spoil_rate": 0.02
+        },
+        "herb": {
+          "name": "药材",
+          "use": "herbal",
+          "base_yield": 200.0,
+          "price": 20000,
+          "growth_days": 240.0,
+          "water_need": 0.9,
+          "fertility_cost": 0.1,
+          "spoil_rate": 0.005
+        }
+      },
+      "AGRI_LIVESTOCK": {
+        "pig": {
+          "name": "生猪",
+          "kind": "livestock",
+          "feed_per_day": 2.5,
+          "breed_rate": 0.06,
+          "disease_risk": 0.08,
+          "market_price": 4000
+        },
+        "cattle": {
+          "name": "肉牛",
+          "kind": "livestock",
+          "feed_per_day": 6.0,
+          "breed_rate": 0.03,
+          "disease_risk": 0.05,
+          "market_price": 15000
+        },
+        "chicken": {
+          "name": "肉鸡",
+          "kind": "poultry",
+          "feed_per_day": 0.15,
+          "breed_rate": 0.15,
+          "disease_risk": 0.12,
+          "market_price": 60
+        },
+        "duck": {
+          "name": "鸭",
+          "kind": "poultry",
+          "feed_per_day": 0.2,
+          "breed_rate": 0.12,
+          "disease_risk": 0.12,
+          "market_price": 80
+        },
+        "fish": {
+          "name": "鱼",
+          "kind": "aquaculture",
+          "feed_per_day": 0.05,
+          "breed_rate": 0.1,
+          "disease_risk": 0.15,
+          "market_price": 25
+        }
+      },
+      "AGRI_MARKET_CHANNELS": {
+        "self_supply": {
+          "name": "自给",
+          "price_mult": 0.0
+        },
+        "market": {
+          "name": "集市",
+          "price_mult": 1.0
+        },
+        "order": {
+          "name": "订单农业",
+          "price_mult": 1.15
+        },
+        "cooperative": {
+          "name": "合作社",
+          "price_mult": 1.08
+        },
+        "futures": {
+          "name": "期货",
+          "price_mult": 1.25
+        }
+      }
+    },
+    "pet": {
+      "PET_SPECIES": {
+        "dog": {
+          "name": "狗",
+          "lifespan": 13.0,
+          "buy_cost": 200000,
+          "feed_cost": 3000,
+          "trainability": 0.9,
+          "daily_minutes": 60
+        },
+        "cat": {
+          "name": "猫",
+          "lifespan": 15.0,
+          "buy_cost": 150000,
+          "feed_cost": 2500,
+          "trainability": 0.5,
+          "daily_minutes": 30
+        },
+        "bird": {
+          "name": "鸟",
+          "lifespan": 10.0,
+          "buy_cost": 80000,
+          "feed_cost": 1000,
+          "trainability": 0.6,
+          "daily_minutes": 20
+        },
+        "fish": {
+          "name": "鱼",
+          "lifespan": 5.0,
+          "buy_cost": 20000,
+          "feed_cost": 500,
+          "trainability": 0.1,
+          "daily_minutes": 10
+        },
+        "rabbit": {
+          "name": "兔",
+          "lifespan": 8.0,
+          "buy_cost": 60000,
+          "feed_cost": 1200,
+          "trainability": 0.3,
+          "daily_minutes": 20
+        },
+        "hamster": {
+          "name": "仓鼠",
+          "lifespan": 3.0,
+          "buy_cost": 30000,
+          "feed_cost": 800,
+          "trainability": 0.2,
+          "daily_minutes": 10
+        },
+        "reptile": {
+          "name": "爬宠",
+          "lifespan": 20.0,
+          "buy_cost": 500000,
+          "feed_cost": 2000,
+          "trainability": 0.2,
+          "daily_minutes": 15
+        }
+      },
+      "PET_HUNGER_DECAY_PER_DAY": 12.0,
+      "PET_STARVATION_HEALTH_LOSS": 8.0,
+      "PET_LOST_BASE_RISK": 0.01,
+      "PET_DEATH_MOOD_DELTA": -20.0,
+      "PET_DEATH_HAPPINESS_DELTA": -15.0
     }
   }
 }

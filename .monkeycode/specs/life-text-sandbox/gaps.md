@@ -9,7 +9,7 @@
 
 ## 1. 系统性问题（跨全部域）
 
-1. **数值基线覆盖仍不全（高）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济；task 48.3 已补 SEIR/碳排环保/工程/医疗/体育/医美；task 48.4 已补心理/残障养老/数字/消费者保护/民间借贷/应急，域代码经 `Baseline` 消费生成常量）；其余 D1–D50 系数表仍可继续补齐。
+1. **数值基线覆盖仍不全（高）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济；task 48.3 已补 SEIR/碳排环保/工程/医疗/体育/医美；task 48.4 已补心理/残障养老/数字/消费者保护/民间借贷/应急；task 48.5 已补婚育/育儿/职场/房产/农业/宠物，域代码经 `Baseline` 消费生成常量）；其余 D1–D50 系数表仍可继续补齐。
 2. **存档/领域 schema 未扩展（高）**：`player` 缺 family/memory/pet/军籍/残障/土地/数字资产/案件/病症三维；`finances/legal/health` 过粗；`world_delta` 多为 `additionalProperties` 空壳；缺 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema。
 3. **内容目录与 R56 硬指标脱节（高）**：content-catalog 缺 D35–D43、D45–D50 专属节；多处「完整表」只有示例（精神疾病约 14、医美无节、技能约 46/目标 140、娱乐约 31/目标 100、金融标的仅类别/目标 40）。
 4. **UI 入口缺失（高）**：`ui.md` 仅 12 面板，design UI Inventory 另有经营面板/组织面板；案件、救援、环保、市政、债务、维权、救助、殡葬、玄学、高阶医疗、文娱、工程、专业/生活服务、交通基建、家庭/宠物、体育、活动、奖项、数字平台、疫情、战争、宏观行情、天气预报均无入口。

@@ -1,5 +1,7 @@
 class_name AgricultureSystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 农业与乡土（R66；design D22）。
 ##
 ## 覆盖：
@@ -15,31 +17,14 @@ extends RefCounted
 ##   - 收成时一次性结算产量入仓，售卖按渠道价格倍率换算，年收入在 settle_year 汇总；
 ##   - 随机项（繁殖/疫病/价格波动）由外部 roll/rng 注入，缺省确定化。
 
-const CROPS: Dictionary = {
-	"rice": {"name": "水稻", "use": "grain", "base_yield": 600.0, "price": 3000, "growth_days": 120.0, "water_need": 1.2, "fertility_cost": 0.15, "spoil_rate": 0.002},
-	"wheat": {"name": "小麦", "use": "grain", "base_yield": 500.0, "price": 3200, "growth_days": 150.0, "water_need": 0.8, "fertility_cost": 0.10, "spoil_rate": 0.002},
-	"cotton": {"name": "棉花", "use": "cash", "base_yield": 300.0, "price": 8000, "growth_days": 180.0, "water_need": 0.9, "fertility_cost": 0.18, "spoil_rate": 0.001},
-	"rapeseed": {"name": "油菜", "use": "cash", "base_yield": 250.0, "price": 6000, "growth_days": 160.0, "water_need": 0.7, "fertility_cost": 0.12, "spoil_rate": 0.001},
-	"vegetable": {"name": "蔬菜", "use": "vegetable", "base_yield": 2000.0, "price": 2500, "growth_days": 60.0, "water_need": 1.3, "fertility_cost": 0.20, "spoil_rate": 0.020},
-	"herb": {"name": "药材", "use": "herbal", "base_yield": 200.0, "price": 20000, "growth_days": 240.0, "water_need": 0.9, "fertility_cost": 0.10, "spoil_rate": 0.005},
-}
+## 作物数值真源：shared/consistency/baseline/agriculture.json。
+const CROPS: Dictionary = BaselineScript.AGRI_CROPS
 
-const LIVESTOCK: Dictionary = {
-	"pig": {"name": "生猪", "kind": "livestock", "feed_per_day": 2.5, "breed_rate": 0.06, "disease_risk": 0.08, "market_price": 4000},
-	"cattle": {"name": "肉牛", "kind": "livestock", "feed_per_day": 6.0, "breed_rate": 0.03, "disease_risk": 0.05, "market_price": 15000},
-	"chicken": {"name": "肉鸡", "kind": "poultry", "feed_per_day": 0.15, "breed_rate": 0.15, "disease_risk": 0.12, "market_price": 60},
-	"duck": {"name": "鸭", "kind": "poultry", "feed_per_day": 0.2, "breed_rate": 0.12, "disease_risk": 0.12, "market_price": 80},
-	"fish": {"name": "鱼", "kind": "aquaculture", "feed_per_day": 0.05, "breed_rate": 0.10, "disease_risk": 0.15, "market_price": 25},
-}
+## 养殖数值真源：shared/consistency/baseline/agriculture.json。
+const LIVESTOCK: Dictionary = BaselineScript.AGRI_LIVESTOCK
 
-## 销售渠道：价格倍率（自给不自售）。
-const MARKET_CHANNELS: Dictionary = {
-	"self_supply": {"name": "自给", "price_mult": 0.0},
-	"market": {"name": "集市", "price_mult": 1.0},
-	"order": {"name": "订单农业", "price_mult": 1.15},
-	"cooperative": {"name": "合作社", "price_mult": 1.08},
-	"futures": {"name": "期货", "price_mult": 1.25},
-}
+## 销售渠道：价格倍率（自给不自售）。数值真源：shared/consistency/baseline/agriculture.json。
+const MARKET_CHANNELS: Dictionary = BaselineScript.AGRI_MARKET_CHANNELS
 
 const DISASTERS: Array = ["drought", "flood", "pest"]
 const DISASTER_NAMES: Dictionary = {"drought": "干旱", "flood": "洪水", "pest": "虫害"}

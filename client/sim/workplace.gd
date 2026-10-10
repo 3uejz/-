@@ -15,7 +15,8 @@ extends RefCounted
 
 const BaselineScript = preload("res://sim/baseline.gd")
 
-const DIM_MAX: float = 100.0
+## 职场数值真源：shared/consistency/baseline/workplace.json。
+const DIM_MAX: float = BaselineScript.WORK_DIM_MAX
 
 const EVENT_CREDIT_GRAB: String = "credit_grab"   # 抢功
 const EVENT_BLAME: String = "blame"               # 甩锅
@@ -25,21 +26,16 @@ const EVENT_REPORT: String = "report"             # 举报
 ## 恶化后果（由轻到重）。
 const ACTIONS: Array = ["none", "sidelined", "transfer", "demote", "fire"]
 
-const EVENT_WEIGHTS: Dictionary = {
-	EVENT_CREDIT_GRAB: 0.30,
-	EVENT_BLAME: 0.30,
-	EVENT_TAKE_SIDES: 0.20,
-	EVENT_REPORT: 0.20,
-}
+const EVENT_WEIGHTS: Dictionary = BaselineScript.WORK_EVENT_WEIGHTS
 
-const PROMOTION_PERFORMANCE_WEIGHT: float = 0.40
-const PROMOTION_SUPERVISOR_WEIGHT: float = 0.25
-const PROMOTION_REPUTATION_WEIGHT: float = 0.20
-const PROMOTION_LUCK_WEIGHT: float = 0.10
-const PROMOTION_INDUSTRY_WEIGHT: float = 0.05
-const PROMOTION_THRESHOLD: float = 65.0
+const PROMOTION_PERFORMANCE_WEIGHT: float = BaselineScript.WORK_PROMOTION_PERFORMANCE_WEIGHT
+const PROMOTION_SUPERVISOR_WEIGHT: float = BaselineScript.WORK_PROMOTION_SUPERVISOR_WEIGHT
+const PROMOTION_REPUTATION_WEIGHT: float = BaselineScript.WORK_PROMOTION_REPUTATION_WEIGHT
+const PROMOTION_LUCK_WEIGHT: float = BaselineScript.WORK_PROMOTION_LUCK_WEIGHT
+const PROMOTION_INDUSTRY_WEIGHT: float = BaselineScript.WORK_PROMOTION_INDUSTRY_WEIGHT
+const PROMOTION_THRESHOLD: float = BaselineScript.WORK_PROMOTION_THRESHOLD
 
-const FACTION_POWER_MAX: float = 100.0
+const FACTION_POWER_MAX: float = BaselineScript.WORK_FACTION_POWER_MAX
 
 
 # --- 初始化与存取 ---

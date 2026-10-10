@@ -1,0 +1,22 @@
+{
+  "PARENT_GENE_WEIGHT": 0.5,
+  "PARENT_CARE_WEIGHT": 0.2,
+  "PARENT_EDU_WEIGHT": 0.2,
+  "PARENT_RANDOM_WEIGHT": 0.1,
+  "PARENT_STAGE_RANGE": {"infant": [0, 3], "toddler": [3, 6], "child": [6, 12], "teen": [12, 18]},
+  "PARENT_DAILY_COST": {
+    "infant": {"minutes": 300, "money": 15000},
+    "toddler": {"minutes": 240, "money": 12000},
+    "child": {"minutes": 180, "money": 10000},
+    "teen": {"minutes": 120, "money": 12000}
+  },
+  "PARENT_EVENTS": {
+    "illness": {"ability": {"physique": -3.0}},
+    "injury": {"ability": {"physique": -5.0}},
+    "rebellion": {"personality": {"agreeableness": -4.0, "extraversion": 2.0}},
+    "talent_emerge": {"ability": {"intelligence": 5.0}},
+    "bullying": {"personality": {"neuroticism": 4.0}},
+    "academic_pressure": {"ability": {"intelligence": 3.0}, "personality": {"neuroticism": 2.0}}
+  },
+  "PARENT_EARLY_DEATH_RATE": 0.002
+}

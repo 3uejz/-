@@ -1,0 +1,16 @@
+{
+  "PET_SPECIES": {
+    "dog": {"name": "狗", "lifespan": 13.0, "buy_cost": 200000, "feed_cost": 3000, "trainability": 0.9, "daily_minutes": 60},
+    "cat": {"name": "猫", "lifespan": 15.0, "buy_cost": 150000, "feed_cost": 2500, "trainability": 0.5, "daily_minutes": 30},
+    "bird": {"name": "鸟", "lifespan": 10.0, "buy_cost": 80000, "feed_cost": 1000, "trainability": 0.6, "daily_minutes": 20},
+    "fish": {"name": "鱼", "lifespan": 5.0, "buy_cost": 20000, "feed_cost": 500, "trainability": 0.1, "daily_minutes": 10},
+    "rabbit": {"name": "兔", "lifespan": 8.0, "buy_cost": 60000, "feed_cost": 1200, "trainability": 0.3, "daily_minutes": 20},
+    "hamster": {"name": "仓鼠", "lifespan": 3.0, "buy_cost": 30000, "feed_cost": 800, "trainability": 0.2, "daily_minutes": 10},
+    "reptile": {"name": "爬宠", "lifespan": 20.0, "buy_cost": 500000, "feed_cost": 2000, "trainability": 0.2, "daily_minutes": 15}
+  },
+  "PET_HUNGER_DECAY_PER_DAY": 12.0,
+  "PET_STARVATION_HEALTH_LOSS": 8.0,
+  "PET_LOST_BASE_RISK": 0.01,
+  "PET_DEATH_MOOD_DELTA": -20.0,
+  "PET_DEATH_HAPPINESS_DELTA": -15.0
+}

@@ -7,39 +7,29 @@ extends RefCounted
 ## 突发事件改变成长轨迹；成年后可独立并继承家业；玩家可择一子代切换主角。
 
 const FamilyScript = preload("res://sim/family.gd")
+const BaselineScript = preload("res://sim/baseline.gd")
 
 const ABILITY_KEYS: Array = ["intelligence", "charm", "physique", "willpower", "luck"]
 const BIG_FIVE: Array = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"]
 
-const GENE_WEIGHT: float = 0.5
-const CARE_WEIGHT: float = 0.2
-const EDU_WEIGHT: float = 0.2
-const RANDOM_WEIGHT: float = 0.1
+## 育儿数值真源：shared/consistency/baseline/parenting.json。
+const GENE_WEIGHT: float = BaselineScript.PARENT_GENE_WEIGHT
+const CARE_WEIGHT: float = BaselineScript.PARENT_CARE_WEIGHT
+const EDU_WEIGHT: float = BaselineScript.PARENT_EDU_WEIGHT
+const RANDOM_WEIGHT: float = BaselineScript.PARENT_RANDOM_WEIGHT
 
 const STAGES: Array = ["infant", "toddler", "child", "teen"]
 const STAGE_NAMES: Dictionary = {"infant": "婴儿", "toddler": "幼儿", "child": "儿童", "teen": "少年", "adult": "成年"}
-const STAGE_RANGE: Dictionary = {"infant": [0, 3], "toddler": [3, 6], "child": [6, 12], "teen": [12, 18]}
+const STAGE_RANGE: Dictionary = BaselineScript.PARENT_STAGE_RANGE
 
-## 每日照护成本（分钟、最小货币单位）。
-const DAILY_COST: Dictionary = {
-	"infant": {"minutes": 300, "money": 15000},
-	"toddler": {"minutes": 240, "money": 12000},
-	"child": {"minutes": 180, "money": 10000},
-	"teen": {"minutes": 120, "money": 12000},
-}
+## 每日照护成本（分钟、最小货币单位）。数值真源：shared/consistency/baseline/parenting.json。
+const DAILY_COST: Dictionary = BaselineScript.PARENT_DAILY_COST
 
-## 突发事件对属性的修正。
-const EVENTS: Dictionary = {
-	"illness": {"ability": {"physique": -3.0}},
-	"injury": {"ability": {"physique": -5.0}},
-	"rebellion": {"personality": {"agreeableness": -4.0, "extraversion": 2.0}},
-	"talent_emerge": {"ability": {"intelligence": 5.0}},
-	"bullying": {"personality": {"neuroticism": 4.0}},
-	"academic_pressure": {"ability": {"intelligence": 3.0}, "personality": {"neuroticism": 2.0}},
-}
+## 突发事件对属性的修正。数值真源：shared/consistency/baseline/parenting.json。
+const EVENTS: Dictionary = BaselineScript.PARENT_EVENTS
 
 const EARLY_DEATH_ENABLED_DEFAULT: bool = true
-const EARLY_DEATH_RATE: float = 0.002
+const EARLY_DEATH_RATE: float = BaselineScript.PARENT_EARLY_DEATH_RATE
 
 
 func _clamp100(v: float) -> float:
