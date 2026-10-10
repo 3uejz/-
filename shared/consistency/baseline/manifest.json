@@ -15,6 +15,12 @@
     "engineering.json",
     "medical.json",
     "sports.json",
-    "aesthetics.json"
+    "aesthetics.json",
+    "mental_health.json",
+    "disability_elderly.json",
+    "digital.json",
+    "consumer_protection.json",
+    "debt_service.json",
+    "emergency.json"
   ]
 }

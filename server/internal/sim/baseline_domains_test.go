@@ -123,6 +123,44 @@ func TestBaselineDomainsConsistency(t *testing.T) {
 			"AESTHETICS_ILLEGAL_COMPLICATION_MULT":     sim.BaselineAestheticsIllegalComplicationMult,
 			"AESTHETICS_MALPRACTICE_COMPENSATION":      sim.BaselineAestheticsMalpracticeCompensation,
 		},
+		"mental_health": {
+			"MH_STRESS_DISORDER_THRESHOLD": sim.BaselineMhStressDisorderThreshold,
+			"MH_TREATMENTS":                sim.BaselineMhTreatments,
+			"MH_EVENTS":                    sim.BaselineMhEvents,
+		},
+		"disability_elderly": {
+			"DE_SEVERITY_PENALTY": sim.BaselineDeSeverityPenalty,
+			"DE_DEVICES":          sim.BaselineDeDevices,
+			"DE_CARE_MODES":       sim.BaselineDeCareModes,
+		},
+		"digital": {
+			"DIGITAL_ADDICTION_THRESHOLD_HOURS": sim.BaselineDigitalAddictionThresholdHours,
+			"DIGITAL_HACK_TARGETS":              sim.BaselineDigitalHackTargets,
+			"DIGITAL_SECURITY_JOBS":             sim.BaselineDigitalSecurityJobs,
+			"DIGITAL_CONTENT_PLATFORMS":         sim.BaselineDigitalContentPlatforms,
+		},
+		"consumer_protection": {
+			"CP_CHANNEL_WEIGHTS":      sim.BaselineCpChannelWeights,
+			"CP_RETURN_WINDOW_DAYS":   sim.BaselineCpReturnWindowDays,
+			"CP_THREE_GUARANTEE_DAYS": sim.BaselineCpThreeGuaranteeDays,
+			"CP_WARRANTY_DEFECT_DAYS": sim.BaselineCpWarrantyDefectDays,
+		},
+		"debt_service": {
+			"DS_INTEREST_RATE_CAP":    sim.BaselineDsInterestRateCap,
+			"DS_BUSINESSES":           sim.BaselineDsBusinesses,
+			"DS_COLLECTION_MODES":     sim.BaselineDsCollectionModes,
+			"DS_P2P_ERA_START":        sim.BaselineDsP2pEraStart,
+			"DS_P2P_ERA_END":          sim.BaselineDsP2pEraEnd,
+			"DS_BANKRUPTCY_ERA_START": sim.BaselineDsBankruptcyEraStart,
+		},
+		"emergency": {
+			"EM_DEFAULT_RESPONSE_CAP": sim.BaselineEmDefaultResponseCap,
+			"EM_SURVIVAL_TREATED":     sim.BaselineEmSurvivalTreated,
+			"EM_SURVIVAL_UNTREATED":   sim.BaselineEmSurvivalUntreated,
+			"EM_SECONDARY_BASE_RISK":  sim.BaselineEmSecondaryBaseRisk,
+			"EM_COMMAND_FAULT_LINE":   sim.BaselineEmCommandFaultLine,
+			"EM_PROFESSIONS":          sim.BaselineEmProfessions,
+		},
 	}
 
 	for domain, expected := range v.Domains {
@@ -159,6 +197,20 @@ func compareVectorValue(t *testing.T, label string, got, want any) {
 			if fmt.Sprint(g[i]) != fmt.Sprint(w[i]) {
 				t.Errorf("%s[%d]: got=%v want=%v", label, i, g[i], w[i])
 			}
+		}
+	case map[string]any:
+		g, ok := got.(map[string]any)
+		if !ok {
+			t.Errorf("%s: 类型应为字典，got %T", label, got)
+			return
+		}
+		for k, wv := range w {
+			gv, ok := g[k]
+			if !ok {
+				t.Errorf("%s.%s: 缺少键", label, k)
+				continue
+			}
+			compareVectorValue(t, fmt.Sprintf("%s.%s", label, k), gv, wv)
 		}
 	case float64:
 		gf, ok := toFloat(got)

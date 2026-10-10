@@ -125,11 +125,36 @@
         "acceptance"
       ],
       "ENGINEERING_ZONE_TYPES": {
-        "residential": {"name": "居住区", "land_mult": 1.0, "population_pull": 1.0, "traffic_demand": 0.6},
-        "commercial": {"name": "商业区", "land_mult": 1.8, "population_pull": 0.3, "traffic_demand": 1.0},
-        "industrial": {"name": "工业区", "land_mult": 0.7, "population_pull": 0.4, "traffic_demand": 0.8},
-        "mixed": {"name": "综合区", "land_mult": 1.3, "population_pull": 0.8, "traffic_demand": 0.9},
-        "green": {"name": "绿地", "land_mult": 0.5, "population_pull": 0.2, "traffic_demand": 0.2}
+        "residential": {
+          "name": "居住区",
+          "land_mult": 1.0,
+          "population_pull": 1.0,
+          "traffic_demand": 0.6
+        },
+        "commercial": {
+          "name": "商业区",
+          "land_mult": 1.8,
+          "population_pull": 0.3,
+          "traffic_demand": 1.0
+        },
+        "industrial": {
+          "name": "工业区",
+          "land_mult": 0.7,
+          "population_pull": 0.4,
+          "traffic_demand": 0.8
+        },
+        "mixed": {
+          "name": "综合区",
+          "land_mult": 1.3,
+          "population_pull": 0.8,
+          "traffic_demand": 0.9
+        },
+        "green": {
+          "name": "绿地",
+          "land_mult": 0.5,
+          "population_pull": 0.2,
+          "traffic_demand": 0.2
+        }
       }
     },
     "medical": {
@@ -164,6 +189,410 @@
       "AESTHETICS_ILLEGAL_SUCCESS_MULT": 0.55,
       "AESTHETICS_ILLEGAL_COMPLICATION_MULT": 2.2,
       "AESTHETICS_MALPRACTICE_COMPENSATION": 3000000
+    },
+    "mental_health": {
+      "MH_STRESS_DISORDER_THRESHOLD": 70.0,
+      "MH_TREATMENTS": {
+        "psychotherapy": {
+          "name": "心理咨询",
+          "cost": 30000,
+          "minutes": 90,
+          "cure": 0.25,
+          "remit": 0.5,
+          "side_effect": 0.02,
+          "adherence": 0.8
+        },
+        "medication": {
+          "name": "药物治疗",
+          "cost": 20000,
+          "minutes": 30,
+          "cure": 0.15,
+          "remit": 0.6,
+          "side_effect": 0.35,
+          "adherence": 0.65
+        },
+        "cbt": {
+          "name": "认知行为治疗",
+          "cost": 50000,
+          "minutes": 120,
+          "cure": 0.35,
+          "remit": 0.45,
+          "side_effect": 0.03,
+          "adherence": 0.7
+        },
+        "hospitalization": {
+          "name": "住院治疗",
+          "cost": 300000,
+          "minutes": 14400,
+          "cure": 0.2,
+          "remit": 0.6,
+          "side_effect": 0.1,
+          "adherence": 0.9
+        },
+        "crisis_intervention": {
+          "name": "重症干预",
+          "cost": 80000,
+          "minutes": 240,
+          "cure": 0.05,
+          "remit": 0.75,
+          "side_effect": 0.08,
+          "adherence": 0.85
+        }
+      },
+      "MH_EVENTS": {
+        "unemployment": {
+          "mood": -12.0,
+          "stress": 18.0
+        },
+        "breakup": {
+          "mood": -15.0,
+          "stress": 16.0
+        },
+        "debt": {
+          "mood": -8.0,
+          "stress": 14.0
+        },
+        "stay_up": {
+          "mood": -5.0,
+          "stress": 8.0
+        },
+        "illness": {
+          "mood": -10.0,
+          "stress": 12.0
+        },
+        "marriage": {
+          "mood": 12.0,
+          "stress": 4.0
+        },
+        "promotion": {
+          "mood": 10.0,
+          "stress": 6.0
+        },
+        "praise": {
+          "mood": 6.0,
+          "stress": -4.0
+        }
+      }
+    },
+    "disability_elderly": {
+      "DE_SEVERITY_PENALTY": {
+        "light": 0.15,
+        "medium": 0.4,
+        "heavy": 0.75
+      },
+      "DE_DEVICES": {
+        "wheelchair": {
+          "name": "轮椅",
+          "cost": 800000,
+          "mobility_bonus": 0.5,
+          "types": [
+            "physical"
+          ]
+        },
+        "hearing_aid": {
+          "name": "助听器",
+          "cost": 200000,
+          "mobility_bonus": 0.1,
+          "types": [
+            "sensory"
+          ]
+        },
+        "prosthesis": {
+          "name": "义肢",
+          "cost": 1500000,
+          "mobility_bonus": 0.4,
+          "types": [
+            "physical"
+          ]
+        },
+        "guide_dog": {
+          "name": "导盲犬",
+          "cost": 300000,
+          "mobility_bonus": 0.35,
+          "types": [
+            "sensory"
+          ]
+        },
+        "accessibility": {
+          "name": "无障碍改造",
+          "cost": 500000,
+          "mobility_bonus": 0.2,
+          "types": [
+            "physical",
+            "sensory"
+          ]
+        },
+        "rehab": {
+          "name": "康复训练",
+          "cost": 100000,
+          "mobility_bonus": 0.15,
+          "types": [
+            "physical",
+            "sensory",
+            "intellectual",
+            "mental"
+          ]
+        }
+      },
+      "DE_CARE_MODES": {
+        "home_care": {
+          "name": "居家护理",
+          "cost_per_month": 400000,
+          "quality": 0.5,
+          "happiness": 0.0,
+          "life_modifier": 0.0
+        },
+        "community_care": {
+          "name": "社区养老",
+          "cost_per_month": 600000,
+          "quality": 0.65,
+          "happiness": 2.0,
+          "life_modifier": 0.1
+        },
+        "institution_care": {
+          "name": "机构养老",
+          "cost_per_month": 1200000,
+          "quality": 0.8,
+          "happiness": -1.0,
+          "life_modifier": 0.2
+        }
+      }
+    },
+    "digital": {
+      "DIGITAL_ADDICTION_THRESHOLD_HOURS": 8.0,
+      "DIGITAL_HACK_TARGETS": {
+        "personal": {
+          "name": "个人",
+          "difficulty": 6.0,
+          "base_gain": 20000,
+          "exposure": 0.25,
+          "sentence_days": 180,
+          "fine": 50000,
+          "wanted": 1
+        },
+        "enterprise": {
+          "name": "企业",
+          "difficulty": 10.0,
+          "base_gain": 500000,
+          "exposure": 0.4,
+          "sentence_days": 730,
+          "fine": 500000,
+          "wanted": 2
+        },
+        "government": {
+          "name": "政府",
+          "difficulty": 15.0,
+          "base_gain": 2000000,
+          "exposure": 0.6,
+          "sentence_days": 1825,
+          "fine": 2000000,
+          "wanted": 3
+        },
+        "black_market": {
+          "name": "黑产",
+          "difficulty": 12.0,
+          "base_gain": 800000,
+          "exposure": 0.5,
+          "sentence_days": 365,
+          "fine": 300000,
+          "wanted": 1
+        }
+      },
+      "DIGITAL_SECURITY_JOBS": {
+        "pentest": {
+          "name": "渗透测试",
+          "difficulty": 8.0,
+          "income": 120000,
+          "reputation": 1.0
+        },
+        "defense": {
+          "name": "安全防护",
+          "difficulty": 7.0,
+          "income": 90000,
+          "reputation": 0.8
+        },
+        "incident_response": {
+          "name": "应急响应",
+          "difficulty": 9.0,
+          "income": 150000,
+          "reputation": 1.2
+        },
+        "breach_disposal": {
+          "name": "数据泄露处置",
+          "difficulty": 10.0,
+          "income": 200000,
+          "reputation": 1.5
+        }
+      },
+      "DIGITAL_CONTENT_PLATFORMS": {
+        "livestream": {
+          "name": "直播",
+          "base_views": 20000,
+          "tip_rate": 0.02,
+          "cut": 0.3,
+          "conversion": 0.05
+        },
+        "short_video": {
+          "name": "短视频",
+          "base_views": 60000,
+          "tip_rate": 0.005,
+          "cut": 0.2,
+          "conversion": 0.08
+        }
+      }
+    },
+    "consumer_protection": {
+      "CP_CHANNEL_WEIGHTS": {
+        "negotiate": 0.25,
+        "platform": 0.4,
+        "hotline_12315": 0.6,
+        "consumer_association": 0.7,
+        "litigation": 0.85,
+        "class_action": 0.9
+      },
+      "CP_RETURN_WINDOW_DAYS": 7,
+      "CP_THREE_GUARANTEE_DAYS": 15,
+      "CP_WARRANTY_DEFECT_DAYS": 180
+    },
+    "debt_service": {
+      "DS_INTEREST_RATE_CAP": 0.36,
+      "DS_BUSINESSES": {
+        "pawn": {
+          "name": "典当",
+          "requires_license": true,
+          "rate_cap": 0.36,
+          "collateral_required": true,
+          "era": "all"
+        },
+        "private_lending": {
+          "name": "民间借贷",
+          "requires_license": false,
+          "rate_cap": 0.36,
+          "collateral_required": false,
+          "era": "all"
+        },
+        "micro_loan": {
+          "name": "小额信贷",
+          "requires_license": true,
+          "rate_cap": 0.24,
+          "collateral_required": false,
+          "era": "all"
+        },
+        "consumer_finance": {
+          "name": "消费金融",
+          "requires_license": true,
+          "rate_cap": 0.24,
+          "collateral_required": false,
+          "era": "all"
+        },
+        "crowdfunding": {
+          "name": "众筹",
+          "requires_license": true,
+          "rate_cap": 0.0,
+          "collateral_required": false,
+          "era": "all"
+        },
+        "p2p": {
+          "name": "P2P",
+          "requires_license": true,
+          "rate_cap": 0.24,
+          "collateral_required": false,
+          "era": "2013-2020"
+        }
+      },
+      "DS_COLLECTION_MODES": {
+        "reminder": {
+          "name": "短信电话提醒",
+          "legal": true,
+          "severity": 0.1
+        },
+        "litigation": {
+          "name": "起诉",
+          "legal": true,
+          "severity": 0.2
+        },
+        "harassment": {
+          "name": "骚扰",
+          "legal": false,
+          "severity": 0.4
+        },
+        "home_visit": {
+          "name": "上门施压",
+          "legal": false,
+          "severity": 0.65
+        },
+        "violence": {
+          "name": "暴力催收",
+          "legal": false,
+          "severity": 0.9
+        }
+      },
+      "DS_P2P_ERA_START": 2013,
+      "DS_P2P_ERA_END": 2020,
+      "DS_BANKRUPTCY_ERA_START": 2021
+    },
+    "emergency": {
+      "EM_DEFAULT_RESPONSE_CAP": 60.0,
+      "EM_SURVIVAL_TREATED": 0.9,
+      "EM_SURVIVAL_UNTREATED": 0.35,
+      "EM_SECONDARY_BASE_RISK": 0.15,
+      "EM_COMMAND_FAULT_LINE": 0.5,
+      "EM_PROFESSIONS": {
+        "fire": {
+          "name": "消防",
+          "base_response": 8.0,
+          "equipment": [
+            "fire_truck",
+            "aerial_ladder",
+            "breathing_apparatus"
+          ]
+        },
+        "ems": {
+          "name": "急救",
+          "base_response": 6.0,
+          "equipment": [
+            "ambulance",
+            "defibrillator",
+            "stretcher"
+          ]
+        },
+        "coast_guard": {
+          "name": "海警",
+          "base_response": 15.0,
+          "equipment": [
+            "patrol_boat",
+            "life_raft",
+            "sonar"
+          ]
+        },
+        "mountain_rescue": {
+          "name": "山地救援",
+          "base_response": 30.0,
+          "equipment": [
+            "rope_kit",
+            "helicopter",
+            "thermal_drone"
+          ]
+        },
+        "earthquake_rescue": {
+          "name": "地震救援",
+          "base_response": 20.0,
+          "equipment": [
+            "hydraulic_tool",
+            "search_dog",
+            "rescue_bed"
+          ]
+        },
+        "flood_rescue": {
+          "name": "洪水救援",
+          "base_response": 18.0,
+          "equipment": [
+            "rubber_boat",
+            "life_jacket",
+            "pump"
+          ]
+        }
+      }
     }
   }
 }

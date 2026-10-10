@@ -1,5 +1,7 @@
 class_name DigitalSystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 数字生活与黑客（R67；design D23）。
 ##
 ## 覆盖：
@@ -24,28 +26,16 @@ const HACK_GOVERNMENT: String = "government"
 const HACK_BLACK_MARKET: String = "black_market"
 
 ## 黑客目标：难度（0..20）、基准收益、基础暴露率、法律后果（刑期/罚金/通缉等级）。
-const HACK_TARGETS: Dictionary = {
-	"personal": {"name": "个人", "difficulty": 6.0, "base_gain": 20000, "exposure": 0.25, "sentence_days": 180, "fine": 50000, "wanted": 1},
-	"enterprise": {"name": "企业", "difficulty": 10.0, "base_gain": 500000, "exposure": 0.40, "sentence_days": 730, "fine": 500000, "wanted": 2},
-	"government": {"name": "政府", "difficulty": 15.0, "base_gain": 2000000, "exposure": 0.60, "sentence_days": 1825, "fine": 2000000, "wanted": 3},
-	"black_market": {"name": "黑产", "difficulty": 12.0, "base_gain": 800000, "exposure": 0.50, "sentence_days": 365, "fine": 300000, "wanted": 1},
-}
+## 数值真源：shared/consistency/baseline/digital.json。
+const HACK_TARGETS: Dictionary = BaselineScript.DIGITAL_HACK_TARGETS
 
-## 网络安全职业（合法方向）：难度、收入、声望增益。
-const SECURITY_JOBS: Dictionary = {
-	"pentest": {"name": "渗透测试", "difficulty": 8.0, "income": 120000, "reputation": 1.0},
-	"defense": {"name": "安全防护", "difficulty": 7.0, "income": 90000, "reputation": 0.8},
-	"incident_response": {"name": "应急响应", "difficulty": 9.0, "income": 150000, "reputation": 1.2},
-	"breach_disposal": {"name": "数据泄露处置", "difficulty": 10.0, "income": 200000, "reputation": 1.5},
-}
+## 网络安全职业（合法方向）：难度、收入、声望增益。数值真源：shared/consistency/baseline/digital.json。
+const SECURITY_JOBS: Dictionary = BaselineScript.DIGITAL_SECURITY_JOBS
 
-## 内容平台：基准播放、打赏率、平台分成比例、带货转化率。
-const CONTENT_PLATFORMS: Dictionary = {
-	"livestream": {"name": "直播", "base_views": 20000, "tip_rate": 0.02, "cut": 0.30, "conversion": 0.05},
-	"short_video": {"name": "短视频", "base_views": 60000, "tip_rate": 0.005, "cut": 0.20, "conversion": 0.08},
-}
+## 内容平台：基准播放、打赏率、平台分成比例、带货转化率。数值真源：shared/consistency/baseline/digital.json。
+const CONTENT_PLATFORMS: Dictionary = BaselineScript.DIGITAL_CONTENT_PLATFORMS
 
-const ADDICTION_THRESHOLD_HOURS: float = 8.0
+const ADDICTION_THRESHOLD_HOURS: float = BaselineScript.DIGITAL_ADDICTION_THRESHOLD_HOURS
 
 
 func _roll(forced: float, rng) -> float:

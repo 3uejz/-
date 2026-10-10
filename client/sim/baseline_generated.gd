@@ -86,6 +86,14 @@ const CLIMATE_ZONES: Dictionary = {
 
 const CLIMATE_ZONE_ORDER: Array = ["tropical_rainforest", "tropical_monsoon", "tropical_savanna", "tropical_desert", "subtropical_monsoon", "mediterranean", "temperate_oceanic", "temperate_continental", "subarctic_conifer", "polar_highland"]
 
+const CP_CHANNEL_WEIGHTS: Dictionary = {"class_action": 0.9, "consumer_association": 0.7, "hotline_12315": 0.6, "litigation": 0.85, "negotiate": 0.25, "platform": 0.4}
+
+const CP_RETURN_WINDOW_DAYS: int = 7
+
+const CP_THREE_GUARANTEE_DAYS: int = 15
+
+const CP_WARRANTY_DEFECT_DAYS: int = 180
+
 const CURRENCIES: Dictionary = {
 	"CNY": {"name": "人民币", "rate": 7.0},
 	"EUR": {"name": "欧元", "rate": 0.92},
@@ -98,6 +106,99 @@ const CURRENCIES: Dictionary = {
 const CURRENCY_BASE: String = "USD"
 
 const DEHYDRATE_HEALTH_PER_HOUR: float = 4.0
+
+const DE_CARE_MODES: Dictionary = {
+	"community_care": {"cost_per_month": 600000, "happiness": 2.0, "life_modifier": 0.1, "name": "社区养老", "quality": 0.65},
+	"home_care": {"cost_per_month": 400000, "happiness": 0.0, "life_modifier": 0.0, "name": "居家护理", "quality": 0.5},
+	"institution_care": {"cost_per_month": 1200000, "happiness": -1.0, "life_modifier": 0.2, "name": "机构养老", "quality": 0.8},
+}
+
+const DE_DEVICES: Dictionary = {
+	"accessibility": {
+		"cost": 500000,
+		"mobility_bonus": 0.2,
+		"name": "无障碍改造",
+		"types": ["physical", "sensory"],
+	},
+	"guide_dog": {
+		"cost": 300000,
+		"mobility_bonus": 0.35,
+		"name": "导盲犬",
+		"types": ["sensory"],
+	},
+	"hearing_aid": {
+		"cost": 200000,
+		"mobility_bonus": 0.1,
+		"name": "助听器",
+		"types": ["sensory"],
+	},
+	"prosthesis": {
+		"cost": 1500000,
+		"mobility_bonus": 0.4,
+		"name": "义肢",
+		"types": ["physical"],
+	},
+	"rehab": {
+		"cost": 100000,
+		"mobility_bonus": 0.15,
+		"name": "康复训练",
+		"types": ["physical", "sensory", "intellectual", "mental"],
+	},
+	"wheelchair": {
+		"cost": 800000,
+		"mobility_bonus": 0.5,
+		"name": "轮椅",
+		"types": ["physical"],
+	},
+}
+
+const DE_SEVERITY_PENALTY: Dictionary = {"heavy": 0.75, "light": 0.15, "medium": 0.4}
+
+const DIGITAL_ADDICTION_THRESHOLD_HOURS: float = 8.0
+
+const DIGITAL_CONTENT_PLATFORMS: Dictionary = {
+	"livestream": {"base_views": 20000, "conversion": 0.05, "cut": 0.3, "name": "直播", "tip_rate": 0.02},
+	"short_video": {"base_views": 60000, "conversion": 0.08, "cut": 0.2, "name": "短视频", "tip_rate": 0.005},
+}
+
+const DIGITAL_HACK_TARGETS: Dictionary = {
+	"black_market": {"base_gain": 800000, "difficulty": 12.0, "exposure": 0.5, "fine": 300000, "name": "黑产", "sentence_days": 365, "wanted": 1},
+	"enterprise": {"base_gain": 500000, "difficulty": 10.0, "exposure": 0.4, "fine": 500000, "name": "企业", "sentence_days": 730, "wanted": 2},
+	"government": {"base_gain": 2000000, "difficulty": 15.0, "exposure": 0.6, "fine": 2000000, "name": "政府", "sentence_days": 1825, "wanted": 3},
+	"personal": {"base_gain": 20000, "difficulty": 6.0, "exposure": 0.25, "fine": 50000, "name": "个人", "sentence_days": 180, "wanted": 1},
+}
+
+const DIGITAL_SECURITY_JOBS: Dictionary = {
+	"breach_disposal": {"difficulty": 10.0, "income": 200000, "name": "数据泄露处置", "reputation": 1.5},
+	"defense": {"difficulty": 7.0, "income": 90000, "name": "安全防护", "reputation": 0.8},
+	"incident_response": {"difficulty": 9.0, "income": 150000, "name": "应急响应", "reputation": 1.2},
+	"pentest": {"difficulty": 8.0, "income": 120000, "name": "渗透测试", "reputation": 1.0},
+}
+
+const DS_BANKRUPTCY_ERA_START: int = 2021
+
+const DS_BUSINESSES: Dictionary = {
+	"consumer_finance": {"collateral_required": false, "era": "all", "name": "消费金融", "rate_cap": 0.24, "requires_license": true},
+	"crowdfunding": {"collateral_required": false, "era": "all", "name": "众筹", "rate_cap": 0.0, "requires_license": true},
+	"micro_loan": {"collateral_required": false, "era": "all", "name": "小额信贷", "rate_cap": 0.24, "requires_license": true},
+	"p2p": {"collateral_required": false, "era": "2013-2020", "name": "P2P", "rate_cap": 0.24, "requires_license": true},
+	"pawn": {"collateral_required": true, "era": "all", "name": "典当", "rate_cap": 0.36, "requires_license": true},
+	"private_lending": {"collateral_required": false, "era": "all", "name": "民间借贷", "rate_cap": 0.36, "requires_license": false},
+}
+
+const DS_COLLECTION_MODES: Dictionary = {
+	"harassment": {"legal": false, "name": "骚扰", "severity": 0.4},
+	"home_visit": {"legal": false, "name": "上门施压", "severity": 0.65},
+	"litigation": {"legal": true, "name": "起诉", "severity": 0.2},
+	"reminder": {"legal": true, "name": "短信电话提醒", "severity": 0.1},
+	"violence": {"legal": false, "name": "暴力催收", "severity": 0.9},
+}
+
+const DS_INTEREST_RATE_CAP: float = 0.36
+
+const DS_P2P_ERA_END: int = 2020
+
+const DS_P2P_ERA_START: int = 2013
 
 const DYING_HEALTH_MARGIN: float = 30.0
 
@@ -112,6 +213,49 @@ const EMPLOYMENT_BASE_HIRE_DIFFICULTY: float = 0.7
 const EMPLOYMENT_UNEMPLOYMENT_SENSITIVITY: float = 3.0
 
 const EMPLOYMENT_WAGE_UNEMPLOYMENT_SENSITIVITY: float = 1.5
+
+const EM_COMMAND_FAULT_LINE: float = 0.5
+
+const EM_DEFAULT_RESPONSE_CAP: float = 60.0
+
+const EM_PROFESSIONS: Dictionary = {
+	"coast_guard": {
+		"base_response": 15.0,
+		"equipment": ["patrol_boat", "life_raft", "sonar"],
+		"name": "海警",
+	},
+	"earthquake_rescue": {
+		"base_response": 20.0,
+		"equipment": ["hydraulic_tool", "search_dog", "rescue_bed"],
+		"name": "地震救援",
+	},
+	"ems": {
+		"base_response": 6.0,
+		"equipment": ["ambulance", "defibrillator", "stretcher"],
+		"name": "急救",
+	},
+	"fire": {
+		"base_response": 8.0,
+		"equipment": ["fire_truck", "aerial_ladder", "breathing_apparatus"],
+		"name": "消防",
+	},
+	"flood_rescue": {
+		"base_response": 18.0,
+		"equipment": ["rubber_boat", "life_jacket", "pump"],
+		"name": "洪水救援",
+	},
+	"mountain_rescue": {
+		"base_response": 30.0,
+		"equipment": ["rope_kit", "helicopter", "thermal_drone"],
+		"name": "山地救援",
+	},
+}
+
+const EM_SECONDARY_BASE_RISK: float = 0.15
+
+const EM_SURVIVAL_TREATED: float = 0.9
+
+const EM_SURVIVAL_UNTREATED: float = 0.35
 
 const ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD: float = 0.6
 
@@ -391,6 +535,27 @@ const MEDICAL_SERVICE_COST: Dictionary = {"admit": 200000, "checkup": 50000, "co
 const MEDICAL_UNTREATED_FREE_DAYS: float = 7.0
 
 const MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY: float = 1.0
+
+const MH_EVENTS: Dictionary = {
+	"breakup": {"mood": -15.0, "stress": 16.0},
+	"debt": {"mood": -8.0, "stress": 14.0},
+	"illness": {"mood": -10.0, "stress": 12.0},
+	"marriage": {"mood": 12.0, "stress": 4.0},
+	"praise": {"mood": 6.0, "stress": -4.0},
+	"promotion": {"mood": 10.0, "stress": 6.0},
+	"stay_up": {"mood": -5.0, "stress": 8.0},
+	"unemployment": {"mood": -12.0, "stress": 18.0},
+}
+
+const MH_STRESS_DISORDER_THRESHOLD: float = 70.0
+
+const MH_TREATMENTS: Dictionary = {
+	"cbt": {"adherence": 0.7, "cost": 50000, "cure": 0.35, "minutes": 120, "name": "认知行为治疗", "remit": 0.45, "side_effect": 0.03},
+	"crisis_intervention": {"adherence": 0.85, "cost": 80000, "cure": 0.05, "minutes": 240, "name": "重症干预", "remit": 0.75, "side_effect": 0.08},
+	"hospitalization": {"adherence": 0.9, "cost": 300000, "cure": 0.2, "minutes": 14400, "name": "住院治疗", "remit": 0.6, "side_effect": 0.1},
+	"medication": {"adherence": 0.65, "cost": 20000, "cure": 0.15, "minutes": 30, "name": "药物治疗", "remit": 0.6, "side_effect": 0.35},
+	"psychotherapy": {"adherence": 0.8, "cost": 30000, "cure": 0.25, "minutes": 90, "name": "心理咨询", "remit": 0.5, "side_effect": 0.02},
+}
 
 const MONEY_MINOR_SCALE: int = 100
 

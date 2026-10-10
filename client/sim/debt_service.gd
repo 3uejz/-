@@ -1,5 +1,7 @@
 class_name DebtServiceSystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 债务服务、当铺与小贷（R83；design D39）。
 ##
 ## 覆盖：
@@ -26,28 +28,17 @@ const BIZ_CONSUMER_FINANCE: String = "consumer_finance"
 const BIZ_CROWDFUNDING: String = "crowdfunding"
 const BIZ_P2P: String = "p2p"
 
-const BUSINESSES: Dictionary = {
-	"pawn": {"name": "典当", "requires_license": true, "rate_cap": 0.36, "collateral_required": true, "era": "all"},
-	"private_lending": {"name": "民间借贷", "requires_license": false, "rate_cap": 0.36, "collateral_required": false, "era": "all"},
-	"micro_loan": {"name": "小额信贷", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "all"},
-	"consumer_finance": {"name": "消费金融", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "all"},
-	"crowdfunding": {"name": "众筹", "requires_license": true, "rate_cap": 0.0, "collateral_required": false, "era": "all"},
-	"p2p": {"name": "P2P", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "2013-2020"},
-}
+## 放贷业务。数值真源：shared/consistency/baseline/debt_service.json。
+const BUSINESSES: Dictionary = BaselineScript.DS_BUSINESSES
 
 ## 民间借贷司法保护的利率上限（年化），超出部分不受保护。
-const INTEREST_RATE_CAP: float = 0.36
-const P2P_ERA_START: int = 2013
-const P2P_ERA_END: int = 2020
+const INTEREST_RATE_CAP: float = BaselineScript.DS_INTEREST_RATE_CAP
+const P2P_ERA_START: int = BaselineScript.DS_P2P_ERA_START
+const P2P_ERA_END: int = BaselineScript.DS_P2P_ERA_END
 
 ## 催收方式：合法/灰色、严重度。legal=true 不违法且无强制人身风险。
-const COLLECTION_MODES: Dictionary = {
-	"reminder": {"name": "短信电话提醒", "legal": true, "severity": 0.10},
-	"litigation": {"name": "起诉", "legal": true, "severity": 0.20},
-	"harassment": {"name": "骚扰", "legal": false, "severity": 0.40},
-	"home_visit": {"name": "上门施压", "legal": false, "severity": 0.65},
-	"violence": {"name": "暴力催收", "legal": false, "severity": 0.90},
-}
+## 数值真源：shared/consistency/baseline/debt_service.json。
+const COLLECTION_MODES: Dictionary = BaselineScript.DS_COLLECTION_MODES
 const LEGAL_MODES: Array = ["reminder", "litigation"]
 const GRAY_MODES: Array = ["harassment", "home_visit", "violence"]
 
@@ -62,7 +53,7 @@ const LOAN_DEFAULTED: String = "defaulted"
 const LOAN_RESTRUCTURED: String = "restructured"
 const LOAN_DISCHARGED: String = "discharged"
 
-const BANKRUPTCY_ERA_START: int = 2021  # 个人破产试点时代下限（本地近似）
+const BANKRUPTCY_ERA_START: int = BaselineScript.DS_BANKRUPTCY_ERA_START  # 个人破产试点时代下限（本地近似）
 
 
 func _roll(forced: float, rng) -> float:

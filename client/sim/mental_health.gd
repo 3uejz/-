@@ -22,14 +22,8 @@ const EMOTION_NAMES: Dictionary = {
 ## 病程阶段（R44.4）。
 const PHASES: Array = ["vulnerable", "triggered", "episode", "remission", "chronic"]
 
-## 治疗方式及基础参数（R44.6）。
-const TREATMENTS: Dictionary = {
-	"psychotherapy": {"name": "心理咨询", "cost": 30000, "minutes": 90, "cure": 0.25, "remit": 0.5, "side_effect": 0.02, "adherence": 0.8},
-	"medication": {"name": "药物治疗", "cost": 20000, "minutes": 30, "cure": 0.15, "remit": 0.6, "side_effect": 0.35, "adherence": 0.65},
-	"cbt": {"name": "认知行为治疗", "cost": 50000, "minutes": 120, "cure": 0.35, "remit": 0.45, "side_effect": 0.03, "adherence": 0.7},
-	"hospitalization": {"name": "住院治疗", "cost": 300000, "minutes": 14400, "cure": 0.2, "remit": 0.6, "side_effect": 0.1, "adherence": 0.9},
-	"crisis_intervention": {"name": "重症干预", "cost": 80000, "minutes": 240, "cure": 0.05, "remit": 0.75, "side_effect": 0.08, "adherence": 0.85},
-}
+## 治疗方式及基础参数（R44.6）。数值真源：shared/consistency/baseline/mental_health.json。
+const TREATMENTS: Dictionary = BaselineScript.MH_TREATMENTS
 
 ## 精神疾病库（22 种）。字段：名称、症状、易感因子（人格维度权重）、触发、基础发生率、复发率、慢性化率。
 const DISORDERS: Dictionary = {
@@ -57,22 +51,13 @@ const DISORDERS: Dictionary = {
 	"adjustment": {"name": "适应障碍", "symptoms": ["情绪低落", "焦虑", "功能适应困难"], "susceptibility": {"neuroticism": 0.5}, "triggers": ["stress", "loss", "migration"], "base_rate": 0.06, "relapse": 0.3, "chronic": 0.15},
 }
 
-## 事件对心情/压力/情绪的影响（R8.2）。
-const EVENTS: Dictionary = {
-	"unemployment": {"mood": -12.0, "stress": 18.0},
-	"breakup": {"mood": -15.0, "stress": 16.0},
-	"debt": {"mood": -8.0, "stress": 14.0},
-	"stay_up": {"mood": -5.0, "stress": 8.0},
-	"illness": {"mood": -10.0, "stress": 12.0},
-	"marriage": {"mood": 12.0, "stress": 4.0},
-	"promotion": {"mood": 10.0, "stress": 6.0},
-	"praise": {"mood": 6.0, "stress": -4.0},
-}
+## 事件对心情/压力/情绪的影响（R8.2）。数值真源：shared/consistency/baseline/mental_health.json。
+const EVENTS: Dictionary = BaselineScript.MH_EVENTS
 
 var _cases: Dictionary = {}       # disorder_key -> case state
 var _cumulative_stress: float = 0.0
 
-const STRESS_DISORDER_THRESHOLD: float = 70.0
+const STRESS_DISORDER_THRESHOLD: float = BaselineScript.MH_STRESS_DISORDER_THRESHOLD
 
 
 func disorders_count() -> int:

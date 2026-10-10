@@ -1,5 +1,7 @@
 class_name EmergencySystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 应急、消防与灾害救援（R80；design D36）。
 ##
 ## 覆盖：
@@ -23,14 +25,8 @@ const PROF_EARTHQUAKE: String = "earthquake_rescue"
 const PROF_FLOOD: String = "flood_rescue"
 
 ## 职业：基准出警时间（分钟）与专用装备。
-const PROFESSIONS: Dictionary = {
-	"fire": {"name": "消防", "base_response": 8.0, "equipment": ["fire_truck", "aerial_ladder", "breathing_apparatus"]},
-	"ems": {"name": "急救", "base_response": 6.0, "equipment": ["ambulance", "defibrillator", "stretcher"]},
-	"coast_guard": {"name": "海警", "base_response": 15.0, "equipment": ["patrol_boat", "life_raft", "sonar"]},
-	"mountain_rescue": {"name": "山地救援", "base_response": 30.0, "equipment": ["rope_kit", "helicopter", "thermal_drone"]},
-	"earthquake_rescue": {"name": "地震救援", "base_response": 20.0, "equipment": ["hydraulic_tool", "search_dog", "rescue_bed"]},
-	"flood_rescue": {"name": "洪水救援", "base_response": 18.0, "equipment": ["rubber_boat", "life_jacket", "pump"]},
-}
+## 应急专业与基础响应时间。数值真源：shared/consistency/baseline/emergency.json。
+const PROFESSIONS: Dictionary = BaselineScript.EM_PROFESSIONS
 
 ## 触发流程。
 const STAGE_ALARM: String = "alarm"
@@ -48,13 +44,13 @@ const TRIAGE_YELLOW: String = "yellow"
 const TRIAGE_GREEN: String = "green"
 const TRIAGE_BLACK: String = "black"
 
-const DEFAULT_RESPONSE_CAP: float = 60.0
+const DEFAULT_RESPONSE_CAP: float = BaselineScript.EM_DEFAULT_RESPONSE_CAP
 ## 分诊存活率：及时救治与延迟救治的差异。
-const SURVIVAL_TREATED: float = 0.90
-const SURVIVAL_UNTREATED: float = 0.35
+const SURVIVAL_TREATED: float = BaselineScript.EM_SURVIVAL_TREATED
+const SURVIVAL_UNTREATED: float = BaselineScript.EM_SURVIVAL_UNTREATED
 ## 现场二次事故 / 指挥失当阈值。
-const SECONDARY_BASE_RISK: float = 0.15
-const COMMAND_FAULT_LINE: float = 0.5
+const SECONDARY_BASE_RISK: float = BaselineScript.EM_SECONDARY_BASE_RISK
+const COMMAND_FAULT_LINE: float = BaselineScript.EM_COMMAND_FAULT_LINE
 
 
 # --- 数据表 ---

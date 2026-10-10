@@ -1,5 +1,7 @@
 class_name DisabilityElderlySystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 残障与养老（R65；design D21）。
 ##
 ## 覆盖：
@@ -26,7 +28,8 @@ const TYPE_NAMES: Dictionary = {"physical": "肢体", "sensory": "视听", "inte
 
 const SEVERITIES: Dictionary = {"light": 1, "medium": 2, "heavy": 3}
 const SEVERITY_NAMES: Dictionary = {"light": "轻度", "medium": "中度", "heavy": "重度"}
-const SEVERITY_PENALTY: Dictionary = {"light": 0.15, "medium": 0.40, "heavy": 0.75}
+## 严重度对各项能力的惩罚系数。数值真源：shared/consistency/baseline/disability_elderly.json。
+const SEVERITY_PENALTY: Dictionary = BaselineScript.DE_SEVERITY_PENALTY
 
 ## 各类型受限动词。
 const TYPE_VERBS: Dictionary = {
@@ -36,25 +39,14 @@ const TYPE_VERBS: Dictionary = {
 	"mental": ["社交", "工作", "决策", "出庭"],
 }
 
-## 辅具：花费、移动加成、适用类型。
-const DEVICES: Dictionary = {
-	"wheelchair": {"name": "轮椅", "cost": 800000, "mobility_bonus": 0.50, "types": ["physical"]},
-	"hearing_aid": {"name": "助听器", "cost": 200000, "mobility_bonus": 0.10, "types": ["sensory"]},
-	"prosthesis": {"name": "义肢", "cost": 1500000, "mobility_bonus": 0.40, "types": ["physical"]},
-	"guide_dog": {"name": "导盲犬", "cost": 300000, "mobility_bonus": 0.35, "types": ["sensory"]},
-	"accessibility": {"name": "无障碍改造", "cost": 500000, "mobility_bonus": 0.20, "types": ["physical", "sensory"]},
-	"rehab": {"name": "康复训练", "cost": 100000, "mobility_bonus": 0.15, "types": ["physical", "sensory", "intellectual", "mental"]},
-}
+## 辅具：花费、移动加成、适用类型。数值真源：shared/consistency/baseline/disability_elderly.json。
+const DEVICES: Dictionary = BaselineScript.DE_DEVICES
 
-## 养老模式：月成本、质量、心情影响与寿命修正。
+## 养老模式：月成本、质量、心情影响与寿命修正。数值真源：shared/consistency/baseline/disability_elderly.json。
 const CARE_HOME: String = "home_care"
 const CARE_COMMUNITY: String = "community_care"
 const CARE_INSTITUTION: String = "institution_care"
-const CARE_MODES: Dictionary = {
-	"home_care": {"name": "居家护理", "cost_per_month": 400000, "quality": 0.50, "happiness": 0.0, "life_modifier": 0.0},
-	"community_care": {"name": "社区养老", "cost_per_month": 600000, "quality": 0.65, "happiness": 2.0, "life_modifier": 0.1},
-	"institution_care": {"name": "机构养老", "cost_per_month": 1200000, "quality": 0.80, "happiness": -1.0, "life_modifier": 0.2},
-}
+const CARE_MODES: Dictionary = BaselineScript.DE_CARE_MODES
 
 
 # --- 状态与残障 ---

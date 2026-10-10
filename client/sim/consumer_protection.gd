@@ -1,5 +1,7 @@
 class_name ConsumerProtectionSystem
 extends RefCounted
+
+const BaselineScript = preload("res://sim/baseline.gd")
 ## 消费者保护与产品质量（R84；design D40）。
 ##
 ## 覆盖：
@@ -29,15 +31,12 @@ const CHANNEL_NAMES: Dictionary = {
 	"consumer_association": "消协调解", "litigation": "诉讼", "class_action": "集体维权",
 }
 
-## 渠道权重：越靠后强制力越强。
-const CHANNEL_WEIGHTS: Dictionary = {
-	"negotiate": 0.25, "platform": 0.40, "hotline_12315": 0.60,
-	"consumer_association": 0.70, "litigation": 0.85, "class_action": 0.90,
-}
+## 渠道权重：越靠后强制力越强。数值真源：shared/consistency/baseline/consumer_protection.json。
+const CHANNEL_WEIGHTS: Dictionary = BaselineScript.CP_CHANNEL_WEIGHTS
 
-const RETURN_WINDOW_DAYS: int = 7       # 七日无理由退货
-const THREE_GUARANTEE_DAYS: int = 15    # 三包退换
-const WARRANTY_DEFECT_DAYS: int = 180   # 举证责任倒置期（耐用商品六个月瑕疵）
+const RETURN_WINDOW_DAYS: int = BaselineScript.CP_RETURN_WINDOW_DAYS       # 七日无理由退货
+const THREE_GUARANTEE_DAYS: int = BaselineScript.CP_THREE_GUARANTEE_DAYS    # 三包退换
+const WARRANTY_DEFECT_DAYS: int = BaselineScript.CP_WARRANTY_DEFECT_DAYS   # 举证责任倒置期（耐用商品六个月瑕疵）
 
 const INCIDENT_FOOD_SAFETY: String = "food_safety"
 const INCIDENT_QUALITY: String = "quality"

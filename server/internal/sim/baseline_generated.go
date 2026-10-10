@@ -25,8 +25,16 @@ const (
 	BaselineBankLoanRateAnnual                    = 0.05
 	BaselineBankOverdueDaysDowngrade              = 30
 	BaselineCleanlinessDecayPerMin                = 0.06944444444444445
+	BaselineCpReturnWindowDays                    = 7
+	BaselineCpThreeGuaranteeDays                  = 15
+	BaselineCpWarrantyDefectDays                  = 180
 	BaselineCurrencyBase                          = "USD"
 	BaselineDehydrateHealthPerHour                = 4.0
+	BaselineDigitalAddictionThresholdHours        = 8.0
+	BaselineDsBankruptcyEraStart                  = 2021
+	BaselineDsInterestRateCap                     = 0.36
+	BaselineDsP2pEraEnd                           = 2020
+	BaselineDsP2pEraStart                         = 2013
 	BaselineDyingHealthMargin                     = 30.0
 	BaselineDyingHealthThreshold                  = 10.0
 	BaselineDyingLifespanMarginYears              = 2.0
@@ -34,6 +42,11 @@ const (
 	BaselineEmploymentBaseHireDifficulty          = 0.7
 	BaselineEmploymentUnemploymentSensitivity     = 3.0
 	BaselineEmploymentWageUnemploymentSensitivity = 1.5
+	BaselineEmCommandFaultLine                    = 0.5
+	BaselineEmDefaultResponseCap                  = 60.0
+	BaselineEmSecondaryBaseRisk                   = 0.15
+	BaselineEmSurvivalTreated                     = 0.9
+	BaselineEmSurvivalUntreated                   = 0.35
 	BaselineEngineeringAcceptanceQualityThreshold = 0.6
 	BaselineEnvCarbonFineMultiplier               = 3.0
 	BaselineEnvDefaultCarbonPrice                 = 100
@@ -99,6 +112,7 @@ const (
 	BaselineMedicalMisdiagnosisChance             = 0.1
 	BaselineMedicalUntreatedFreeDays              = 7.0
 	BaselineMedicalUntreatedHealthDecayPerDay     = 1.0
+	BaselineMhStressDisorderThreshold             = 70.0
 	BaselineMoneyMinorScale                       = 100
 	BaselineMoodRecoverPerHour                    = 1.0
 	BaselineNutritionAgeBaseYears                 = 20.0
@@ -233,6 +247,7 @@ var (
 		"tropical_savanna":      map[string]any{"amp_diurnal": 12.0, "amp_temp": 5.0, "arid": 0.4, "base_temp": 27.0, "can_snow": false, "humidity": 55.0, "monsoon": false, "name": "热带草原", "phase": 0.5, "precip_scale": 4.0, "pressure": 1010.0, "visibility": 20.0, "wind": 3.0},
 	}
 	BaselineClimateZoneOrder []any          = []any{"tropical_rainforest", "tropical_monsoon", "tropical_savanna", "tropical_desert", "subtropical_monsoon", "mediterranean", "temperate_oceanic", "temperate_continental", "subarctic_conifer", "polar_highland"}
+	BaselineCpChannelWeights map[string]any = map[string]any{"class_action": 0.9, "consumer_association": 0.7, "hotline_12315": 0.6, "litigation": 0.85, "negotiate": 0.25, "platform": 0.4}
 	BaselineCurrencies       map[string]any = map[string]any{
 		"CNY": map[string]any{"name": "人民币", "rate": 7.0},
 		"EUR": map[string]any{"name": "欧元", "rate": 0.92},
@@ -240,6 +255,113 @@ var (
 		"JPY": map[string]any{"name": "日元", "rate": 150.0},
 		"KRW": map[string]any{"name": "韩元", "rate": 1350.0},
 		"USD": map[string]any{"name": "美元", "rate": 1.0},
+	}
+	BaselineDeCareModes map[string]any = map[string]any{
+		"community_care":   map[string]any{"cost_per_month": 600000, "happiness": 2.0, "life_modifier": 0.1, "name": "社区养老", "quality": 0.65},
+		"home_care":        map[string]any{"cost_per_month": 400000, "happiness": 0.0, "life_modifier": 0.0, "name": "居家护理", "quality": 0.5},
+		"institution_care": map[string]any{"cost_per_month": 1200000, "happiness": -1.0, "life_modifier": 0.2, "name": "机构养老", "quality": 0.8},
+	}
+	BaselineDeDevices map[string]any = map[string]any{
+		"accessibility": map[string]any{
+			"cost":           500000,
+			"mobility_bonus": 0.2,
+			"name":           "无障碍改造",
+			"types":          []any{"physical", "sensory"},
+		},
+		"guide_dog": map[string]any{
+			"cost":           300000,
+			"mobility_bonus": 0.35,
+			"name":           "导盲犬",
+			"types":          []any{"sensory"},
+		},
+		"hearing_aid": map[string]any{
+			"cost":           200000,
+			"mobility_bonus": 0.1,
+			"name":           "助听器",
+			"types":          []any{"sensory"},
+		},
+		"prosthesis": map[string]any{
+			"cost":           1500000,
+			"mobility_bonus": 0.4,
+			"name":           "义肢",
+			"types":          []any{"physical"},
+		},
+		"rehab": map[string]any{
+			"cost":           100000,
+			"mobility_bonus": 0.15,
+			"name":           "康复训练",
+			"types":          []any{"physical", "sensory", "intellectual", "mental"},
+		},
+		"wheelchair": map[string]any{
+			"cost":           800000,
+			"mobility_bonus": 0.5,
+			"name":           "轮椅",
+			"types":          []any{"physical"},
+		},
+	}
+	BaselineDeSeverityPenalty       map[string]any = map[string]any{"heavy": 0.75, "light": 0.15, "medium": 0.4}
+	BaselineDigitalContentPlatforms map[string]any = map[string]any{
+		"livestream":  map[string]any{"base_views": 20000, "conversion": 0.05, "cut": 0.3, "name": "直播", "tip_rate": 0.02},
+		"short_video": map[string]any{"base_views": 60000, "conversion": 0.08, "cut": 0.2, "name": "短视频", "tip_rate": 0.005},
+	}
+	BaselineDigitalHackTargets map[string]any = map[string]any{
+		"black_market": map[string]any{"base_gain": 800000, "difficulty": 12.0, "exposure": 0.5, "fine": 300000, "name": "黑产", "sentence_days": 365, "wanted": 1},
+		"enterprise":   map[string]any{"base_gain": 500000, "difficulty": 10.0, "exposure": 0.4, "fine": 500000, "name": "企业", "sentence_days": 730, "wanted": 2},
+		"government":   map[string]any{"base_gain": 2000000, "difficulty": 15.0, "exposure": 0.6, "fine": 2000000, "name": "政府", "sentence_days": 1825, "wanted": 3},
+		"personal":     map[string]any{"base_gain": 20000, "difficulty": 6.0, "exposure": 0.25, "fine": 50000, "name": "个人", "sentence_days": 180, "wanted": 1},
+	}
+	BaselineDigitalSecurityJobs map[string]any = map[string]any{
+		"breach_disposal":   map[string]any{"difficulty": 10.0, "income": 200000, "name": "数据泄露处置", "reputation": 1.5},
+		"defense":           map[string]any{"difficulty": 7.0, "income": 90000, "name": "安全防护", "reputation": 0.8},
+		"incident_response": map[string]any{"difficulty": 9.0, "income": 150000, "name": "应急响应", "reputation": 1.2},
+		"pentest":           map[string]any{"difficulty": 8.0, "income": 120000, "name": "渗透测试", "reputation": 1.0},
+	}
+	BaselineDsBusinesses map[string]any = map[string]any{
+		"consumer_finance": map[string]any{"collateral_required": false, "era": "all", "name": "消费金融", "rate_cap": 0.24, "requires_license": true},
+		"crowdfunding":     map[string]any{"collateral_required": false, "era": "all", "name": "众筹", "rate_cap": 0.0, "requires_license": true},
+		"micro_loan":       map[string]any{"collateral_required": false, "era": "all", "name": "小额信贷", "rate_cap": 0.24, "requires_license": true},
+		"p2p":              map[string]any{"collateral_required": false, "era": "2013-2020", "name": "P2P", "rate_cap": 0.24, "requires_license": true},
+		"pawn":             map[string]any{"collateral_required": true, "era": "all", "name": "典当", "rate_cap": 0.36, "requires_license": true},
+		"private_lending":  map[string]any{"collateral_required": false, "era": "all", "name": "民间借贷", "rate_cap": 0.36, "requires_license": false},
+	}
+	BaselineDsCollectionModes map[string]any = map[string]any{
+		"harassment": map[string]any{"legal": false, "name": "骚扰", "severity": 0.4},
+		"home_visit": map[string]any{"legal": false, "name": "上门施压", "severity": 0.65},
+		"litigation": map[string]any{"legal": true, "name": "起诉", "severity": 0.2},
+		"reminder":   map[string]any{"legal": true, "name": "短信电话提醒", "severity": 0.1},
+		"violence":   map[string]any{"legal": false, "name": "暴力催收", "severity": 0.9},
+	}
+	BaselineEmProfessions map[string]any = map[string]any{
+		"coast_guard": map[string]any{
+			"base_response": 15.0,
+			"equipment":     []any{"patrol_boat", "life_raft", "sonar"},
+			"name":          "海警",
+		},
+		"earthquake_rescue": map[string]any{
+			"base_response": 20.0,
+			"equipment":     []any{"hydraulic_tool", "search_dog", "rescue_bed"},
+			"name":          "地震救援",
+		},
+		"ems": map[string]any{
+			"base_response": 6.0,
+			"equipment":     []any{"ambulance", "defibrillator", "stretcher"},
+			"name":          "急救",
+		},
+		"fire": map[string]any{
+			"base_response": 8.0,
+			"equipment":     []any{"fire_truck", "aerial_ladder", "breathing_apparatus"},
+			"name":          "消防",
+		},
+		"flood_rescue": map[string]any{
+			"base_response": 18.0,
+			"equipment":     []any{"rubber_boat", "life_jacket", "pump"},
+			"name":          "洪水救援",
+		},
+		"mountain_rescue": map[string]any{
+			"base_response": 30.0,
+			"equipment":     []any{"rope_kit", "helicopter", "thermal_drone"},
+			"name":          "山地救援",
+		},
 	}
 	BaselineEngineeringChain            []any          = []any{"survey", "design", "cost_estimation", "construction", "supervision", "acceptance"}
 	BaselineEngineeringProcurementModes map[string]any = map[string]any{
@@ -379,7 +501,24 @@ var (
 			"services":      []any{"register", "consult", "therapy"},
 		},
 	}
-	BaselineMedicalServiceCost      map[string]any = map[string]any{"admit": 200000, "checkup": 50000, "consult": 20000, "dental": 100000, "medicine": 30000, "register": 5000, "surgery": 500000, "therapy": 30000}
+	BaselineMedicalServiceCost map[string]any = map[string]any{"admit": 200000, "checkup": 50000, "consult": 20000, "dental": 100000, "medicine": 30000, "register": 5000, "surgery": 500000, "therapy": 30000}
+	BaselineMhEvents           map[string]any = map[string]any{
+		"breakup":      map[string]any{"mood": -15.0, "stress": 16.0},
+		"debt":         map[string]any{"mood": -8.0, "stress": 14.0},
+		"illness":      map[string]any{"mood": -10.0, "stress": 12.0},
+		"marriage":     map[string]any{"mood": 12.0, "stress": 4.0},
+		"praise":       map[string]any{"mood": 6.0, "stress": -4.0},
+		"promotion":    map[string]any{"mood": 10.0, "stress": 6.0},
+		"stay_up":      map[string]any{"mood": -5.0, "stress": 8.0},
+		"unemployment": map[string]any{"mood": -12.0, "stress": 18.0},
+	}
+	BaselineMhTreatments map[string]any = map[string]any{
+		"cbt":                 map[string]any{"adherence": 0.7, "cost": 50000, "cure": 0.35, "minutes": 120, "name": "认知行为治疗", "remit": 0.45, "side_effect": 0.03},
+		"crisis_intervention": map[string]any{"adherence": 0.85, "cost": 80000, "cure": 0.05, "minutes": 240, "name": "重症干预", "remit": 0.75, "side_effect": 0.08},
+		"hospitalization":     map[string]any{"adherence": 0.9, "cost": 300000, "cure": 0.2, "minutes": 14400, "name": "住院治疗", "remit": 0.6, "side_effect": 0.1},
+		"medication":          map[string]any{"adherence": 0.65, "cost": 20000, "cure": 0.15, "minutes": 30, "name": "药物治疗", "remit": 0.6, "side_effect": 0.35},
+		"psychotherapy":       map[string]any{"adherence": 0.8, "cost": 30000, "cure": 0.25, "minutes": 90, "name": "心理咨询", "remit": 0.5, "side_effect": 0.02},
+	}
 	BaselineNutritionDecayPerDay    map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
 	BaselinePriceElasticity         map[string]any = map[string]any{"daily": 0.35, "financial": 1.2, "luxury": 0.9, "necessity": 0.15}
 	BaselinePriceSeasonalFactors    map[string]any = map[string]any{"autumn": 1.05, "spring": 1.0, "summer": 1.0, "winter": 1.1}

@@ -1,0 +1,13 @@
+{
+  "CP_CHANNEL_WEIGHTS": {
+    "negotiate": 0.25,
+    "platform": 0.40,
+    "hotline_12315": 0.60,
+    "consumer_association": 0.70,
+    "litigation": 0.85,
+    "class_action": 0.90
+  },
+  "CP_RETURN_WINDOW_DAYS": 7,
+  "CP_THREE_GUARANTEE_DAYS": 15,
+  "CP_WARRANTY_DEFECT_DAYS": 180
+}
