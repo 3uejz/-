@@ -12,6 +12,12 @@ func run_tests() -> void:
 	_test_character_default()
 	_test_inventory_empty()
 	_test_inventory_grouped()
+	_test_skills()
+	_test_career()
+	_test_finance()
+	_test_relations()
+	_test_achievements()
+	_test_family()
 	_test_placeholder()
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
@@ -72,7 +78,59 @@ func _test_inventory_grouped() -> void:
 	var named: Dictionary = PanelContentScript.inventory(player, resolver)
 	check_eq(_row_value(_find_section(named, "物品 · 普通"), "苹果"), "x3", "名称解析生效")
 
+func _test_skills() -> void:
+	check(bool(PanelContentScript.skills(GameStateScript.default_player()).get("empty", false)), "空技能返回空态")
+	var player: Dictionary = GameStateScript.default_player()
+	player["skills"] = [{"content_key": "skill.cooking", "level": 7, "xp": 40.0}]
+	var sec: Dictionary = _find_section(PanelContentScript.skills(player), "技能")
+	check_eq(_row_value(sec, "cooking"), "Lv7 · 经验40", "技能等级与经验")
+
+func _test_career() -> void:
+	check(bool(PanelContentScript.career(GameStateScript.default_player()).get("empty", false)), "无业空态")
+	var player: Dictionary = GameStateScript.default_player()
+	player["job"] = {"title": "会计", "industry": "industry.finance", "salary": 8000.0, "performance": 72.0}
+	player["licenses"] = [{"content_key": "license.driver", "status": "graduated"}]
+	var data: Dictionary = PanelContentScript.career(player)
+	var job_sec: Dictionary = _find_section(data, "职业")
+	check_eq(_row_value(job_sec, "职位"), "会计", "职位标题")
+	check_eq(_row_value(job_sec, "月薪"), "8000", "月薪")
+	var lic: Dictionary = _find_section(data, "执照")
+	check_eq(_row_value(lic, "driver"), "已毕业", "执照状态中文化")
+
+func _test_finance() -> void:
+	var data: Dictionary = PanelContentScript.finance(GameStateScript.default_player())
+	var sec: Dictionary = _find_section(data, "资金")
+	check_eq(_row_value(sec, "现金"), "1000", "默认现金")
+	var player: Dictionary = GameStateScript.default_player()
+	player["assets"] = [{"content_key": "asset.house", "kind": "real_estate", "value": 500000.0, "mortgaged": true}]
+	var asset_sec: Dictionary = _find_section(PanelContentScript.finance(player), "资产")
+	check_eq(_row_value(asset_sec, "house"), "500000 · 已抵押", "资产与抵押")
+
+func _test_relations() -> void:
+	check(bool(PanelContentScript.relations(GameStateScript.default_player()).get("empty", false)), "无关系空态")
+	var player: Dictionary = GameStateScript.default_player()
+	player["relations"] = [{"target_id": "0123456789abcdef", "favor": 30, "trust": 55, "circle": "friend"}]
+	var sec: Dictionary = _find_section(PanelContentScript.relations(player), "关系")
+	check_eq(_row_value(sec, "89abcdef"), "朋友 · 好感30 · 信任55", "关系摘要")
+
+func _test_achievements() -> void:
+	check(bool(PanelContentScript.achievements(GameStateScript.default_player()).get("empty", false)), "无成就空态")
+	var player: Dictionary = GameStateScript.default_player()
+	player["achievements"] = ["achv.first_job"]
+	var sec: Dictionary = _find_section(PanelContentScript.achievements(player), "成就")
+	check_eq(_row_value(sec, "first_job"), "已达成", "成就项")
+
+func _test_family() -> void:
+	check(bool(PanelContentScript.family(GameStateScript.default_player()).get("empty", false)), "首代家族空态")
+	var player: Dictionary = GameStateScript.default_player()
+	player["family"] = {"children_ids": ["a", "b"], "parent_ids": ["c"]}
+	var sec: Dictionary = _find_section(PanelContentScript.family(player), "家庭")
+	check_eq(_row_value(sec, "子女"), "2", "子女数")
+	check_eq(_row_value(sec, "父母"), "1", "父母数")
+
 func _test_placeholder() -> void:
 	var data: Dictionary = PanelContentScript.build("finance", GameStateScript.default_player())
-	check(bool(data.get("empty", false)), "未实现面板返回占位")
-	check_eq(String(data.get("title", "")), "资产与财务", "占位带面板标题")
+	check(not bool(data.get("empty", true)), "财务面板有默认数据")
+	check_eq(String(data.get("title", "")), "资产与财务", "面板标题")
+	var map_data: Dictionary = PanelContentScript.build("map", GameStateScript.default_player())
+	check(bool(map_data.get("empty", false)), "地图面板暂为占位")
