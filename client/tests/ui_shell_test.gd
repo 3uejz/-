@@ -50,4 +50,6 @@ func _test_panel_open_close() -> void:
 	check(not _main.has_panel("character"), "角色面板已移除")
 	check_eq(_main.panel_count(), 1, "关闭后剩一个面板")
 	check(not _main.open_panel("does_not_exist"), "未知面板拒绝打开")
+	check(_main.open_panel("settings"), "打开设置面板")
+	check(_main.has_panel("settings"), "设置面板存在")
 	_main.free()

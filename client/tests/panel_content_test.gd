@@ -18,6 +18,8 @@ func run_tests() -> void:
 	_test_relations()
 	_test_achievements()
 	_test_family()
+	_test_map()
+	_test_settings()
 	_test_placeholder()
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
@@ -133,4 +135,38 @@ func _test_placeholder() -> void:
 	check(not bool(data.get("empty", true)), "财务面板有默认数据")
 	check_eq(String(data.get("title", "")), "资产与财务", "面板标题")
 	var map_data: Dictionary = PanelContentScript.build("map", GameStateScript.default_player())
-	check(bool(map_data.get("empty", false)), "地图面板暂为占位")
+	check(bool(map_data.get("empty", false)), "地图面板无上下文时占位")
+	var anomaly: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player())
+	check(bool(anomaly.get("empty", false)), "异常面板暂为占位")
+
+func _test_map() -> void:
+	var context: Dictionary = {
+		"current_region": "map.beijing",
+		"regions": [{"region_key": "map.beijing", "population": 1200, "price_index": 1.25, "safety": 70}],
+		"itineraries": [{"destination": {"region_id": "map.shanghai"}, "mode": "train", "arrive_minutes": 480}],
+	}
+	var data: Dictionary = PanelContentScript.build("map", GameStateScript.default_player(), Callable(), context)
+	check(not bool(data.get("empty", true)), "有区域数据非空")
+	check_eq(_row_value(_find_section(data, "当前区域"), "beijing"), "所在", "当前区域")
+	var region_sec: Dictionary = _find_section(data, "已到访区域")
+	check(String(_row_value(region_sec, "beijing")).find("人口1200") >= 0, "区域摘要")
+	var trip_sec: Dictionary = _find_section(data, "行程")
+	check(String(_row_value(trip_sec, "shanghai")).find("train") >= 0, "行程目的地")
+
+func _test_settings() -> void:
+	var context: Dictionary = {"settings": {
+		"scheme": "light", "variant": "colorblind", "accent": "jade",
+		"ui_scale": 1.25, "body_font_scale": 1.15,
+		"reduce_motion": true, "tts_enabled": false, "speed_level": 4, "tray_enabled": true,
+	}}
+	var data: Dictionary = PanelContentScript.build("settings", {}, Callable(), context)
+	check(not bool(data.get("empty", true)), "设置摘要非空")
+	var appearance: Dictionary = _find_section(data, "外观")
+	check_eq(_row_value(appearance, "主题"), "亮色", "主题中文化")
+	check_eq(_row_value(appearance, "配色方案"), "色盲友好", "配色方案中文化")
+	check_eq(_row_value(appearance, "主题色"), "石绿", "主色中文化")
+	check_eq(_row_value(appearance, "界面缩放"), "125%", "缩放百分比")
+	var access: Dictionary = _find_section(data, "无障碍")
+	check_eq(_row_value(access, "减少动态"), "开启", "减少动态")
+	check_eq(_row_value(access, "文本朗读"), "关闭", "朗读开关")
+	check_eq(_row_value(_find_section(data, "其他"), "推进倍速"), "4x", "倍速")

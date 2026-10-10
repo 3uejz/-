@@ -25,6 +25,14 @@ const GENDER_LABELS: Dictionary = {
 	"male": "男", "female": "女", "nonbinary": "非二元", "unknown": "未知",
 }
 
+const SCHEME_LABELS: Dictionary = {"dark": "暗色", "light": "亮色"}
+const VARIANT_LABELS: Dictionary = {
+	"default": "默认", "high_contrast": "高对比", "colorblind": "色盲友好",
+}
+const ACCENT_LABELS: Dictionary = {
+	"cinnabar": "朱砂", "daiqing": "黛青", "indigo": "花青", "ochre": "赭石", "jade": "石绿",
+}
+
 ## 生理/营养/心理/能力/人格/价值观的展示顺序与中文标签（确定性）。
 const ATTR_SPECS: Array = [
 	["physiological", "生理", [
@@ -53,7 +61,8 @@ const ATTR_SPECS: Array = [
 ]
 
 ## 面板入口：按 id 装配内容；未实现的面板返回建设中占位（不抛错）。
-static func build(id: String, player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+## context 可选携带视图外部数据：regions/current_region/itineraries（地图）、settings（设置）。
+static func build(id: String, player: Dictionary, name_resolver: Callable = Callable(), context: Dictionary = {}) -> Dictionary:
 	var title: String = String((RegistryScript.PANELS.get(id, {}) as Dictionary).get("title", id))
 	var data: Dictionary
 	match id:
@@ -73,6 +82,10 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = achievements(player, name_resolver)
 		"family":
 			data = family(player, name_resolver)
+		"map":
+			data = map_panel(context, name_resolver)
+		"settings":
+			data = settings_panel(context)
 		_:
 			data = _empty(title, "该面板尚在建设中")
 	data["title"] = title
@@ -272,6 +285,83 @@ static func family(player: Dictionary, name_resolver: Callable = Callable()) -> 
 	if not pregnancy.is_empty() and pregnancy.has("due_minutes"):
 		rows.append({"label": "预产", "value": "第 %d 分钟" % int(pregnancy.get("due_minutes", 0))})
 	return {"empty": false, "empty_hint": "", "sections": [{"title": "家庭", "rows": rows}]}
+
+# --- 地图 ---
+
+static func map_panel(context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	var regions: Array = context.get("regions", [])
+	var current: String = String(context.get("current_region", ""))
+	var itineraries: Array = context.get("itineraries", [])
+	if regions.is_empty() and current.is_empty() and itineraries.is_empty():
+		return _empty("地图", "尚未探索地图，先从所在区域开始移动")
+	var sections: Array = []
+	if current != "":
+		sections.append({"title": "当前区域", "rows": [{"label": _resolve(current, name_resolver), "value": "所在"}]})
+	if not regions.is_empty():
+		var region_rows: Array = []
+		for r in regions:
+			var parts := PackedStringArray()
+			if r.has("population"):
+				parts.append("人口%d" % int(r["population"]))
+			if r.has("price_index"):
+				parts.append("物价%.2f" % float(r["price_index"]))
+			if r.has("safety"):
+				parts.append("治安%d" % int(r["safety"]))
+			region_rows.append({
+				"label": _resolve(String(r.get("region_key", "?")), name_resolver),
+				"value": " · ".join(parts) if parts.size() > 0 else "已到访",
+			})
+		sections.append({"title": "已到访区域", "rows": region_rows})
+	if not itineraries.is_empty():
+		var trip_rows: Array = []
+		for it in itineraries:
+			var dest: Dictionary = it.get("destination", {})
+			var key: String = String(dest.get("region_id", dest.get("location_key", "?")))
+			var value: String = String(it.get("mode", ""))
+			if it.has("arrive_minutes"):
+				value += " · 抵达%d" % int(it["arrive_minutes"])
+			trip_rows.append({"label": _resolve(key, name_resolver), "value": value})
+		sections.append({"title": "行程", "rows": trip_rows})
+	return {"empty": false, "empty_hint": "", "sections": sections}
+
+# --- 设置 ---
+
+static func settings_panel(context: Dictionary) -> Dictionary:
+	var s: Dictionary = context.get("settings", {})
+	if s.is_empty():
+		return _empty("设置", "设置尚未接入")
+	var appearance: Array = []
+	if s.has("scheme"):
+		appearance.append({"label": "主题", "value": String(SCHEME_LABELS.get(String(s["scheme"]), String(s["scheme"])))})
+	if s.has("variant"):
+		appearance.append({"label": "配色方案", "value": String(VARIANT_LABELS.get(String(s["variant"]), String(s["variant"])))})
+	if s.has("accent"):
+		appearance.append({"label": "主题色", "value": String(ACCENT_LABELS.get(String(s["accent"]), String(s["accent"])))})
+	if s.has("ui_scale"):
+		appearance.append({"label": "界面缩放", "value": "%d%%" % int(round(float(s["ui_scale"]) * 100.0))})
+	if s.has("body_font_scale"):
+		appearance.append({"label": "正文字号", "value": "%d%%" % int(round(float(s["body_font_scale"]) * 100.0))})
+	var access: Array = []
+	if s.has("reduce_motion"):
+		access.append({"label": "减少动态", "value": _yes_no(s["reduce_motion"])})
+	if s.has("tts_enabled"):
+		access.append({"label": "文本朗读", "value": _yes_no(s["tts_enabled"])})
+	var misc: Array = []
+	if s.has("speed_level"):
+		misc.append({"label": "推进倍速", "value": "%dx" % int(s["speed_level"])})
+	if s.has("tray_enabled"):
+		misc.append({"label": "系统托盘", "value": _yes_no(s["tray_enabled"])})
+	var sections: Array = []
+	if not appearance.is_empty():
+		sections.append({"title": "外观", "rows": appearance})
+	if not access.is_empty():
+		sections.append({"title": "无障碍", "rows": access})
+	if not misc.is_empty():
+		sections.append({"title": "其他", "rows": misc})
+	return {"empty": false, "empty_hint": "", "sections": sections}
+
+static func _yes_no(value: Variant) -> String:
+	return "开启" if bool(value) else "关闭"
 
 # --- 内部 ---
 

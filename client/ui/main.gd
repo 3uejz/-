@@ -263,21 +263,84 @@ func _build_drawer(id: String) -> PanelContainer:
 	return panel
 
 func _fill_panel_content(container: VBoxContainer, id: String) -> void:
-	var data: Dictionary = PanelContentScript.build(id, _current_player())
+	var data: Dictionary = PanelContentScript.build(id, _current_player(), Callable(), _panel_context())
 	if bool(data.get("empty", false)):
 		var hint := Label.new()
 		hint.text = String(data.get("empty_hint", ""))
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.add_theme_color_override("font_color", _theme_manager.color("color.text.disabled"))
 		container.add_child(hint)
+	else:
+		for section in data.get("sections", []):
+			var section_title := Label.new()
+			section_title.text = String(section.get("title", ""))
+			container.add_child(section_title)
+			for row in section.get("rows", []):
+				container.add_child(_row_node(String(row.get("label", "")), String(row.get("value", ""))))
+			container.add_child(HSeparator.new())
+	if id == "settings":
+		_build_settings_controls(container)
+
+## 设置面板的实时预览控件：切主题/配色/主色即时重生成 Theme 并刷新抽屉（ui.md 10）。
+func _build_settings_controls(container: VBoxContainer) -> void:
+	container.add_child(HSeparator.new())
+	var label := Label.new()
+	label.text = "外观调整（实时预览）"
+	container.add_child(label)
+	container.add_child(_option_row("主题", ["dark", "light"], ["暗色", "亮色"], _theme_manager.scheme, "scheme"))
+	container.add_child(_option_row(
+		"配色", ["default", "high_contrast", "colorblind"], ["默认", "高对比", "色盲友好"],
+		_theme_manager.variant, "variant"))
+	container.add_child(_option_row(
+		"主色", ["cinnabar", "daiqing", "indigo", "ochre", "jade"], ["朱砂", "黛青", "花青", "赭石", "石绿"],
+		_theme_manager.accent, "accent"))
+	var motion := CheckButton.new()
+	motion.text = "减少动态"
+	motion.button_pressed = _theme_manager.reduce_motion()
+	motion.toggled.connect(func(on: bool) -> void:
+		_theme_manager.set_reduce_motion(on)
+		_apply_theme())
+	container.add_child(motion)
+
+func _option_row(label_text: String, values: Array, titles: Array, current: String, kind: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = label_text
+	row.add_child(label)
+	for i in values.size():
+		var value: String = String(values[i])
+		var button := Button.new()
+		button.text = String(titles[i])
+		button.toggle_mode = true
+		button.button_pressed = value == current
+		button.pressed.connect(func() -> void: _apply_theme_setting(kind, value))
+		row.add_child(button)
+	return row
+
+func _apply_theme_setting(kind: String, value: String) -> void:
+	match kind:
+		"scheme":
+			_theme_manager.set_scheme(value)
+		"variant":
+			_theme_manager.set_variant(value)
+		"accent":
+			_theme_manager.set_accent(value)
+	_apply_theme()
+
+func _apply_theme() -> void:
+	_theme_manager.apply_to(self)
+	_refresh_panel("settings")
+
+func _refresh_panel(id: String) -> void:
+	if not _drawers.has(id) or not is_instance_valid(_drawer_row):
 		return
-	for section in data.get("sections", []):
-		var section_title := Label.new()
-		section_title.text = String(section.get("title", ""))
-		container.add_child(section_title)
-		for row in section.get("rows", []):
-			container.add_child(_row_node(String(row.get("label", "")), String(row.get("value", ""))))
-		container.add_child(HSeparator.new())
+	var old = _drawers[id]
+	if is_instance_valid(old):
+		old.queue_free()
+	_drawers.erase(id)
+	var drawer := _build_drawer(id)
+	_drawer_row.add_child(drawer)
+	_drawers[id] = drawer
 
 func _row_node(label_text: String, value_text: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -296,6 +359,27 @@ func _current_player() -> Dictionary:
 	if game != null and game.player is Dictionary:
 		return game.player
 	return {}
+
+## 面板外部上下文：世界区域/行程（地图）与当前设置摘要（设置）。
+func _panel_context() -> Dictionary:
+	var context: Dictionary = {"settings": _settings_summary()}
+	var game = get_node_or_null("/root/GameState")
+	if game != null:
+		var world: Dictionary = game.world_delta if game.world_delta is Dictionary else {}
+		context["regions"] = world.get("regions", [])
+		var player: Dictionary = game.player if game.player is Dictionary else {}
+		context["itineraries"] = player.get("itineraries", [])
+	return context
+
+func _settings_summary() -> Dictionary:
+	return {
+		"scheme": _theme_manager.scheme,
+		"variant": _theme_manager.variant,
+		"accent": _theme_manager.accent,
+		"ui_scale": _theme_manager.ui_scale,
+		"body_font_scale": _theme_manager.body_font_scale(),
+		"reduce_motion": _theme_manager.reduce_motion(),
+	}
 
 # --- 叙事流 ---
 

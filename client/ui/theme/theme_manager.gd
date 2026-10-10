@@ -55,6 +55,13 @@ func set_body_font_level(index: int) -> bool:
 func body_font_px() -> int:
 	return builder.body_font_px()
 
+func body_font_scale() -> float:
+	return builder.font_body_scale
+
+func body_font_level() -> int:
+	var levels: Array = BuilderScript.BODY_FONT_LEVELS
+	return levels.find(builder.font_body_scale)
+
 func set_ui_scale(value: float) -> bool:
 	if not BuilderScript.UI_SCALES.has(value):
 		return false
