@@ -4,6 +4,7 @@ extends "res://tests/test_base.gd"
 const TokensScript = preload("res://ui/theme/theme_tokens.gd")
 const BuilderScript = preload("res://ui/theme/theme_builder.gd")
 const LintScript = preload("res://ui/theme/theme_lint.gd")
+const ManagerScript = preload("res://ui/theme/theme_manager.gd")
 
 func _suite_name() -> String:
 	return "theme"
@@ -13,6 +14,7 @@ func run_tests() -> void:
 	_test_contrast_all_schemes()
 	_test_accent_derivation()
 	_test_builder_theme()
+	_test_manager_defaults()
 	_test_no_hardcoded_colors()
 
 func _test_token_coverage() -> void:
@@ -55,6 +57,17 @@ func _test_builder_theme() -> void:
 	var br = BuilderScript.new()
 	br.reduce_motion = true
 	check_near(float(br.tokens()["motion.normal"]), 0.0, 1e-9, "减少动态归零")
+
+func _test_manager_defaults() -> void:
+	var m = ManagerScript.new("light", "high_contrast", "jade")
+	m.set_ui_scale(1.5)
+	m.set_reduce_motion(true)
+	m.reset_defaults()
+	check_eq(m.scheme, "dark", "恢复默认主题")
+	check_eq(m.variant, "default", "恢复默认配色")
+	check_eq(m.accent, "cinnabar", "恢复默认主色")
+	check_near(m.ui_scale, 1.0, 1e-9, "恢复默认缩放")
+	check(not m.reduce_motion(), "恢复默认无减少动态")
 
 func _test_no_hardcoded_colors() -> void:
 	var violations: Array = LintScript.scan_dir("res://ui")

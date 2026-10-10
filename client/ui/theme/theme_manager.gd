@@ -68,6 +68,15 @@ func set_ui_scale(value: float) -> bool:
 	ui_scale = value
 	return true
 
+## 恢复默认外观（ui.md 10）：暗色 + 默认配色 + 朱砂 + 100% 缩放 + 默认字号 + 无减少动态。
+func reset_defaults() -> void:
+	set_scheme("dark")
+	set_variant("default")
+	set_accent("cinnabar")
+	set_ui_scale(1.0)
+	set_reduce_motion(false)
+	set_body_font_level(BuilderScript.BODY_FONT_LEVELS.find(1.0))
+
 # --- 取色与构建 ---
 
 ## 组件应经此取色，不得出现字面颜色（见 theme_lint.gd）。

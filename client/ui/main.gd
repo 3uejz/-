@@ -217,7 +217,19 @@ func open_panel(id: String, conditions: Dictionary = {}) -> bool:
 	var drawer := _build_drawer(id)
 	_drawer_row.add_child(drawer)
 	_drawers[id] = drawer
+	_animate_drawer(drawer)
 	return true
+
+## 抽屉入场动效；减少动态时直接显示（R59 减少动态）。
+func _animate_drawer(panel: Control) -> void:
+	if not is_instance_valid(panel):
+		return
+	if _theme_manager.reduce_motion():
+		panel.modulate.a = 1.0
+		return
+	panel.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.12)
 
 func close_panel(id: String) -> bool:
 	if _panel_registry == null or not _panel_registry.close(id):
@@ -307,6 +319,14 @@ func _build_settings_controls(container: VBoxContainer) -> void:
 		_theme_manager.set_reduce_motion(on)
 		_apply_theme())
 	container.add_child(motion)
+	var restore := Button.new()
+	restore.text = "恢复默认"
+	restore.pressed.connect(func() -> void: _restore_defaults())
+	container.add_child(restore)
+
+func _restore_defaults() -> void:
+	_theme_manager.reset_defaults()
+	_apply_theme()
 
 func _option_row(label_text: String, values: Array, titles: Array, current: String, kind: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
