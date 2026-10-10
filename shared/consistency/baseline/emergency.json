@@ -1,15 +1,63 @@
 {
   "EM_DEFAULT_RESPONSE_CAP": 60.0,
-  "EM_SURVIVAL_TREATED": 0.90,
+  "EM_SURVIVAL_TREATED": 0.9,
   "EM_SURVIVAL_UNTREATED": 0.35,
   "EM_SECONDARY_BASE_RISK": 0.15,
   "EM_COMMAND_FAULT_LINE": 0.5,
   "EM_PROFESSIONS": {
-    "fire": {"name": "消防", "base_response": 8.0, "equipment": ["fire_truck", "aerial_ladder", "breathing_apparatus"]},
-    "ems": {"name": "急救", "base_response": 6.0, "equipment": ["ambulance", "defibrillator", "stretcher"]},
-    "coast_guard": {"name": "海警", "base_response": 15.0, "equipment": ["patrol_boat", "life_raft", "sonar"]},
-    "mountain_rescue": {"name": "山地救援", "base_response": 30.0, "equipment": ["rope_kit", "helicopter", "thermal_drone"]},
-    "earthquake_rescue": {"name": "地震救援", "base_response": 20.0, "equipment": ["hydraulic_tool", "search_dog", "rescue_bed"]},
-    "flood_rescue": {"name": "洪水救援", "base_response": 18.0, "equipment": ["rubber_boat", "life_jacket", "pump"]}
+    "fire": {
+      "name": "消防",
+      "base_response": 8.0,
+      "equipment": [
+        "fire_truck",
+        "aerial_ladder",
+        "breathing_apparatus"
+      ]
+    },
+    "ems": {
+      "name": "急救",
+      "base_response": 6.0,
+      "equipment": [
+        "ambulance",
+        "defibrillator",
+        "stretcher"
+      ]
+    },
+    "coast_guard": {
+      "name": "海警",
+      "base_response": 15.0,
+      "equipment": [
+        "patrol_boat",
+        "life_raft",
+        "sonar"
+      ]
+    },
+    "mountain_rescue": {
+      "name": "山地救援",
+      "base_response": 30.0,
+      "equipment": [
+        "rope_kit",
+        "helicopter",
+        "thermal_drone"
+      ]
+    },
+    "earthquake_rescue": {
+      "name": "地震救援",
+      "base_response": 20.0,
+      "equipment": [
+        "hydraulic_tool",
+        "search_dog",
+        "rescue_bed"
+      ]
+    },
+    "flood_rescue": {
+      "name": "洪水救援",
+      "base_response": 18.0,
+      "equipment": [
+        "rubber_boat",
+        "life_jacket",
+        "pump"
+      ]
+    }
   }
 }

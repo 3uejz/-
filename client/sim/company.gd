@@ -26,16 +26,16 @@ const STATUS_OPEN: String = "open"
 const STATUS_CLOSED: String = "closed"
 const STATUS_BANKRUPT: String = "bankrupt"
 
-const MONTH_DAYS: int = 30
-const CUSTOMERS_PER_SQM: float = 0.3
-const BASE_CONVERSION: float = 0.5
-const REFERENCE_MARKUP: float = 1.5
-const LIQUIDATION_RATIO: float = 0.5
-const REPUTATION_GAIN_PER_DAY: float = 0.2
-const REPUTATION_LOSS_SHORTAGE: float = 1.0
-const LOYALTY_UNPAID_PENALTY: float = 8.0
-const RESIGN_LOYALTY_THRESHOLD: float = 20.0
-const RESIGN_CHANCE: float = 0.3
+const MONTH_DAYS: int = BaselineScript.COMPANY_MONTH_DAYS
+const CUSTOMERS_PER_SQM: float = BaselineScript.COMPANY_CUSTOMERS_PER_SQM
+const BASE_CONVERSION: float = BaselineScript.COMPANY_BASE_CONVERSION
+const REFERENCE_MARKUP: float = BaselineScript.COMPANY_REFERENCE_MARKUP
+const LIQUIDATION_RATIO: float = BaselineScript.COMPANY_LIQUIDATION_RATIO
+const REPUTATION_GAIN_PER_DAY: float = BaselineScript.COMPANY_REPUTATION_GAIN_PER_DAY
+const REPUTATION_LOSS_SHORTAGE: float = BaselineScript.COMPANY_REPUTATION_LOSS_SHORTAGE
+const LOYALTY_UNPAID_PENALTY: float = BaselineScript.COMPANY_LOYALTY_UNPAID_PENALTY
+const RESIGN_LOYALTY_THRESHOLD: float = BaselineScript.COMPANY_RESIGN_LOYALTY_THRESHOLD
+const RESIGN_CHANCE: float = BaselineScript.COMPANY_RESIGN_CHANCE
 
 
 # --- 注册 ---

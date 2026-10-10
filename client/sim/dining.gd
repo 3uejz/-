@@ -16,6 +16,8 @@ extends RefCounted
 ##   - 翻台率、客单价、客流均为确定性公式；随机项（爆单/差评、被挖角、品控事故）只由外部
 ##     rng 或 opts 强制值驱动，缺省时确定化，保证同输入同输出。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const MATERIALS: Dictionary = {
 	"vegetable": {"name": "蔬菜", "base_unit_cost": 800},
 	"meat": {"name": "肉类", "base_unit_cost": 3000},
@@ -86,13 +88,13 @@ const PACKAGED: Dictionary = {
 
 const STAR_NAMES: Dictionary = {1: "一星", 2: "二星", 3: "三星", 4: "四星", 5: "五星"}
 
-const REFERENCE_STAFF: float = 5.0
-const DEFAULT_TASTE: float = 65.0
-const BASE_INCIDENT_PENALTY: int = 200000
-const RECALL_UNIT_COST: int = 2000
-const DAILY_RENT_DAYS: float = 30.0
-const PACKAGING_COST: int = 300
-const POACH_THRESHOLD: float = 40.0
+const REFERENCE_STAFF: float = BaselineScript.DINING_REFERENCE_STAFF
+const DEFAULT_TASTE: float = BaselineScript.DINING_DEFAULT_TASTE
+const BASE_INCIDENT_PENALTY: int = BaselineScript.DINING_BASE_INCIDENT_PENALTY
+const RECALL_UNIT_COST: int = BaselineScript.DINING_RECALL_UNIT_COST
+const DAILY_RENT_DAYS: float = BaselineScript.DINING_DAILY_RENT_DAYS
+const PACKAGING_COST: int = BaselineScript.DINING_PACKAGING_COST
+const POACH_THRESHOLD: float = BaselineScript.DINING_POACH_THRESHOLD
 
 
 # --- 数据表 ---

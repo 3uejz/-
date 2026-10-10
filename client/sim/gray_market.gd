@@ -6,6 +6,8 @@ extends RefCounted
 ## 被查获时返回刑事信息，供 CrimeSystem/JusticeSystem 触发法律后果。
 
 ## 黑市商品（legal=false 属违禁品）。
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const BLACK_MARKET: Dictionary = {
 	"counterfeit_bag": {"name": "高仿包", "price": 80000, "resale": 150000, "legal": false},
 	"fake_watch": {"name": "假名表", "price": 200000, "resale": 400000, "legal": false},
@@ -26,7 +28,7 @@ const GAMBLING: Dictionary = {
 	"sports_betting": {"name": "体育博彩", "house_edge": 0.1, "skill_factor": 0.3},
 }
 
-const LOAN_INTEREST_DAILY: float = 0.01
+const LOAN_INTEREST_DAILY: float = BaselineScript.GRAY_LOAN_INTEREST_DAILY
 const SMUGGLING_ROUTES: Dictionary = {
 	"electronics": {"name": "电子产品", "investment": 500000, "profit": 0.6, "heat": 10.0},
 	"luxury": {"name": "奢侈品", "investment": 1000000, "profit": 0.8, "heat": 15.0},
@@ -35,7 +37,7 @@ const SMUGGLING_ROUTES: Dictionary = {
 	"weapons": {"name": "军火", "investment": 3000000, "profit": 2.0, "heat": 50.0},
 }
 
-const GAMBLING_ADDICTION_THRESHOLD: float = 60.0
+const GAMBLING_ADDICTION_THRESHOLD: float = BaselineScript.GRAY_GAMBLING_ADDICTION_THRESHOLD
 
 
 func black_market_goods() -> Array:

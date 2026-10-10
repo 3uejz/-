@@ -9,6 +9,8 @@ extends RefCounted
 ##
 ## 本类不直接依赖其他 sim 脚本；效应以结构化返回值交给上层编排。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const RngScript = preload("res://sim/rng.gd")
 
 ## 平台定义：spread_coefficient 越高越易扩散；anonymous 表示匿名平台。
@@ -23,8 +25,8 @@ const PLATFORMS: Dictionary = {
 	"anonymous": {"name": "匿名论坛与暗网", "spread_coefficient": 0.7, "anonymous": true},
 }
 
-const REACH_CIRCLE: float = 0.3
-const REACH_REGION: float = 0.7
+const REACH_CIRCLE: float = BaselineScript.SOCNET_REACH_CIRCLE
+const REACH_REGION: float = BaselineScript.SOCNET_REACH_REGION
 const TIER_INDEX: Dictionary = {"circle": 1, "region": 2, "public": 3}
 
 var _rng = null

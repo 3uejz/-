@@ -15,6 +15,8 @@ extends RefCounted
 ##     权重合计为 1，评分 clamp 到 [0, 100]，可比对；
 ##   - 潮流状态机（新兴→上升→顶峰→退潮）与鉴定/拍卖均为确定性；随机项由外部 rng 或强制值驱动。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const DISCIPLINES: Dictionary = {
 	"apparel": {"name": "服装设计", "skill": "skill.design_apparel"},
 	"jewelry": {"name": "珠宝设计", "skill": "skill.design_jewelry"},
@@ -62,12 +64,12 @@ const MARKETING: Dictionary = {
 	"charity": {"name": "公益形象", "fame": 3.0, "backlash": 0.0},
 }
 
-const SKILL_WEIGHT: float = 0.45
-const INSPIRATION_WEIGHT: float = 0.20
-const TREND_WEIGHT: float = 0.35
-const PLAGIARISM_PENALTY: float = 35.0
-const BASE_ORDER_VALUE: int = 5000
-const BUBBLE_THRESHOLD: float = 1.8
+const SKILL_WEIGHT: float = BaselineScript.FASHION_SKILL_WEIGHT
+const INSPIRATION_WEIGHT: float = BaselineScript.FASHION_INSPIRATION_WEIGHT
+const TREND_WEIGHT: float = BaselineScript.FASHION_TREND_WEIGHT
+const PLAGIARISM_PENALTY: float = BaselineScript.FASHION_PLAGIARISM_PENALTY
+const BASE_ORDER_VALUE: int = BaselineScript.FASHION_BASE_ORDER_VALUE
+const BUBBLE_THRESHOLD: float = BaselineScript.FASHION_BUBBLE_THRESHOLD
 
 
 # --- 数据表 ---

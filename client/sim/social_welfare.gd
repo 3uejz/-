@@ -17,6 +17,8 @@ extends RefCounted
 ##   - 资格审核为确定性门槛（年龄/收入/资产/有无犯罪等），拒绝原因逐条可查；
 ##   - 善款挪用与虐待举报由注入 roll 判定是否被查获/证实，缺省确定化。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const ADOPTION: String = "adoption"
 const FOSTER: String = "foster"
 const HOMELESS_RELIEF: String = "homeless_relief"
@@ -44,7 +46,7 @@ const ASSISTANCE_STANDARDS: Dictionary = {
 	"temporary_aid": {"base_amount": 100000, "max_days": 90},
 }
 ## 低保家庭人均收入上限。
-const DIBAO_INCOME_CEILING: float = 12000.0
+const DIBAO_INCOME_CEILING: float = BaselineScript.WELFARE_DIBAO_INCOME_CEILING
 
 const CRISIS_ORPHAN: String = "orphan"
 const CRISIS_ABANDONED: String = "abandoned"

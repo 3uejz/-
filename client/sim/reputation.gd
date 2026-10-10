@@ -6,10 +6,12 @@ extends RefCounted
 ## 传闻按圈层 → 区域 → 公众三层扩散，具有时延与失真；分层升级时结算声誉影响。
 ## 高名望解锁机会；高恶名导致场所拒服务与 NPC 敌意。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const GregorianScript = preload("res://sim/gregorian.gd")
 
-const MAX_REPUTATION: float = 100.0
-const MINUTES_PER_DAY: float = 1440.0
+const MAX_REPUTATION: float = BaselineScript.REPUTATION_MAX_REPUTATION
+const MINUTES_PER_DAY: float = BaselineScript.REPUTATION_MINUTES_PER_DAY
 
 ## 行为 → 三条声誉线基础增减。
 const ACTS: Dictionary = {
@@ -29,8 +31,8 @@ const TIER_REGION: String = "region"
 const TIER_PUBLIC: String = "public"
 const TIER_INDEX: Dictionary = {"circle": 1, "region": 2, "public": 3}
 
-const REACH_CIRCLE: float = 0.3
-const REACH_REGION: float = 0.7
+const REACH_CIRCLE: float = BaselineScript.REPUTATION_REACH_CIRCLE
+const REACH_REGION: float = BaselineScript.REPUTATION_REACH_REGION
 
 ## 机会解锁阈值（名望）。
 const FAME_UNLOCKS: Dictionary = {
@@ -39,8 +41,8 @@ const FAME_UNLOCKS: Dictionary = {
 const STATUS_UNLOCKS: Dictionary = {"board_seat": 70.0, "guild_master": 60.0}
 
 ## 恶名阈值。
-const HOSTILE_THRESHOLD: float = 40.0
-const REFUSE_SERVICE_THRESHOLD: float = 60.0
+const HOSTILE_THRESHOLD: float = BaselineScript.REPUTATION_HOSTILE_THRESHOLD
+const REFUSE_SERVICE_THRESHOLD: float = BaselineScript.REPUTATION_REFUSE_SERVICE_THRESHOLD
 
 var _rumors: Dictionary = {}   # id -> rumor
 var _seq: int = 0

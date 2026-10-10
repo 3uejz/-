@@ -17,6 +17,8 @@ extends RefCounted
 ##   - 黑幕以 hidden/revealed 双态标记，未被揭露不影响评审（甚至加分成全买奖），
 ##     揭露时统一清算声望与荣誉，形成“隐蔽—曝光—反噬”闭环。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CATEGORY_ACADEMIC: String = "academic"
 const CATEGORY_ARTS: String = "arts"
 const CATEGORY_SPORTS: String = "sports"
@@ -71,9 +73,9 @@ const SCANDAL_ACADEMIC_FRAUD: String = "academic_fraud"
 const SCANDAL_JURY_CORRUPTION: String = "jury_corruption"
 const SCANDAL_KINDS: Array = ["bought_award", "academic_fraud", "jury_corruption"]
 
-const BIAS_BONUS: float = 0.10
-const TIE_EPSILON: float = 0.01
-const ENSHRINE_MIN_PRESTIGE: float = 80.0
+const BIAS_BONUS: float = BaselineScript.HONOR_BIAS_BONUS
+const TIE_EPSILON: float = BaselineScript.HONOR_TIE_EPSILON
+const ENSHRINE_MIN_PRESTIGE: float = BaselineScript.HONOR_ENSHRINE_MIN_PRESTIGE
 
 
 # --- 数据表 ---

@@ -6,13 +6,15 @@ extends RefCounted
 ## 点数货币；家族血脉跨代累积使多周目收益叠加；开新档可携带有限数量传承天赋；
 ## 传承数据独立持久化（后端 legacy）。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const WorldMemoryScript = preload("res://sim/world_memory.gd")
 
-const SKILL_MEMORY_RATIO: float = 0.5      # 技能记忆折算比例
-const ASSET_CARRY_RATIO: float = 0.3       # 可继承流动比例（其余走遗嘱与遗产税 D11）
-const TALENT_SLOTS: int = 3                # 开新档可携带天赋数
-const BLOODLINE_PER_GEN: float = 0.05      # 每代血脉加成
-const MAX_BLOODLINE: float = 1.0
+const SKILL_MEMORY_RATIO: float = BaselineScript.LEGACY_SKILL_MEMORY_RATIO      # 技能记忆折算比例
+const ASSET_CARRY_RATIO: float = BaselineScript.LEGACY_ASSET_CARRY_RATIO       # 可继承流动比例（其余走遗嘱与遗产税 D11）
+const TALENT_SLOTS: int = BaselineScript.LEGACY_TALENT_SLOTS                # 开新档可携带天赋数
+const BLOODLINE_PER_GEN: float = BaselineScript.LEGACY_BLOODLINE_PER_GEN      # 每代血脉加成
+const MAX_BLOODLINE: float = BaselineScript.LEGACY_MAX_BLOODLINE
 
 
 func new_legacy() -> Dictionary:

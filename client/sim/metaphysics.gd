@@ -19,6 +19,8 @@ extends RefCounted
 ##   - 随机性由注入 roll/rng 决定，缺省确定化。
 
 ## 玄学服务。base_rate 为无真实能力时的成功率（统一 0.5，接近随机）。
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const SERVICES: Dictionary = {
 	"fortune": {"name": "算命", "fee": 20000, "risk": 0.20, "base_rate": 0.5},
 	"fengshui": {"name": "风水", "fee": 50000, "risk": 0.25, "base_rate": 0.5},
@@ -41,8 +43,8 @@ const FOLK_PRACTICES: Dictionary = {
 }
 
 ## 安慰剂/确认偏误带来的心情与决策倾向上限。
-const PLACEBO_MOOD: float = 5.0
-const CONFIRMATION_BIAS: float = 0.15
+const PLACEBO_MOOD: float = BaselineScript.META_PLACEBO_MOOD
+const CONFIRMATION_BIAS: float = BaselineScript.META_CONFIRMATION_BIAS
 
 
 func services() -> Array:

@@ -15,6 +15,8 @@ extends RefCounted
 ##   - 非法取证（无搜查令采集监控/技术证据）直接标记程序瑕疵：证据不入链且合法性下降；
 ##   - 误判由“证据薄弱 + 逼供”共同决定，与司法系统（D12）的冤案概念衔接但不重复其流程。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const ROLE_POLICE: String = "police"
 const ROLE_FORENSIC: String = "forensic"
 const ROLE_DETECTIVE: String = "detective"
@@ -63,7 +65,7 @@ const SECURITY_SERVICES: Dictionary = {
 	"vip_protection": {"name": "要人保护", "base_fee": 800000, "risk": 0.30, "staff_required": 8},
 }
 
-const MISJUDGMENT_EVIDENCE_LINE: float = 0.40
+const MISJUDGMENT_EVIDENCE_LINE: float = BaselineScript.POLICE_MISJUDGMENT_EVIDENCE_LINE
 
 
 # --- 数据表 ---

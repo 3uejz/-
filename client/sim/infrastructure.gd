@@ -14,6 +14,8 @@ extends RefCounted
 ##   - 抢修用“工日”推进：按 设施优先级 × 严重度 排序，医院/工厂依赖的电力与供水优先；
 ##   - 设施“停机”由 active=false 与未完成 incident 共同表达，依赖效果据此推导。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const FACILITY_POWER: String = "power"
 const FACILITY_WATER: String = "water"
 const FACILITY_GAS: String = "gas"
@@ -41,9 +43,9 @@ const CAUSE_AGING: String = "aging"
 const CAUSE_STRIKE: String = "strike"
 const CAUSES: Array = [CAUSE_DISASTER, CAUSE_WAR, CAUSE_AGING, CAUSE_STRIKE]
 
-const BILL_GRACE_DAYS: float = 30.0
-const RECONNECT_FEE: int = 5000
-const CREDIT_PENALTY: float = 30.0
+const BILL_GRACE_DAYS: float = BaselineScript.INFRA_BILL_GRACE_DAYS
+const RECONNECT_FEE: int = BaselineScript.INFRA_RECONNECT_FEE
+const CREDIT_PENALTY: float = BaselineScript.INFRA_CREDIT_PENALTY
 
 
 func new_city(population: int, opts: Dictionary = {}) -> Dictionary:

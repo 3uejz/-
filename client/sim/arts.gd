@@ -9,6 +9,8 @@ extends RefCounted
 ##   - 作品与随机源由调用方注入，本模块不依赖 Autoload，便于测试与复现；
 ##   - 技能按对应领域技能等级（0..20）折算，也可由调用方直接给出。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const DISCIPLINES: Array = ["music", "painting", "writing", "performance"]
 const DISCIPLINE_NAMES: Dictionary = {
 	"music": "音乐", "painting": "绘画", "writing": "写作", "performance": "表演",
@@ -18,13 +20,13 @@ const DISCIPLINE_SKILL: Dictionary = {
 	"writing": "skill.creative_writing", "performance": "skill.acting",
 }
 
-const SKILL_WEIGHT: float = 0.5
-const INSPIRATION_WEIGHT: float = 0.3
-const LUCK_WEIGHT: float = 0.2
-const PANDER_LOSS: float = 30.0
-const BASE_INCOME: int = 20000
-const AWARD_MIN_SCORE: float = 85.0
-const AWARD_CHANCE: float = 0.5
+const SKILL_WEIGHT: float = BaselineScript.ARTS_SKILL_WEIGHT
+const INSPIRATION_WEIGHT: float = BaselineScript.ARTS_INSPIRATION_WEIGHT
+const LUCK_WEIGHT: float = BaselineScript.ARTS_LUCK_WEIGHT
+const PANDER_LOSS: float = BaselineScript.ARTS_PANDER_LOSS
+const BASE_INCOME: int = BaselineScript.ARTS_BASE_INCOME
+const AWARD_MIN_SCORE: float = BaselineScript.ARTS_AWARD_MIN_SCORE
+const AWARD_CHANCE: float = BaselineScript.ARTS_AWARD_CHANCE
 
 
 func _skill_level(skills: Array, discipline: String) -> float:

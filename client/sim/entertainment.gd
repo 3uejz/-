@@ -6,6 +6,8 @@ extends RefCounted
 ## 费用、耗时、属性/技能要求、心情与健康效果、重复衰减与上瘾风险；兴趣形成同好
 ## 圈层并可发展为副业；过度娱乐导致负债或上瘾。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CATEGORIES: Array = ["home", "outdoor", "culture", "sports", "nightlife", "collect", "extreme"]
 const CATEGORY_NAMES: Dictionary = {
 	"home": "居家", "outdoor": "户外", "culture": "文化", "sports": "竞技",
@@ -146,7 +148,7 @@ const ACTIVITIES: Dictionary = {
 	"cliff_diving": {"name": "悬崖跳水", "category": "extreme", "fee": 20000, "minutes": 180, "mood": 9.0, "health": -2.0, "skill": "fitness", "addiction": 0.03},
 }
 
-const ADDICTION_THRESHOLD: float = 60.0
+const ADDICTION_THRESHOLD: float = BaselineScript.ENT_ADDICTION_THRESHOLD
 
 
 func categories() -> Array:

@@ -6,11 +6,13 @@ extends RefCounted
 ## 时间戳；按重大度设定半衰期衰减，被引用或传播可减缓；影响后代初始态度并解锁事件；
 ## 随世界延续而非角色死亡清除。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CARRIERS: Array = ["legend", "feud", "title", "hidden"]
 const CARRIER_NAMES: Dictionary = {"legend": "传说事件", "feud": "世交世仇", "title": "称号纪念", "hidden": "隐藏事件"}
 
-const BASE_HALF_LIFE_DAYS: float = 30.0
-const FADE_THRESHOLD: float = 1.0
+const BASE_HALF_LIFE_DAYS: float = BaselineScript.WMEM_BASE_HALF_LIFE_DAYS
+const FADE_THRESHOLD: float = BaselineScript.WMEM_FADE_THRESHOLD
 
 
 func carriers() -> Array:

@@ -6,13 +6,15 @@ extends RefCounted
 ## 完整诉讼：立案、举证、开庭、判决、上诉、执行；多维证据链与律师能力修正胜率；
 ## 执行不能、失信被执行人限高限消、财产查封拍卖。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const DISPUTE_TYPES: Array = ["contract", "debt", "tort", "marital_property", "neighbor", "labor", "consumer", "property", "ip"]
 const TYPE_NAMES: Dictionary = {
 	"contract": "合同", "debt": "债务", "tort": "侵权", "marital_property": "婚姻财产",
 	"neighbor": "邻里", "labor": "劳动争议", "consumer": "消费维权", "property": "房产纠纷", "ip": "知识产权",
 }
 const STAGES: Array = ["negotiate", "mediate", "litigate", "enforcement"]
-const LAWYER_FEE_PER_LEVEL: int = 200000
+const LAWYER_FEE_PER_LEVEL: int = BaselineScript.CIVIL_LAWYER_FEE_PER_LEVEL
 
 
 func types_count() -> int:

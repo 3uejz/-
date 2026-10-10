@@ -10,11 +10,13 @@ extends RefCounted
 ##   - 形象存于 player["appearance"]（schema 允许附加字段），核心字段用 appearance_score/temperament。
 ##   - 所有护理/健身指令返回费用与效果，由上层扣费。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CHARM_WEIGHTS: Dictionary = {"appearance": 0.5, "temperament": 0.3, "outfit": 0.2}
-const BMI_NORMAL_MIN: float = 18.5
-const BMI_NORMAL_MAX: float = 24.9
-const TYPICAL_HEIGHT_M: float = 170.0
-const TYPICAL_WEIGHT_KG: float = 62.0
+const BMI_NORMAL_MIN: float = BaselineScript.APPEAR_BMI_NORMAL_MIN
+const BMI_NORMAL_MAX: float = BaselineScript.APPEAR_BMI_NORMAL_MAX
+const TYPICAL_HEIGHT_M: float = BaselineScript.APPEAR_TYPICAL_HEIGHT_M
+const TYPICAL_WEIGHT_KG: float = BaselineScript.APPEAR_TYPICAL_WEIGHT_KG
 
 
 func _clamp100(v: float) -> float:

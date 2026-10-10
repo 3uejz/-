@@ -10,8 +10,8 @@ import (
 	"lifetextsandbox/server/internal/sim"
 )
 
-// TestBaselineDomainsConsistency 校验新迁移域（survival/region/geo_transport/
-// climate_weather/era/economy）的生成常量与共享向量 baseline_domains.json 一致。
+// TestBaselineDomainsConsistency 校验按域生成的全部基线常量与共享向量
+// baseline_domains.json 一致。数据驱动：新增迁移域只需扩向量。
 func TestBaselineDomainsConsistency(t *testing.T) {
 	var v struct {
 		Domains map[string]map[string]any `json:"domains"`
@@ -21,208 +21,8 @@ func TestBaselineDomainsConsistency(t *testing.T) {
 		t.Fatal("baseline_domains.json 无 domains")
 	}
 
-	code := map[string]map[string]any{
-		"survival": {
-			"HUNGER_DECAY_PER_MIN":      sim.BaselineHungerDecayPerMin,
-			"THIRST_DECAY_PER_MIN":      sim.BaselineThirstDecayPerMin,
-			"CLEANLINESS_DECAY_PER_MIN": sim.BaselineCleanlinessDecayPerMin,
-			"SLEEP_DEBT_THRESHOLD":      sim.BaselineSleepDebtThreshold,
-			"MOOD_RECOVER_PER_HOUR":     sim.BaselineMoodRecoverPerHour,
-			"LIFESPAN_BASE_YEARS":       sim.BaselineLifespanBaseYears,
-			"DYING_HEALTH_THRESHOLD":    sim.BaselineDyingHealthThreshold,
-			"ADDICTION_DEPENDENT_MIN":   sim.BaselineAddictionDependentMin,
-			"NUTRITION_LIGHT_THRESHOLD": sim.BaselineNutritionLightThreshold,
-		},
-		"region": {
-			"REGION_BIRTH_RATE_ANNUAL":     sim.BaselineRegionBirthRateAnnual,
-			"REGION_DEATH_RATE_ANNUAL":     sim.BaselineRegionDeathRateAnnual,
-			"REGION_MIGRATION_RATE_ANNUAL": sim.BaselineRegionMigrationRateAnnual,
-			"REGION_ECONOMY_GROWTH_ANNUAL": sim.BaselineRegionEconomyGrowthAnnual,
-			"REGION_DAYS_PER_YEAR":         sim.BaselineRegionDaysPerYear,
-		},
-		"geo_transport": {
-			"EARTH_RADIUS_KM":                    sim.BaselineEarthRadiusKm,
-			"GEO_MIN_TOTAL_LOCATIONS":            sim.BaselineGeoMinTotalLocations,
-			"TRANSPORT_CONGESTION_PEAK_FACTOR":   sim.BaselineTransportCongestionPeakFactor,
-			"TRANSPORT_TRANSFER_MINUTES_DEFAULT": sim.BaselineTransportTransferMinutesDefault,
-			"TRANSPORT_MODE_ORDER":               sim.BaselineTransportModeOrder,
-		},
-		"climate_weather": {
-			"WEATHER_TEMP_MIN":           sim.BaselineWeatherTempMin,
-			"WEATHER_TEMP_MAX":           sim.BaselineWeatherTempMax,
-			"WEATHER_HUMIDITY_MAX":       sim.BaselineWeatherHumidityMax,
-			"WEATHER_FORECAST_DAYS":      sim.BaselineWeatherForecastDays,
-			"WEATHER_MARKOV_PERSISTENCE": sim.BaselineWeatherMarkovPersistence,
-			"WEATHER_DAYS_PER_YEAR":      sim.BaselineWeatherDaysPerYear,
-			"CLIMATE_ZONE_ORDER":         sim.BaselineClimateZoneOrder,
-		},
-		"era": {
-			"ERA_COUNT": sim.BaselineEraCount,
-		},
-		"economy": {
-			"MONEY_MINOR_SCALE":    sim.BaselineMoneyMinorScale,
-			"FX_ANNUAL_VOLATILITY": sim.BaselineFxAnnualVolatility,
-			"PRICE_FLOOR_RATIO":    sim.BaselinePriceFloorRatio,
-			"PRICE_CEIL_RATIO":     sim.BaselinePriceCeilRatio,
-			"TAX_CORPORATE_RATE":   sim.BaselineTaxCorporateRate,
-			"TAX_VAT_RATE":         sim.BaselineTaxVatRate,
-			"LOTTERY_WIN_CHANCE":   sim.BaselineLotteryWinChance,
-			"MACRO_BASE_INFLATION": sim.BaselineMacroBaseInflation,
-			"GBM_DRIFT_DEFAULT":    sim.BaselineGbmDriftDefault,
-			"BANK_CREDIT_START":    sim.BaselineBankCreditStart,
-		},
-		"epidemic": {
-			"SEIR_BETA_REDUCTION_CAP":        sim.BaselineSeirBetaReductionCap,
-			"SEIR_SURGE_EXTRA_SLOPE":         sim.BaselineSeirSurgeExtraSlope,
-			"SEIR_BEDS_DIVISOR":              sim.BaselineSeirBedsDivisor,
-			"SEIR_DEFAULT_VACCINE_HESITANCY": sim.BaselineSeirDefaultVaccineHesitancy,
-			"SEIR_POLICY_TRUST_PENALTY":      sim.BaselineSeirPolicyTrustPenalty,
-			"SEIR_IMMUNITY_WANE_RATE":        sim.BaselineSeirImmunityWaneRate,
-			"SEIR_ALERT_WATCH_PREVALENCE":    sim.BaselineSeirAlertWatchPrevalence,
-			"SEIR_ALERT_ALERT_OCCUPANCY":     sim.BaselineSeirAlertAlertOccupancy,
-			"SEIR_ALERT_EMERGENCY_OCCUPANCY": sim.BaselineSeirAlertEmergencyOccupancy,
-			"SEIR_DEFAULT_PARAMS":            sim.BaselineSeirDefaultParams,
-			"SEIR_POLICY_BETA_REDUCTION":     sim.BaselineSeirPolicyBetaReduction,
-		},
-		"environment": {
-			"ENV_DEFAULT_CARBON_PRICE":   sim.BaselineEnvDefaultCarbonPrice,
-			"ENV_CARBON_FINE_MULTIPLIER": sim.BaselineEnvCarbonFineMultiplier,
-			"ENV_FOOTPRINT_SCOPE1":       sim.BaselineEnvFootprintScope1,
-			"ENV_FOOTPRINT_SCOPE2":       sim.BaselineEnvFootprintScope2,
-			"ENV_FOOTPRINT_SCOPE3":       sim.BaselineEnvFootprintScope3,
-			"ENV_ESG_SCORE_MAX":          sim.BaselineEnvEsgScoreMax,
-			"ENV_ESG_GRADE_A":            sim.BaselineEnvEsgGradeA,
-			"ENV_ESG_GRADE_B":            sim.BaselineEnvEsgGradeB,
-			"ENV_ESG_GRADE_C":            sim.BaselineEnvEsgGradeC,
-		},
-		"engineering": {
-			"ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD": sim.BaselineEngineeringAcceptanceQualityThreshold,
-			"ENGINEERING_CHAIN":                        sim.BaselineEngineeringChain,
-			"ENGINEERING_ZONE_TYPES":                   sim.BaselineEngineeringZoneTypes,
-		},
-		"medical": {
-			"MEDICAL_UNTREATED_FREE_DAYS":            sim.BaselineMedicalUntreatedFreeDays,
-			"MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY": sim.BaselineMedicalUntreatedHealthDecayPerDay,
-			"MEDICAL_MISDIAGNOSIS_CHANCE":            sim.BaselineMedicalMisdiagnosisChance,
-			"MEDICAL_SERVICE_COST":                   sim.BaselineMedicalServiceCost,
-		},
-		"sports": {
-			"SPORTS_PEAK_MIN_AGE":      sim.BaselineSportsPeakMinAge,
-			"SPORTS_PEAK_MAX_AGE":      sim.BaselineSportsPeakMaxAge,
-			"SPORTS_AGE_DECLINE_RATE":  sim.BaselineSportsAgeDeclineRate,
-			"SPORTS_AGE_FLOOR":         sim.BaselineSportsAgeFloor,
-			"SPORTS_TRAIN_RATE":        sim.BaselineSportsTrainRate,
-			"SPORTS_INJURY_PENALTY":    sim.BaselineSportsInjuryPenalty,
-			"SPORTS_INJURY_BASE_RISK":  sim.BaselineSportsInjuryBaseRisk,
-			"SPORTS_DOPING_BOOST":      sim.BaselineSportsDopingBoost,
-			"SPORTS_DOPING_BAN_CHANCE": sim.BaselineSportsDopingBanChance,
-		},
-		"aesthetics": {
-			"AESTHETICS_OVER_MEDICALIZATION_THRESHOLD": sim.BaselineAestheticsOverMedicalizationThreshold,
-			"AESTHETICS_STIFFNESS_PER_PROCEDURE":       sim.BaselineAestheticsStiffnessPerProcedure,
-			"AESTHETICS_ILLEGAL_SUCCESS_MULT":          sim.BaselineAestheticsIllegalSuccessMult,
-			"AESTHETICS_ILLEGAL_COMPLICATION_MULT":     sim.BaselineAestheticsIllegalComplicationMult,
-			"AESTHETICS_MALPRACTICE_COMPENSATION":      sim.BaselineAestheticsMalpracticeCompensation,
-		},
-		"mental_health": {
-			"MH_STRESS_DISORDER_THRESHOLD": sim.BaselineMhStressDisorderThreshold,
-			"MH_TREATMENTS":                sim.BaselineMhTreatments,
-			"MH_EVENTS":                    sim.BaselineMhEvents,
-		},
-		"disability_elderly": {
-			"DE_SEVERITY_PENALTY": sim.BaselineDeSeverityPenalty,
-			"DE_DEVICES":          sim.BaselineDeDevices,
-			"DE_CARE_MODES":       sim.BaselineDeCareModes,
-		},
-		"digital": {
-			"DIGITAL_ADDICTION_THRESHOLD_HOURS": sim.BaselineDigitalAddictionThresholdHours,
-			"DIGITAL_HACK_TARGETS":              sim.BaselineDigitalHackTargets,
-			"DIGITAL_SECURITY_JOBS":             sim.BaselineDigitalSecurityJobs,
-			"DIGITAL_CONTENT_PLATFORMS":         sim.BaselineDigitalContentPlatforms,
-		},
-		"consumer_protection": {
-			"CP_CHANNEL_WEIGHTS":      sim.BaselineCpChannelWeights,
-			"CP_RETURN_WINDOW_DAYS":   sim.BaselineCpReturnWindowDays,
-			"CP_THREE_GUARANTEE_DAYS": sim.BaselineCpThreeGuaranteeDays,
-			"CP_WARRANTY_DEFECT_DAYS": sim.BaselineCpWarrantyDefectDays,
-		},
-		"debt_service": {
-			"DS_INTEREST_RATE_CAP":    sim.BaselineDsInterestRateCap,
-			"DS_BUSINESSES":           sim.BaselineDsBusinesses,
-			"DS_COLLECTION_MODES":     sim.BaselineDsCollectionModes,
-			"DS_P2P_ERA_START":        sim.BaselineDsP2pEraStart,
-			"DS_P2P_ERA_END":          sim.BaselineDsP2pEraEnd,
-			"DS_BANKRUPTCY_ERA_START": sim.BaselineDsBankruptcyEraStart,
-		},
-		"emergency": {
-			"EM_DEFAULT_RESPONSE_CAP": sim.BaselineEmDefaultResponseCap,
-			"EM_SURVIVAL_TREATED":     sim.BaselineEmSurvivalTreated,
-			"EM_SURVIVAL_UNTREATED":   sim.BaselineEmSurvivalUntreated,
-			"EM_SECONDARY_BASE_RISK":  sim.BaselineEmSecondaryBaseRisk,
-			"EM_COMMAND_FAULT_LINE":   sim.BaselineEmCommandFaultLine,
-			"EM_PROFESSIONS":          sim.BaselineEmProfessions,
-		},
-		"family": {
-			"FAM_CONFESS_BASE":          sim.BaselineFamConfessBase,
-			"FAM_MARRIAGE_FAVOR_MIN":    sim.BaselineFamMarriageFavorMin,
-			"FAM_MARRIAGE_INTIMACY_MIN": sim.BaselineFamMarriageIntimacyMin,
-			"FAM_HEREDITY_WEIGHT":       sim.BaselineFamHeredityWeight,
-			"FAM_GENE_NOISE":            sim.BaselineFamGeneNoise,
-			"FAM_DIVORCE_ASSET_SPLIT":   sim.BaselineFamDivorceAssetSplit,
-			"FAM_DIVORCE_MOOD_PENALTY":  sim.BaselineFamDivorceMoodPenalty,
-			"FAM_CHILD_DAILY_EXPENSE":   sim.BaselineFamChildDailyExpense,
-			"FAM_ELDER_DAILY_EXPENSE":   sim.BaselineFamElderDailyExpense,
-		},
-		"parenting": {
-			"PARENT_GENE_WEIGHT":      sim.BaselineParentGeneWeight,
-			"PARENT_CARE_WEIGHT":      sim.BaselineParentCareWeight,
-			"PARENT_EDU_WEIGHT":       sim.BaselineParentEduWeight,
-			"PARENT_RANDOM_WEIGHT":    sim.BaselineParentRandomWeight,
-			"PARENT_STAGE_RANGE":      sim.BaselineParentStageRange,
-			"PARENT_DAILY_COST":       sim.BaselineParentDailyCost,
-			"PARENT_EVENTS":           sim.BaselineParentEvents,
-			"PARENT_EARLY_DEATH_RATE": sim.BaselineParentEarlyDeathRate,
-		},
-		"workplace": {
-			"WORK_DIM_MAX":                      sim.BaselineWorkDimMax,
-			"WORK_EVENT_WEIGHTS":                sim.BaselineWorkEventWeights,
-			"WORK_PROMOTION_PERFORMANCE_WEIGHT": sim.BaselineWorkPromotionPerformanceWeight,
-			"WORK_PROMOTION_SUPERVISOR_WEIGHT":  sim.BaselineWorkPromotionSupervisorWeight,
-			"WORK_PROMOTION_REPUTATION_WEIGHT":  sim.BaselineWorkPromotionReputationWeight,
-			"WORK_PROMOTION_LUCK_WEIGHT":        sim.BaselineWorkPromotionLuckWeight,
-			"WORK_PROMOTION_INDUSTRY_WEIGHT":    sim.BaselineWorkPromotionIndustryWeight,
-			"WORK_PROMOTION_THRESHOLD":          sim.BaselineWorkPromotionThreshold,
-			"WORK_FACTION_POWER_MAX":            sim.BaselineWorkFactionPowerMax,
-		},
-		"property": {
-			"PROP_DOWN_PAYMENT_RATIO":       sim.BaselinePropDownPaymentRatio,
-			"PROP_MORTGAGE_RATE_ANNUAL":     sim.BaselinePropMortgageRateAnnual,
-			"PROP_DEFAULT_TERM_YEARS":       sim.BaselinePropDefaultTermYears,
-			"PROP_DEED_TAX_RATE":            sim.BaselinePropDeedTaxRate,
-			"PROP_MAINTENANCE_RATE_ANNUAL":  sim.BaselinePropMaintenanceRateAnnual,
-			"PROP_DEPRECIATION_RATE_ANNUAL": sim.BaselinePropDepreciationRateAnnual,
-			"PROP_RENT_YIELD_ANNUAL":        sim.BaselinePropRentYieldAnnual,
-			"PROP_FORECLOSE_ARREARS_MONTHS": sim.BaselinePropForecloseArrearsMonths,
-			"PROP_PRICE_FLOOR_RATIO":        sim.BaselinePropPriceFloorRatio,
-			"PROP_PRICE_CEIL_RATIO":         sim.BaselinePropPriceCeilRatio,
-		},
-		"agriculture": {
-			"AGRI_CROPS":           sim.BaselineAgriCrops,
-			"AGRI_LIVESTOCK":       sim.BaselineAgriLivestock,
-			"AGRI_MARKET_CHANNELS": sim.BaselineAgriMarketChannels,
-		},
-		"pet": {
-			"PET_SPECIES":                sim.BaselinePetSpecies,
-			"PET_HUNGER_DECAY_PER_DAY":   sim.BaselinePetHungerDecayPerDay,
-			"PET_STARVATION_HEALTH_LOSS": sim.BaselinePetStarvationHealthLoss,
-			"PET_LOST_BASE_RISK":         sim.BaselinePetLostBaseRisk,
-			"PET_DEATH_MOOD_DELTA":       sim.BaselinePetDeathMoodDelta,
-			"PET_DEATH_HAPPINESS_DELTA":  sim.BaselinePetDeathHappinessDelta,
-		},
-	}
-
 	for domain, expected := range v.Domains {
-		gots, ok := code[domain]
+		gots, ok := sim.BaselineDomains[domain]
 		if !ok {
 			t.Errorf("代码缺少域 %s", domain)
 			continue
@@ -253,9 +53,7 @@ func compareVectorValue(t *testing.T, label string, got, want any) {
 			return
 		}
 		for i := range w {
-			if fmt.Sprint(g[i]) != fmt.Sprint(w[i]) {
-				t.Errorf("%s[%d]: got=%v want=%v", label, i, g[i], w[i])
-			}
+			compareVectorValue(t, fmt.Sprintf("%s[%d]", label, i), g[i], w[i])
 		}
 	case map[string]any:
 		g, ok := got.(map[string]any)

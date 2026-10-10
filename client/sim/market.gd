@@ -13,8 +13,8 @@ extends RefCounted
 const BaselineScript = preload("res://sim/baseline.gd")
 const RngScript = preload("res://sim/rng.gd")
 
-const MIN_SUPPLY: float = 0.01
-const FX_EPSILON: float = 1e-9
+const MIN_SUPPLY: float = BaselineScript.MARKET_MIN_SUPPLY
+const FX_EPSILON: float = BaselineScript.MARKET_FX_EPSILON
 
 
 # --- 通用 GBM ---

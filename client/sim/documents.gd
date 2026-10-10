@@ -5,8 +5,10 @@ extends RefCounted
 ## 维护身份证、户口、驾照、护照、签证、产权证与营业执照；按行为校验所需证件，
 ## 缺证时给出办理途径；支持有效期、续办、跨法域换发与整容后人像比对失败。
 
-const MINUTES_PER_YEAR: int = 525960
-const PHOTO_MATCH_THRESHOLD: float = 0.75
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const MINUTES_PER_YEAR: int = BaselineScript.DOC_MINUTES_PER_YEAR
+const PHOTO_MATCH_THRESHOLD: float = BaselineScript.DOC_PHOTO_MATCH_THRESHOLD
 
 ## 证件事典。
 const DOCUMENTS: Dictionary = {

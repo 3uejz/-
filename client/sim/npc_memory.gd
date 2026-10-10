@@ -9,10 +9,12 @@ extends RefCounted
 ##   - 按情境检索相关记忆供叙事引用；冲突取情感权重高者；
 ##   - NPC 死亡后记忆归档为遗产线索/世界记忆素材。
 
-const MAX_ENTRIES: int = 50
-const BASE_HALF_LIFE_YEARS: float = 1.0
-const MAX_HALF_LIFE_YEARS: float = 10.0
-const REINFORCE_AMOUNT: float = 5.0
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const MAX_ENTRIES: int = BaselineScript.NPCMEM_MAX_ENTRIES
+const BASE_HALF_LIFE_YEARS: float = BaselineScript.NPCMEM_BASE_HALF_LIFE_YEARS
+const MAX_HALF_LIFE_YEARS: float = BaselineScript.NPCMEM_MAX_HALF_LIFE_YEARS
+const REINFORCE_AMOUNT: float = BaselineScript.NPCMEM_REINFORCE_AMOUNT
 const MINUTES_PER_YEAR: float = 365.25 * 1440.0
 
 ## 记忆类型。

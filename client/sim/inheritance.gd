@@ -5,12 +5,14 @@ extends RefCounted
 ## 无遗嘱按法定顺序：配偶 → 子女 → 父母 → 兄弟姐妹；争议触发 D12 诉讼；
 ## 遗产税复用 TaxSystem.inheritance_tax；未成年子女需判定监护权。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const TaxScript = preload("res://sim/tax.gd")
 
 const INTESTATE_ORDER: Array = ["spouse", "children", "parents", "siblings"]
-const DISPUTE_BASE: float = 0.2
-const DISPUTE_MULTI_HEIR_BONUS: float = 0.25
-const DISPUTE_WILL_REDUCTION: float = 0.1
+const DISPUTE_BASE: float = BaselineScript.INHERIT_DISPUTE_BASE
+const DISPUTE_MULTI_HEIR_BONUS: float = BaselineScript.INHERIT_DISPUTE_MULTI_HEIR_BONUS
+const DISPUTE_WILL_REDUCTION: float = BaselineScript.INHERIT_DISPUTE_WILL_REDUCTION
 
 
 ## 遗产税（委托 TaxSystem）。

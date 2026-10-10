@@ -15,6 +15,8 @@ extends RefCounted
 ##   - 随机项（海难、火灾、狩猎命中）由外部 roll/rng 注入，缺省确定化（roll=0）；
 ##   - 违法捕捞/偷猎/无证狩猎统一走 legal_consequence，返回罚款与违法标记。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const FISH_SPECIES: Dictionary = {
 	"cod": {"name": "鳕鱼", "price": 3000, "recovery": 0.01},
 	"tuna": {"name": "金枪鱼", "price": 12000, "recovery": 0.005},
@@ -33,8 +35,8 @@ const GAME_SPECIES: Dictionary = {
 	"rabbit": {"name": "野兔", "price": 800, "population": 2000.0},
 }
 
-const FISHING_CLOSED_DAYS: float = 90.0
-const FIRE_BASE_RISK: float = 0.02
+const FISHING_CLOSED_DAYS: float = BaselineScript.PRIMARY_FISHING_CLOSED_DAYS
+const FIRE_BASE_RISK: float = BaselineScript.PRIMARY_FIRE_BASE_RISK
 
 
 # --- 渔业 ---

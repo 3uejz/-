@@ -4,7 +4,9 @@ extends RefCounted
 ##
 ## 玩家自设愿望，同时最多 3 个；追踪进度并在达成时庆祝；达成后可设定新愿望。
 
-const MAX_WISHES: int = 3
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const MAX_WISHES: int = BaselineScript.WISH_MAX_WISHES
 const WISH_TYPES: Array = ["wealth", "skill", "relationship", "career", "travel", "family", "custom"]
 const WISH_TYPE_NAMES: Dictionary = {
 	"wealth": "财富", "skill": "技能", "relationship": "情感", "career": "事业",

@@ -15,6 +15,8 @@ extends RefCounted
 ##   - 收益与成本分别累计到 revenue/cost，复盘据此给出净利润，可核对；
 ##   - 超售、踩踏、安保失效、艺人违约等由确定性规则或外部注入的 roll 判定，缺省确定化。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const EVENT_TYPES: Dictionary = {
 	"concert": {"name": "演唱会", "base_capacity": 20000, "base_price": 6800, "star_weight": 0.6, "base_risk": 0.25, "merch_per_capita": 300},
 	"music_festival": {"name": "音乐节", "base_capacity": 30000, "base_price": 4800, "star_weight": 0.5, "base_risk": 0.30, "merch_per_capita": 400},
@@ -56,9 +58,9 @@ const CAREER_ROLES: Dictionary = {
 	"ticketing": {"name": "票务公司", "exp_per_level": 110},
 }
 
-const SECURITY_SAFE_LEVEL: float = 0.6
-const BASE_LIABILITY: int = 500000
-const EXP_PER_EVENT: int = 20
+const SECURITY_SAFE_LEVEL: float = BaselineScript.EXPO_SECURITY_SAFE_LEVEL
+const BASE_LIABILITY: int = BaselineScript.EXPO_BASE_LIABILITY
+const EXP_PER_EVENT: int = BaselineScript.EXPO_EXP_PER_EVENT
 
 
 # --- 数据表 ---

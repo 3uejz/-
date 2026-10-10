@@ -12,6 +12,8 @@ extends RefCounted
 ##
 ## 约定：金额为最小货币单位整数；支付/退款走 EconomySystem，货币守恒由其保证。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const STATUS_CREATED: String = "created"
 const STATUS_PAID: String = "paid"
 const STATUS_SHIPPING: String = "shipping"
@@ -21,9 +23,9 @@ const STATUS_REFUNDING: String = "refunding"
 const STATUS_REFUNDED: String = "refunded"
 const STATUS_CANCELLED: String = "cancelled"
 
-const RETURN_WINDOW_DAYS: int = 7
-const AUTO_COMPLETE_DAYS: int = 3
-const MONTH_DAYS: int = 30
+const RETURN_WINDOW_DAYS: int = BaselineScript.ORDER_RETURN_WINDOW_DAYS
+const AUTO_COMPLETE_DAYS: int = BaselineScript.ORDER_AUTO_COMPLETE_DAYS
+const MONTH_DAYS: int = BaselineScript.ORDER_MONTH_DAYS
 
 ## 渠道配置：instant=即时履约；eta_days=物流天数；fee=配送费；discount=折扣；tariff=关税；psych=消费心理权重。
 const CHANNEL_CONFIG: Dictionary = {

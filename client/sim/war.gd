@@ -18,6 +18,8 @@ extends RefCounted
 ##   - 一切随机经外部 rng 注入，缺省时退化为确定性取值，便于 headless 测试复现；
 ##   - 张紧度 tension 为 0..100，状态由张紧度 + 是否交战 + 是否停战/占领推导，避免多处写入不一致。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const MilitaryScript = preload("res://sim/military.gd")
 
 # --- 状态机 ---
@@ -34,10 +36,10 @@ const STANCE_NAMES: Dictionary = {
 	"total_war": "全面战争", "ceasefire": "停战", "occupation": "占领",
 }
 
-const TENSION_THRESHOLD: float = 20.0          # ≥ 转为紧张
-const LIMITED_CONFLICT_TENSION: float = 50.0   # ≥ 局部冲突
-const TOTAL_WAR_TENSION: float = 80.0          # ≥ 全面战争
-const DECLARE_WAR_MIN_TENSION: float = 70.0    # 宣战最低张紧度
+const TENSION_THRESHOLD: float = BaselineScript.WAR_TENSION_THRESHOLD          # ≥ 转为紧张
+const LIMITED_CONFLICT_TENSION: float = BaselineScript.WAR_LIMITED_CONFLICT_TENSION   # ≥ 局部冲突
+const TOTAL_WAR_TENSION: float = BaselineScript.WAR_TOTAL_WAR_TENSION          # ≥ 全面战争
+const DECLARE_WAR_MIN_TENSION: float = BaselineScript.WAR_DECLARE_WAR_MIN_TENSION    # 宣战最低张紧度
 
 ## 驱动因子权重（领土/经济/同盟/意识形态/随机）。
 const DRIVER_WEIGHTS: Dictionary = {
@@ -49,9 +51,9 @@ const DRIVER_WEIGHTS: Dictionary = {
 const CONSCRIPTION_VOLUNTEER: String = "volunteer"
 const CONSCRIPTION_LOTTERY: String = "lottery"
 
-const DRAFT_MIN_AGE: float = 18.0
-const DRAFT_MAX_AGE: float = 35.0
-const DRAFT_MIN_HEALTH: float = 50.0
+const DRAFT_MIN_AGE: float = BaselineScript.WAR_DRAFT_MIN_AGE
+const DRAFT_MAX_AGE: float = BaselineScript.WAR_DRAFT_MAX_AGE
+const DRAFT_MIN_HEALTH: float = BaselineScript.WAR_DRAFT_MIN_HEALTH
 
 const DEFER_STUDENT: String = "student"
 const DEFER_DISABLED: String = "disabled"
@@ -79,11 +81,11 @@ const TACTICS: Dictionary = {
 
 # --- 战争经济 ---
 
-const DEFENSE_JOBS_PER_MOBILIZATION: float = 1000000.0
-const PRICE_SHOCK_PER_MOBILIZATION: float = 0.15
-const BLACK_MARKET_PER_MOBILIZATION: float = 0.10
-const RATIONING_MOBILIZATION_THRESHOLD: float = 0.5
-const DEBT_PER_YEAR_PER_MOBILIZATION: int = 500000000  # 最小货币单位
+const DEFENSE_JOBS_PER_MOBILIZATION: float = BaselineScript.WAR_DEFENSE_JOBS_PER_MOBILIZATION
+const PRICE_SHOCK_PER_MOBILIZATION: float = BaselineScript.WAR_PRICE_SHOCK_PER_MOBILIZATION
+const BLACK_MARKET_PER_MOBILIZATION: float = BaselineScript.WAR_BLACK_MARKET_PER_MOBILIZATION
+const RATIONING_MOBILIZATION_THRESHOLD: float = BaselineScript.WAR_RATIONING_MOBILIZATION_THRESHOLD
+const DEBT_PER_YEAR_PER_MOBILIZATION: int = BaselineScript.WAR_DEBT_PER_YEAR_PER_MOBILIZATION  # 最小货币单位
 
 
 # =====================================================================

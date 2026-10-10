@@ -32,6 +32,8 @@ extends RefCounted
 ##   - 一切随机项由外部注入 roll/rng，缺省确定化；
 ##   - 常规系统永远看不到异常；regular_effects() 在隐藏时恒为空。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const RngScript = preload("res://sim/rng.gd")
 
 # --- 分级与枚举 ---
@@ -58,7 +60,7 @@ const HAZARD_CONTAM: Dictionary = {"meme": "meme", "cognition": "cognition", "in
 
 const GATE_KEYS: Array = ["rare_talent", "hidden_event_chain", "bloodline", "special_place", "special_item"]
 ## 稀有天赋出生概率（极低）。注入 roll 判定。
-const RARE_TALENT_RATE: float = 0.001
+const RARE_TALENT_RATE: float = BaselineScript.ANOMALY_RARE_TALENT_RATE
 
 const ABILITY_LINES: Array = ["precognition", "medium", "cultivation", "sorcery"]
 const ABILITY_NAMES: Dictionary = {
@@ -72,8 +74,8 @@ const ABILITY_COSTS: Dictionary = {
 	"cultivation": {"mana": 12.0, "spirit": 0.0, "sanity": 0.0},
 	"sorcery": {"mana": 15.0, "spirit": 0.0, "sanity": 0.0},
 }
-const ABILITY_MAX_LEVEL: int = 20
-const EXP_PER_LEVEL: float = 100.0
+const ABILITY_MAX_LEVEL: int = BaselineScript.ANOMALY_ABILITY_MAX_LEVEL
+const EXP_PER_LEVEL: float = BaselineScript.ANOMALY_EXP_PER_LEVEL
 
 const FACTIONS: Dictionary = {
 	"foundation": "基金会", "cult": "异常崇拜", "black_lab": "黑实验室", "hunter": "猎魔/掠夺者",
@@ -100,11 +102,11 @@ const BACKLASH_NAMES: Dictionary = {
 }
 
 ## 记忆删除药剂。
-const AMNESTIC_DEFAULT_MAX: int = 3
-const AMNESTIC_CLEAR_PER_DOSE: float = 40.0
+const AMNESTIC_DEFAULT_MAX: int = BaselineScript.ANOMALY_AMNESTIC_DEFAULT_MAX
+const AMNESTIC_CLEAR_PER_DOSE: float = BaselineScript.ANOMALY_AMNESTIC_CLEAR_PER_DOSE
 
 ## 目标条目总量（R88.11：不少于 2000，核心手写其余生成）。
-const TOTAL_CATALOG_SIZE: int = 2000
+const TOTAL_CATALOG_SIZE: int = BaselineScript.ANOMALY_TOTAL_CATALOG_SIZE
 
 # --- 核心手写异常条目（8–15 条示例）---
 

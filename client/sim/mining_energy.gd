@@ -16,6 +16,8 @@ extends RefCounted
 ##   - 事故只由 安全水平 与 外部注入的 roll 决定，缺省确定化（roll=0）；
 ##   - 储量/品位为标量，冶炼按品位折算金属量，链条数值线性可核算。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const MINERALS: Dictionary = {
 	"iron": {"name": "铁矿", "base_grade": 0.35, "base_reserve": 1000000.0, "smelt_yield": 0.90, "price": 800},
 	"copper": {"name": "铜矿", "base_grade": 0.25, "base_reserve": 500000.0, "smelt_yield": 0.85, "price": 5000},
@@ -41,7 +43,7 @@ const NEW_ENERGY_KINDS: Array = ["wind", "solar", "nuclear", "storage"]
 const NEW_ENERGY_NAMES: Dictionary = {"wind": "风电", "solar": "光伏", "nuclear": "核电", "storage": "储能"}
 
 const CONCESSION_QUALIFICATION: String = "mining_license"
-const CONCESSION_MIN_CAPITAL: int = 50000000
+const CONCESSION_MIN_CAPITAL: int = BaselineScript.MINING_CONCESSION_MIN_CAPITAL
 
 
 # --- 数据表 ---

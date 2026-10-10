@@ -1,0 +1,4 @@
+{
+  "WAKE_MINUTES_PER_DAY": 1440,
+  "WAKE_EPSILON": 1e-06
+}

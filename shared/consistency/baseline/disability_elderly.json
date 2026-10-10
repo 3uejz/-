@@ -1,16 +1,84 @@
 {
-  "DE_SEVERITY_PENALTY": {"light": 0.15, "medium": 0.40, "heavy": 0.75},
+  "DE_SEVERITY_PENALTY": {
+    "light": 0.15,
+    "medium": 0.4,
+    "heavy": 0.75
+  },
   "DE_DEVICES": {
-    "wheelchair": {"name": "轮椅", "cost": 800000, "mobility_bonus": 0.50, "types": ["physical"]},
-    "hearing_aid": {"name": "助听器", "cost": 200000, "mobility_bonus": 0.10, "types": ["sensory"]},
-    "prosthesis": {"name": "义肢", "cost": 1500000, "mobility_bonus": 0.40, "types": ["physical"]},
-    "guide_dog": {"name": "导盲犬", "cost": 300000, "mobility_bonus": 0.35, "types": ["sensory"]},
-    "accessibility": {"name": "无障碍改造", "cost": 500000, "mobility_bonus": 0.20, "types": ["physical", "sensory"]},
-    "rehab": {"name": "康复训练", "cost": 100000, "mobility_bonus": 0.15, "types": ["physical", "sensory", "intellectual", "mental"]}
+    "wheelchair": {
+      "name": "轮椅",
+      "cost": 800000,
+      "mobility_bonus": 0.5,
+      "types": [
+        "physical"
+      ]
+    },
+    "hearing_aid": {
+      "name": "助听器",
+      "cost": 200000,
+      "mobility_bonus": 0.1,
+      "types": [
+        "sensory"
+      ]
+    },
+    "prosthesis": {
+      "name": "义肢",
+      "cost": 1500000,
+      "mobility_bonus": 0.4,
+      "types": [
+        "physical"
+      ]
+    },
+    "guide_dog": {
+      "name": "导盲犬",
+      "cost": 300000,
+      "mobility_bonus": 0.35,
+      "types": [
+        "sensory"
+      ]
+    },
+    "accessibility": {
+      "name": "无障碍改造",
+      "cost": 500000,
+      "mobility_bonus": 0.2,
+      "types": [
+        "physical",
+        "sensory"
+      ]
+    },
+    "rehab": {
+      "name": "康复训练",
+      "cost": 100000,
+      "mobility_bonus": 0.15,
+      "types": [
+        "physical",
+        "sensory",
+        "intellectual",
+        "mental"
+      ]
+    }
   },
   "DE_CARE_MODES": {
-    "home_care": {"name": "居家护理", "cost_per_month": 400000, "quality": 0.50, "happiness": 0.0, "life_modifier": 0.0},
-    "community_care": {"name": "社区养老", "cost_per_month": 600000, "quality": 0.65, "happiness": 2.0, "life_modifier": 0.1},
-    "institution_care": {"name": "机构养老", "cost_per_month": 1200000, "quality": 0.80, "happiness": -1.0, "life_modifier": 0.2}
+    "home_care": {
+      "name": "居家护理",
+      "cost_per_month": 400000,
+      "quality": 0.5,
+      "happiness": 0.0,
+      "life_modifier": 0.0
+    },
+    "community_care": {
+      "name": "社区养老",
+      "cost_per_month": 600000,
+      "quality": 0.65,
+      "happiness": 2.0,
+      "life_modifier": 0.1
+    },
+    "institution_care": {
+      "name": "机构养老",
+      "cost_per_month": 1200000,
+      "quality": 0.8,
+      "happiness": -1.0,
+      "life_modifier": 0.2
+    }
   }
 }

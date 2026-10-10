@@ -11,6 +11,8 @@ extends RefCounted
 ##   - 学历要求按顺序比较（高学历满足低学历要求），证书要求按具体条目；
 ##   - 考试评分由注入 rng 决定随机项，确定化便于复现与三端对齐。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const DEGREE_DEFS: Array = [
 	{"id": "edu.kindergarten", "name": "幼儿园", "prereq": "", "years": 3, "difficulty": 10.0},
 	{"id": "edu.primary", "name": "小学", "prereq": "edu.kindergarten", "years": 6, "difficulty": 20.0},
@@ -55,8 +57,8 @@ const CERT_DEFS: Array = [
 	{"id": "license.actuary", "name": "精算师", "req_education": "edu.bachelor", "difficulty": 82.0, "fee": 80000},
 ]
 
-const STUDY_RATE: float = 12.0
-const EXAM_PASS_MARGIN: float = 0.0
+const STUDY_RATE: float = BaselineScript.EDU_STUDY_RATE
+const EXAM_PASS_MARGIN: float = BaselineScript.EDU_EXAM_PASS_MARGIN
 
 
 var _degrees: Dictionary = {}

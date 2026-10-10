@@ -18,6 +18,8 @@ extends RefCounted
 ##   - 良品率只由技能结构、品控/研发/工程师配置与自动化决定，clamp 到 [0.5, 0.995]，不引入随机漂移；
 ##   - 随机项（工伤、缺勤）只保留在 injury_check/absenteeism 中，并由外部 rng 注入，缺省确定化。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const ROLES: Dictionary = {
 	"unskilled": {"name": "普工", "skill": "labor", "wage": 400000, "output": 1.0, "quality": 0.0, "supply": 0.0},
 	"skilled": {"name": "技工", "skill": "craft", "wage": 700000, "output": 1.6, "quality": 0.01, "supply": 0.0},
@@ -52,8 +54,8 @@ const RECIPES: Dictionary = {
 
 const DISRUPTIONS: Array = ["power_outage", "material_shortage", "equipment_failure", "strike", "absenteeism"]
 
-const REFERENCE_LABOR: float = 20.0
-const DEFECT_SHARE: float = 0.5
+const REFERENCE_LABOR: float = BaselineScript.MFG_REFERENCE_LABOR
+const DEFECT_SHARE: float = BaselineScript.MFG_DEFECT_SHARE
 
 
 # --- 数据表 ---

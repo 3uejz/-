@@ -15,6 +15,8 @@ extends RefCounted
 ##   - 特许经营只结算本地服务质量考核与投诉，公用事业的真值由后端宏观承接（不重复）；
 ##   - 施工对通行的影响以系数表达，具体路径规划仍归 Transport（D2），不重复实现路网。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const FACILITY_ROAD: String = "road"
 const FACILITY_BRIDGE: String = "bridge"
 const FACILITY_PARK: String = "park"
@@ -41,10 +43,10 @@ const FACILITY_BASE: Dictionary = {
 	"public_toilet": {"condition": 0.75, "maintain_cost": 200000, "decay": 0.05},
 }
 
-const FACILITY_GRADE_THRESHOLD: float = 0.5
-const ROAD_REOPEN_WINDOW_DAYS: int = 365
-const NEGLECT_CONDITION: float = 0.4
-const NEGLECT_MAINTENANCE_DAYS: int = 365
+const FACILITY_GRADE_THRESHOLD: float = BaselineScript.MUNICIPAL_FACILITY_GRADE_THRESHOLD
+const ROAD_REOPEN_WINDOW_DAYS: int = BaselineScript.MUNICIPAL_ROAD_REOPEN_WINDOW_DAYS
+const NEGLECT_CONDITION: float = BaselineScript.MUNICIPAL_NEGLECT_CONDITION
+const NEGLECT_MAINTENANCE_DAYS: int = BaselineScript.MUNICIPAL_NEGLECT_MAINTENANCE_DAYS
 
 ## 邮政包裹状态。
 const PARCEL_ACCEPTED: String = "accepted"

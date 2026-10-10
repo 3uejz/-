@@ -1,20 +1,84 @@
 {
   "MH_STRESS_DISORDER_THRESHOLD": 70.0,
   "MH_TREATMENTS": {
-    "psychotherapy": {"name": "心理咨询", "cost": 30000, "minutes": 90, "cure": 0.25, "remit": 0.5, "side_effect": 0.02, "adherence": 0.8},
-    "medication": {"name": "药物治疗", "cost": 20000, "minutes": 30, "cure": 0.15, "remit": 0.6, "side_effect": 0.35, "adherence": 0.65},
-    "cbt": {"name": "认知行为治疗", "cost": 50000, "minutes": 120, "cure": 0.35, "remit": 0.45, "side_effect": 0.03, "adherence": 0.7},
-    "hospitalization": {"name": "住院治疗", "cost": 300000, "minutes": 14400, "cure": 0.2, "remit": 0.6, "side_effect": 0.1, "adherence": 0.9},
-    "crisis_intervention": {"name": "重症干预", "cost": 80000, "minutes": 240, "cure": 0.05, "remit": 0.75, "side_effect": 0.08, "adherence": 0.85}
+    "psychotherapy": {
+      "name": "心理咨询",
+      "cost": 30000,
+      "minutes": 90,
+      "cure": 0.25,
+      "remit": 0.5,
+      "side_effect": 0.02,
+      "adherence": 0.8
+    },
+    "medication": {
+      "name": "药物治疗",
+      "cost": 20000,
+      "minutes": 30,
+      "cure": 0.15,
+      "remit": 0.6,
+      "side_effect": 0.35,
+      "adherence": 0.65
+    },
+    "cbt": {
+      "name": "认知行为治疗",
+      "cost": 50000,
+      "minutes": 120,
+      "cure": 0.35,
+      "remit": 0.45,
+      "side_effect": 0.03,
+      "adherence": 0.7
+    },
+    "hospitalization": {
+      "name": "住院治疗",
+      "cost": 300000,
+      "minutes": 14400,
+      "cure": 0.2,
+      "remit": 0.6,
+      "side_effect": 0.1,
+      "adherence": 0.9
+    },
+    "crisis_intervention": {
+      "name": "重症干预",
+      "cost": 80000,
+      "minutes": 240,
+      "cure": 0.05,
+      "remit": 0.75,
+      "side_effect": 0.08,
+      "adherence": 0.85
+    }
   },
   "MH_EVENTS": {
-    "unemployment": {"mood": -12.0, "stress": 18.0},
-    "breakup": {"mood": -15.0, "stress": 16.0},
-    "debt": {"mood": -8.0, "stress": 14.0},
-    "stay_up": {"mood": -5.0, "stress": 8.0},
-    "illness": {"mood": -10.0, "stress": 12.0},
-    "marriage": {"mood": 12.0, "stress": 4.0},
-    "promotion": {"mood": 10.0, "stress": 6.0},
-    "praise": {"mood": 6.0, "stress": -4.0}
+    "unemployment": {
+      "mood": -12.0,
+      "stress": 18.0
+    },
+    "breakup": {
+      "mood": -15.0,
+      "stress": 16.0
+    },
+    "debt": {
+      "mood": -8.0,
+      "stress": 14.0
+    },
+    "stay_up": {
+      "mood": -5.0,
+      "stress": 8.0
+    },
+    "illness": {
+      "mood": -10.0,
+      "stress": 12.0
+    },
+    "marriage": {
+      "mood": 12.0,
+      "stress": 4.0
+    },
+    "promotion": {
+      "mood": 10.0,
+      "stress": 6.0
+    },
+    "praise": {
+      "mood": 6.0,
+      "stress": -4.0
+    }
   }
 }

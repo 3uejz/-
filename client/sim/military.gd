@@ -18,9 +18,9 @@ const BaselineScript = preload("res://sim/baseline.gd")
 
 const MINUTES_PER_YEAR: float = 365.25 * 1440.0
 
-const ENLIST_MIN_AGE: float = 18.0
-const ENLIST_MAX_AGE: float = 24.0
-const ENLIST_MIN_HEALTH: float = 60.0
+const ENLIST_MIN_AGE: float = BaselineScript.MILITARY_ENLIST_MIN_AGE
+const ENLIST_MAX_AGE: float = BaselineScript.MILITARY_ENLIST_MAX_AGE
+const ENLIST_MIN_HEALTH: float = BaselineScript.MILITARY_ENLIST_MIN_HEALTH
 const ENLIST_MIN_EDUCATION: String = "edu.high_school"
 
 ## 兵种：技能需求、晋升速度（>1 更快）、作战强度（影响伤亡与军功）。
@@ -63,11 +63,11 @@ const RESTRICTED_VERBS: Array = [
 	"辞职", "跳槽", "创业", "注册公司", "参选", "入党", "移民", "出国", "罢工",
 ]
 
-const MISSION_BASE_CASUALTY: float = 0.05
-const MISSION_MERIT_BASE: float = 4.0
-const TRAINING_MERIT_PER_DAY: float = 0.1
-const GARRISON_MERIT_PER_YEAR: float = 2.0
-const DISCHARGE_PAY_PER_YEAR: float = 2.0   # 退役金 = 月薪 × 年数 × 系数（月数）
+const MISSION_BASE_CASUALTY: float = BaselineScript.MILITARY_MISSION_BASE_CASUALTY
+const MISSION_MERIT_BASE: float = BaselineScript.MILITARY_MISSION_MERIT_BASE
+const TRAINING_MERIT_PER_DAY: float = BaselineScript.MILITARY_TRAINING_MERIT_PER_DAY
+const GARRISON_MERIT_PER_YEAR: float = BaselineScript.MILITARY_GARRISON_MERIT_PER_YEAR
+const DISCHARGE_PAY_PER_YEAR: float = BaselineScript.MILITARY_DISCHARGE_PAY_PER_YEAR   # 退役金 = 月薪 × 年数 × 系数（月数）
 
 
 # --- 兵种与军衔 ---

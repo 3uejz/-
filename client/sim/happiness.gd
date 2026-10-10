@@ -7,6 +7,8 @@ extends RefCounted
 ## 长期低值提高精神疾病与中年危机权重；极端低值触发危机事件。
 
 ## 幸福加权公式（design D4，权重和 = 1.0）。
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const WEIGHTS: Dictionary = {
 	"relations": 0.25, "career": 0.20, "health": 0.20, "faith": 0.15, "meaning": 0.20,
 }
@@ -15,11 +17,11 @@ const MEANING_WEIGHTS: Dictionary = {
 	"pursuit": 0.30, "family": 0.25, "achievement": 0.25, "values_consistency": 0.20,
 }
 
-const LOW_THRESHOLD: float = 30.0
-const EXTREME_LOW: float = 15.0
-const LOW_DAYS_FOR_RISK: int = 30
-const MIDLIFE_AGE_MIN: float = 40.0
-const MIDLIFE_AGE_MAX: float = 55.0
+const LOW_THRESHOLD: float = BaselineScript.HAPPY_LOW_THRESHOLD
+const EXTREME_LOW: float = BaselineScript.HAPPY_EXTREME_LOW
+const LOW_DAYS_FOR_RISK: int = BaselineScript.HAPPY_LOW_DAYS_FOR_RISK
+const MIDLIFE_AGE_MIN: float = BaselineScript.HAPPY_MIDLIFE_AGE_MIN
+const MIDLIFE_AGE_MAX: float = BaselineScript.HAPPY_MIDLIFE_AGE_MAX
 
 
 func _clamp100(v: float) -> float:

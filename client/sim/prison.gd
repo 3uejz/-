@@ -5,12 +5,14 @@ extends RefCounted
 ## 覆盖劳动、探视、狱友关系与帮派博弈、违纪、减刑与假释、越狱尝试；
 ## 在监时世界继续推进；出狱保留案底并施加长期影响（就业歧视与再犯风险）。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const GANGS: Array = ["none", "order", "brotherhood", "lone"]
 const GANG_NAMES: Dictionary = {"none": "中立", "order": "秩序帮", "brotherhood": "兄弟会", "lone": "独行"}
 
-const PAROLE_BEHAVIOR_MIN: float = 60.0
-const ESCAPE_BASE: float = 0.05
-const RECIDIVISM_BASE: float = 0.3
+const PAROLE_BEHAVIOR_MIN: float = BaselineScript.PRISON_PAROLE_BEHAVIOR_MIN
+const ESCAPE_BASE: float = BaselineScript.PRISON_ESCAPE_BASE
+const RECIDIVISM_BASE: float = BaselineScript.PRISON_RECIDIVISM_BASE
 
 
 func new_inmate(name: String, crime: String, sentence_days: int) -> Dictionary:

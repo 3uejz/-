@@ -1,19 +1,75 @@
 {
   "DS_INTEREST_RATE_CAP": 0.36,
   "DS_BUSINESSES": {
-    "pawn": {"name": "典当", "requires_license": true, "rate_cap": 0.36, "collateral_required": true, "era": "all"},
-    "private_lending": {"name": "民间借贷", "requires_license": false, "rate_cap": 0.36, "collateral_required": false, "era": "all"},
-    "micro_loan": {"name": "小额信贷", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "all"},
-    "consumer_finance": {"name": "消费金融", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "all"},
-    "crowdfunding": {"name": "众筹", "requires_license": true, "rate_cap": 0.0, "collateral_required": false, "era": "all"},
-    "p2p": {"name": "P2P", "requires_license": true, "rate_cap": 0.24, "collateral_required": false, "era": "2013-2020"}
+    "pawn": {
+      "name": "典当",
+      "requires_license": true,
+      "rate_cap": 0.36,
+      "collateral_required": true,
+      "era": "all"
+    },
+    "private_lending": {
+      "name": "民间借贷",
+      "requires_license": false,
+      "rate_cap": 0.36,
+      "collateral_required": false,
+      "era": "all"
+    },
+    "micro_loan": {
+      "name": "小额信贷",
+      "requires_license": true,
+      "rate_cap": 0.24,
+      "collateral_required": false,
+      "era": "all"
+    },
+    "consumer_finance": {
+      "name": "消费金融",
+      "requires_license": true,
+      "rate_cap": 0.24,
+      "collateral_required": false,
+      "era": "all"
+    },
+    "crowdfunding": {
+      "name": "众筹",
+      "requires_license": true,
+      "rate_cap": 0.0,
+      "collateral_required": false,
+      "era": "all"
+    },
+    "p2p": {
+      "name": "P2P",
+      "requires_license": true,
+      "rate_cap": 0.24,
+      "collateral_required": false,
+      "era": "2013-2020"
+    }
   },
   "DS_COLLECTION_MODES": {
-    "reminder": {"name": "短信电话提醒", "legal": true, "severity": 0.10},
-    "litigation": {"name": "起诉", "legal": true, "severity": 0.20},
-    "harassment": {"name": "骚扰", "legal": false, "severity": 0.40},
-    "home_visit": {"name": "上门施压", "legal": false, "severity": 0.65},
-    "violence": {"name": "暴力催收", "legal": false, "severity": 0.90}
+    "reminder": {
+      "name": "短信电话提醒",
+      "legal": true,
+      "severity": 0.1
+    },
+    "litigation": {
+      "name": "起诉",
+      "legal": true,
+      "severity": 0.2
+    },
+    "harassment": {
+      "name": "骚扰",
+      "legal": false,
+      "severity": 0.4
+    },
+    "home_visit": {
+      "name": "上门施压",
+      "legal": false,
+      "severity": 0.65
+    },
+    "violence": {
+      "name": "暴力催收",
+      "legal": false,
+      "severity": 0.9
+    }
   },
   "DS_P2P_ERA_START": 2013,
   "DS_P2P_ERA_END": 2020,

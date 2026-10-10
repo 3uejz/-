@@ -10,20 +10,22 @@ extends RefCounted
 ##   - 项目状态存于独立 project 字典；资源、技能与随机源均由调用方注入，便于测试与复现；
 ##   - 经费以最小货币单位整数从 resources["funding"] 扣减，收入经 EconomySystem 注入。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const STAGES: Array = ["topic", "literature", "experiment", "data", "paper", "peer_review", "published", "rejected"]
 
-const STARTUP_COST: int = 1000000
-const EXPERIMENT_COST: int = 500000
-const PEER_REVIEW_THRESHOLD: float = 50.0
-const PATENT_MIN_QUALITY: float = 70.0
-const PUBLISH_PRESTIGE_FACTOR: float = 0.5
-const PUBLISH_INCOME_PER_QUALITY: int = 5000
-const ERA_UNLOCK_QUALITY: float = 90.0
+const STARTUP_COST: int = BaselineScript.RESEARCH_STARTUP_COST
+const EXPERIMENT_COST: int = BaselineScript.RESEARCH_EXPERIMENT_COST
+const PEER_REVIEW_THRESHOLD: float = BaselineScript.RESEARCH_PEER_REVIEW_THRESHOLD
+const PATENT_MIN_QUALITY: float = BaselineScript.RESEARCH_PATENT_MIN_QUALITY
+const PUBLISH_PRESTIGE_FACTOR: float = BaselineScript.RESEARCH_PUBLISH_PRESTIGE_FACTOR
+const PUBLISH_INCOME_PER_QUALITY: int = BaselineScript.RESEARCH_PUBLISH_INCOME_PER_QUALITY
+const ERA_UNLOCK_QUALITY: float = BaselineScript.RESEARCH_ERA_UNLOCK_QUALITY
 
-const SKILL_WEIGHT: float = 0.4
-const INVESTMENT_WEIGHT: float = 0.3
-const INNOVATION_WEIGHT: float = 0.2
-const LUCK_WEIGHT: float = 0.1
+const SKILL_WEIGHT: float = BaselineScript.RESEARCH_SKILL_WEIGHT
+const INVESTMENT_WEIGHT: float = BaselineScript.RESEARCH_INVESTMENT_WEIGHT
+const INNOVATION_WEIGHT: float = BaselineScript.RESEARCH_INNOVATION_WEIGHT
+const LUCK_WEIGHT: float = BaselineScript.RESEARCH_LUCK_WEIGHT
 
 
 func new_project(topic: String) -> Dictionary:

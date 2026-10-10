@@ -11,7 +11,7 @@ const BaselineScript = preload("res://sim/baseline.gd")
 const GregorianScript = preload("res://sim/gregorian.gd")
 
 const MINUTES_PER_YEAR: float = 365.25 * 1440.0
-const MASK: int = -1
+const MASK: int = BaselineScript.NPC_MASK
 
 ## 生命阶段。
 const STAGE_CHILD: String = "child"

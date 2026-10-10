@@ -9,7 +9,9 @@ extends RefCounted
 ##
 ## 为便于 headless 测试与离线近似，本类不依赖 Autoload，也不持节点树，纯 Dictionary 状态。
 
-const MINUTES_PER_DAY: int = 1440
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const MINUTES_PER_DAY: int = BaselineScript.WAKE_MINUTES_PER_DAY
 const MINUTES_PER_YEAR: float = 1440.0 * 365.25
 
 const KIND_CASE: String = "case"
@@ -28,7 +30,7 @@ const KIND_HANDLERS: Dictionary = {
 	KIND_SURGERY: "advance_surgery",
 }
 
-const EPSILON: float = 0.000001
+const EPSILON: float = BaselineScript.WAKE_EPSILON
 
 var _entries: Dictionary = {}      # id -> entry dict
 var _now_minute: int = 0

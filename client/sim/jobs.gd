@@ -19,7 +19,7 @@ extends RefCounted
 const BaselineScript = preload("res://sim/baseline.gd")
 
 const MINUTES_PER_YEAR: float = 365.25 * 1440.0
-const DAYS_PER_MONTH: float = 30.0
+const DAYS_PER_MONTH: float = BaselineScript.JOB_DAYS_PER_MONTH
 
 ## 学历顺序（高学历满足低学历要求；与 EducationSystem 口径一致）。
 const DEGREE_ORDER: Array = [
@@ -54,19 +54,19 @@ const DEF_DEFAULTS: Dictionary = {
 	"military": false,
 }
 
-const PROBATION_DAYS: int = 90
-const WORK_STAMINA_PER_HOUR: float = 6.0
-const WORK_MOOD_PER_HOUR: float = 1.5
-const MOOD_THRESHOLD: float = 40.0
-const PERFORMANCE_GAIN_PER_HOUR: float = 0.25
-const PERFORMANCE_DECAY_PER_DAY: float = 0.1
-const PROMOTION_PERFORMANCE_MIN: float = 70.0
-const PROMOTION_INTERNAL_REP_MIN: float = 60.0
-const PROMOTION_BASE_CHANCE: float = 0.55
-const INTERVIEW_CHARM_WEIGHT: float = 0.15
-const INTERVIEW_LUCK_WEIGHT: float = 0.1
-const RETIREMENT_YEARS_REQUIRED: float = 20.0
-const RETIREMENT_PENSION_RATE: float = 0.02
+const PROBATION_DAYS: int = BaselineScript.JOB_PROBATION_DAYS
+const WORK_STAMINA_PER_HOUR: float = BaselineScript.JOB_WORK_STAMINA_PER_HOUR
+const WORK_MOOD_PER_HOUR: float = BaselineScript.JOB_WORK_MOOD_PER_HOUR
+const MOOD_THRESHOLD: float = BaselineScript.JOB_MOOD_THRESHOLD
+const PERFORMANCE_GAIN_PER_HOUR: float = BaselineScript.JOB_PERFORMANCE_GAIN_PER_HOUR
+const PERFORMANCE_DECAY_PER_DAY: float = BaselineScript.JOB_PERFORMANCE_DECAY_PER_DAY
+const PROMOTION_PERFORMANCE_MIN: float = BaselineScript.JOB_PROMOTION_PERFORMANCE_MIN
+const PROMOTION_INTERNAL_REP_MIN: float = BaselineScript.JOB_PROMOTION_INTERNAL_REP_MIN
+const PROMOTION_BASE_CHANCE: float = BaselineScript.JOB_PROMOTION_BASE_CHANCE
+const INTERVIEW_CHARM_WEIGHT: float = BaselineScript.JOB_INTERVIEW_CHARM_WEIGHT
+const INTERVIEW_LUCK_WEIGHT: float = BaselineScript.JOB_INTERVIEW_LUCK_WEIGHT
+const RETIREMENT_YEARS_REQUIRED: float = BaselineScript.JOB_RETIREMENT_YEARS_REQUIRED
+const RETIREMENT_PENSION_RATE: float = BaselineScript.JOB_RETIREMENT_PENSION_RATE
 
 var _defs: Dictionary = {}   # id -> def
 

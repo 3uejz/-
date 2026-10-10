@@ -9,6 +9,8 @@ extends RefCounted
 ##   - 人格以普通 Dictionary（键为五维英文名）表示，便于直接嵌入 player["attrs"]["personality"]。
 ##   - 累计漂移以独立字典跟踪，保证「一生漂移上限」可被多次小幅调整累积后仍受约束。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const BIG_FIVE: Array = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"]
 const DIM_NAMES: Dictionary = {
 	"openness": "开放性",
@@ -19,15 +21,15 @@ const DIM_NAMES: Dictionary = {
 }
 
 ## 遗传权重：父母均值占比，其余为人群基线 50。
-const HEREDITY_WEIGHT: float = 0.5
-const POPULATION_BASELINE: float = 50.0
+const HEREDITY_WEIGHT: float = BaselineScript.PERSONALITY_HEREDITY_WEIGHT
+const POPULATION_BASELINE: float = BaselineScript.PERSONALITY_POPULATION_BASELINE
 ## 出生噪声幅度（±）。
-const NOISE_RANGE: float = 12.0
+const NOISE_RANGE: float = BaselineScript.PERSONALITY_NOISE_RANGE
 ## 一生每维累计漂移绝对值上限。
-const LIFETIME_DRIFT_CAP: float = 20.0
+const LIFETIME_DRIFT_CAP: float = BaselineScript.PERSONALITY_LIFETIME_DRIFT_CAP
 ## 成年年龄与成年后漂移速率。
-const ADULT_AGE: float = 25.0
-const ADULT_DRIFT_FACTOR: float = 0.25
+const ADULT_AGE: float = BaselineScript.PERSONALITY_ADULT_AGE
+const ADULT_DRIFT_FACTOR: float = BaselineScript.PERSONALITY_ADULT_DRIFT_FACTOR
 
 
 func _clamp(v: float) -> float:

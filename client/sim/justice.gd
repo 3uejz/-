@@ -7,6 +7,8 @@ extends RefCounted
 ## 律师水平、关系网、证据充分度与舆论共同影响判决；覆盖罚金/缓刑/监禁/无期/死刑刑种与国别差异；
 ## 支持认罪协商、自辩、冤假错案与再审。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const CrimeScript = preload("res://sim/crime.gd")
 
 const EVIDENCE_KINDS: Array = ["physical", "witness", "surveillance", "digital", "confession"]
@@ -15,7 +17,7 @@ const EVIDENCE_NAMES: Dictionary = {"physical": "物证", "witness": "人证", "
 
 const STAGES: Array = ["report", "investigate", "arrest", "interrogate", "prosecute", "trial", "sentence", "appeal"]
 const SENTENCE_TYPES: Array = ["fine", "probation", "prison", "life", "death"]
-const LAWYER_FEE_PER_LEVEL: int = 200000
+const LAWYER_FEE_PER_LEVEL: int = BaselineScript.JUSTICE_LAWYER_FEE_PER_LEVEL
 
 
 func new_case(crime: String, suspect: String, region: String) -> Dictionary:

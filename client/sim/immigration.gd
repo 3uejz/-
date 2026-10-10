@@ -6,6 +6,8 @@ extends RefCounted
 ## 遣返风险；成功后切换法域（法律/税制/语言/社会关系成本）；处理双重国籍与兵役冲突。
 
 ## 国家档案（轻量）：语言、法域、税负、社保、兵役。
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const COUNTRIES: Dictionary = {
 	"CN": {"name": "中国", "language": "zh-CN", "legal_system": "civil_law", "tax": 0.2, "welfare": 0.4, "military_service": true, "dual_allowed": false},
 	"US": {"name": "美国", "language": "en-US", "legal_system": "common_law", "tax": 0.28, "welfare": 0.3, "military_service": false, "dual_allowed": true},
@@ -27,8 +29,8 @@ const VISAS: Dictionary = {
 	"asylum": {"name": "庇护签证", "min_funds": 0, "min_language": 0, "min_points": 0, "needs_degree": false, "needs_persecution": true},
 }
 
-const MINUTES_PER_YEAR: int = 525960
-const NATURALIZE_YEARS: int = 5
+const MINUTES_PER_YEAR: int = BaselineScript.IMMIG_MINUTES_PER_YEAR
+const NATURALIZE_YEARS: int = BaselineScript.IMMIG_NATURALIZE_YEARS
 
 
 func countries() -> Array:

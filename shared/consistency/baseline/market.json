@@ -1,0 +1,4 @@
+{
+  "MARKET_MIN_SUPPLY": 0.01,
+  "MARKET_FX_EPSILON": 1e-09
+}

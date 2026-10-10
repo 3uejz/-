@@ -58,8 +58,8 @@ const BARRIERS: Array = ["tariff", "quota", "anti_dumping", "origin"]
 const RISK_EVENTS: Array = ["trade_war", "sanction", "war"]
 const SERVICES: Array = ["freight_forwarder", "customs_broker", "overseas_warehouse", "cross_border_ecommerce"]
 
-const DEFAULT_TARIFF_RATE: float = 0.08
-const DEFAULT_VAT_RATE: float = 0.13
+const DEFAULT_TARIFF_RATE: float = BaselineScript.TRADE_DEFAULT_TARIFF_RATE
+const DEFAULT_VAT_RATE: float = BaselineScript.TRADE_DEFAULT_VAT_RATE
 
 
 # --- 数据表 ---

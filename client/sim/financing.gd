@@ -14,6 +14,8 @@ extends RefCounted
 ##   - 回购支出经 burn_money 回收；退出收益经 issue_money 注入创始人账户；
 ##   - 无状态机随机，概率性交由注入 rng（当前实现为确定性规则）。
 
+const BaselineScript = preload("res://sim/baseline.gd")
+
 const STAGES: Array = ["seed", "angel", "a", "b", "c"]
 
 ## 各轮出让比例区间（占投后股权）。
@@ -25,15 +27,15 @@ const EQUITY_RANGE: Dictionary = {
 	"c": [0.05, 0.12],
 }
 
-const CONTROL_THRESHOLD: float = 0.34
-const VAM_REPURCHASE_RATIO: float = 0.20
-const VAM_CONTROL_TRANSFER: float = 0.20
-const REVENUE_MULTIPLE: float = 8.0
-const ANNUALIZE_DAYS: int = 365
-const GROWTH_BONUS_CAP: float = 2.0
-const SENTIMENT_MIN: float = 0.1
-const SENTIMENT_MAX: float = 3.0
-const MIN_VALUATION: int = 10000000
+const CONTROL_THRESHOLD: float = BaselineScript.FIN_CONTROL_THRESHOLD
+const VAM_REPURCHASE_RATIO: float = BaselineScript.FIN_VAM_REPURCHASE_RATIO
+const VAM_CONTROL_TRANSFER: float = BaselineScript.FIN_VAM_CONTROL_TRANSFER
+const REVENUE_MULTIPLE: float = BaselineScript.FIN_REVENUE_MULTIPLE
+const ANNUALIZE_DAYS: int = BaselineScript.FIN_ANNUALIZE_DAYS
+const GROWTH_BONUS_CAP: float = BaselineScript.FIN_GROWTH_BONUS_CAP
+const SENTIMENT_MIN: float = BaselineScript.FIN_SENTIMENT_MIN
+const SENTIMENT_MAX: float = BaselineScript.FIN_SENTIMENT_MAX
+const MIN_VALUATION: int = BaselineScript.FIN_MIN_VALUATION
 
 const EXITS: Array = ["ipo", "acquired"]
 

@@ -13,15 +13,17 @@ extends RefCounted
 ##   - 内容可随内容包扩展：register() 可无限追加技能定义；
 ##   - 随机性不由本模块引入，天赋/指导/疲劳均由调用方注入，便于复现与三端对齐。
 
-const MAX_LEVEL: int = 20
-const XP_BASE: float = 100.0
-const XP_EXPONENT: float = 1.5
-const PRACTICE_BASE: float = 10.0
-const DIMINISH_START: int = 10
-const DIMINISH_RATE: float = 0.9
-const INNATE_CAP: int = 8
-const IDLE_GRACE_DAYS: float = 30.0
-const FORGET_PER_DAY: float = 0.02
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const MAX_LEVEL: int = BaselineScript.SKILL_MAX_LEVEL
+const XP_BASE: float = BaselineScript.SKILL_XP_BASE
+const XP_EXPONENT: float = BaselineScript.SKILL_XP_EXPONENT
+const PRACTICE_BASE: float = BaselineScript.SKILL_PRACTICE_BASE
+const DIMINISH_START: int = BaselineScript.SKILL_DIMINISH_START
+const DIMINISH_RATE: float = BaselineScript.SKILL_DIMINISH_RATE
+const INNATE_CAP: int = BaselineScript.SKILL_INNATE_CAP
+const IDLE_GRACE_DAYS: float = BaselineScript.SKILL_IDLE_GRACE_DAYS
+const FORGET_PER_DAY: float = BaselineScript.SKILL_FORGET_PER_DAY
 
 const TREES: Array = ["life", "career", "academic", "art", "sports", "social", "crime"]
 const TREE_NAMES: Dictionary = {
