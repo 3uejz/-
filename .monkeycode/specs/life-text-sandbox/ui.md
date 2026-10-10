@@ -156,6 +156,8 @@ client/ui/
 
 已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（12 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
 
+主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通「角色与属性」「背包与装备」两个验证面板；其余面板显示建设中占位。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`。
+
 ## 12. 测试策略
 
 - 主题：亮/暗与三套无障碍配色的对比度校验通过；切换幂等；token 无硬编码遗漏。

@@ -6,6 +6,9 @@ extends Control
 const ParserScript = preload("res://command/command_parser.gd")
 const NarratorScript = preload("res://sim/narrator.gd")
 const PaletteScript = preload("res://ui/settings/accessibility_palette.gd")
+const ThemeManagerScript = preload("res://ui/theme/theme_manager.gd")
+const PanelContentScript = preload("res://ui/panels/panel_content.gd")
+const PanelRegistryScript = preload("res://ui/components/panel_registry.gd")
 
 ## 常驻快捷动作：未输入即可游玩（R35.5）。
 const QUICK_ACTIONS: Array = [
@@ -34,13 +37,32 @@ var _parser
 var _narrator
 var _palette
 var _command_handler: Callable = Callable()
+var _theme_manager
+var _panel_registry
+var _drawers: Dictionary = {}          ## 面板 id -> 抽屉节点
+var _drawer_row: HBoxContainer
+
+## 快捷动词 -> 侧边面板映射，使按钮与文字指令同源打开面板（R35.5）。
+const VERB_PANELS: Dictionary = {
+	"看自己": "character", "看角色": "character", "属性": "character",
+	"看背包": "inventory", "背包": "inventory",
+	"看技能": "skills", "技能树": "skills",
+	"看关系": "relations", "人脉": "relations",
+	"看地图": "map", "地图": "map",
+	"看资产": "finance", "财务": "finance",
+}
 
 func _ready() -> void:
 	_parser = ParserScript.new()
 	_narrator = NarratorScript.new()
 	_palette = PaletteScript.new()
+	_theme_manager = ThemeManagerScript.new()
+	_theme_manager.apply_to(self)
+	_panel_registry = PanelRegistryScript.new()
 	_connect_nodes()
 	_build_actions()
+	_ensure_drawer_row()
+	_build_panel_buttons()
 	refresh_status()
 	append_message("浮生录：输入中文指令开始你的一生。", "info")
 
@@ -84,6 +106,9 @@ func submit(text: String) -> void:
 
 ## 动作面板/快捷键入口与文字输入同源（R27 意图同源）。
 func dispatch_action(verb: String, objects: Array = [], params: Dictionary = {}, source: String = "panel") -> void:
+	var pid: String = String(VERB_PANELS.get(verb, ""))
+	if pid != "":
+		_toggle_panel(pid)
 	var intent = _parser.from_action(verb, objects, params, _context(), source)
 	if not intent.ok:
 		append_message(intent.error, "danger")
@@ -136,6 +161,141 @@ func _build_actions() -> void:
 		var params: Dictionary = action.get("params", {})
 		button.pressed.connect(func() -> void: dispatch_action(verb, objects, params, "panel"))
 		_action_panel.add_child(button)
+
+# --- 侧边抽屉面板（任务 47/51） ---
+
+## 面板条件可见：目前仅常驻面板；异常/金手指面板待对应状态接入后开放。
+func _panel_conditions() -> Dictionary:
+	return {}
+
+func _ensure_drawer_row() -> void:
+	if is_instance_valid(_drawer_row):
+		return
+	var root := get_node_or_null("Root")
+	if root == null:
+		return
+	_drawer_row = HBoxContainer.new()
+	_drawer_row.name = "Drawers"
+	root.add_child(_drawer_row)
+	var body := root.get_node_or_null("Body")
+	if body != null:
+		root.move_child(_drawer_row, body.get_index() + 1)
+
+func _build_panel_buttons() -> void:
+	if not is_instance_valid(_action_panel) or _panel_registry == null:
+		return
+	var label := Label.new()
+	label.text = "面板"
+	_action_panel.add_child(label)
+	for id in _panel_registry.available(_panel_conditions()):
+		var panel_id := String(id)
+		var button := Button.new()
+		button.text = _panel_registry.title_of(panel_id)
+		button.focus_mode = Control.FOCUS_ALL
+		button.pressed.connect(func() -> void: _toggle_panel(panel_id))
+		_action_panel.add_child(button)
+
+## 打开面板（可多开并排，集中在焦点）。返回是否已打开。
+func open_panel(id: String, conditions: Dictionary = {}) -> bool:
+	if _panel_registry == null:
+		return false
+	var cond: Dictionary = conditions if not conditions.is_empty() else _panel_conditions()
+	var result: Dictionary = _panel_registry.open(id, cond)
+	if not bool(result.get("ok", false)):
+		return false
+	if _drawers.has(id):
+		return true
+	_ensure_drawer_row()
+	if not is_instance_valid(_drawer_row):
+		return false
+	var drawer := _build_drawer(id)
+	_drawer_row.add_child(drawer)
+	_drawers[id] = drawer
+	return true
+
+func close_panel(id: String) -> bool:
+	if _panel_registry == null or not _panel_registry.close(id):
+		return false
+	if _drawers.has(id):
+		var drawer = _drawers[id]
+		if is_instance_valid(drawer):
+			drawer.queue_free()
+		_drawers.erase(id)
+	return true
+
+func _toggle_panel(id: String) -> void:
+	if _panel_registry != null and _panel_registry.is_open(id):
+		close_panel(id)
+	else:
+		open_panel(id)
+
+func has_panel(id: String) -> bool:
+	return _drawers.has(id)
+
+func panel_count() -> int:
+	return _drawers.size()
+
+func _build_drawer(id: String) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = "Drawer_%s" % id
+	panel.custom_minimum_size = Vector2(300, 0)
+	var column := VBoxContainer.new()
+	panel.add_child(column)
+	var header := HBoxContainer.new()
+	var title := Label.new()
+	title.text = _panel_registry.title_of(id)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var close_button := Button.new()
+	close_button.text = "关闭"
+	close_button.pressed.connect(func() -> void: close_panel(id))
+	header.add_child(close_button)
+	column.add_child(header)
+	column.add_child(HSeparator.new())
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 240)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	column.add_child(scroll)
+	_fill_panel_content(content, id)
+	return panel
+
+func _fill_panel_content(container: VBoxContainer, id: String) -> void:
+	var data: Dictionary = PanelContentScript.build(id, _current_player())
+	if bool(data.get("empty", false)):
+		var hint := Label.new()
+		hint.text = String(data.get("empty_hint", ""))
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.add_theme_color_override("font_color", _theme_manager.color("color.text.disabled"))
+		container.add_child(hint)
+		return
+	for section in data.get("sections", []):
+		var section_title := Label.new()
+		section_title.text = String(section.get("title", ""))
+		container.add_child(section_title)
+		for row in section.get("rows", []):
+			container.add_child(_row_node(String(row.get("label", "")), String(row.get("value", ""))))
+		container.add_child(HSeparator.new())
+
+func _row_node(label_text: String, value_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var left := Label.new()
+	left.text = label_text
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var right := Label.new()
+	right.text = value_text
+	right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(left)
+	row.add_child(right)
+	return row
+
+func _current_player() -> Dictionary:
+	var game = get_node_or_null("/root/GameState")
+	if game != null and game.player is Dictionary:
+		return game.player
+	return {}
 
 # --- 叙事流 ---
 
