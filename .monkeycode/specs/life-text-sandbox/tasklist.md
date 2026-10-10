@@ -350,7 +350,7 @@
   - [x] 45.1 打通 `engine/` overlay 与 lifetext 分支基线并记录构建步骤
   - [ ] 45.2 产出首个 Windows 导出自定义模板并验证可运行
 
-- [ ] 46. 建立共享数值基线单一真源与代码生成（自 M0 起并行）
+- [x] 46. 建立共享数值基线单一真源与代码生成（自 M0 起并行）
   - 以 `shared/consistency/baseline/*.json` 为单一真源（`vectors/baseline.json` 为生成快照），由 `tools/genbaseline` 生成 `client/sim/baseline_generated.gd` 与 `server/internal/sim/baseline_generated.go`
   - 迁移现有散落常量（region/weather/era/economy 等）入真源，保留运行时 remote override 叠加
   - `scripts/test.sh` 与 CI 校验生成物无 diff；把未来的 C++ 内核纳入同一真源
@@ -405,7 +405,7 @@
   - 对应 `gaps.md` 系统性问题 4、5
   - [x] 51.1 编写面板入口与动词注册完整性检查
 
-- [ ] 52. 跨域接口、权威边界与休眠补算契约（横切）
+- [x] 52. 跨域接口、权威边界与休眠补算契约（横切）
   - 定义统一事件/修饰符字典（天气、中断、罢工、数据泄露、能源价格、荣誉等）
   - 逐域标注后端权威边界与离线近似/上线合并锚点
   - 扩展 `RegionManager.wake` 覆盖案件、灾害、在建工程、逾期催收、异常暴露、手术等
@@ -413,7 +413,7 @@
   - [x] 52.1 编写休眠补算守恒与幂等测试
   - [x] 52.2 编写权威边界合并测试
 
-- [ ] 53. 测试覆盖补齐（横切）
+- [x] 53. 测试覆盖补齐（横切）
   - 为 D37/D38/D40/D41/D42/D43/D46 补专属测试，为各域补边界/失败测试
   - 把新增领域不变量接入 Correctness Properties 与属性测试
   - 对应 `gaps.md` 系统性问题 9
