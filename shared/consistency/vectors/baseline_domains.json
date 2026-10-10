@@ -75,6 +75,95 @@
       "MACRO_BASE_INFLATION": 0.02,
       "GBM_DRIFT_DEFAULT": 0.08,
       "BANK_CREDIT_START": 700
+    },
+    "epidemic": {
+      "SEIR_BETA_REDUCTION_CAP": 0.95,
+      "SEIR_SURGE_EXTRA_SLOPE": 0.5,
+      "SEIR_BEDS_DIVISOR": 1000.0,
+      "SEIR_DEFAULT_VACCINE_HESITANCY": 0.2,
+      "SEIR_POLICY_TRUST_PENALTY": 0.02,
+      "SEIR_IMMUNITY_WANE_RATE": 0.1,
+      "SEIR_ALERT_WATCH_PREVALENCE": 0.0005,
+      "SEIR_ALERT_ALERT_OCCUPANCY": 1.0,
+      "SEIR_ALERT_EMERGENCY_OCCUPANCY": 1.5,
+      "SEIR_DEFAULT_PARAMS": {
+        "beta": 0.5,
+        "sigma": 0.2,
+        "gamma": 0.1,
+        "mortality": 0.01,
+        "immunity_days": 180.0,
+        "mutation_rate": 0.001
+      },
+      "SEIR_POLICY_BETA_REDUCTION": {
+        "quarantine": 0.3,
+        "lockdown": 0.6,
+        "school_closure": 0.2,
+        "mask": 0.15,
+        "travel_restriction": 0.25,
+        "vaccine_mandate": 0.1
+      }
+    },
+    "environment": {
+      "ENV_DEFAULT_CARBON_PRICE": 100,
+      "ENV_CARBON_FINE_MULTIPLIER": 3.0,
+      "ENV_FOOTPRINT_SCOPE1": 0.5,
+      "ENV_FOOTPRINT_SCOPE2": 0.3,
+      "ENV_FOOTPRINT_SCOPE3": 0.2,
+      "ENV_ESG_SCORE_MAX": 100.0,
+      "ENV_ESG_GRADE_A": 80.0,
+      "ENV_ESG_GRADE_B": 65.0,
+      "ENV_ESG_GRADE_C": 50.0
+    },
+    "engineering": {
+      "ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD": 0.6,
+      "ENGINEERING_CHAIN": [
+        "survey",
+        "design",
+        "cost_estimation",
+        "construction",
+        "supervision",
+        "acceptance"
+      ],
+      "ENGINEERING_ZONE_TYPES": {
+        "residential": {"name": "居住区", "land_mult": 1.0, "population_pull": 1.0, "traffic_demand": 0.6},
+        "commercial": {"name": "商业区", "land_mult": 1.8, "population_pull": 0.3, "traffic_demand": 1.0},
+        "industrial": {"name": "工业区", "land_mult": 0.7, "population_pull": 0.4, "traffic_demand": 0.8},
+        "mixed": {"name": "综合区", "land_mult": 1.3, "population_pull": 0.8, "traffic_demand": 0.9},
+        "green": {"name": "绿地", "land_mult": 0.5, "population_pull": 0.2, "traffic_demand": 0.2}
+      }
+    },
+    "medical": {
+      "MEDICAL_UNTREATED_FREE_DAYS": 7.0,
+      "MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY": 1.0,
+      "MEDICAL_MISDIAGNOSIS_CHANCE": 0.1,
+      "MEDICAL_SERVICE_COST": {
+        "register": 5000,
+        "consult": 20000,
+        "medicine": 30000,
+        "admit": 200000,
+        "surgery": 500000,
+        "dental": 100000,
+        "checkup": 50000,
+        "therapy": 30000
+      }
+    },
+    "sports": {
+      "SPORTS_PEAK_MIN_AGE": 22,
+      "SPORTS_PEAK_MAX_AGE": 28,
+      "SPORTS_AGE_DECLINE_RATE": 0.97,
+      "SPORTS_AGE_FLOOR": 0.3,
+      "SPORTS_TRAIN_RATE": 0.4,
+      "SPORTS_INJURY_PENALTY": 8.0,
+      "SPORTS_INJURY_BASE_RISK": 0.02,
+      "SPORTS_DOPING_BOOST": 10.0,
+      "SPORTS_DOPING_BAN_CHANCE": 0.3
+    },
+    "aesthetics": {
+      "AESTHETICS_OVER_MEDICALIZATION_THRESHOLD": 5,
+      "AESTHETICS_STIFFNESS_PER_PROCEDURE": 8.0,
+      "AESTHETICS_ILLEGAL_SUCCESS_MULT": 0.55,
+      "AESTHETICS_ILLEGAL_COMPLICATION_MULT": 2.2,
+      "AESTHETICS_MALPRACTICE_COMPENSATION": 3000000
     }
   }
 }

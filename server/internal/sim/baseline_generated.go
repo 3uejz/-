@@ -10,6 +10,11 @@ const (
 	BaselineAddictionDependentMin                 = 20.0
 	BaselineAddictionSevereMin                    = 60.0
 	BaselineAddictionWithdrawalTriggerHours       = 12.0
+	BaselineAestheticsIllegalComplicationMult     = 2.2
+	BaselineAestheticsIllegalSuccessMult          = 0.55
+	BaselineAestheticsMalpracticeCompensation     = 3000000
+	BaselineAestheticsOverMedicalizationThreshold = 5
+	BaselineAestheticsStiffnessPerProcedure       = 8.0
 	BaselineBankCreditMax                         = 1000
 	BaselineBankCreditMin                         = 0
 	BaselineBankCreditOverduePenalty              = 100
@@ -29,6 +34,22 @@ const (
 	BaselineEmploymentBaseHireDifficulty          = 0.7
 	BaselineEmploymentUnemploymentSensitivity     = 3.0
 	BaselineEmploymentWageUnemploymentSensitivity = 1.5
+	BaselineEngineeringAcceptanceQualityThreshold = 0.6
+	BaselineEnvCarbonFineMultiplier               = 3.0
+	BaselineEnvDefaultCarbonPrice                 = 100
+	BaselineEnvEsgEmissionPenalty                 = 0.5
+	BaselineEnvEsgFineDivisor                     = 100000.0
+	BaselineEnvEsgFraudPenalty                    = 30.0
+	BaselineEnvEsgGradeA                          = 80.0
+	BaselineEnvEsgGradeB                          = 65.0
+	BaselineEnvEsgGradeC                          = 50.0
+	BaselineEnvEsgGreenInvestmentCap              = 15.0
+	BaselineEnvEsgGreenInvestmentUnit             = 1e+06
+	BaselineEnvEsgIllegalPenalty                  = 20.0
+	BaselineEnvEsgScoreMax                        = 100.0
+	BaselineEnvFootprintScope1                    = 0.5
+	BaselineEnvFootprintScope2                    = 0.3
+	BaselineEnvFootprintScope3                    = 0.2
 	BaselineEraCount                              = 9
 	BaselineFxAnnualVolatility                    = 0.08
 	BaselineFxFeeRate                             = 0.001
@@ -75,6 +96,9 @@ const (
 	BaselineMarginInitialRatio                    = 0.5
 	BaselineMarginLiquidationFee                  = 0.01
 	BaselineMarginMaintenanceRatio                = 0.25
+	BaselineMedicalMisdiagnosisChance             = 0.1
+	BaselineMedicalUntreatedFreeDays              = 7.0
+	BaselineMedicalUntreatedHealthDecayPerDay     = 1.0
 	BaselineMoneyMinorScale                       = 100
 	BaselineMoodRecoverPerHour                    = 1.0
 	BaselineNutritionAgeBaseYears                 = 20.0
@@ -95,11 +119,39 @@ const (
 	BaselineRegionEventRateAnnual                 = 1.0
 	BaselineRegionInflationRateAnnual             = 0.02
 	BaselineRegionMigrationRateAnnual             = 0.0
+	BaselineSeirAlertAlertOccupancy               = 1.0
+	BaselineSeirAlertAlertPrevalence              = 0.005
+	BaselineSeirAlertEmergencyOccupancy           = 1.5
+	BaselineSeirAlertEmergencyPrevalence          = 0.02
+	BaselineSeirAlertWatchPrevalence              = 0.0005
+	BaselineSeirBedsDivisor                       = 1000.0
+	BaselineSeirBetaReductionCap                  = 0.95
+	BaselineSeirDefaultVaccineHesitancy           = 0.2
+	BaselineSeirDoctorsDivisor                    = 500.0
+	BaselineSeirImmunityWaneRate                  = 0.1
+	BaselineSeirPolicyTrustPenalty                = 0.02
+	BaselineSeirStageDecliningRatio               = 0.01
+	BaselineSeirStagePeakRatio                    = 0.98
+	BaselineSeirStageResolvedInfectious           = 0.5
+	BaselineSeirSurgeExtraSlope                   = 0.5
+	BaselineSeirTestKitsDivisor                   = 100.0
+	BaselineSeirVaccineAcceptanceNoise            = 0.1
+	BaselineSeirVaccineStockDivisor               = 250.0
+	BaselineSeirVentilatorsDivisor                = 20000.0
 	BaselineSleepDebtGainPerHour                  = 4.166666666666667
 	BaselineSleepDebtIntelligencePenaltyPerHour   = 2.0
 	BaselineSleepDebtMoodPenaltyPerHour           = 3.0
 	BaselineSleepDebtRecoverPerHour               = 12.5
 	BaselineSleepDebtThreshold                    = 60.0
+	BaselineSportsAgeDeclineRate                  = 0.97
+	BaselineSportsAgeFloor                        = 0.3
+	BaselineSportsDopingBanChance                 = 0.3
+	BaselineSportsDopingBoost                     = 10.0
+	BaselineSportsInjuryBaseRisk                  = 0.02
+	BaselineSportsInjuryPenalty                   = 8.0
+	BaselineSportsPeakMaxAge                      = 28
+	BaselineSportsPeakMinAge                      = 22
+	BaselineSportsTrainRate                       = 0.4
 	BaselineStaminaDrainPerHour                   = 20.0
 	BaselineStaminaRegenAsleepPerHour             = 12.5
 	BaselineStaminaRegenAwakePerHour              = 5.0
@@ -189,6 +241,31 @@ var (
 		"KRW": map[string]any{"name": "韩元", "rate": 1350.0},
 		"USD": map[string]any{"name": "美元", "rate": 1.0},
 	}
+	BaselineEngineeringChain            []any          = []any{"survey", "design", "cost_estimation", "construction", "supervision", "acceptance"}
+	BaselineEngineeringProcurementModes map[string]any = map[string]any{
+		"government_tender": map[string]any{"name": "政府招投标"},
+		"private":           map[string]any{"name": "私人工程"},
+	}
+	BaselineEngineeringQualifications map[string]any = map[string]any{
+		"first":   map[string]any{"bid_bonus": 0.08, "max_scale": 300000000, "min_capital": 10000000, "name": "一级"},
+		"second":  map[string]any{"bid_bonus": 0.0, "max_scale": 80000000, "min_capital": 2000000, "name": "二级"},
+		"special": map[string]any{"bid_bonus": 0.15, "max_scale": 1000000000, "min_capital": 50000000, "name": "特级"},
+	}
+	BaselineEngineeringStages map[string]any = map[string]any{
+		"acceptance":      map[string]any{"cost_ratio": 0.01, "duration_ratio": 0.03, "name": "验收", "quality_weight": 0.1},
+		"construction":    map[string]any{"cost_ratio": 0.7, "duration_ratio": 0.55, "name": "施工", "quality_weight": 0.4},
+		"cost_estimation": map[string]any{"cost_ratio": 0.02, "duration_ratio": 0.04, "name": "造价", "quality_weight": 0.05},
+		"design":          map[string]any{"cost_ratio": 0.07, "duration_ratio": 0.15, "name": "设计", "quality_weight": 0.2},
+		"supervision":     map[string]any{"cost_ratio": 0.03, "duration_ratio": 0.1, "name": "监理", "quality_weight": 0.15},
+		"survey":          map[string]any{"cost_ratio": 0.03, "duration_ratio": 0.08, "name": "勘察", "quality_weight": 0.1},
+	}
+	BaselineEngineeringZoneTypes map[string]any = map[string]any{
+		"commercial":  map[string]any{"land_mult": 1.8, "name": "商业区", "population_pull": 0.3, "traffic_demand": 1.0},
+		"green":       map[string]any{"land_mult": 0.5, "name": "绿地", "population_pull": 0.2, "traffic_demand": 0.2},
+		"industrial":  map[string]any{"land_mult": 0.7, "name": "工业区", "population_pull": 0.4, "traffic_demand": 0.8},
+		"mixed":       map[string]any{"land_mult": 1.3, "name": "综合区", "population_pull": 0.8, "traffic_demand": 0.9},
+		"residential": map[string]any{"land_mult": 1.0, "name": "居住区", "population_pull": 1.0, "traffic_demand": 0.6},
+	}
 	BaselineEraDefinitions []any = []any{
 		map[string]any{
 			"description":       "以采集、狩猎与打制石器为生。",
@@ -263,12 +340,53 @@ var (
 			"tags":              []any{"fusion", "spacefaring", "colony"},
 		},
 	}
-	BaselineMacroCycleGdpEffect  map[string]any = map[string]any{"boom": 0.05, "recession": -0.04, "recovery": 0.02, "slowdown": 0.01}
-	BaselineMacroCyclePhases     []any          = []any{"recession", "recovery", "boom", "slowdown"}
-	BaselineNutritionDecayPerDay map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
-	BaselinePriceElasticity      map[string]any = map[string]any{"daily": 0.35, "financial": 1.2, "luxury": 0.9, "necessity": 0.15}
-	BaselinePriceSeasonalFactors map[string]any = map[string]any{"autumn": 1.05, "spring": 1.0, "summer": 1.0, "winter": 1.1}
-	BaselineTaxIncomeBrackets    []any          = []any{
+	BaselineMacroCycleGdpEffect map[string]any = map[string]any{"boom": 0.05, "recession": -0.04, "recovery": 0.02, "slowdown": 0.01}
+	BaselineMacroCyclePhases    []any          = []any{"recession", "recovery", "boom", "slowdown"}
+	BaselineMedicalFacilities   map[string]any = map[string]any{
+		"clinic": map[string]any{
+			"cost_mult":     0.7,
+			"medical_level": 0.8,
+			"name":          "诊所",
+			"reimburse":     0.5,
+			"services":      []any{"register", "consult", "medicine"},
+		},
+		"dental": map[string]any{
+			"cost_mult":     1.2,
+			"medical_level": 0.9,
+			"name":          "牙科",
+			"reimburse":     0.4,
+			"services":      []any{"register", "consult", "dental", "surgery"},
+		},
+		"hospital": map[string]any{
+			"cost_mult":     1.0,
+			"medical_level": 1.0,
+			"name":          "综合医院",
+			"reimburse":     0.7,
+			"services":      []any{"register", "consult", "admit", "surgery", "checkup"},
+		},
+		"pharmacy": map[string]any{
+			"cost_mult":     1.0,
+			"medical_level": 0.7,
+			"name":          "药店",
+			"reimburse":     0.0,
+			"services":      []any{"medicine"},
+		},
+		"psych_clinic": map[string]any{
+			"cost_mult":     1.0,
+			"medical_level": 0.8,
+			"name":          "心理诊所",
+			"reimburse":     0.3,
+			"services":      []any{"register", "consult", "therapy"},
+		},
+	}
+	BaselineMedicalServiceCost      map[string]any = map[string]any{"admit": 200000, "checkup": 50000, "consult": 20000, "dental": 100000, "medicine": 30000, "register": 5000, "surgery": 500000, "therapy": 30000}
+	BaselineNutritionDecayPerDay    map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
+	BaselinePriceElasticity         map[string]any = map[string]any{"daily": 0.35, "financial": 1.2, "luxury": 0.9, "necessity": 0.15}
+	BaselinePriceSeasonalFactors    map[string]any = map[string]any{"autumn": 1.05, "spring": 1.0, "summer": 1.0, "winter": 1.1}
+	BaselineSeirDefaultParams       map[string]any = map[string]any{"beta": 0.5, "gamma": 0.1, "immunity_days": 180.0, "mortality": 0.01, "mutation_rate": 0.001, "sigma": 0.2}
+	BaselineSeirPolicyBetaReduction map[string]any = map[string]any{"lockdown": 0.6, "mask": 0.15, "quarantine": 0.3, "school_closure": 0.2, "travel_restriction": 0.25, "vaccine_mandate": 0.1}
+	BaselineSeirPolicyEconomyCost   map[string]any = map[string]any{"lockdown": 0.05, "mask": 0.002, "quarantine": 0.02, "school_closure": 0.02, "travel_restriction": 0.03, "vaccine_mandate": 0.004}
+	BaselineTaxIncomeBrackets       []any          = []any{
 		map[string]any{"rate": 0.03, "upper": 36000.0},
 		map[string]any{"rate": 0.1, "upper": 144000.0},
 		map[string]any{"rate": 0.2, "upper": 300000.0},

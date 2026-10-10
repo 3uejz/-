@@ -1,0 +1,45 @@
+{
+  "SEIR_DEFAULT_PARAMS": {
+    "beta": 0.5,
+    "sigma": 0.2,
+    "gamma": 0.1,
+    "mortality": 0.01,
+    "immunity_days": 180.0,
+    "mutation_rate": 0.001
+  },
+  "SEIR_POLICY_BETA_REDUCTION": {
+    "quarantine": 0.3,
+    "lockdown": 0.6,
+    "school_closure": 0.2,
+    "mask": 0.15,
+    "travel_restriction": 0.25,
+    "vaccine_mandate": 0.1
+  },
+  "SEIR_POLICY_ECONOMY_COST": {
+    "quarantine": 0.02,
+    "lockdown": 0.05,
+    "school_closure": 0.02,
+    "mask": 0.002,
+    "travel_restriction": 0.03,
+    "vaccine_mandate": 0.004
+  },
+  "SEIR_BETA_REDUCTION_CAP": 0.95,
+  "SEIR_SURGE_EXTRA_SLOPE": 0.5,
+  "SEIR_BEDS_DIVISOR": 1000.0,
+  "SEIR_DOCTORS_DIVISOR": 500.0,
+  "SEIR_VENTILATORS_DIVISOR": 20000.0,
+  "SEIR_TEST_KITS_DIVISOR": 100.0,
+  "SEIR_VACCINE_STOCK_DIVISOR": 250.0,
+  "SEIR_DEFAULT_VACCINE_HESITANCY": 0.2,
+  "SEIR_VACCINE_ACCEPTANCE_NOISE": 0.1,
+  "SEIR_POLICY_TRUST_PENALTY": 0.02,
+  "SEIR_IMMUNITY_WANE_RATE": 0.1,
+  "SEIR_ALERT_WATCH_PREVALENCE": 0.0005,
+  "SEIR_ALERT_ALERT_PREVALENCE": 0.005,
+  "SEIR_ALERT_EMERGENCY_PREVALENCE": 0.02,
+  "SEIR_ALERT_ALERT_OCCUPANCY": 1.0,
+  "SEIR_ALERT_EMERGENCY_OCCUPANCY": 1.5,
+  "SEIR_STAGE_RESOLVED_INFECTIOUS": 0.5,
+  "SEIR_STAGE_PEAK_RATIO": 0.98,
+  "SEIR_STAGE_DECLINING_RATIO": 0.01
+}

@@ -41,6 +41,16 @@ const ADDICTION_TREATMENT: Dictionary = {
 
 const ADDICTION_WITHDRAWAL_TRIGGER_HOURS: float = 12.0
 
+const AESTHETICS_ILLEGAL_COMPLICATION_MULT: float = 2.2
+
+const AESTHETICS_ILLEGAL_SUCCESS_MULT: float = 0.55
+
+const AESTHETICS_MALPRACTICE_COMPENSATION: int = 3000000
+
+const AESTHETICS_OVER_MEDICALIZATION_THRESHOLD: int = 5
+
+const AESTHETICS_STIFFNESS_PER_PROCEDURE: float = 8.0
+
 const BANK_CREDIT_MAX: int = 1000
 
 const BANK_CREDIT_MIN: int = 0
@@ -102,6 +112,68 @@ const EMPLOYMENT_BASE_HIRE_DIFFICULTY: float = 0.7
 const EMPLOYMENT_UNEMPLOYMENT_SENSITIVITY: float = 3.0
 
 const EMPLOYMENT_WAGE_UNEMPLOYMENT_SENSITIVITY: float = 1.5
+
+const ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD: float = 0.6
+
+const ENGINEERING_CHAIN: Array = ["survey", "design", "cost_estimation", "construction", "supervision", "acceptance"]
+
+const ENGINEERING_PROCUREMENT_MODES: Dictionary = {
+	"government_tender": {"name": "政府招投标"},
+	"private": {"name": "私人工程"},
+}
+
+const ENGINEERING_QUALIFICATIONS: Dictionary = {
+	"first": {"bid_bonus": 0.08, "max_scale": 300000000, "min_capital": 10000000, "name": "一级"},
+	"second": {"bid_bonus": 0.0, "max_scale": 80000000, "min_capital": 2000000, "name": "二级"},
+	"special": {"bid_bonus": 0.15, "max_scale": 1000000000, "min_capital": 50000000, "name": "特级"},
+}
+
+const ENGINEERING_STAGES: Dictionary = {
+	"acceptance": {"cost_ratio": 0.01, "duration_ratio": 0.03, "name": "验收", "quality_weight": 0.1},
+	"construction": {"cost_ratio": 0.7, "duration_ratio": 0.55, "name": "施工", "quality_weight": 0.4},
+	"cost_estimation": {"cost_ratio": 0.02, "duration_ratio": 0.04, "name": "造价", "quality_weight": 0.05},
+	"design": {"cost_ratio": 0.07, "duration_ratio": 0.15, "name": "设计", "quality_weight": 0.2},
+	"supervision": {"cost_ratio": 0.03, "duration_ratio": 0.1, "name": "监理", "quality_weight": 0.15},
+	"survey": {"cost_ratio": 0.03, "duration_ratio": 0.08, "name": "勘察", "quality_weight": 0.1},
+}
+
+const ENGINEERING_ZONE_TYPES: Dictionary = {
+	"commercial": {"land_mult": 1.8, "name": "商业区", "population_pull": 0.3, "traffic_demand": 1.0},
+	"green": {"land_mult": 0.5, "name": "绿地", "population_pull": 0.2, "traffic_demand": 0.2},
+	"industrial": {"land_mult": 0.7, "name": "工业区", "population_pull": 0.4, "traffic_demand": 0.8},
+	"mixed": {"land_mult": 1.3, "name": "综合区", "population_pull": 0.8, "traffic_demand": 0.9},
+	"residential": {"land_mult": 1.0, "name": "居住区", "population_pull": 1.0, "traffic_demand": 0.6},
+}
+
+const ENV_CARBON_FINE_MULTIPLIER: float = 3.0
+
+const ENV_DEFAULT_CARBON_PRICE: int = 100
+
+const ENV_ESG_EMISSION_PENALTY: float = 0.5
+
+const ENV_ESG_FINE_DIVISOR: float = 100000.0
+
+const ENV_ESG_FRAUD_PENALTY: float = 30.0
+
+const ENV_ESG_GRADE_A: float = 80.0
+
+const ENV_ESG_GRADE_B: float = 65.0
+
+const ENV_ESG_GRADE_C: float = 50.0
+
+const ENV_ESG_GREEN_INVESTMENT_CAP: float = 15.0
+
+const ENV_ESG_GREEN_INVESTMENT_UNIT: float = 1e+06
+
+const ENV_ESG_ILLEGAL_PENALTY: float = 20.0
+
+const ENV_ESG_SCORE_MAX: float = 100.0
+
+const ENV_FOOTPRINT_SCOPE1: float = 0.5
+
+const ENV_FOOTPRINT_SCOPE2: float = 0.3
+
+const ENV_FOOTPRINT_SCOPE3: float = 0.2
 
 const ERA_COUNT: int = 9
 
@@ -274,6 +346,52 @@ const MARGIN_LIQUIDATION_FEE: float = 0.01
 
 const MARGIN_MAINTENANCE_RATIO: float = 0.25
 
+const MEDICAL_FACILITIES: Dictionary = {
+	"clinic": {
+		"cost_mult": 0.7,
+		"medical_level": 0.8,
+		"name": "诊所",
+		"reimburse": 0.5,
+		"services": ["register", "consult", "medicine"],
+	},
+	"dental": {
+		"cost_mult": 1.2,
+		"medical_level": 0.9,
+		"name": "牙科",
+		"reimburse": 0.4,
+		"services": ["register", "consult", "dental", "surgery"],
+	},
+	"hospital": {
+		"cost_mult": 1.0,
+		"medical_level": 1.0,
+		"name": "综合医院",
+		"reimburse": 0.7,
+		"services": ["register", "consult", "admit", "surgery", "checkup"],
+	},
+	"pharmacy": {
+		"cost_mult": 1.0,
+		"medical_level": 0.7,
+		"name": "药店",
+		"reimburse": 0.0,
+		"services": ["medicine"],
+	},
+	"psych_clinic": {
+		"cost_mult": 1.0,
+		"medical_level": 0.8,
+		"name": "心理诊所",
+		"reimburse": 0.3,
+		"services": ["register", "consult", "therapy"],
+	},
+}
+
+const MEDICAL_MISDIAGNOSIS_CHANCE: float = 0.1
+
+const MEDICAL_SERVICE_COST: Dictionary = {"admit": 200000, "checkup": 50000, "consult": 20000, "dental": 100000, "medicine": 30000, "register": 5000, "surgery": 500000, "therapy": 30000}
+
+const MEDICAL_UNTREATED_FREE_DAYS: float = 7.0
+
+const MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY: float = 1.0
+
 const MONEY_MINOR_SCALE: int = 100
 
 const MOOD_RECOVER_PER_HOUR: float = 1.0
@@ -320,6 +438,50 @@ const REGION_INFLATION_RATE_ANNUAL: float = 0.02
 
 const REGION_MIGRATION_RATE_ANNUAL: float = 0.0
 
+const SEIR_ALERT_ALERT_OCCUPANCY: float = 1.0
+
+const SEIR_ALERT_ALERT_PREVALENCE: float = 0.005
+
+const SEIR_ALERT_EMERGENCY_OCCUPANCY: float = 1.5
+
+const SEIR_ALERT_EMERGENCY_PREVALENCE: float = 0.02
+
+const SEIR_ALERT_WATCH_PREVALENCE: float = 0.0005
+
+const SEIR_BEDS_DIVISOR: float = 1000.0
+
+const SEIR_BETA_REDUCTION_CAP: float = 0.95
+
+const SEIR_DEFAULT_PARAMS: Dictionary = {"beta": 0.5, "gamma": 0.1, "immunity_days": 180.0, "mortality": 0.01, "mutation_rate": 0.001, "sigma": 0.2}
+
+const SEIR_DEFAULT_VACCINE_HESITANCY: float = 0.2
+
+const SEIR_DOCTORS_DIVISOR: float = 500.0
+
+const SEIR_IMMUNITY_WANE_RATE: float = 0.1
+
+const SEIR_POLICY_BETA_REDUCTION: Dictionary = {"lockdown": 0.6, "mask": 0.15, "quarantine": 0.3, "school_closure": 0.2, "travel_restriction": 0.25, "vaccine_mandate": 0.1}
+
+const SEIR_POLICY_ECONOMY_COST: Dictionary = {"lockdown": 0.05, "mask": 0.002, "quarantine": 0.02, "school_closure": 0.02, "travel_restriction": 0.03, "vaccine_mandate": 0.004}
+
+const SEIR_POLICY_TRUST_PENALTY: float = 0.02
+
+const SEIR_STAGE_DECLINING_RATIO: float = 0.01
+
+const SEIR_STAGE_PEAK_RATIO: float = 0.98
+
+const SEIR_STAGE_RESOLVED_INFECTIOUS: float = 0.5
+
+const SEIR_SURGE_EXTRA_SLOPE: float = 0.5
+
+const SEIR_TEST_KITS_DIVISOR: float = 100.0
+
+const SEIR_VACCINE_ACCEPTANCE_NOISE: float = 0.1
+
+const SEIR_VACCINE_STOCK_DIVISOR: float = 250.0
+
+const SEIR_VENTILATORS_DIVISOR: float = 20000.0
+
 const SLEEP_DEBT_GAIN_PER_HOUR: float = 4.166666666666667
 
 const SLEEP_DEBT_INTELLIGENCE_PENALTY_PER_HOUR: float = 2.0
@@ -329,6 +491,24 @@ const SLEEP_DEBT_MOOD_PENALTY_PER_HOUR: float = 3.0
 const SLEEP_DEBT_RECOVER_PER_HOUR: float = 12.5
 
 const SLEEP_DEBT_THRESHOLD: float = 60.0
+
+const SPORTS_AGE_DECLINE_RATE: float = 0.97
+
+const SPORTS_AGE_FLOOR: float = 0.3
+
+const SPORTS_DOPING_BAN_CHANCE: float = 0.3
+
+const SPORTS_DOPING_BOOST: float = 10.0
+
+const SPORTS_INJURY_BASE_RISK: float = 0.02
+
+const SPORTS_INJURY_PENALTY: float = 8.0
+
+const SPORTS_PEAK_MAX_AGE: int = 28
+
+const SPORTS_PEAK_MIN_AGE: int = 22
+
+const SPORTS_TRAIN_RATE: float = 0.4
 
 const STAMINA_DRAIN_PER_HOUR: float = 20.0
 

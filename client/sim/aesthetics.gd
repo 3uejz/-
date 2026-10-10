@@ -6,6 +6,7 @@ extends RefCounted
 ## 过度医美造成面部僵硬并降低气质；非法诊所显著提高失败率；失败/并发症结算健康与外貌损失。
 
 const AppearanceScript = preload("res://sim/appearance.gd")
+const BaselineScript = preload("res://sim/baseline.gd")
 
 ## 医美项目表（R46.5）。effect 为施加到形象档案的增量；decay_days=0 表示长期维持。
 const PROJECTS: Dictionary = {
@@ -21,11 +22,11 @@ const PROJECTS: Dictionary = {
 	"anti_aging": {"name": "抗衰", "cost": 600000, "recovery_minutes": 2880, "success": 0.9, "complication": 0.07, "repeatable": true, "effect": {"appearance_score": 4.0}, "decay_days": 365},
 }
 
-const OVER_MEDICALIZATION_THRESHOLD: int = 5
-const STIFFNESS_PER_PROCEDURE: float = 8.0
-const ILLEGAL_SUCCESS_MULT: float = 0.55
-const ILLEGAL_COMPLICATION_MULT: float = 2.2
-const MALPRACTICE_COMPENSATION: int = 3000000
+const OVER_MEDICALIZATION_THRESHOLD: int = BaselineScript.AESTHETICS_OVER_MEDICALIZATION_THRESHOLD
+const STIFFNESS_PER_PROCEDURE: float = BaselineScript.AESTHETICS_STIFFNESS_PER_PROCEDURE
+const ILLEGAL_SUCCESS_MULT: float = BaselineScript.AESTHETICS_ILLEGAL_SUCCESS_MULT
+const ILLEGAL_COMPLICATION_MULT: float = BaselineScript.AESTHETICS_ILLEGAL_COMPLICATION_MULT
+const MALPRACTICE_COMPENSATION: int = BaselineScript.AESTHETICS_MALPRACTICE_COMPENSATION
 
 
 func new_state() -> Dictionary:

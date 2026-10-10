@@ -9,6 +9,12 @@
     "geo_transport.json",
     "climate_weather.json",
     "era.json",
-    "economy.json"
+    "economy.json",
+    "epidemic.json",
+    "environment.json",
+    "engineering.json",
+    "medical.json",
+    "sports.json",
+    "aesthetics.json"
   ]
 }

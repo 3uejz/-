@@ -43,22 +43,15 @@ const DISEASES: Dictionary = {
 }
 
 ## 医疗机构与服务（R9.3）。
-const FACILITIES: Dictionary = {
-	"hospital": {"name": "综合医院", "services": ["register", "consult", "admit", "surgery", "checkup"], "cost_mult": 1.0, "reimburse": 0.7, "medical_level": 1.0},
-	"clinic": {"name": "诊所", "services": ["register", "consult", "medicine"], "cost_mult": 0.7, "reimburse": 0.5, "medical_level": 0.8},
-	"pharmacy": {"name": "药店", "services": ["medicine"], "cost_mult": 1.0, "reimburse": 0.0, "medical_level": 0.7},
-	"dental": {"name": "牙科", "services": ["register", "consult", "dental", "surgery"], "cost_mult": 1.2, "reimburse": 0.4, "medical_level": 0.9},
-	"psych_clinic": {"name": "心理诊所", "services": ["register", "consult", "therapy"], "cost_mult": 1.0, "reimburse": 0.3, "medical_level": 0.8},
-}
+const BaselineScript = preload("res://sim/baseline.gd")
 
-const SERVICE_COST: Dictionary = {
-	"register": 5000, "consult": 20000, "medicine": 30000, "admit": 200000,
-	"surgery": 500000, "dental": 100000, "checkup": 50000, "therapy": 30000,
-}
+const FACILITIES: Dictionary = BaselineScript.MEDICAL_FACILITIES
 
-const UNTREATED_FREE_DAYS: float = 7.0
-const UNTREATED_HEALTH_DECAY_PER_DAY: float = 1.0
-const MISDIAGNOSIS_CHANCE: float = 0.1
+const SERVICE_COST: Dictionary = BaselineScript.MEDICAL_SERVICE_COST
+
+const UNTREATED_FREE_DAYS: float = BaselineScript.MEDICAL_UNTREATED_FREE_DAYS
+const UNTREATED_HEALTH_DECAY_PER_DAY: float = BaselineScript.MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY
+const MISDIAGNOSIS_CHANCE: float = BaselineScript.MEDICAL_MISDIAGNOSIS_CHANCE
 
 const SURGERY_PHASES: Array = ["scheduled", "prep", "operating", "recovery", "done"]
 

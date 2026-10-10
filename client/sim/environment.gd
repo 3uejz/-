@@ -28,8 +28,10 @@ const CAREERS: Dictionary = {
 	"env_engineering": {"name": "环保工程", "base_cost": 2000000, "margin": 0.15},
 }
 
-const DEFAULT_CARBON_PRICE: int = 100
-const FINE_MULTIPLIER: float = 3.0
+const BaselineScript = preload("res://sim/baseline.gd")
+
+const DEFAULT_CARBON_PRICE: int = BaselineScript.ENV_DEFAULT_CARBON_PRICE
+const FINE_MULTIPLIER: float = BaselineScript.ENV_CARBON_FINE_MULTIPLIER
 
 
 # --- 数据表 ---
@@ -170,9 +172,9 @@ func carbon_trade(ent: Dictionary, credits: float, price: int = -1, opts: Dictio
 ## 碳足迹核算：总量与按范围拆分的示意值。
 func carbon_footprint(ent: Dictionary) -> Dictionary:
 	var total: float = float(ent.get("emissions", 0.0))
-	var scope1: float = total * 0.5
-	var scope2: float = total * 0.3
-	var scope3: float = total * 0.2
+	var scope1: float = total * BaselineScript.ENV_FOOTPRINT_SCOPE1
+	var scope2: float = total * BaselineScript.ENV_FOOTPRINT_SCOPE2
+	var scope3: float = total * BaselineScript.ENV_FOOTPRINT_SCOPE3
 	return {"total": total, "scope1": scope1, "scope2": scope2, "scope3": scope3}
 
 
@@ -180,20 +182,20 @@ func carbon_footprint(ent: Dictionary) -> Dictionary:
 func esg_rating(ent: Dictionary) -> Dictionary:
 	var quota: float = maxf(1.0, float(ent.get("quota", 1.0)))
 	var ratio: float = float(ent.get("emissions", 0.0)) / quota
-	var score: float = 100.0 * clampf(1.0 - ratio * 0.5, 0.0, 1.0)
-	score += clampf(float(ent.get("green_investment", 0)) / 1000000.0, 0.0, 15.0)
-	score -= float(ent.get("fines", 0)) / 100000.0
+	var score: float = BaselineScript.ENV_ESG_SCORE_MAX * clampf(1.0 - ratio * BaselineScript.ENV_ESG_EMISSION_PENALTY, 0.0, 1.0)
+	score += clampf(float(ent.get("green_investment", 0)) / BaselineScript.ENV_ESG_GREEN_INVESTMENT_UNIT, 0.0, BaselineScript.ENV_ESG_GREEN_INVESTMENT_CAP)
+	score -= float(ent.get("fines", 0)) / BaselineScript.ENV_ESG_FINE_DIVISOR
 	if bool(ent.get("fraud", false)):
-		score -= 30.0
+		score -= BaselineScript.ENV_ESG_FRAUD_PENALTY
 	if bool(ent.get("illegal_discharge", false)):
-		score -= 20.0
+		score -= BaselineScript.ENV_ESG_ILLEGAL_PENALTY
 	score = clampf(score, 0.0, 100.0)
 	var grade: String = "D"
-	if score >= 80.0:
+	if score >= BaselineScript.ENV_ESG_GRADE_A:
 		grade = "A"
-	elif score >= 65.0:
+	elif score >= BaselineScript.ENV_ESG_GRADE_B:
 		grade = "B"
-	elif score >= 50.0:
+	elif score >= BaselineScript.ENV_ESG_GRADE_C:
 		grade = "C"
 	ent["esg"] = score
 	return {"ok": true, "score": score, "grade": grade}

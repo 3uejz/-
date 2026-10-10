@@ -7,6 +7,9 @@ extends RefCounted
 ##
 ## 设计取舍：
 ##   - 运动员状态存于独立字典；随机性由注入 rng 决定，便于复现与三端对齐。
+##   - 生涯窗口、训练与伤病系数集中在 shared/consistency/baseline/sports.json，经 Baseline 读取。
+
+const BaselineScript = preload("res://sim/baseline.gd")
 
 const SPORTS: Array = ["track", "swimming", "ball", "combat", "gymnastics"]
 const SPORT_NAMES: Dictionary = {
@@ -14,15 +17,15 @@ const SPORT_NAMES: Dictionary = {
 	"combat": "格斗", "gymnastics": "体操",
 }
 
-const PEAK_MIN_AGE: int = 22
-const PEAK_MAX_AGE: int = 28
-const AGE_DECLINE_RATE: float = 0.97
-const AGE_FLOOR: float = 0.3
-const TRAIN_RATE: float = 0.4
-const INJURY_PENALTY: float = 8.0
-const INJURY_BASE_RISK: float = 0.02
-const DOPING_BOOST: float = 10.0
-const DOPING_BAN_CHANCE: float = 0.3
+const PEAK_MIN_AGE: int = BaselineScript.SPORTS_PEAK_MIN_AGE
+const PEAK_MAX_AGE: int = BaselineScript.SPORTS_PEAK_MAX_AGE
+const AGE_DECLINE_RATE: float = BaselineScript.SPORTS_AGE_DECLINE_RATE
+const AGE_FLOOR: float = BaselineScript.SPORTS_AGE_FLOOR
+const TRAIN_RATE: float = BaselineScript.SPORTS_TRAIN_RATE
+const INJURY_PENALTY: float = BaselineScript.SPORTS_INJURY_PENALTY
+const INJURY_BASE_RISK: float = BaselineScript.SPORTS_INJURY_BASE_RISK
+const DOPING_BOOST: float = BaselineScript.SPORTS_DOPING_BOOST
+const DOPING_BAN_CHANCE: float = BaselineScript.SPORTS_DOPING_BAN_CHANCE
 
 
 func new_athlete(sport: String) -> Dictionary:

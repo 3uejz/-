@@ -18,43 +18,24 @@ extends RefCounted
 ##   - 三角债用有序债权链模拟违约传染，简单可解释；
 ##   - 一切随机由外部 roll/rng 注入，缺省确定化。
 
-## 资质分级：可承接工程规模上限、注册资本门槛与投标加成。
-const QUALIFICATIONS: Dictionary = {
-	"special": {"name": "特级", "max_scale": 1000000000, "min_capital": 50000000, "bid_bonus": 0.15},
-	"first": {"name": "一级", "max_scale": 300000000, "min_capital": 10000000, "bid_bonus": 0.08},
-	"second": {"name": "二级", "max_scale": 80000000, "min_capital": 2000000, "bid_bonus": 0.00},
-}
+const BaselineScript = preload("res://sim/baseline.gd")
 
+## 资质分级：可承接工程规模上限、注册资本门槛与投标加成。
+const QUALIFICATIONS: Dictionary = BaselineScript.ENGINEERING_QUALIFICATIONS
 ## 工程链条阶段：费用占比、工期占比与质量权重。
-const STAGES: Dictionary = {
-	"survey": {"name": "勘察", "cost_ratio": 0.03, "duration_ratio": 0.08, "quality_weight": 0.10},
-	"design": {"name": "设计", "cost_ratio": 0.07, "duration_ratio": 0.15, "quality_weight": 0.20},
-	"cost_estimation": {"name": "造价", "cost_ratio": 0.02, "duration_ratio": 0.04, "quality_weight": 0.05},
-	"construction": {"name": "施工", "cost_ratio": 0.70, "duration_ratio": 0.55, "quality_weight": 0.40},
-	"supervision": {"name": "监理", "cost_ratio": 0.03, "duration_ratio": 0.10, "quality_weight": 0.15},
-	"acceptance": {"name": "验收", "cost_ratio": 0.01, "duration_ratio": 0.03, "quality_weight": 0.10},
-}
+const STAGES: Dictionary = BaselineScript.ENGINEERING_STAGES
 
 ## 链条执行顺序。
-const CHAIN: Array = ["survey", "design", "cost_estimation", "construction", "supervision", "acceptance"]
+const CHAIN: Array = BaselineScript.ENGINEERING_CHAIN
 
 ## 承接方式。
-const PROCUREMENT_MODES: Dictionary = {
-	"private": {"name": "私人工程"},
-	"government_tender": {"name": "政府招投标"},
-}
+const PROCUREMENT_MODES: Dictionary = BaselineScript.ENGINEERING_PROCUREMENT_MODES
 
 ## 城市规划功能区：基准地价系数、人口吸引与交通需求。
-const ZONE_TYPES: Dictionary = {
-	"residential": {"name": "居住区", "land_mult": 1.0, "population_pull": 1.0, "traffic_demand": 0.6},
-	"commercial": {"name": "商业区", "land_mult": 1.8, "population_pull": 0.3, "traffic_demand": 1.0},
-	"industrial": {"name": "工业区", "land_mult": 0.7, "population_pull": 0.4, "traffic_demand": 0.8},
-	"mixed": {"name": "综合区", "land_mult": 1.3, "population_pull": 0.8, "traffic_demand": 0.9},
-	"green": {"name": "绿地", "land_mult": 0.5, "population_pull": 0.2, "traffic_demand": 0.2},
-}
+const ZONE_TYPES: Dictionary = BaselineScript.ENGINEERING_ZONE_TYPES
 
 ## 验收合格所需的工程质量门槛。
-const ACCEPTANCE_QUALITY_THRESHOLD: float = 0.6
+const ACCEPTANCE_QUALITY_THRESHOLD: float = BaselineScript.ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD
 
 var _seq: int = 0
 

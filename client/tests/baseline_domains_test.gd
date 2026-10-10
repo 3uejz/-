@@ -77,6 +77,59 @@ func _code_values() -> Dictionary:
 			"GBM_DRIFT_DEFAULT": Baseline.GBM_DRIFT_DEFAULT,
 			"BANK_CREDIT_START": Baseline.BANK_CREDIT_START,
 		},
+		"epidemic": {
+			"SEIR_BETA_REDUCTION_CAP": Baseline.SEIR_BETA_REDUCTION_CAP,
+			"SEIR_SURGE_EXTRA_SLOPE": Baseline.SEIR_SURGE_EXTRA_SLOPE,
+			"SEIR_BEDS_DIVISOR": Baseline.SEIR_BEDS_DIVISOR,
+			"SEIR_DEFAULT_VACCINE_HESITANCY": Baseline.SEIR_DEFAULT_VACCINE_HESITANCY,
+			"SEIR_POLICY_TRUST_PENALTY": Baseline.SEIR_POLICY_TRUST_PENALTY,
+			"SEIR_IMMUNITY_WANE_RATE": Baseline.SEIR_IMMUNITY_WANE_RATE,
+			"SEIR_ALERT_WATCH_PREVALENCE": Baseline.SEIR_ALERT_WATCH_PREVALENCE,
+			"SEIR_ALERT_ALERT_OCCUPANCY": Baseline.SEIR_ALERT_ALERT_OCCUPANCY,
+			"SEIR_ALERT_EMERGENCY_OCCUPANCY": Baseline.SEIR_ALERT_EMERGENCY_OCCUPANCY,
+			"SEIR_DEFAULT_PARAMS": Baseline.SEIR_DEFAULT_PARAMS,
+			"SEIR_POLICY_BETA_REDUCTION": Baseline.SEIR_POLICY_BETA_REDUCTION,
+		},
+		"environment": {
+			"ENV_DEFAULT_CARBON_PRICE": Baseline.ENV_DEFAULT_CARBON_PRICE,
+			"ENV_CARBON_FINE_MULTIPLIER": Baseline.ENV_CARBON_FINE_MULTIPLIER,
+			"ENV_FOOTPRINT_SCOPE1": Baseline.ENV_FOOTPRINT_SCOPE1,
+			"ENV_FOOTPRINT_SCOPE2": Baseline.ENV_FOOTPRINT_SCOPE2,
+			"ENV_FOOTPRINT_SCOPE3": Baseline.ENV_FOOTPRINT_SCOPE3,
+			"ENV_ESG_SCORE_MAX": Baseline.ENV_ESG_SCORE_MAX,
+			"ENV_ESG_GRADE_A": Baseline.ENV_ESG_GRADE_A,
+			"ENV_ESG_GRADE_B": Baseline.ENV_ESG_GRADE_B,
+			"ENV_ESG_GRADE_C": Baseline.ENV_ESG_GRADE_C,
+		},
+		"engineering": {
+			"ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD": Baseline.ENGINEERING_ACCEPTANCE_QUALITY_THRESHOLD,
+			"ENGINEERING_CHAIN": Baseline.ENGINEERING_CHAIN,
+			"ENGINEERING_ZONE_TYPES": Baseline.ENGINEERING_ZONE_TYPES,
+		},
+		"medical": {
+			"MEDICAL_UNTREATED_FREE_DAYS": Baseline.MEDICAL_UNTREATED_FREE_DAYS,
+			"MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY": Baseline.MEDICAL_UNTREATED_HEALTH_DECAY_PER_DAY,
+			"MEDICAL_MISDIAGNOSIS_CHANCE": Baseline.MEDICAL_MISDIAGNOSIS_CHANCE,
+			"MEDICAL_SERVICE_COST": Baseline.MEDICAL_SERVICE_COST,
+		},
+		"sports": {
+			"SPORTS_PEAK_MIN_AGE": Baseline.SPORTS_PEAK_MIN_AGE,
+			"SPORTS_PEAK_MAX_AGE": Baseline.SPORTS_PEAK_MAX_AGE,
+			"SPORTS_AGE_DECLINE_RATE": Baseline.SPORTS_AGE_DECLINE_RATE,
+			"SPORTS_AGE_FLOOR": Baseline.SPORTS_AGE_FLOOR,
+			"SPORTS_TRAIN_RATE": Baseline.SPORTS_TRAIN_RATE,
+			"SPORTS_INJURY_PENALTY": Baseline.SPORTS_INJURY_PENALTY,
+			"SPORTS_INJURY_BASE_RISK": Baseline.SPORTS_INJURY_BASE_RISK,
+			"SPORTS_DOPING_BOOST": Baseline.SPORTS_DOPING_BOOST,
+			"SPORTS_DOPING_BAN_CHANCE": Baseline.SPORTS_DOPING_BAN_CHANCE,
+		},
+		"aesthetics": {
+			"AESTHETICS_OVER_MEDICALIZATION_THRESHOLD": Baseline.AESTHETICS_OVER_MEDICALIZATION_THRESHOLD,
+			"AESTHETICS_STIFFNESS_PER_PROCEDURE": Baseline.AESTHETICS_STIFFNESS_PER_PROCEDURE,
+			"AESTHETICS_ILLEGAL_SUCCESS_MULT": Baseline.AESTHETICS_ILLEGAL_SUCCESS_MULT,
+			"AESTHETICS_ILLEGAL_COMPLICATION_MULT": Baseline.AESTHETICS_ILLEGAL_COMPLICATION_MULT,
+			"AESTHETICS_MALPRACTICE_COMPENSATION": Baseline.AESTHETICS_MALPRACTICE_COMPENSATION,
+		},
 	}
 
 
@@ -88,6 +141,15 @@ func _match(got: Variant, want: Variant, label: String) -> void:
 		check_eq((got as Array).size(), (want as Array).size(), "%s 数组长度" % label)
 		for i in mini((got as Array).size(), (want as Array).size()):
 			_match((got as Array)[i], (want as Array)[i], "%s[%d]" % [label, i])
+	elif want is Dictionary:
+		check(got is Dictionary, "%s 应为字典" % label)
+		if not (got is Dictionary):
+			return
+		var gd: Dictionary = got
+		for key in (want as Dictionary).keys():
+			check(gd.has(key), "%s.%s 存在" % [label, key])
+			if gd.has(key):
+				_match(gd[key], (want as Dictionary)[key], "%s.%s" % [label, key])
 	elif got is int:
 		check_eq(int(got), int(want), label)
 	elif got is float:
