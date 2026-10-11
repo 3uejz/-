@@ -341,7 +341,7 @@
   - [x] 44.1 编写抽取分布与保底、积分上限测试
   - [x] 44.2 编写开关切换幂等与状态一致性测试
 
-- [ ] 45. 建立引擎定制基座与构建管线（自 M0 起并行）
+- [x] 45. 建立引擎定制基座与构建管线（自 M0 起并行）
   - 建立 `engine/` overlay：`scripts/setup-engine.sh` 克隆自有 Godot fork 的 `lifetext` 分支（基于官方 4.7.2-stable，不入库、不进 `.gitmodules`），项目模块经 SCons `custom_modules` 叠加；`engine-patches/` 放核心补丁，独立 commit、锁定 4.x.y（对应 design「引擎定制」）
   - 以原生 C++ overlay 模块 + `EditorImportPlugin` + `ResourceFormatLoader/Saver` 做前三块原型：内容格式、加密、CJK/IME 文本
   - 原型验证通过后，冻结为 `engine-modules/lifetext_{content,crypto,text,sim}`
@@ -349,7 +349,7 @@
   - 约定核心 patch 独立 commit、可追溯上游；引擎升级以 CI 全绿为准
   - 对应 design「引擎定制」「引擎运行时架构」
   - [x] 45.1 打通 `engine/` overlay 与 lifetext 分支基线并记录构建步骤
-  - [ ] 45.2 产出首个 Windows 导出自定义模板并验证可运行
+  - [x] 45.2 产出首个 Windows 导出自定义模板并验证可运行（CI `engine-build` run #10 全绿：构建模板 → 注册自定义模板 → 用官方编辑器导出客户端 → headless 冒烟运行导出程序）
 
 - [x] 46. 建立共享数值基线单一真源与代码生成（自 M0 起并行）
   - 以 `shared/consistency/baseline/*.json` 为单一真源（`vectors/baseline.json` 为生成快照），由 `tools/genbaseline` 生成 `client/sim/baseline_generated.gd` 与 `server/internal/sim/baseline_generated.go`
