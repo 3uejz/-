@@ -1,7 +1,7 @@
 class_name PanelRegistry
 extends RefCounted
 ## 侧边抽屉面板注册与开合（R57；任务 47.2）。
-## 12 个面板可多开并排；异常图鉴/金手指为条件可见。纯逻辑，headless 可测。
+## 37 个面板可多开并排；异常图鉴/金手指为条件可见（全量面板清单见 `ui.md` §4）。纯逻辑，headless 可测。
 
 const COND_ALWAYS: String = "always"
 const COND_ABNORMAL: String = "abnormal"
@@ -17,6 +17,31 @@ const PANELS: Dictionary = {
 	"finance": {"title": "资产与财务", "condition": COND_ALWAYS},
 	"achievements": {"title": "成就与图鉴", "condition": COND_ALWAYS},
 	"family": {"title": "家族史与传承", "condition": COND_ALWAYS},
+	"business": {"title": "经营", "condition": COND_ALWAYS},
+	"organizations": {"title": "组织", "condition": COND_ALWAYS},
+	"legal": {"title": "案件与法律", "condition": COND_ALWAYS},
+	"rescue": {"title": "救援与灾害", "condition": COND_ALWAYS},
+	"environment": {"title": "环保与碳市场", "condition": COND_ALWAYS},
+	"municipal": {"title": "市政", "condition": COND_ALWAYS},
+	"debt": {"title": "债务与催收", "condition": COND_ALWAYS},
+	"consumer": {"title": "维权与消费", "condition": COND_ALWAYS},
+	"welfare": {"title": "救助与福利", "condition": COND_ALWAYS},
+	"funeral": {"title": "殡葬", "condition": COND_ALWAYS},
+	"metaphysics": {"title": "玄学", "condition": COND_ALWAYS},
+	"medical": {"title": "医疗", "condition": COND_ALWAYS},
+	"content_industry": {"title": "文娱", "condition": COND_ALWAYS},
+	"engineering": {"title": "工程与基建", "condition": COND_ALWAYS},
+	"services": {"title": "专业与生活服务", "condition": COND_ALWAYS},
+	"transport_infra": {"title": "交通基建", "condition": COND_ALWAYS},
+	"household": {"title": "家庭与宠物", "condition": COND_ALWAYS},
+	"sports": {"title": "体育", "condition": COND_ALWAYS},
+	"events": {"title": "活动与展会", "condition": COND_ALWAYS},
+	"awards": {"title": "奖项与荣誉", "condition": COND_ALWAYS},
+	"digital": {"title": "数字与平台", "condition": COND_ALWAYS},
+	"epidemic": {"title": "疫情与公共卫生", "condition": COND_ALWAYS},
+	"war": {"title": "战争与军旅", "condition": COND_ALWAYS},
+	"market": {"title": "宏观行情", "condition": COND_ALWAYS},
+	"weather": {"title": "天气预报", "condition": COND_ALWAYS},
 	"anomaly": {"title": "异常图鉴", "condition": COND_ABNORMAL},
 	"goldfinger": {"title": "金手指", "condition": COND_GOLDFINGER},
 	"settings": {"title": "设置", "condition": COND_ALWAYS},
