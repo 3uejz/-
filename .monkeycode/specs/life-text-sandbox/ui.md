@@ -184,6 +184,8 @@ client/ui/
 
 主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通「角色与属性」「背包与装备」「技能树」「工作与职业」「资产与财务」「关系与人脉」「成就与图鉴」「家族史与传承」「地图」「设置」十个常驻面板（设置面板含切主题/配色/主色的实时预览控件）；异常图鉴、金手指为条件可见面板，待对应状态接入。名称解析可注入内容注册表 Callable，离线回退 content_key。关键弹窗经 `DialogRegistry` 接入主壳 `DialogLayer`（遮罩 + 居中面板，层级高于抽屉）：模态互斥、危险弹窗二次确认、不可关闭弹窗禁用关闭按钮；`open_dialog/confirm_dialog/close_dialog` 为对外接口。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`。
 
+已落地的纯逻辑基座（任务 47 收尾）：`layout/history_view.gd`（历史窗口化视图模型：按滚动位置计算可见窗口，超长会话分段加载）、`components/illustration.gd`（内联水墨插画键解析，缺资源回退占位留白）、`notifications/notification_center.gd`（组合通知偏好与系统投递回调，未聚焦排队、聚焦排空、托盘常驻推进世界）。`ui/main.gd` 在叙事流接入窗口化渲染（超过 `VIRTUAL_THRESHOLD` 行改用可见窗口 + 上下占位块），并提供 `append_illustration/notify/set_focused/set_tray_enabled` 对外接口。对应测试 `client/tests/ui_narrative_test.gd`。
+
 ## 12. 测试策略
 
 - 主题：亮/暗与三套无障碍配色的对比度校验通过；切换幂等；token 无硬编码遗漏。

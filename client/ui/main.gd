@@ -10,6 +10,9 @@ const ThemeManagerScript = preload("res://ui/theme/theme_manager.gd")
 const PanelContentScript = preload("res://ui/panels/panel_content.gd")
 const PanelRegistryScript = preload("res://ui/components/panel_registry.gd")
 const DialogRegistryScript = preload("res://ui/components/dialog_registry.gd")
+const HistoryViewScript = preload("res://ui/layout/history_view.gd")
+const IllustrationScript = preload("res://ui/components/illustration.gd")
+const NotificationCenterScript = preload("res://ui/notifications/notification_center.gd")
 
 ## 常驻快捷动作：未输入即可游玩（R35.5）。
 const QUICK_ACTIONS: Array = [
@@ -30,6 +33,7 @@ const QUICK_ACTIONS: Array = [
 @onready var _speed_button: Button = $Root/StatusBar/SpeedButton
 @onready var _pause_button: Button = $Root/StatusBar/PauseButton
 @onready var _message_list: VBoxContainer = $Root/Body/Messages/MessageList
+@onready var _messages_scroll: ScrollContainer = $Root/Body/Messages
 @onready var _action_panel: VBoxContainer = $Root/Body/SidePanel/ActionPanel
 @onready var _input: LineEdit = $Root/InputBar/Input
 @onready var _send_button: Button = $Root/InputBar/SendButton
@@ -40,6 +44,11 @@ var _palette
 var _command_handler: Callable = Callable()
 var _theme_manager
 var _panel_registry
+var _history
+var _notifications
+## 超过该行数后叙事流改用窗口化渲染，避免超长会话卡顿（ui.md 第 6 节）。
+const VIRTUAL_THRESHOLD: int = 400
+const EST_ROW_HEIGHT: float = 26.0
 var _dialog_registry
 var _drawers: Dictionary = {}          ## 面板 id -> 抽屉节点
 var _drawer_row: HBoxContainer
@@ -95,6 +104,8 @@ func _ready() -> void:
 	_theme_manager.apply_to(self)
 	_panel_registry = PanelRegistryScript.new()
 	_dialog_registry = DialogRegistryScript.new()
+	_history = HistoryViewScript.new()
+	_notifications = NotificationCenterScript.new()
 	_connect_nodes()
 	_build_actions()
 	_ensure_drawer_row()
@@ -110,6 +121,8 @@ func _connect_nodes() -> void:
 		_input.text_submitted.connect(_on_submit_text)
 	if is_instance_valid(_pause_button):
 		_pause_button.pressed.connect(_on_pause)
+	if is_instance_valid(_messages_scroll):
+		_messages_scroll.get_v_scroll_bar().value_changed.connect(_on_history_scrolled)
 
 ## 外部（如事件结算、面板）可注入执行器；无执行器时仅回显解析意图。
 func set_command_handler(handler: Callable) -> void:
@@ -543,7 +556,27 @@ func append_message(text: String, type: String = "info", markers: Array = []) ->
 	var render := {"text": text, "markers": markers}
 	_append_render(render, type)
 
+## 追加一条内联水墨插画（R35、R57）；缺资源时回退占位留白。
+func append_illustration(key: String, caption: String = "") -> Dictionary:
+	if not is_instance_valid(_message_list):
+		return {}
+	var info: Dictionary = IllustrationScript.resolve(key, caption)
+	var render := {"text": String(info["caption"]), "markers": [], "illustration": info}
+	_append_render(render, "illustration" if bool(info["available"]) else "info")
+	return info
+
 func _append_render(render: Dictionary, type: String) -> void:
+	if _history == null:
+		_history = HistoryViewScript.new()
+	_history.append({"render": render, "type": type})
+	if _history.count() > VIRTUAL_THRESHOLD:
+		_render_history_window(true)
+	else:
+		_message_list.add_child(_make_label(render, type))
+		_scroll_to_bottom()
+
+## 构建单条消息控件。
+func _make_label(render: Dictionary, type: String) -> RichTextLabel:
 	var style: Dictionary = _palette.style_for(type)
 	var label := RichTextLabel.new()
 	label.bbcode_enabled = true
@@ -554,7 +587,47 @@ func _append_render(render: Dictionary, type: String) -> void:
 	label.add_theme_color_override("default_color", style["color"])
 	var prefix := "%s " % String(style["cue"])
 	label.text = prefix + _to_bbcode(render)
-	_message_list.add_child(label)
+	return label
+
+## 窗口化渲染：仅实例化当前可见窗口内的行，用上下占位块保持滚动几何（超长会话）。
+func _render_history_window(to_bottom: bool = false) -> void:
+	if not is_instance_valid(_message_list):
+		return
+	for c in _message_list.get_children():
+		_message_list.remove_child(c)
+		c.queue_free()
+	var vh: float = _messages_scroll.size.y if is_instance_valid(_messages_scroll) else 400.0
+	var top: float = _messages_scroll.get_v_scroll_bar().value if is_instance_valid(_messages_scroll) else 0.0
+	if to_bottom:
+		top = _history.total_height(EST_ROW_HEIGHT)
+	top = _history.clamp_scroll(top, vh, EST_ROW_HEIGHT)
+	var win: Dictionary = _history.visible_window(top, vh, EST_ROW_HEIGHT)
+	var start: int = int(win["start"])
+	var end: int = int(win["end"])
+	if start > 0:
+		_message_list.add_child(_spacer(float(start) * EST_ROW_HEIGHT))
+	for i in range(start, end):
+		var row: Dictionary = _history.row_at(i)
+		_message_list.add_child(_make_label(row.get("render", {}), String(row.get("type", "info"))))
+	var tail: int = _history.count() - end
+	if tail > 0:
+		_message_list.add_child(_spacer(float(tail) * EST_ROW_HEIGHT))
+	if to_bottom and is_instance_valid(_messages_scroll):
+		call_deferred("_scroll_to_bottom")
+
+func _spacer(height: float) -> Control:
+	var s := Control.new()
+	s.custom_minimum_size = Vector2(0, height)
+	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return s
+
+func _scroll_to_bottom() -> void:
+	if is_instance_valid(_messages_scroll):
+		_messages_scroll.scroll_vertical = int(_messages_scroll.get_v_scroll_bar().max_value)
+
+func _on_history_scrolled(_value: float) -> void:
+	if _history != null and _history.count() > VIRTUAL_THRESHOLD:
+		_render_history_window(false)
 
 ## 把 Narrator 标记转成可点击 bbcode 链接（地点/物品/NPC 名称）。
 func _to_bbcode(render: Dictionary) -> String:
@@ -608,6 +681,37 @@ func _on_speed() -> void:
 	var idx: int = levels.find(int(speed.get_speed()))
 	speed.set_speed(int(levels[(idx + 1) % levels.size()]))
 	refresh_status()
+
+# --- 通知与托盘（任务 47 收尾）---
+
+## 触发一条分类通知：投递系统通知；未聚焦时并入游戏内角标（返回结果字典）。
+func notify(category: String, title: String, body: String = "", panel: String = "") -> Dictionary:
+	if _notifications == null:
+		_notifications = NotificationCenterScript.new()
+	var r: Dictionary = _notifications.notify(category, title, body, panel)
+	if bool(r.get("sent", false)) and bool(r.get("queued", false)):
+		append_message("[%s] %s" % [title, body], "info")
+	return r
+
+## 应用窗口聚焦状态：聚焦时排空排队通知。
+func set_focused(value: bool) -> void:
+	if value:
+		for item in _notifications.focus():
+			append_message("[%s] %s" % [String(item.get("title", "")), String(item.get("body", ""))], "info")
+	else:
+		_notifications.blur()
+
+func set_tray_enabled(value: bool) -> void:
+	_notifications.set_tray_enabled(value)
+
+func tray_enabled() -> bool:
+	return bool(_notifications.prefs.tray_enabled)
+
+func notification_center():
+	return _notifications
+
+func history():
+	return _history
 
 func _on_pause() -> void:
 	var speed = get_node_or_null("/root/SpeedController")
