@@ -29,6 +29,7 @@ jobs:
           cd tools/contentbuilder
           go test ./...
           go run . validate --catalog "$GITHUB_WORKSPACE/content/catalog"
+          go run . coverage --catalog "$GITHUB_WORKSPACE/content/catalog"
 
       - name: 内容包构建
         run: |
@@ -38,3 +39,32 @@ jobs:
       - name: Go 后端测试
         working-directory: server
         run: go test ./...
+
+  client:
+    name: Godot 客户端测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装图形运行依赖
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1 libfreetype6
+
+      - name: 安装 Godot 4.7.2 编辑器
+        run: |
+          set -euo pipefail
+          GODOT_VER="4.7.2-stable"
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VER}"
+          mkdir -p "$HOME/godot/editor"
+          curl -fL -o "$HOME/godot/editor.zip" "${BASE}/Godot_v4.7.2-stable_linux.x86_64.zip"
+          unzip -q "$HOME/godot/editor.zip" -d "$HOME/godot/editor"
+          echo "GODOT_BIN=$HOME/godot/editor/Godot_v4.7.2-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: 导入资源并运行客户端测试
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --path client --import >/dev/null 2>&1 || true
+          for t in client/tests/*_test.gd; do
+            name="$(basename "$t")"
+            echo "-- $name"
+            "$GODOT_BIN" --headless --path client --script "res://tests/$name"
+          done
