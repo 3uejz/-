@@ -73,7 +73,7 @@ jobs:
           $url = "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_win64.exe.zip"
           Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\editor.zip"
           Expand-Archive "$env:RUNNER_TEMP\editor.zip" -DestinationPath "$env:RUNNER_TEMP\editor" -Force
-          "GODOT_BIN=$env:RUNNER_TEMP\editor\Godot_v${ver}_win64.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "GODOT_BIN=$env:RUNNER_TEMP\editor\Godot_v${ver}_win64_console.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: 以自定义模板导出并冒烟运行客户端
         shell: pwsh
@@ -85,11 +85,11 @@ jobs:
           $out = Join-Path $env:GITHUB_WORKSPACE "client\build\windows\lifetext.exe"
           New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
           & $env:GODOT_BIN --headless --path client --export-release "Windows Desktop" $out
-          if ($LASTEXITCODE -ne 0) { throw "导出失败，退出码 $LASTEXITCODE" }
+          if ($LASTEXITCODE -ne 0) { throw "导出失败，退出码 $($LASTEXITCODE)" }
           if (-not (Test-Path $out)) { throw "未找到导出产物 $out" }
           Get-ChildItem (Split-Path $out) | Format-Table Name, Length
-          & $out --headless --quit-after 60
-          if ($LASTEXITCODE -ne 0) { throw "导出程序退出码 $LASTEXITCODE" }
+          $g = Start-Process -FilePath $out -ArgumentList @("--headless","--quit-after","60") -NoNewWindow -Wait -PassThru
+          if ($g.ExitCode -ne 0) { throw "导出程序退出码 $($g.ExitCode)" }
 
       - name: 上传导出模板产物
         uses: actions/upload-artifact@v4
