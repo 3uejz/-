@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"lifetextsandbox/server/internal/auth"
@@ -330,5 +331,82 @@ func TestAdminDashboardAndSystem(t *testing.T) {
 	_ = json.Unmarshal(rec.Body.Bytes(), &migrations)
 	if len(migrations.Available) == 0 {
 		t.Fatal("迁移列表不应为空")
+	}
+}
+
+// 后台内容流水线：内容包上传 → 列表 → 校验 → 存储用量 → 发布清单。
+func TestAdminContentPackPipeline(t *testing.T) {
+	srv, h := newTestServer(t)
+	admin := adminToken(t, srv, h)
+
+	// 初始清单为空。
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/admin/content/packs", admin, nil, nil); rec.Code != http.StatusOK {
+		t.Fatalf("内容包列表期望 200，得到 %d", rec.Code)
+	}
+
+	// 缺必填字段 → 400。
+	if rec := doJSON(t, h, http.MethodPost, "/api/v1/admin/content/packs", admin, map[string]any{"name": "x"}, nil); rec.Code != http.StatusBadRequest {
+		t.Fatalf("缺字段期望 400，得到 %d", rec.Code)
+	}
+
+	// 上传合法内容包。
+	pack := map[string]any{
+		"name": "core", "kind": "content", "version": "1.0.0",
+		"hash": "sha256:" + strings.Repeat("a", 64), "size": 1024,
+		"url": "https://cdn.example/core-1.0.0.pck",
+	}
+	rec := doJSON(t, h, http.MethodPost, "/api/v1/admin/content/packs", admin, pack, nil)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("上传内容包期望 201，得到 %d %s", rec.Code, rec.Body.String())
+	}
+
+	// 列表包含该包。
+	rec = doJSON(t, h, http.MethodGet, "/api/v1/admin/content/packs", admin, nil, nil)
+	var list struct {
+		Items []map[string]any `json:"items"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &list)
+	if len(list.Items) != 1 || list.Items[0]["name"] != "core" {
+		t.Fatalf("内容包列表异常: %+v", list.Items)
+	}
+
+	// 校验合法包通过。
+	rec = doJSON(t, h, http.MethodPost, "/api/v1/admin/content/packs/core/validate", admin, nil, nil)
+	var val struct {
+		Valid  bool     `json:"valid"`
+		Issues []string `json:"issues"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &val)
+	if rec.Code != http.StatusOK || !val.Valid {
+		t.Fatalf("校验应通过: %d %+v", rec.Code, val)
+	}
+
+	// 校验不存在的包失败。
+	rec = doJSON(t, h, http.MethodPost, "/api/v1/admin/content/packs/missing/validate", admin, nil, nil)
+	_ = json.Unmarshal(rec.Body.Bytes(), &val)
+	if val.Valid || len(val.Issues) == 0 {
+		t.Fatalf("不存在包应校验失败: %+v", val)
+	}
+
+	// 存储用量可读。
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/admin/storage/usage", admin, nil, nil); rec.Code != http.StatusOK {
+		t.Fatalf("存储用量期望 200，得到 %d", rec.Code)
+	}
+
+	// 发布整份清单（含该包），返回 ETag。
+	manifest := map[string]any{"manifest_version": 1, "packs": []any{pack}}
+	rec = doJSON(t, h, http.MethodPost, "/api/v1/admin/content/publish", admin, manifest, nil)
+	if rec.Code != http.StatusAccepted || rec.Header().Get("ETag") == "" {
+		t.Fatalf("发布清单期望 202+ETag，得到 %d etag=%q", rec.Code, rec.Header().Get("ETag"))
+	}
+
+	// 玩家侧清单反映已发布内容，且条件请求可命中 304。
+	rec = doJSON(t, h, http.MethodGet, "/api/v1/content/manifest", "", nil, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("玩家清单期望 200，得到 %d", rec.Code)
+	}
+	tag := rec.Header().Get("ETag")
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/content/manifest", "", nil, map[string]string{"If-None-Match": tag}); rec.Code != http.StatusNotModified {
+		t.Fatalf("发布后清单条件请求期望 304，得到 %d", rec.Code)
 	}
 }
