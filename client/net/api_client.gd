@@ -87,7 +87,7 @@ func session_dict() -> Dictionary:
 		"expires_in": access_expires_in,
 	}
 
-func _apply_tokens(data: Variant) -> void:
+func apply_tokens(data: Variant) -> void:
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	var d: Dictionary = data
@@ -246,13 +246,13 @@ func execute_authed(method: String, path: String, opts: Dictionary = {}) -> Dict
 func register(username: String, password: String) -> Dictionary:
 	var result := execute("POST", "/auth/register", {"body": {"username": username, "password": password}})
 	if result["ok"]:
-		_apply_tokens(result["data"])
+		apply_tokens(result["data"])
 	return result
 
 func login(username: String, password: String) -> Dictionary:
 	var result := execute("POST", "/auth/login", {"body": {"username": username, "password": password}})
 	if result["ok"]:
-		_apply_tokens(result["data"])
+		apply_tokens(result["data"])
 	return result
 
 func refresh() -> Dictionary:
@@ -268,7 +268,7 @@ func refresh() -> Dictionary:
 	var result := execute("POST", "/auth/refresh", {"body": {"refresh_token": refresh_token}})
 	_refreshing = false
 	if result["ok"]:
-		_apply_tokens(result["data"])
+		apply_tokens(result["data"])
 	else:
 		clear_session()
 	return result

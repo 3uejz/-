@@ -18,6 +18,7 @@ GameState="*res://autoload/game_state.gd"
 WorldClock="*res://autoload/world_clock.gd"
 TickScheduler="*res://autoload/tick_scheduler.gd"
 SpeedController="*res://autoload/speed_controller.gd"
+Net="*res://autoload/net.gd"
 
 [display]
 

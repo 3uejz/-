@@ -39,13 +39,17 @@ func take_batch(limit: int = MAX_BATCH) -> Array[Dictionary]:
 		out.append(_queue[i].duplicate(true))
 	return out
 
-## 批量刷出。client 需实现 post_telemetry(events) -> 结果 Dictionary。
+## 批量刷出（同步）。client 需实现 post_telemetry(events) -> 结果 Dictionary。
 func flush(client: ApiClient) -> Dictionary:
-	var total := _queue.size()
-	if total == 0:
+	if _queue.is_empty():
 		return {"ok": true, "skipped": true, "accepted": 0, "rejected": 0, "remaining": 0}
 	var batch := take_batch(MAX_BATCH)
 	var result := client.post_telemetry(batch)
+	return apply_result(batch, result)
+
+## 应用一次上报结果（纯函数，供同步 flush 与异步网关复用）。
+## batch 为本次发送的事件（take_batch 的返回，尚未从队列移除）。
+func apply_result(batch: Array, result: Dictionary) -> Dictionary:
 	if not result.get("ok", false):
 		return {
 			"ok": false,
