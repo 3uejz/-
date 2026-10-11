@@ -218,6 +218,8 @@
 - **占位资产约定**：在真实美术资产进场前，任何内容键经 `PlaceholderAssets` 确定性映射到基础几何体（box/sphere/cylinder/capsule/prism）与颜色，路径统一为 `res://assets/placeholder/<key>.tscn`；真实资产到位后由 `sites` 内容条目覆盖即可，逻辑层无需改动。
 - **通用内容 Resource**：`ContentDef`（`content_key`/`category`/`fields`）包装容器条目，供编辑器与运行时统一使用。
 - **资产台账**：`contentbuilder assets --dir ART_DIR --out ledger.json` 扫描模型/贴图/音频，记录大小、sha256、LOD 分层与许可证旁注（`<asset>.license.json`），对齐 R36.11。
+- **外部内容包（MOD）预留接口**：`client/content/mod_loader.gd` 预留发现/兼容（`api_version`）/签名（注入校验器，默认拒绝未签名）/冲突检测，`enable_mods` 默认 false，首发不启用；启用时再补沙箱与兼容校验。
+- **大资源分包分片与按区域挂载**：`client/content/sharded_source.gd` 支持按 `shard_bytes` 切块、`range_fetcher(url, offset, length)` 断点续传、整片/分块 sha256 校验、按区域挂载与超预算 LRU 淘汰；`ContentManager.set_sharded_source()` 让美术包随同一区域键挂载（面向 30GB 级资产）。
 
 ## 22. 领域内容骨架（D35–D50；任务 50）
 

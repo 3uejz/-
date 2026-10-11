@@ -16,6 +16,13 @@ var packs: Dictionary = {}          # category -> ContentPack（已挂载，含�
 var patches: Dictionary = {}        # base pack name -> ContentPack（差量包）
 var installed: Dictionary = {}      # pack name -> hash（本次会话已同步）
 var issues: Array = []
+## 可选：大美术资源的分包分片下载源（任务 23，30GB 级）；按区域随内容包一同挂载。
+var sharded = null
+
+
+## 注入分片资源源（ShardedSource）；未注入时不挂载任何分片资源。
+func set_sharded_source(source) -> void:
+	sharded = source
 
 
 func _init(manifest_data: Dictionary, fetcher_fn: Callable, cache_path: String) -> void:
@@ -72,6 +79,10 @@ func mount_region(region_key: String = "") -> int:
 		var merged := _merge(base, name)
 		packs[merged.category] = merged
 		mounted += 1
+	# 分片资源（美术包）按同一区域键按需挂载；未注入或通用区域时跳过。
+	if region_key != "" and sharded != null:
+		var r: Dictionary = sharded.mount_region(region_key)
+		mounted += int(r.get("mounted", 0))
 	return mounted
 
 
