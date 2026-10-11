@@ -74,18 +74,21 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\editor.zip"
           Expand-Archive "$env:RUNNER_TEMP\editor.zip" -DestinationPath "$env:RUNNER_TEMP\editor" -Force
           "GODOT_BIN=$env:RUNNER_TEMP\editor\Godot_v${ver}_win64.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "TPL_DIR=$env:APPDATA\Godot\export_templates\4.7.2.stable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: 以自定义模板导出并冒烟运行客户端
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path $env:TPL_DIR | Out-Null
-          Copy-Item "engine/bin/godot.windows.template_release.x86_64.exe" "$env:TPL_DIR\windows_release_x86_64.exe" -Force
+          $tpl = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force -Path $tpl | Out-Null
+          Copy-Item "engine/bin/godot.windows.template_release.x86_64.exe" (Join-Path $tpl "windows_release_x86_64.exe") -Force
           & $env:GODOT_BIN --headless --path client --import
-          New-Item -ItemType Directory -Force -Path "client/build/windows" | Out-Null
-          & $env:GODOT_BIN --headless --path client --export-release "Windows Desktop" "build/windows/lifetext.exe"
-          Get-ChildItem "client/build/windows" | Format-Table Name, Length
-          & "client/build/windows/lifetext.exe" --headless --quit-after 60
+          $out = Join-Path $env:GITHUB_WORKSPACE "client\build\windows\lifetext.exe"
+          New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+          & $env:GODOT_BIN --headless --path client --export-release "Windows Desktop" $out
+          if ($LASTEXITCODE -ne 0) { throw "导出失败，退出码 $LASTEXITCODE" }
+          if (-not (Test-Path $out)) { throw "未找到导出产物 $out" }
+          Get-ChildItem (Split-Path $out) | Format-Table Name, Length
+          & $out --headless --quit-after 60
           if ($LASTEXITCODE -ne 0) { throw "导出程序退出码 $LASTEXITCODE" }
 
       - name: 上传导出模板产物
