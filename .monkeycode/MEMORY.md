@@ -108,3 +108,13 @@ Entries discovered by the Agent during task execution should follow this format:
 - Instructions:
   - 客户端测试文件放入 `client/tests/*_test.gd` 即被 `scripts/test.sh` 按 glob 自动发现执行，无需注册；套件须 `extends "res://tests/test_base.gd"` 并实现 `_suite_name()` 与 `run_tests()`。
   - 注意坑：`test_base` 仅在断言失败时累加 failures；若套件中出现运行时 `SCRIPT ERROR`（如空数组下标、参数类型不符），当前函数会中断但 failures 不增加，仍打印 `PASS`。因此看到 PASS 后仍需确认输出里没有 `SCRIPT ERROR`。
+
+[Project Knowledge Summary]
+- Date: 2026-10-11
+- Context: Discovered by Agent while verifying task 45.2（Windows 导出自定义模板）与客户端后端接线
+- Category: Operations & Deployment
+- Instructions:
+  - 引擎构建 CI 为 `.github/workflows/engine.yml`（工作流名 engine-build），仅在 push `engine-*` 标签或 workflow_dispatch 时触发；默认 `master` push 只跑 `.github/workflows/ci.yml`。单次全量约 35 分钟。
+  - windows-template 作业流程：SCons 构建自定义模板 → 安装官方 4.7.2 编辑器 → 注册模板为 `%APPDATA%\Godot\export_templates\4.7.2.stable\windows_release_x86_64.exe` → 用该模板导出客户端 → headless 冒烟运行导出程序。
+  - 坑：Windows 编辑器要用 `Godot_v4.7.2-stable_win64_console.exe`（GUI 版不挂控制台，PowerShell 既不等待也拿不到退出码/日志）；导出路径传绝对路径，导出程序是 GUI 子系统，需用 `Start-Process -Wait -PassThru` 才能拿到退出码。
+  - 查询本仓库 CI 状态：GitHub API 未认证会被限流（60/h）；可用 `git credential fill`（host=github.com）取 token 后以 `Authorization: Bearer` 调 `/repos/3uejz/-/actions/...`，勿在任何输出中打印 token。
