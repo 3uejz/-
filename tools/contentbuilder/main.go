@@ -22,6 +22,8 @@ func main() {
 	switch os.Args[1] {
 	case "validate":
 		os.Exit(runValidate(os.Args[2:]))
+	case "coverage":
+		os.Exit(runCoverage(os.Args[2:]))
 	case "build":
 		os.Exit(runBuild(os.Args[2:]))
 	case "diff":
@@ -46,6 +48,7 @@ func usage() {
 
 用法:
   contentbuilder validate [--catalog DIR]
+  contentbuilder coverage [--catalog DIR]
   contentbuilder build    [--catalog DIR] [--out DIR] [--base-url URL] [--version N]
   contentbuilder diff     --prev MANIFEST --next MANIFEST [--prev-catalog DIR] [--next-catalog DIR]
   contentbuilder patch    --prev-catalog DIR --next-catalog DIR [--out DIR] [--base-url URL] [--version N]
@@ -77,6 +80,33 @@ func runValidate(args []string) int {
 		return 1
 	}
 	fmt.Println("校验通过")
+	return 0
+}
+
+// runCoverage 对照 R56 内容硬指标检查目录规模。
+func runCoverage(args []string) int {
+	fs := flag.NewFlagSet("coverage", flag.ContinueOnError)
+	catalogDir := fs.String("catalog", defaultCatalogDir, "内容源目录")
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	cat, issues := loadAndValidate(*catalogDir)
+	if len(issues) > 0 {
+		for _, is := range issues {
+			fmt.Fprintln(os.Stderr, "错误:", is.String())
+		}
+		fmt.Fprintf(os.Stderr, "校验失败：%d 个问题\n", len(issues))
+		return 1
+	}
+	cov := Coverage(cat)
+	if len(cov) > 0 {
+		for _, is := range cov {
+			fmt.Fprintln(os.Stderr, "缺口:", is.String())
+		}
+		fmt.Fprintf(os.Stderr, "R56 覆盖不足：%d 个指标\n", len(cov))
+		return 1
+	}
+	fmt.Println("R56 内容覆盖达标")
 	return 0
 }
 

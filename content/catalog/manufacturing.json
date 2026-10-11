@@ -1,0 +1,255 @@
+{
+  "category": "manufacturing",
+  "entries": [
+    {
+      "content_key": "mfg.n006f_25",
+      "name": "酿酒制糖",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n05d0_45",
+      "name": "仓储物流",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n08b1_07",
+      "name": "机械装备",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n0d2c_42",
+      "name": "大宗批发",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n1825_43",
+      "name": "跨境电商",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.n1bd6_08",
+      "name": "电子元件",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.n2055_16",
+      "name": "钢材轧制",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n209f_00",
+      "name": "食品加工",
+      "era": 1
+    },
+    {
+      "content_key": "mfg.n2cc0_10",
+      "name": "建材生产",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n2fbe_13",
+      "name": "精密仪器",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.n3413_47",
+      "name": "成品零售",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n3e2f_06",
+      "name": "金属冶炼",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n3e62_22",
+      "name": "涂料油墨",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n3f54_48",
+      "name": "原材料贸易",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n43a8_37",
+      "name": "医疗器械",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.n4615_20",
+      "name": "橡胶制品",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n4a0a_46",
+      "name": "冷链运输",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.n4ae5_12",
+      "name": "半导体制造",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.n563b_02",
+      "name": "家具制造",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n5695_41",
+      "name": "再生资源回收",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n5a30_21",
+      "name": "塑料制品",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n5d36_18",
+      "name": "玻璃制造",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.n717d_03",
+      "name": "造纸印刷",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n76cb_44",
+      "name": "供应链服务",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.n81b7_40",
+      "name": "包装材料",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n82b4_24",
+      "name": "饲料加工",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.n8bde_32",
+      "name": "机器人本体",
+      "era": 6
+    },
+    {
+      "content_key": "mfg.n9616_33",
+      "name": "数控机床",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.n9d16_38",
+      "name": "玩具制造",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.na6a5_01",
+      "name": "纺织服装",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.na797_27",
+      "name": "皮革制品",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.naa70_30",
+      "name": "光伏组件",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.nae2d_36",
+      "name": "轨道交通装备",
+      "era": 6
+    },
+    {
+      "content_key": "mfg.nb0fe_35",
+      "name": "船舶制造",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.nb136_11",
+      "name": "日化用品",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.nb38a_14",
+      "name": "航空航天部件",
+      "era": 6
+    },
+    {
+      "content_key": "mfg.nc447_28",
+      "name": "家电组装",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.nc5d6_05",
+      "name": "医药制造",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.nd057_31",
+      "name": "风电设备",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.nd43f_15",
+      "name": "新能源电池",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.nd51c_39",
+      "name": "文体用品",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.nd5df_17",
+      "name": "水泥熟料",
+      "era": 2
+    },
+    {
+      "content_key": "mfg.nd5ec_04",
+      "name": "化工原料",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.ne20b_29",
+      "name": "通信设备",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.neb94_34",
+      "name": "工程机械",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.nee76_49",
+      "name": "元器件分销",
+      "era": 5
+    },
+    {
+      "content_key": "mfg.nf1f6_09",
+      "name": "汽车零部件",
+      "era": 4
+    },
+    {
+      "content_key": "mfg.nf67f_26",
+      "name": "烟草加工",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.nf884_23",
+      "name": "化肥农药",
+      "era": 3
+    },
+    {
+      "content_key": "mfg.nfda7_19",
+      "name": "陶瓷制品",
+      "era": 2
+    }
+  ]
+}

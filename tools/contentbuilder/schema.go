@@ -146,6 +146,12 @@ var categorySpecs = map[string]categorySpec{
 	"infra_projects": {name: "infra_projects", kind: "data", fields: []fieldSpec{
 		{"content_key", tString, true}, {"name", tString, true}, {"mode", tString, true}, {"capacity", tFloat, true},
 	}},
+	"place_types": {name: "place_types", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"group", tString, true},
+	}},
+	"primary_industry": {name: "primary_industry", kind: "data", fields: []fieldSpec{
+		{"content_key", tString, true}, {"name", tString, true}, {"sector", tString, true},
+	}},
 }
 
 // categoryOrder 稳定输出顺序。

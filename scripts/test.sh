@@ -21,6 +21,7 @@ echo "== 内容工具链测试与内容校验 =="
   cd "$ROOT/tools/contentbuilder"
   "$GO_BIN" test ./...
   "$GO_BIN" run . validate --catalog "$ROOT/content/catalog"
+  "$GO_BIN" run . coverage --catalog "$ROOT/content/catalog"
 )
 
 echo "== Godot 客户端测试 =="

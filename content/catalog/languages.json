@@ -1,0 +1,55 @@
+{
+  "category": "languages",
+  "entries": [
+    {
+      "content_key": "lang.n15a1_08",
+      "name": "西班牙语",
+      "region": "欧美"
+    },
+    {
+      "content_key": "lang.n2b24_03",
+      "name": "吴语",
+      "region": "江南"
+    },
+    {
+      "content_key": "lang.n69f2_04",
+      "name": "闽南语",
+      "region": "闽台"
+    },
+    {
+      "content_key": "lang.n6e5b_01",
+      "name": "英语",
+      "region": "国际"
+    },
+    {
+      "content_key": "lang.n773c_00",
+      "name": "汉语普通话",
+      "region": "中国"
+    },
+    {
+      "content_key": "lang.na1d4_02",
+      "name": "粤语",
+      "region": "华南"
+    },
+    {
+      "content_key": "lang.nb560_05",
+      "name": "日语",
+      "region": "东亚"
+    },
+    {
+      "content_key": "lang.nbac6_09",
+      "name": "阿拉伯语",
+      "region": "中东"
+    },
+    {
+      "content_key": "lang.nc405_07",
+      "name": "法语",
+      "region": "欧洲"
+    },
+    {
+      "content_key": "lang.nf3cc_06",
+      "name": "韩语",
+      "region": "东亚"
+    }
+  ]
+}

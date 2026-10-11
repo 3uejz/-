@@ -1,0 +1,180 @@
+{
+  "category": "primary_industry",
+  "entries": [
+    {
+      "content_key": "primary.n0b8c_03",
+      "name": "大豆",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.n1225_00",
+      "name": "水稻",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.n2e2b_01",
+      "name": "小麦",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.n31ce_04",
+      "name": "乳制品原料",
+      "sector": "process"
+    },
+    {
+      "content_key": "primary.n3708_06",
+      "name": "棉花",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.n390f_04",
+      "name": "藻类",
+      "sector": "aquatic"
+    },
+    {
+      "content_key": "primary.n5063_05",
+      "name": "鹅",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.n5263_00",
+      "name": "鱼",
+      "sector": "aquatic"
+    },
+    {
+      "content_key": "primary.n5c0c_05",
+      "name": "水果",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.n69c6_02",
+      "name": "木材",
+      "sector": "forestry"
+    },
+    {
+      "content_key": "primary.n6c7a_05",
+      "name": "肉制品原料",
+      "sector": "process"
+    },
+    {
+      "content_key": "primary.n76f9_01",
+      "name": "牛",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.n8286_00",
+      "name": "猪",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.n82b4_00",
+      "name": "饲料加工",
+      "sector": "process"
+    },
+    {
+      "content_key": "primary.n849b_03",
+      "name": "水产加工",
+      "sector": "process"
+    },
+    {
+      "content_key": "primary.n85f3_03",
+      "name": "鸡",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.n8692_00",
+      "name": "橡胶",
+      "sector": "forestry"
+    },
+    {
+      "content_key": "primary.n8e3d_01",
+      "name": "药材",
+      "sector": "forestry"
+    },
+    {
+      "content_key": "primary.na936_08",
+      "name": "油料",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nc5d2_04",
+      "name": "蔬菜",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nc5f7_02",
+      "name": "蟹",
+      "sector": "aquatic"
+    },
+    {
+      "content_key": "primary.nc631_02",
+      "name": "玉米",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nc9d8_04",
+      "name": "鸭",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.nd077_09",
+      "name": "薯类",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nda5e_07",
+      "name": "马",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.ndc4f_03",
+      "name": "贝",
+      "sector": "aquatic"
+    },
+    {
+      "content_key": "primary.nec4b_10",
+      "name": "糖料",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nedb3_11",
+      "name": "烟草",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nee0f_03",
+      "name": "竹材",
+      "sector": "forestry"
+    },
+    {
+      "content_key": "primary.nf00a_06",
+      "name": "兔",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.nf4ef_07",
+      "name": "茶叶",
+      "sector": "crop"
+    },
+    {
+      "content_key": "primary.nf5e2_02",
+      "name": "果蔬保鲜",
+      "sector": "process"
+    },
+    {
+      "content_key": "primary.nf63f_02",
+      "name": "羊",
+      "sector": "livestock"
+    },
+    {
+      "content_key": "primary.nf7d2_01",
+      "name": "虾",
+      "sector": "aquatic"
+    },
+    {
+      "content_key": "primary.nfd0b_01",
+      "name": "粮食烘干",
+      "sector": "process"
+    }
+  ]
+}

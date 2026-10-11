@@ -1,44 +1,1690 @@
 {
   "category": "jobs",
   "entries": [
-    { "content_key": "occupation.farmer", "name": "农民", "industry": "agriculture", "level": 1, "salary_base": 400000, "skills": [] },
-    { "content_key": "occupation.machine_operator", "name": "农机手", "industry": "agriculture", "level": 2, "salary_base": 600000, "skills": ["skill.driving"] },
-    { "content_key": "occupation.vet", "name": "兽医", "industry": "agriculture", "level": 4, "salary_base": 1200000, "skills": ["skill.first_aid"] },
-    { "content_key": "occupation.general_worker", "name": "普工", "industry": "industry", "level": 1, "salary_base": 500000, "skills": [] },
-    { "content_key": "occupation.electrician", "name": "电工", "industry": "industry", "level": 3, "salary_base": 900000, "skills": [] },
-    { "content_key": "occupation.quality_inspector", "name": "质检员", "industry": "industry", "level": 3, "salary_base": 850000, "skills": [] },
-    { "content_key": "occupation.carpenter", "name": "木工", "industry": "construction", "level": 2, "salary_base": 800000, "skills": ["skill.cooking"] },
-    { "content_key": "occupation.construction_manager", "name": "项目经理", "industry": "construction", "level": 6, "salary_base": 2500000, "skills": ["skill.management", "skill.negotiation"] },
-    { "content_key": "occupation.driver", "name": "司机", "industry": "transport", "level": 2, "salary_base": 700000, "skills": ["skill.driving"] },
-    { "content_key": "occupation.ride_hailing_driver", "name": "网约车司机", "industry": "transport", "level": 2, "salary_base": 750000, "skills": ["skill.driving"] },
-    { "content_key": "occupation.programmer", "name": "程序员", "industry": "it", "level": 4, "salary_base": 1800000, "skills": ["skill.coding"] },
-    { "content_key": "occupation.architect", "name": "架构师", "industry": "it", "level": 7, "salary_base": 4000000, "skills": ["skill.coding", "skill.management"] },
-    { "content_key": "occupation.product_manager", "name": "产品经理", "industry": "it", "level": 5, "salary_base": 2200000, "skills": ["skill.writing", "skill.negotiation"] },
-    { "content_key": "occupation.bank_teller", "name": "柜员", "industry": "finance", "level": 2, "salary_base": 800000, "skills": ["skill.accounting"] },
-    { "content_key": "occupation.financial_analyst", "name": "分析师", "industry": "finance", "level": 5, "salary_base": 2500000, "skills": ["skill.finance", "skill.math"] },
-    { "content_key": "occupation.nurse", "name": "护士", "industry": "medical", "level": 3, "salary_base": 1000000, "skills": ["skill.first_aid", "skill.empathy"] },
-    { "content_key": "occupation.doctor", "name": "医生", "industry": "medical", "level": 7, "salary_base": 3000000, "skills": ["skill.first_aid", "skill.empathy"] },
-    { "content_key": "occupation.psychologist", "name": "心理医生", "industry": "medical", "level": 6, "salary_base": 2200000, "skills": ["skill.empathy", "skill.speaking"] },
-    { "content_key": "occupation.teacher", "name": "中小学教师", "industry": "education", "level": 4, "salary_base": 1100000, "skills": ["skill.speaking", "skill.writing"] },
-    { "content_key": "occupation.university_lecturer", "name": "大学讲师", "industry": "education", "level": 6, "salary_base": 1800000, "skills": ["skill.speaking", "skill.math"] },
-    { "content_key": "occupation.lawyer", "name": "律师", "industry": "legal", "level": 6, "salary_base": 2800000, "skills": ["skill.negotiation", "skill.writing"] },
-    { "content_key": "occupation.judge", "name": "法官", "industry": "legal", "level": 8, "salary_base": 3000000, "skills": ["skill.writing"] },
-    { "content_key": "occupation.chef", "name": "厨师", "industry": "service", "level": 3, "salary_base": 1000000, "skills": ["skill.cooking"] },
-    { "content_key": "occupation.barber", "name": "理发师", "industry": "service", "level": 2, "salary_base": 700000, "skills": [] },
-    { "content_key": "occupation.actor", "name": "演员", "industry": "entertainment", "level": 4, "salary_base": 1500000, "skills": ["skill.speaking", "skill.empathy"] },
-    { "content_key": "occupation.streamer", "name": "主播", "industry": "entertainment", "level": 3, "salary_base": 1200000, "skills": ["skill.speaking", "skill.persuasion"] },
-    { "content_key": "occupation.journalist", "name": "记者", "industry": "media", "level": 4, "salary_base": 1000000, "skills": ["skill.writing", "skill.english"] },
-    { "content_key": "occupation.civil_servant", "name": "公务员", "industry": "government", "level": 3, "salary_base": 900000, "skills": ["skill.writing", "skill.etiquette"] },
-    { "content_key": "occupation.police", "name": "警察", "industry": "government", "level": 4, "salary_base": 1100000, "skills": ["skill.fighting", "skill.first_aid"] },
-    { "content_key": "occupation.soldier", "name": "军人", "industry": "government", "level": 3, "salary_base": 900000, "skills": ["skill.fighting", "skill.swimming"] },
-    { "content_key": "occupation.athlete", "name": "运动员", "industry": "sports", "level": 5, "salary_base": 1500000, "skills": ["skill.swimming", "skill.fighting"] },
-    { "content_key": "occupation.painter", "name": "画家", "industry": "art", "level": 4, "salary_base": 900000, "skills": ["skill.painting"] },
-    { "content_key": "occupation.writer", "name": "作家", "industry": "art", "level": 4, "salary_base": 900000, "skills": ["skill.writing"] },
-    { "content_key": "occupation.musician", "name": "乐手", "industry": "art", "level": 4, "salary_base": 1000000, "skills": ["skill.instrument"] },
-    { "content_key": "occupation.tailor", "name": "裁缝", "industry": "handicraft", "level": 3, "salary_base": 800000, "skills": ["skill.design"] },
-    { "content_key": "occupation.accountant", "name": "会计", "industry": "professional", "level": 4, "salary_base": 1200000, "skills": ["skill.accounting", "skill.finance"] },
-    { "content_key": "occupation.salesperson", "name": "销售", "industry": "professional", "level": 3, "salary_base": 900000, "skills": ["skill.sales", "skill.persuasion"] },
-    { "content_key": "occupation.delivery_driver", "name": "快递员", "industry": "logistics", "level": 1, "salary_base": 600000, "skills": ["skill.driving"] },
-    { "content_key": "occupation.miner", "name": "矿工", "industry": "mining", "level": 2, "salary_base": 800000, "skills": [] }
+    {
+      "content_key": "occupation.accountant",
+      "name": "会计",
+      "industry": "professional",
+      "level": 4,
+      "salary_base": 1200000,
+      "skills": [
+        "skill.accounting",
+        "skill.finance"
+      ]
+    },
+    {
+      "content_key": "occupation.actor",
+      "name": "演员",
+      "industry": "entertainment",
+      "level": 4,
+      "salary_base": 1500000,
+      "skills": [
+        "skill.speaking",
+        "skill.empathy"
+      ]
+    },
+    {
+      "content_key": "occupation.agriculture.n09d7_01",
+      "name": "农机手",
+      "industry": "agriculture",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n14ee_03",
+      "name": "农技员",
+      "industry": "agriculture",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n2d3f_02",
+      "name": "兽医",
+      "industry": "agriculture",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n3452_09",
+      "name": "畜牧员",
+      "industry": "agriculture",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n76ff_07",
+      "name": "果园工",
+      "industry": "agriculture",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n8670_08",
+      "name": "茶农",
+      "industry": "agriculture",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.n91c4_00",
+      "name": "农民",
+      "industry": "agriculture",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.nbf80_06",
+      "name": "养殖户",
+      "industry": "agriculture",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.ncd62_04",
+      "name": "渔民",
+      "industry": "agriculture",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.agriculture.nebb9_05",
+      "name": "林农",
+      "industry": "agriculture",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.architect",
+      "name": "架构师",
+      "industry": "it",
+      "level": 7,
+      "salary_base": 4000000,
+      "skills": [
+        "skill.coding",
+        "skill.management"
+      ]
+    },
+    {
+      "content_key": "occupation.art.n0d8f_02",
+      "name": "设计师",
+      "industry": "art",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n1dc3_08",
+      "name": "非遗传承人",
+      "industry": "art",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n2e45_07",
+      "name": "陶艺师",
+      "industry": "art",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n4234_06",
+      "name": "插画师",
+      "industry": "art",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n5747_00",
+      "name": "画家",
+      "industry": "art",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n8fef_09",
+      "name": "评论家",
+      "industry": "art",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.n9708_05",
+      "name": "策展人",
+      "industry": "art",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.ne1c9_04",
+      "name": "书法家",
+      "industry": "art",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.nfd61_01",
+      "name": "雕塑家",
+      "industry": "art",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.art.nff1b_03",
+      "name": "作家",
+      "industry": "art",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.athlete",
+      "name": "运动员",
+      "industry": "sports",
+      "level": 5,
+      "salary_base": 1500000,
+      "skills": [
+        "skill.swimming",
+        "skill.fighting"
+      ]
+    },
+    {
+      "content_key": "occupation.bank_teller",
+      "name": "柜员",
+      "industry": "finance",
+      "level": 2,
+      "salary_base": 800000,
+      "skills": [
+        "skill.accounting"
+      ]
+    },
+    {
+      "content_key": "occupation.barber",
+      "name": "理发师",
+      "industry": "service",
+      "level": 2,
+      "salary_base": 700000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.carpenter",
+      "name": "木工",
+      "industry": "construction",
+      "level": 2,
+      "salary_base": 800000,
+      "skills": [
+        "skill.cooking"
+      ]
+    },
+    {
+      "content_key": "occupation.catering.nb6b6_00",
+      "name": "厨师长",
+      "industry": "catering",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.chef",
+      "name": "厨师",
+      "industry": "service",
+      "level": 3,
+      "salary_base": 1000000,
+      "skills": [
+        "skill.cooking"
+      ]
+    },
+    {
+      "content_key": "occupation.civil_servant",
+      "name": "公务员",
+      "industry": "government",
+      "level": 3,
+      "salary_base": 900000,
+      "skills": [
+        "skill.writing",
+        "skill.etiquette"
+      ]
+    },
+    {
+      "content_key": "occupation.construction.n08a3_07",
+      "name": "项目经理",
+      "industry": "construction",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.n0d8f_06",
+      "name": "设计师",
+      "industry": "construction",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.n5ef1_05",
+      "name": "造价师",
+      "industry": "construction",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.n6ea1_02",
+      "name": "钢筋工",
+      "industry": "construction",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.n7073_04",
+      "name": "监理",
+      "industry": "construction",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.n7abd_03",
+      "name": "施工员",
+      "industry": "construction",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.nb8c7_09",
+      "name": "测量员",
+      "industry": "construction",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.nbcca_08",
+      "name": "安全员",
+      "industry": "construction",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.ndf94_00",
+      "name": "木工",
+      "industry": "construction",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction.necd3_01",
+      "name": "瓦工",
+      "industry": "construction",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.construction_manager",
+      "name": "项目经理",
+      "industry": "construction",
+      "level": 6,
+      "salary_base": 2500000,
+      "skills": [
+        "skill.management",
+        "skill.negotiation"
+      ]
+    },
+    {
+      "content_key": "occupation.delivery_driver",
+      "name": "快递员",
+      "industry": "logistics",
+      "level": 1,
+      "salary_base": 600000,
+      "skills": [
+        "skill.driving"
+      ]
+    },
+    {
+      "content_key": "occupation.doctor",
+      "name": "医生",
+      "industry": "medical",
+      "level": 7,
+      "salary_base": 3000000,
+      "skills": [
+        "skill.first_aid",
+        "skill.empathy"
+      ]
+    },
+    {
+      "content_key": "occupation.driver",
+      "name": "司机",
+      "industry": "transport",
+      "level": 2,
+      "salary_base": 700000,
+      "skills": [
+        "skill.driving"
+      ]
+    },
+    {
+      "content_key": "occupation.education.n3330_09",
+      "name": "特教老师",
+      "industry": "education",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n38d2_05",
+      "name": "研究员",
+      "industry": "education",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n4db7_04",
+      "name": "教授",
+      "industry": "education",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n70f5_07",
+      "name": "培训讲师",
+      "industry": "education",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n8bb1_08",
+      "name": "教务员",
+      "industry": "education",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n8d0d_01",
+      "name": "小学教师",
+      "industry": "education",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.n8d3c_00",
+      "name": "幼师",
+      "industry": "education",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.nb9b8_03",
+      "name": "大学讲师",
+      "industry": "education",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.nf3ca_02",
+      "name": "中学教师",
+      "industry": "education",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.education.nf7af_06",
+      "name": "辅导员",
+      "industry": "education",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.electrician",
+      "name": "电工",
+      "industry": "industry",
+      "level": 3,
+      "salary_base": 900000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.entertain.n0e54_09",
+      "name": "经纪人",
+      "industry": "entertain",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.n22eb_05",
+      "name": "电竞选手",
+      "industry": "entertain",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.n3b74_03",
+      "name": "舞者",
+      "industry": "entertain",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.n78bc_00",
+      "name": "演员",
+      "industry": "entertain",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.na64e_02",
+      "name": "乐手",
+      "industry": "entertain",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.nc4c3_08",
+      "name": "摄影师",
+      "industry": "entertain",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.nc80c_06",
+      "name": "导演",
+      "industry": "entertain",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.nd6f6_07",
+      "name": "编剧",
+      "industry": "entertain",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.nde20_01",
+      "name": "歌手",
+      "industry": "entertain",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.entertain.ne9a6_04",
+      "name": "主播",
+      "industry": "entertain",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.farmer",
+      "name": "农民",
+      "industry": "agriculture",
+      "level": 1,
+      "salary_base": 400000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.finance.n0587_00",
+      "name": "柜员",
+      "industry": "finance",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.n212b_02",
+      "name": "理财顾问",
+      "industry": "finance",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.n2be6_01",
+      "name": "信贷员",
+      "industry": "finance",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.n2c0e_04",
+      "name": "分析师",
+      "industry": "finance",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.n5206_09",
+      "name": "审计助理",
+      "industry": "finance",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.n7ee9_08",
+      "name": "风控专员",
+      "industry": "finance",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.nb476_05",
+      "name": "基金经理",
+      "industry": "finance",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.nb66e_06",
+      "name": "投行顾问",
+      "industry": "finance",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.nd473_03",
+      "name": "证券经纪人",
+      "industry": "finance",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.finance.nf392_07",
+      "name": "精算师",
+      "industry": "finance",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.financial_analyst",
+      "name": "分析师",
+      "industry": "finance",
+      "level": 5,
+      "salary_base": 2500000,
+      "skills": [
+        "skill.finance",
+        "skill.math"
+      ]
+    },
+    {
+      "content_key": "occupation.general_worker",
+      "name": "普工",
+      "industry": "industry",
+      "level": 1,
+      "salary_base": 500000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.government.n0caa_00",
+      "name": "公务员",
+      "industry": "government",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n190a_02",
+      "name": "警察",
+      "industry": "government",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n288b_01",
+      "name": "基层干部",
+      "industry": "government",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n6cd9_04",
+      "name": "军人",
+      "industry": "government",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n7b1e_07",
+      "name": "税务员",
+      "industry": "government",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n8596_03",
+      "name": "消防员",
+      "industry": "government",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n8c2a_09",
+      "name": "信访员",
+      "industry": "government",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.n9e67_05",
+      "name": "城管",
+      "industry": "government",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.na3e3_08",
+      "name": "海关员",
+      "industry": "government",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.government.nef5e_06",
+      "name": "社区工作者",
+      "industry": "government",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n0f38_00",
+      "name": "普工",
+      "industry": "industry",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n3a67_01",
+      "name": "技工",
+      "industry": "industry",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n60bc_07",
+      "name": "厂长",
+      "industry": "industry",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n6b8d_05",
+      "name": "质检员",
+      "industry": "industry",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n8856_09",
+      "name": "仓储员",
+      "industry": "industry",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.n9d34_06",
+      "name": "生产主管",
+      "industry": "industry",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.nb7c7_03",
+      "name": "焊工",
+      "industry": "industry",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.nc72d_08",
+      "name": "设备工程师",
+      "industry": "industry",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.nc8b2_04",
+      "name": "电工",
+      "industry": "industry",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.industry.ncf63_02",
+      "name": "车工",
+      "industry": "industry",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n08a3_09",
+      "name": "项目经理",
+      "industry": "it",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n17c0_05",
+      "name": "算法工程师",
+      "industry": "it",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n3432_00",
+      "name": "程序员",
+      "industry": "it",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n4dfd_04",
+      "name": "架构师",
+      "industry": "it",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n519a_01",
+      "name": "测试工程师",
+      "industry": "it",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n561c_07",
+      "name": "安全工程师",
+      "industry": "it",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.n81df_03",
+      "name": "产品经理",
+      "industry": "it",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.ncadb_02",
+      "name": "运维工程师",
+      "industry": "it",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.ncfa5_08",
+      "name": "前端工程师",
+      "industry": "it",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.it.ne709_06",
+      "name": "数据工程师",
+      "industry": "it",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.journalist",
+      "name": "记者",
+      "industry": "media",
+      "level": 4,
+      "salary_base": 1000000,
+      "skills": [
+        "skill.writing",
+        "skill.english"
+      ]
+    },
+    {
+      "content_key": "occupation.judge",
+      "name": "法官",
+      "industry": "legal",
+      "level": 8,
+      "salary_base": 3000000,
+      "skills": [
+        "skill.writing"
+      ]
+    },
+    {
+      "content_key": "occupation.lawyer",
+      "name": "律师",
+      "industry": "legal",
+      "level": 6,
+      "salary_base": 2800000,
+      "skills": [
+        "skill.negotiation",
+        "skill.writing"
+      ]
+    },
+    {
+      "content_key": "occupation.legal.n0d8c_02",
+      "name": "检察官",
+      "industry": "legal",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.n103e_05",
+      "name": "公证员",
+      "industry": "legal",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.n491b_07",
+      "name": "助理律师",
+      "industry": "legal",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.n4fa0_06",
+      "name": "仲裁员",
+      "industry": "legal",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.n9134_00",
+      "name": "律师",
+      "industry": "legal",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.na234_01",
+      "name": "法官",
+      "industry": "legal",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.nab75_03",
+      "name": "书记员",
+      "industry": "legal",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.nb675_09",
+      "name": "执法员",
+      "industry": "legal",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.ncb9a_04",
+      "name": "法务",
+      "industry": "legal",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.legal.ncf71_08",
+      "name": "调解员",
+      "industry": "legal",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.machine_operator",
+      "name": "农机手",
+      "industry": "agriculture",
+      "level": 2,
+      "salary_base": 600000,
+      "skills": [
+        "skill.driving"
+      ]
+    },
+    {
+      "content_key": "occupation.media.n018f_08",
+      "name": "校对",
+      "industry": "media",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n028f_02",
+      "name": "主持人",
+      "industry": "media",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n1a48_06",
+      "name": "运营",
+      "industry": "media",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n2ebe_03",
+      "name": "公关",
+      "industry": "media",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n2fa6_05",
+      "name": "文案",
+      "industry": "media",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n39dd_00",
+      "name": "记者",
+      "industry": "media",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n4a84_09",
+      "name": "内容审核",
+      "industry": "media",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n7008_01",
+      "name": "编辑",
+      "industry": "media",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.n9c3e_07",
+      "name": "编导",
+      "industry": "media",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.media.ndb57_04",
+      "name": "广告策划",
+      "industry": "media",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n0787_01",
+      "name": "全科医生",
+      "industry": "medical",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n0e3b_02",
+      "name": "专科医师",
+      "industry": "medical",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n141c_08",
+      "name": "心理医生",
+      "industry": "medical",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n1f45_06",
+      "name": "检验师",
+      "industry": "medical",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n1f5a_05",
+      "name": "药剂师",
+      "industry": "medical",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n31fe_09",
+      "name": "公卫医师",
+      "industry": "medical",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n390b_04",
+      "name": "麻醉师",
+      "industry": "medical",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.n8c9f_07",
+      "name": "影像师",
+      "industry": "medical",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.ne51b_03",
+      "name": "外科医生",
+      "industry": "medical",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.medical.nf85c_00",
+      "name": "护士",
+      "industry": "medical",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.miner",
+      "name": "矿工",
+      "industry": "mining",
+      "level": 2,
+      "salary_base": 800000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.musician",
+      "name": "乐手",
+      "industry": "art",
+      "level": 4,
+      "salary_base": 1000000,
+      "skills": [
+        "skill.instrument"
+      ]
+    },
+    {
+      "content_key": "occupation.nurse",
+      "name": "护士",
+      "industry": "medical",
+      "level": 3,
+      "salary_base": 1000000,
+      "skills": [
+        "skill.first_aid",
+        "skill.empathy"
+      ]
+    },
+    {
+      "content_key": "occupation.painter",
+      "name": "画家",
+      "industry": "art",
+      "level": 4,
+      "salary_base": 900000,
+      "skills": [
+        "skill.painting"
+      ]
+    },
+    {
+      "content_key": "occupation.police",
+      "name": "警察",
+      "industry": "government",
+      "level": 4,
+      "salary_base": 1100000,
+      "skills": [
+        "skill.fighting",
+        "skill.first_aid"
+      ]
+    },
+    {
+      "content_key": "occupation.product_manager",
+      "name": "产品经理",
+      "industry": "it",
+      "level": 5,
+      "salary_base": 2200000,
+      "skills": [
+        "skill.writing",
+        "skill.negotiation"
+      ]
+    },
+    {
+      "content_key": "occupation.programmer",
+      "name": "程序员",
+      "industry": "it",
+      "level": 4,
+      "salary_base": 1800000,
+      "skills": [
+        "skill.coding"
+      ]
+    },
+    {
+      "content_key": "occupation.psychologist",
+      "name": "心理医生",
+      "industry": "medical",
+      "level": 6,
+      "salary_base": 2200000,
+      "skills": [
+        "skill.empathy",
+        "skill.speaking"
+      ]
+    },
+    {
+      "content_key": "occupation.quality_inspector",
+      "name": "质检员",
+      "industry": "industry",
+      "level": 3,
+      "salary_base": 850000,
+      "skills": []
+    },
+    {
+      "content_key": "occupation.research.n00c3_02",
+      "name": "工程师",
+      "industry": "research",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n1694_04",
+      "name": "技术员",
+      "industry": "research",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n38d2_01",
+      "name": "研究员",
+      "industry": "research",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n4916_07",
+      "name": "数据员",
+      "industry": "research",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n57d3_09",
+      "name": "院士助理",
+      "industry": "research",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n5e4d_03",
+      "name": "实验员",
+      "industry": "research",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.n8d5a_00",
+      "name": "研究生",
+      "industry": "research",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.nae76_06",
+      "name": "博士后",
+      "industry": "research",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.nce44_08",
+      "name": "仪器员",
+      "industry": "research",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.research.ndbb1_05",
+      "name": "学术助理",
+      "industry": "research",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.ride_hailing_driver",
+      "name": "网约车司机",
+      "industry": "transport",
+      "level": 2,
+      "salary_base": 750000,
+      "skills": [
+        "skill.driving"
+      ]
+    },
+    {
+      "content_key": "occupation.salesperson",
+      "name": "销售",
+      "industry": "professional",
+      "level": 3,
+      "salary_base": 900000,
+      "skills": [
+        "skill.sales",
+        "skill.persuasion"
+      ]
+    },
+    {
+      "content_key": "occupation.service.n22cd_09",
+      "name": "保洁员",
+      "industry": "service",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n2847_00",
+      "name": "服务员",
+      "industry": "service",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n2962_01",
+      "name": "厨师",
+      "industry": "service",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n3a89_04",
+      "name": "美容师",
+      "industry": "service",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n4158_02",
+      "name": "咖啡师",
+      "industry": "service",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n4e22_05",
+      "name": "按摩师",
+      "industry": "service",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n61eb_06",
+      "name": "导游",
+      "industry": "service",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n85ef_03",
+      "name": "理发师",
+      "industry": "service",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.n989c_07",
+      "name": "月嫂",
+      "industry": "service",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.service.ncacb_08",
+      "name": "家政员",
+      "industry": "service",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.soldier",
+      "name": "军人",
+      "industry": "government",
+      "level": 3,
+      "salary_base": 900000,
+      "skills": [
+        "skill.fighting",
+        "skill.swimming"
+      ]
+    },
+    {
+      "content_key": "occupation.sports.n0dcd_07",
+      "name": "赛事运营",
+      "industry": "sports",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n0e54_03",
+      "name": "经纪人",
+      "industry": "sports",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n24e4_00",
+      "name": "运动员",
+      "industry": "sports",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n3cbe_01",
+      "name": "教练",
+      "industry": "sports",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n6bad_02",
+      "name": "裁判",
+      "industry": "sports",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n8b23_09",
+      "name": "康复师",
+      "industry": "sports",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n939d_05",
+      "name": "体能师",
+      "industry": "sports",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.n9935_08",
+      "name": "体育记者",
+      "industry": "sports",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.nd9c2_04",
+      "name": "队医",
+      "industry": "sports",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.sports.ne26f_06",
+      "name": "青训教练",
+      "industry": "sports",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.streamer",
+      "name": "主播",
+      "industry": "entertainment",
+      "level": 3,
+      "salary_base": 1200000,
+      "skills": [
+        "skill.speaking",
+        "skill.persuasion"
+      ]
+    },
+    {
+      "content_key": "occupation.tailor",
+      "name": "裁缝",
+      "industry": "handicraft",
+      "level": 3,
+      "salary_base": 800000,
+      "skills": [
+        "skill.design"
+      ]
+    },
+    {
+      "content_key": "occupation.teacher",
+      "name": "中小学教师",
+      "industry": "education",
+      "level": 4,
+      "salary_base": 1100000,
+      "skills": [
+        "skill.speaking",
+        "skill.writing"
+      ]
+    },
+    {
+      "content_key": "occupation.transport.n5932_00",
+      "name": "司机",
+      "industry": "transport",
+      "level": 1,
+      "salary_base": 750000,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.n5a3c_04",
+      "name": "飞行员",
+      "industry": "transport",
+      "level": 5,
+      "salary_base": 2164800,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.n6269_09",
+      "name": "票务员",
+      "industry": "transport",
+      "level": 5,
+      "salary_base": 2183300,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.n7056_02",
+      "name": "网约车司机",
+      "industry": "transport",
+      "level": 3,
+      "salary_base": 1457400,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.n7069_07",
+      "name": "船员",
+      "industry": "transport",
+      "level": 3,
+      "salary_base": 1475900,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.n7fae_08",
+      "name": "调度员",
+      "industry": "transport",
+      "level": 4,
+      "salary_base": 1829600,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.na722_03",
+      "name": "列车员",
+      "industry": "transport",
+      "level": 4,
+      "salary_base": 1811100,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.naf7b_05",
+      "name": "空乘",
+      "industry": "transport",
+      "level": 1,
+      "salary_base": 768500,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.nd471_01",
+      "name": "公交司机",
+      "industry": "transport",
+      "level": 2,
+      "salary_base": 1103700,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.transport.nf962_06",
+      "name": "船长",
+      "industry": "transport",
+      "level": 2,
+      "salary_base": 1122200,
+      "entry": "job"
+    },
+    {
+      "content_key": "occupation.university_lecturer",
+      "name": "大学讲师",
+      "industry": "education",
+      "level": 6,
+      "salary_base": 1800000,
+      "skills": [
+        "skill.speaking",
+        "skill.math"
+      ]
+    },
+    {
+      "content_key": "occupation.vet",
+      "name": "兽医",
+      "industry": "agriculture",
+      "level": 4,
+      "salary_base": 1200000,
+      "skills": [
+        "skill.first_aid"
+      ]
+    },
+    {
+      "content_key": "occupation.writer",
+      "name": "作家",
+      "industry": "art",
+      "level": 4,
+      "salary_base": 900000,
+      "skills": [
+        "skill.writing"
+      ]
+    }
   ]
 }

@@ -11,7 +11,7 @@
 
 1. **数值基线覆盖仍不全（已收敛，低）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分，现 **76 域**），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济；task 48.3 补 SEIR/碳排环保/工程/医疗/体育/医美；task 48.4 补心理/残障养老/数字/消费者保护/民间借贷/应急；task 48.5 补婚育/育儿/职场/房产/农业/宠物；task 48.6 批量迁移剩余全部系数型标量域，并令 `worldsim.macro`、`sim.gregorian` 改为引用生成基线单一真源；对齐测试数据驱动化，遍历 `BASELINE_DOMAINS`/`BaselineDomains` 逐值比对，新增域无需改测试代码）。仅剩纯实现类常量（哈希盐/枚举序号/LOD/存档 schema 版本）不纳入基线，因为它们不构成跨端数值契约。
 2. **存档/领域 schema 未扩展（高）**：`player` 缺 family/memory/pet/军籍/残障/土地/数字资产/案件/病症三维；`finances/legal/health` 过粗；`world_delta` 多为 `additionalProperties` 空壳；缺 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema。
-3. **内容目录与 R56 硬指标脱节（高）**：content-catalog 缺 D35–D43、D45–D50 专属节；多处「完整表」只有示例（精神疾病约 14、医美无节、技能约 46/目标 140、娱乐约 31/目标 100、金融标的仅类别/目标 40）。
+3. **内容目录与 R56 硬指标脱节（已收敛，低）**：新增 `tools/contentgen/generate.py` 按 R56 下限确定性补齐全部内容类别（地点 1000、场所类型 124、职业 200、技能 140、物品 1000、疾病 80 含精神 20/成瘾 5、证书 30、娱乐 100、事件 300、成就 300、图鉴 500、交通 12、金融标的 56、制造贸易 50、奖项 40、组织 30、异常实体 2000、大型活动 20、第一产业 35、语言 10、节日 10）；`tools/contentbuilder coverage` 对 R56 硬阻断并并入 `scripts/test.sh`；content-catalog §23 记录规模对齐表与 era 门闩。D35–D43、D45–D50 专属节见 content-catalog §22。
 4. **UI 入口（已收敛，低）**：`ui.md` 面板清单已由 12 扩至 37，覆盖经营、组织、案件、救援、环保、市政、债务、维权、福利、殡葬、玄学、医疗、文娱、工程、专业/生活服务、交通基建、家庭宠物、体育、活动、奖项、数字、疫情、战争、宏观行情、天气预报等域；`panel_registry.gd` 同步注册，主壳 `VERB_PANELS` 动词映射补全；未实现内容的面板以「建设中」占位呈现，不阻塞入口。
 5. **动词表（已收敛，低）**：`verb-registry.md` 新增「政务、服务与组织」节（缴费/办证/落户/土地流转/IP 授权/进出口/办案/救灾/审计/招投标/搬家/算命/移植/接种/参战/转会/参展/申报奖项/实名认证等）与全量面板查询动词，所有域均有入口动词。
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。

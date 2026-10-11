@@ -1,0 +1,155 @@
+{
+  "category": "organizations",
+  "entries": [
+    {
+      "content_key": "org.n032a_22",
+      "name": "律师协会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n0b16_01",
+      "name": "行业联合会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n0fbe_19",
+      "name": "戏曲票友会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.n1fa3_09",
+      "name": "摄影协会",
+      "kind": "俱乐部"
+    },
+    {
+      "content_key": "org.n223d_27",
+      "name": "夜行社",
+      "kind": "结社"
+    },
+    {
+      "content_key": "org.n26df_00",
+      "name": "总工会",
+      "kind": "工会"
+    },
+    {
+      "content_key": "org.n41a4_29",
+      "name": "宗亲会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.n47de_16",
+      "name": "社区互助会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.n4a7e_28",
+      "name": "同乡会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.n4dc8_20",
+      "name": "科研学会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n4f9d_07",
+      "name": "读书会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.n512e_10",
+      "name": "青年商会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n5569_02",
+      "name": "企业家俱乐部",
+      "kind": "俱乐部"
+    },
+    {
+      "content_key": "org.n5db9_13",
+      "name": "残疾人联合会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n67e1_23",
+      "name": "教师工会",
+      "kind": "工会"
+    },
+    {
+      "content_key": "org.n6b9d_05",
+      "name": "志愿者服务团",
+      "kind": "志愿"
+    },
+    {
+      "content_key": "org.n719f_24",
+      "name": "记者协会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n73cf_21",
+      "name": "医师协会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n74a2_12",
+      "name": "消费者协会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n7e73_08",
+      "name": "登山协会",
+      "kind": "俱乐部"
+    },
+    {
+      "content_key": "org.n81c0_11",
+      "name": "妇女联合会",
+      "kind": "协会"
+    },
+    {
+      "content_key": "org.n83e9_17",
+      "name": "钓友会",
+      "kind": "俱乐部"
+    },
+    {
+      "content_key": "org.n8e93_14",
+      "name": "红十字会",
+      "kind": "公益"
+    },
+    {
+      "content_key": "org.nac43_06",
+      "name": "校友会",
+      "kind": "社团"
+    },
+    {
+      "content_key": "org.nc2a0_15",
+      "name": "慈善基金会",
+      "kind": "公益"
+    },
+    {
+      "content_key": "org.nccfc_25",
+      "name": "秘密读书会",
+      "kind": "结社"
+    },
+    {
+      "content_key": "org.ncd72_18",
+      "name": "棋友会",
+      "kind": "俱乐部"
+    },
+    {
+      "content_key": "org.ncf8e_04",
+      "name": "动物保护协会",
+      "kind": "NGO"
+    },
+    {
+      "content_key": "org.nff68_26",
+      "name": "异常研究会",
+      "kind": "结社"
+    },
+    {
+      "content_key": "org.ngo_03",
+      "name": "环保 NGO",
+      "kind": "NGO"
+    }
+  ]
+}

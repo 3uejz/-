@@ -1,31 +1,2105 @@
 {
   "category": "events",
   "entries": [
-    { "content_key": "event.birthday", "name": "生日", "type": "life", "weight": 100, "priority": 1 },
-    { "content_key": "event.first_school", "name": "入学", "type": "life", "weight": 100, "priority": 5 },
-    { "content_key": "event.graduation", "name": "毕业", "type": "life", "weight": 100, "priority": 5 },
-    { "content_key": "event.first_job", "name": "第一份工作", "type": "career", "weight": 100, "priority": 5 },
-    { "content_key": "event.promotion", "name": "升职", "type": "career", "weight": 60, "priority": 3 },
-    { "content_key": "event.layoff", "name": "裁员", "type": "career", "weight": 40, "priority": 4 },
-    { "content_key": "event.marriage", "name": "结婚", "type": "family", "weight": 80, "priority": 5 },
-    { "content_key": "event.childbirth", "name": "生子", "type": "family", "weight": 80, "priority": 5 },
-    { "content_key": "event.divorce", "name": "离婚", "type": "family", "weight": 30, "priority": 4 },
-    { "content_key": "event.illness", "name": "患病", "type": "health", "weight": 50, "priority": 4 },
-    { "content_key": "event.accident", "name": "意外事故", "type": "health", "weight": 20, "priority": 5 },
-    { "content_key": "event.recovery", "name": "康复", "type": "health", "weight": 50, "priority": 3 },
-    { "content_key": "event.lottery_win", "name": "中奖", "type": "fortune", "weight": 5, "priority": 3 },
-    { "content_key": "event.investment_gain", "name": "投资获利", "type": "fortune", "weight": 40, "priority": 2 },
-    { "content_key": "event.investment_loss", "name": "投资亏损", "type": "fortune", "weight": 40, "priority": 2 },
-    { "content_key": "event.meet_friend", "name": "结识好友", "type": "social", "weight": 70, "priority": 2 },
-    { "content_key": "event.conflict", "name": "冲突", "type": "social", "weight": 30, "priority": 3 },
-    { "content_key": "event.gossip", "name": "流言", "type": "social", "weight": 40, "priority": 2 },
-    { "content_key": "event.festival", "name": "节庆", "type": "life", "weight": 60, "priority": 2 },
-    { "content_key": "event.weather_disaster", "name": "自然灾害", "type": "fortune", "weight": 8, "priority": 5 },
-    { "content_key": "event.move_house", "name": "搬家", "type": "life", "weight": 45, "priority": 3 },
-    { "content_key": "event.legal_trouble", "name": "惹上官司", "type": "legal", "weight": 15, "priority": 5 },
-    { "content_key": "event.travel", "name": "旅行", "type": "life", "weight": 55, "priority": 2 },
-    { "content_key": "event.study_abroad", "name": "留学", "type": "career", "weight": 20, "priority": 4 },
-    { "content_key": "event.pet_adopt", "name": "收养宠物", "type": "life", "weight": 35, "priority": 2 },
-    { "content_key": "event.retirement", "name": "退休", "type": "career", "weight": 100, "priority": 5 }
+    {
+      "content_key": "event.accident",
+      "name": "意外事故",
+      "type": "health",
+      "weight": 20,
+      "priority": 5
+    },
+    {
+      "content_key": "event.birthday",
+      "name": "生日",
+      "type": "life",
+      "weight": 100,
+      "priority": 1
+    },
+    {
+      "content_key": "event.childbirth",
+      "name": "生子",
+      "type": "family",
+      "weight": 80,
+      "priority": 5
+    },
+    {
+      "content_key": "event.conflict",
+      "name": "冲突",
+      "type": "social",
+      "weight": 30,
+      "priority": 3
+    },
+    {
+      "content_key": "event.divorce",
+      "name": "离婚",
+      "type": "family",
+      "weight": 30,
+      "priority": 4
+    },
+    {
+      "content_key": "event.festival",
+      "name": "节庆",
+      "type": "life",
+      "weight": 60,
+      "priority": 2
+    },
+    {
+      "content_key": "event.first_job",
+      "name": "第一份工作",
+      "type": "career",
+      "weight": 100,
+      "priority": 5
+    },
+    {
+      "content_key": "event.first_school",
+      "name": "入学",
+      "type": "life",
+      "weight": 100,
+      "priority": 5
+    },
+    {
+      "content_key": "event.gossip",
+      "name": "流言",
+      "type": "social",
+      "weight": 40,
+      "priority": 2
+    },
+    {
+      "content_key": "event.graduation",
+      "name": "毕业",
+      "type": "life",
+      "weight": 100,
+      "priority": 5
+    },
+    {
+      "content_key": "event.illness",
+      "name": "患病",
+      "type": "health",
+      "weight": 50,
+      "priority": 4
+    },
+    {
+      "content_key": "event.investment_gain",
+      "name": "投资获利",
+      "type": "fortune",
+      "weight": 40,
+      "priority": 2
+    },
+    {
+      "content_key": "event.investment_loss",
+      "name": "投资亏损",
+      "type": "fortune",
+      "weight": 40,
+      "priority": 2
+    },
+    {
+      "content_key": "event.layoff",
+      "name": "裁员",
+      "type": "career",
+      "weight": 40,
+      "priority": 4
+    },
+    {
+      "content_key": "event.legal_trouble",
+      "name": "惹上官司",
+      "type": "legal",
+      "weight": 15,
+      "priority": 5
+    },
+    {
+      "content_key": "event.lottery_win",
+      "name": "中奖",
+      "type": "fortune",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.marriage",
+      "name": "结婚",
+      "type": "family",
+      "weight": 80,
+      "priority": 5
+    },
+    {
+      "content_key": "event.meet_friend",
+      "name": "结识好友",
+      "type": "social",
+      "weight": 70,
+      "priority": 2
+    },
+    {
+      "content_key": "event.move_house",
+      "name": "搬家",
+      "type": "life",
+      "weight": 45,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_00",
+      "name": "中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_01",
+      "name": "在清晨中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_02",
+      "name": "在雨夜中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_03",
+      "name": "在街头中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_04",
+      "name": "在职场中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_05",
+      "name": "在旅途中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_06",
+      "name": "在深夜中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_07",
+      "name": "在故乡中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_08",
+      "name": "在异乡中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n16ac_00_09",
+      "name": "在人群中中奖",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n3089_05_00",
+      "name": "意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_01",
+      "name": "在清晨意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_02",
+      "name": "在雨夜意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_03",
+      "name": "在街头意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_04",
+      "name": "在职场意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_05",
+      "name": "在旅途意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_06",
+      "name": "在深夜意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_07",
+      "name": "在故乡意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_08",
+      "name": "在异乡意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n3089_05_09",
+      "name": "在人群中意外之财",
+      "type": "机遇",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_00",
+      "name": "桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_01",
+      "name": "在清晨桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_02",
+      "name": "在雨夜桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_03",
+      "name": "在街头桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_04",
+      "name": "在职场桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_05",
+      "name": "在旅途桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_06",
+      "name": "在深夜桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_07",
+      "name": "在故乡桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_08",
+      "name": "在异乡桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n43ba_04_09",
+      "name": "在人群中桃花运",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n8068_02_00",
+      "name": "捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_01",
+      "name": "在清晨捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_02",
+      "name": "在雨夜捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_03",
+      "name": "在街头捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_04",
+      "name": "在职场捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_05",
+      "name": "在旅途捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_06",
+      "name": "在深夜捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_07",
+      "name": "在故乡捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_08",
+      "name": "在异乡捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n8068_02_09",
+      "name": "在人群中捡漏",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.n814c_07_00",
+      "name": "旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_01",
+      "name": "在清晨旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_02",
+      "name": "在雨夜旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_03",
+      "name": "在街头旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_04",
+      "name": "在职场旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_05",
+      "name": "在旅途旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_06",
+      "name": "在深夜旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_07",
+      "name": "在故乡旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_08",
+      "name": "在异乡旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n814c_07_09",
+      "name": "在人群中旧友重逢",
+      "type": "机遇",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n817b_09_00",
+      "name": "投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_01",
+      "name": "在清晨投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_02",
+      "name": "在雨夜投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_03",
+      "name": "在街头投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_04",
+      "name": "在职场投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_05",
+      "name": "在旅途投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_06",
+      "name": "在深夜投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_07",
+      "name": "在故乡投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_08",
+      "name": "在异乡投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n817b_09_09",
+      "name": "在人群中投资获利",
+      "type": "机遇",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_00",
+      "name": "升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_01",
+      "name": "在清晨升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_02",
+      "name": "在雨夜升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_03",
+      "name": "在街头升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_04",
+      "name": "在职场升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_05",
+      "name": "在旅途升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_06",
+      "name": "在深夜升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_07",
+      "name": "在故乡升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_08",
+      "name": "在异乡升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.n81a4_01_09",
+      "name": "在人群中升职机会",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_00",
+      "name": "贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_01",
+      "name": "在清晨贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_02",
+      "name": "在雨夜贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_03",
+      "name": "在街头贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_04",
+      "name": "在职场贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_05",
+      "name": "在旅途贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_06",
+      "name": "在深夜贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_07",
+      "name": "在故乡贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_08",
+      "name": "在异乡贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nd6eb_03_09",
+      "name": "在人群中贵人相助",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_00",
+      "name": "中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_01",
+      "name": "在清晨中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_02",
+      "name": "在雨夜中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_03",
+      "name": "在街头中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_04",
+      "name": "在职场中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_05",
+      "name": "在旅途中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_06",
+      "name": "在深夜中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_07",
+      "name": "在故乡中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_08",
+      "name": "在异乡中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.ne030_06_09",
+      "name": "在人群中中签",
+      "type": "机遇",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_00",
+      "name": "被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_01",
+      "name": "在清晨被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_02",
+      "name": "在雨夜被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_03",
+      "name": "在街头被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_04",
+      "name": "在职场被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_05",
+      "name": "在旅途被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_06",
+      "name": "在深夜被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_07",
+      "name": "在故乡被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_08",
+      "name": "在异乡被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n6975.nf47d_08_09",
+      "name": "在人群中被人赏识",
+      "type": "机遇",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_00",
+      "name": "法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_01",
+      "name": "在清晨法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_02",
+      "name": "在雨夜法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_03",
+      "name": "在街头法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_04",
+      "name": "在职场法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_05",
+      "name": "在旅途法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_06",
+      "name": "在深夜法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_07",
+      "name": "在故乡法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_08",
+      "name": "在异乡法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n01c3_04_09",
+      "name": "在人群中法律纠纷",
+      "type": "社会",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_00",
+      "name": "公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_01",
+      "name": "在清晨公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_02",
+      "name": "在雨夜公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_03",
+      "name": "在街头公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_04",
+      "name": "在职场公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_05",
+      "name": "在旅途公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_06",
+      "name": "在深夜公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_07",
+      "name": "在故乡公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_08",
+      "name": "在异乡公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n133c_06_09",
+      "name": "在人群中公益募捐",
+      "type": "社会",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_00",
+      "name": "舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_01",
+      "name": "在清晨舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_02",
+      "name": "在雨夜舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_03",
+      "name": "在街头舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_04",
+      "name": "在职场舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_05",
+      "name": "在旅途舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_06",
+      "name": "在深夜舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_07",
+      "name": "在故乡舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_08",
+      "name": "在异乡舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n25ef_03_09",
+      "name": "在人群中舆论风波",
+      "type": "社会",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n31ca_07_00",
+      "name": "志愿活动",
+      "type": "社会",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n31ca_07_01",
+      "name": "在清晨志愿活动",
+      "type": "社会",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n31ca_07_02",
+      "name": "在雨夜志愿活动",
+      "type": "社会",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n31ca_07_03",
+      "name": "在街头志愿活动",
+      "type": "社会",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_00",
+      "name": "政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_01",
+      "name": "在清晨政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_02",
+      "name": "在雨夜政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_03",
+      "name": "在街头政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_04",
+      "name": "在职场政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_05",
+      "name": "在旅途政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_06",
+      "name": "在深夜政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_07",
+      "name": "在故乡政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_08",
+      "name": "在异乡政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.n4215_00_09",
+      "name": "在人群中政策变动",
+      "type": "社会",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_00",
+      "name": "物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_01",
+      "name": "在清晨物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_02",
+      "name": "在雨夜物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_03",
+      "name": "在街头物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_04",
+      "name": "在职场物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_05",
+      "name": "在旅途物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_06",
+      "name": "在深夜物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_07",
+      "name": "在故乡物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_08",
+      "name": "在异乡物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nafd9_01_09",
+      "name": "在人群中物价上涨",
+      "type": "社会",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_00",
+      "name": "邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_01",
+      "name": "在清晨邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_02",
+      "name": "在雨夜邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_03",
+      "name": "在街头邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_04",
+      "name": "在职场邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_05",
+      "name": "在旅途邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_06",
+      "name": "在深夜邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_07",
+      "name": "在故乡邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_08",
+      "name": "在异乡邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.nbcc1_02_09",
+      "name": "在人群中邻里纠纷",
+      "type": "社会",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_00",
+      "name": "社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_01",
+      "name": "在清晨社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_02",
+      "name": "在雨夜社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_03",
+      "name": "在街头社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_04",
+      "name": "在职场社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_05",
+      "name": "在旅途社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_06",
+      "name": "在深夜社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_07",
+      "name": "在故乡社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_08",
+      "name": "在异乡社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.n69f4.ndbb9_05_09",
+      "name": "在人群中社区选举",
+      "type": "社会",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_00",
+      "name": "车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_01",
+      "name": "在清晨车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_02",
+      "name": "在雨夜车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_03",
+      "name": "在街头车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_04",
+      "name": "在职场车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_05",
+      "name": "在旅途车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_06",
+      "name": "在深夜车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_07",
+      "name": "在故乡车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_08",
+      "name": "在异乡车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n0707_03_09",
+      "name": "在人群中车祸",
+      "type": "意外",
+      "weight": 8,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_00",
+      "name": "停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_01",
+      "name": "在清晨停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_02",
+      "name": "在雨夜停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_03",
+      "name": "在街头停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_04",
+      "name": "在职场停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_05",
+      "name": "在旅途停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_06",
+      "name": "在深夜停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_07",
+      "name": "在故乡停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_08",
+      "name": "在异乡停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2294_08_09",
+      "name": "在人群中停电",
+      "type": "意外",
+      "weight": 8,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_00",
+      "name": "突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_01",
+      "name": "在清晨突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_02",
+      "name": "在雨夜突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_03",
+      "name": "在街头突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_04",
+      "name": "在职场突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_05",
+      "name": "在旅途突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_06",
+      "name": "在深夜突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_07",
+      "name": "在故乡突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_08",
+      "name": "在异乡突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n2452_09_09",
+      "name": "在人群中突发加班",
+      "type": "意外",
+      "weight": 9,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_00",
+      "name": "交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_01",
+      "name": "在清晨交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_02",
+      "name": "在雨夜交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_03",
+      "name": "在街头交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_04",
+      "name": "在职场交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_05",
+      "name": "在旅途交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_06",
+      "name": "在深夜交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_07",
+      "name": "在故乡交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_08",
+      "name": "在异乡交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n34b5_00_09",
+      "name": "在人群中交通事故",
+      "type": "意外",
+      "weight": 5,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_00",
+      "name": "丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_01",
+      "name": "在清晨丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_02",
+      "name": "在雨夜丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_03",
+      "name": "在街头丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_04",
+      "name": "在职场丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_05",
+      "name": "在旅途丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_06",
+      "name": "在深夜丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_07",
+      "name": "在故乡丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_08",
+      "name": "在异乡丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n6e7a_06_09",
+      "name": "在人群中丢钱包",
+      "type": "意外",
+      "weight": 6,
+      "priority": 1
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_00",
+      "name": "失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_01",
+      "name": "在清晨失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_02",
+      "name": "在雨夜失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_03",
+      "name": "在街头失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_04",
+      "name": "在职场失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_05",
+      "name": "在旅途失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_06",
+      "name": "在深夜失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_07",
+      "name": "在故乡失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_08",
+      "name": "在异乡失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.n7be7_01_09",
+      "name": "在人群中失窃",
+      "type": "意外",
+      "weight": 6,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_00",
+      "name": "家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_01",
+      "name": "在清晨家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_02",
+      "name": "在雨夜家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_03",
+      "name": "在街头家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_04",
+      "name": "在职场家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_05",
+      "name": "在旅途家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_06",
+      "name": "在深夜家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_07",
+      "name": "在故乡家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_08",
+      "name": "在异乡家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nb924_05_09",
+      "name": "在人群中家中漏水",
+      "type": "意外",
+      "weight": 5,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_00",
+      "name": "被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_01",
+      "name": "在清晨被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_02",
+      "name": "在雨夜被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_03",
+      "name": "在街头被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_04",
+      "name": "在职场被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_05",
+      "name": "在旅途被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_06",
+      "name": "在深夜被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_07",
+      "name": "在故乡被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_08",
+      "name": "在异乡被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nd315_04_09",
+      "name": "在人群中被骗",
+      "type": "意外",
+      "weight": 9,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_00",
+      "name": "摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_01",
+      "name": "在清晨摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_02",
+      "name": "在雨夜摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_03",
+      "name": "在街头摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_04",
+      "name": "在职场摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_05",
+      "name": "在旅途摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_06",
+      "name": "在深夜摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_07",
+      "name": "在故乡摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_08",
+      "name": "在异乡摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.ndf56_07_09",
+      "name": "在人群中摔伤",
+      "type": "意外",
+      "weight": 7,
+      "priority": 2
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_00",
+      "name": "突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_01",
+      "name": "在清晨突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_02",
+      "name": "在雨夜突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_03",
+      "name": "在街头突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_04",
+      "name": "在职场突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_05",
+      "name": "在旅途突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_06",
+      "name": "在深夜突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_07",
+      "name": "在故乡突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_08",
+      "name": "在异乡突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.nb4d4.nefd5_02_09",
+      "name": "在人群中突发疾病",
+      "type": "意外",
+      "weight": 7,
+      "priority": 3
+    },
+    {
+      "content_key": "event.pet_adopt",
+      "name": "收养宠物",
+      "type": "life",
+      "weight": 35,
+      "priority": 2
+    },
+    {
+      "content_key": "event.promotion",
+      "name": "升职",
+      "type": "career",
+      "weight": 60,
+      "priority": 3
+    },
+    {
+      "content_key": "event.recovery",
+      "name": "康复",
+      "type": "health",
+      "weight": 50,
+      "priority": 3
+    },
+    {
+      "content_key": "event.retirement",
+      "name": "退休",
+      "type": "career",
+      "weight": 100,
+      "priority": 5
+    },
+    {
+      "content_key": "event.study_abroad",
+      "name": "留学",
+      "type": "career",
+      "weight": 20,
+      "priority": 4
+    },
+    {
+      "content_key": "event.travel",
+      "name": "旅行",
+      "type": "life",
+      "weight": 55,
+      "priority": 2
+    },
+    {
+      "content_key": "event.weather_disaster",
+      "name": "自然灾害",
+      "type": "fortune",
+      "weight": 8,
+      "priority": 5
+    }
   ]
 }

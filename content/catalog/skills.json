@@ -1,32 +1,851 @@
 {
   "category": "skills",
   "entries": [
-    { "content_key": "skill.cooking", "name": "烹饪", "domain": "life", "max_level": 10 },
-    { "content_key": "skill.cleaning", "name": "清洁", "domain": "life", "max_level": 8 },
-    { "content_key": "skill.finance", "name": "理财", "domain": "life", "max_level": 10, "prereq": ["skill.cooking"] },
-    { "content_key": "skill.driving", "name": "驾驶", "domain": "life", "max_level": 6 },
-    { "content_key": "skill.first_aid", "name": "急救", "domain": "life", "max_level": 6 },
-    { "content_key": "skill.coding", "name": "编程", "domain": "career", "max_level": 20 },
-    { "content_key": "skill.design", "name": "设计", "domain": "career", "max_level": 15 },
-    { "content_key": "skill.writing", "name": "写作", "domain": "career", "max_level": 15 },
-    { "content_key": "skill.accounting", "name": "会计", "domain": "career", "max_level": 12 },
-    { "content_key": "skill.sales", "name": "销售", "domain": "career", "max_level": 12 },
-    { "content_key": "skill.negotiation", "name": "谈判", "domain": "career", "max_level": 12 },
-    { "content_key": "skill.management", "name": "管理", "domain": "career", "max_level": 15 },
-    { "content_key": "skill.speaking", "name": "演讲", "domain": "career", "max_level": 10 },
-    { "content_key": "skill.math", "name": "数学", "domain": "academic", "max_level": 20 },
-    { "content_key": "skill.physics", "name": "物理", "domain": "academic", "max_level": 20, "prereq": ["skill.math"] },
-    { "content_key": "skill.english", "name": "英语", "domain": "academic", "max_level": 15 },
-    { "content_key": "skill.painting", "name": "绘画", "domain": "art", "max_level": 15 },
-    { "content_key": "skill.instrument", "name": "乐器", "domain": "art", "max_level": 15 },
-    { "content_key": "skill.photography", "name": "摄影", "domain": "art", "max_level": 12 },
-    { "content_key": "skill.swimming", "name": "游泳", "domain": "sports", "max_level": 10 },
-    { "content_key": "skill.fighting", "name": "格斗", "domain": "sports", "max_level": 12 },
-    { "content_key": "skill.etiquette", "name": "社交礼仪", "domain": "social", "max_level": 10 },
-    { "content_key": "skill.empathy", "name": "共情", "domain": "social", "max_level": 10 },
-    { "content_key": "skill.persuasion", "name": "说服", "domain": "social", "max_level": 12 },
-    { "content_key": "skill.lockpicking", "name": "开锁", "domain": "crime", "max_level": 12 },
-    { "content_key": "skill.pickpocket", "name": "扒窃", "domain": "crime", "max_level": 12 },
-    { "content_key": "skill.hacking", "name": "黑客", "domain": "crime", "max_level": 15 }
+    {
+      "content_key": "skill.academic.n04d0_03",
+      "name": "生物",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.n1e4b_02",
+      "name": "化学",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.n24e2_08",
+      "name": "统计学",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.n2671_05",
+      "name": "哲学",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.n52d7_06",
+      "name": "外语",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.n5933_18",
+      "name": "文献检索",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.n5c7a_12",
+      "name": "社会科学",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.n6035_13",
+      "name": "考古",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.n64df_01",
+      "name": "物理",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.n69f4_00",
+      "name": "数学",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.n88e9_04",
+      "name": "历史",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.na90b_17",
+      "name": "工程原理",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.nb746_16",
+      "name": "法学基础",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.nc0a7_10",
+      "name": "经济学",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.nc2f7_09",
+      "name": "逻辑学",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.academic.nc533_07",
+      "name": "地理",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.nd541_19",
+      "name": "实验设计",
+      "domain": "academic",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.academic.nd791_11",
+      "name": "心理学",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.ndd5e_14",
+      "name": "天文学",
+      "domain": "academic",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.academic.ne90f_15",
+      "name": "医学基础",
+      "domain": "academic",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.accounting",
+      "name": "会计",
+      "domain": "career",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.art.n0135_15",
+      "name": "篆刻",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.n0300_13",
+      "name": "戏剧",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.n310c_10",
+      "name": "色彩学",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.n3754_05",
+      "name": "摄影",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.n4746_08",
+      "name": "陶艺",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.n47ed_12",
+      "name": "作曲",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.n7b34_02",
+      "name": "乐器",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.n7e87_01",
+      "name": "声乐",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.n85bf_17",
+      "name": "策展",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.n94a2_18",
+      "name": "美学鉴赏",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.n99e8_00",
+      "name": "绘画",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.n9bb3_16",
+      "name": "装帧",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.na1ec_11",
+      "name": "剪辑",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.na57b_04",
+      "name": "表演",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.nb46f_14",
+      "name": "插画",
+      "domain": "art",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.art.nc6f0_19",
+      "name": "艺术史",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.nca73_03",
+      "name": "舞蹈",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.nd04f_07",
+      "name": "雕塑",
+      "domain": "art",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.art.ne229_06",
+      "name": "书法",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.art.nfabd_09",
+      "name": "设计构成",
+      "domain": "art",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.n0406_16",
+      "name": "合同审核",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.n0805_07",
+      "name": "演讲",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.n0fb8_04",
+      "name": "销售",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.n2426_15",
+      "name": "市场调研",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.n4389_10",
+      "name": "客户服务",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.n6210_11",
+      "name": "供应链",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.n7656_09",
+      "name": "数据分析",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.n7b98_00",
+      "name": "编程",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.n80a2_18",
+      "name": "时间管理",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.n9fe3_03",
+      "name": "会计",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.na313_01",
+      "name": "设计",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.nafd3_17",
+      "name": "团队协作",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.nb51c_13",
+      "name": "商务礼仪",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.career.nb768_02",
+      "name": "写作",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.nbf24_06",
+      "name": "管理",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.nc85c_08",
+      "name": "项目管理",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.nc975_05",
+      "name": "谈判",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.ncbb2_12",
+      "name": "质量管理",
+      "domain": "career",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.career.nd479_14",
+      "name": "办公软件",
+      "domain": "career",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.career.nf2a0_19",
+      "name": "复盘",
+      "domain": "career",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.cleaning",
+      "name": "清洁",
+      "domain": "life",
+      "max_level": 8
+    },
+    {
+      "content_key": "skill.coding",
+      "name": "编程",
+      "domain": "career",
+      "max_level": 20
+    },
+    {
+      "content_key": "skill.cooking",
+      "name": "烹饪",
+      "domain": "life",
+      "max_level": 10
+    },
+    {
+      "content_key": "skill.design",
+      "name": "设计",
+      "domain": "career",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.driving",
+      "name": "驾驶",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.empathy",
+      "name": "共情",
+      "domain": "social",
+      "max_level": 10
+    },
+    {
+      "content_key": "skill.english",
+      "name": "英语",
+      "domain": "academic",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.etiquette",
+      "name": "社交礼仪",
+      "domain": "social",
+      "max_level": 10
+    },
+    {
+      "content_key": "skill.fighting",
+      "name": "格斗",
+      "domain": "sports",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.finance",
+      "name": "理财",
+      "domain": "life",
+      "max_level": 10,
+      "prereq": [
+        "skill.cooking"
+      ]
+    },
+    {
+      "content_key": "skill.first_aid",
+      "name": "急救",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.hacking",
+      "name": "黑客",
+      "domain": "crime",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.instrument",
+      "name": "乐器",
+      "domain": "art",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.life.n04c3_08",
+      "name": "园艺",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.n0a0c_15",
+      "name": "宠物养护",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.n0ddf_14",
+      "name": "家居设计",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.n207d_19",
+      "name": "垃圾分类",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.n28f8_01",
+      "name": "清洁",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.n2eb5_06",
+      "name": "维修",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.n391a_10",
+      "name": "烘焙",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.n3c18_11",
+      "name": "采购",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.n57d6_13",
+      "name": "预算",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.n6c0e_02",
+      "name": "理财",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.n7106_04",
+      "name": "急救",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.na8be_00",
+      "name": "烹饪",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.nab8b_07",
+      "name": "收纳",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.life.nac82_09",
+      "name": "缝纫",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.nbc63_17",
+      "name": "防身",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.nbcb6_05",
+      "name": "育儿",
+      "domain": "life",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.life.nc479_18",
+      "name": "出行规划",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.nc975_12",
+      "name": "谈判",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.nd591_03",
+      "name": "驾驶",
+      "domain": "life",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.life.nda05_16",
+      "name": "养生",
+      "domain": "life",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.lockpicking",
+      "name": "开锁",
+      "domain": "crime",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.management",
+      "name": "管理",
+      "domain": "career",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.math",
+      "name": "数学",
+      "domain": "academic",
+      "max_level": 20
+    },
+    {
+      "content_key": "skill.negotiation",
+      "name": "谈判",
+      "domain": "career",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.painting",
+      "name": "绘画",
+      "domain": "art",
+      "max_level": 15
+    },
+    {
+      "content_key": "skill.persuasion",
+      "name": "说服",
+      "domain": "social",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.photography",
+      "name": "摄影",
+      "domain": "art",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.physics",
+      "name": "物理",
+      "domain": "academic",
+      "max_level": 20,
+      "prereq": [
+        "skill.math"
+      ]
+    },
+    {
+      "content_key": "skill.pickpocket",
+      "name": "扒窃",
+      "domain": "crime",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.sales",
+      "name": "销售",
+      "domain": "career",
+      "max_level": 12
+    },
+    {
+      "content_key": "skill.social.n0805_08",
+      "name": "演讲",
+      "domain": "social",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.social.n150a_00",
+      "name": "社交礼仪",
+      "domain": "social",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.social.n2cca_11",
+      "name": "人脉经营",
+      "domain": "social",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.social.n2dba_01",
+      "name": "共情",
+      "domain": "social",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.social.n2ebe_07",
+      "name": "公关",
+      "domain": "social",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.social.n381e_12",
+      "name": "危机沟通",
+      "domain": "social",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.social.n509a_10",
+      "name": "幽默",
+      "domain": "social",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.social.n70e9_06",
+      "name": "调解",
+      "domain": "social",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.social.n7f5f_02",
+      "name": "说服",
+      "domain": "social",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.social.n8332_04",
+      "name": "领导",
+      "domain": "social",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.social.nc975_05",
+      "name": "谈判",
+      "domain": "social",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.social.nd53b_09",
+      "name": "倾听",
+      "domain": "social",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.social.nfdde_03",
+      "name": "伪装",
+      "domain": "social",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.speaking",
+      "name": "演讲",
+      "domain": "career",
+      "max_level": 10
+    },
+    {
+      "content_key": "skill.sports.n08cb_07",
+      "name": "登山",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.n10a0_09",
+      "name": "滑板",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.n14f0_14",
+      "name": "滑雪",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.n1fd5_12",
+      "name": "柔道",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.n20c0_18",
+      "name": "马拉松",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.n29a4_08",
+      "name": "骑行",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.n2f98_16",
+      "name": "跆拳道",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.n54a8_15",
+      "name": "冲浪",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.n5e5c_17",
+      "name": "跳绳",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.n6b30_19",
+      "name": "体能训练",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.n7429_10",
+      "name": "射击",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.n8784_03",
+      "name": "球类",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.n8afd_11",
+      "name": "射箭",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.n8cdc_05",
+      "name": "瑜伽",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.n9397_04",
+      "name": "田径",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.n9875_06",
+      "name": "举重",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.nb0e1_02",
+      "name": "格斗",
+      "domain": "sports",
+      "max_level": 7
+    },
+    {
+      "content_key": "skill.sports.ncb87_00",
+      "name": "跑酷",
+      "domain": "sports",
+      "max_level": 5
+    },
+    {
+      "content_key": "skill.sports.ncfc3_01",
+      "name": "游泳",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.sports.nf08e_13",
+      "name": "体操",
+      "domain": "sports",
+      "max_level": 6
+    },
+    {
+      "content_key": "skill.swimming",
+      "name": "游泳",
+      "domain": "sports",
+      "max_level": 10
+    },
+    {
+      "content_key": "skill.writing",
+      "name": "写作",
+      "domain": "career",
+      "max_level": 15
+    }
   ]
 }

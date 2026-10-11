@@ -240,3 +240,36 @@
 | D50 交通基建 | `infra_projects` | 铁路/高速/港口/机场/地铁/物流 | 交通方式 12 |
 
 - 新增/扩展内容时先补 `categorySpecs` 字段与跨引用，再落内容文件；`scripts/test.sh` 与 CI 会对 `content/catalog` 全量硬阻断校验。
+
+## 23. 内容规模与 R56 对齐（任务 50）
+
+- **生成器**：`tools/contentgen/generate.py` 按 R56 下限为各内容类别确定性补齐条目。它先读取现有条目并原样保留，再在无键冲突前提下追加程序化生成条目，故重复运行幂等、不覆盖手工条目。
+- **校验闸门**：`tools/contentbuilder coverage --catalog content/catalog` 对照 R56 下限硬阻断（已并入 `scripts/test.sh` 与 CI）；`validate` 负责字段/类型/主键/跨引用。
+- **判据来源**：数值型枚举（气候带 10、天气状态 20、灾害 10、时代 9、异常能力线 4）由数值基线保证（`shared/consistency/baseline/climate_weather.json`、`era.json`、`client/sim/anomaly.gd`），在 `coverage` 中不重复度量。
+
+| 类别 | 源文件 | R56 下限 | 当前规模 |
+|------|--------|----------|----------|
+| 地点 `sites` | sites.json | 1000 | 1000 |
+| 场所类型 `place_types` | place_types.json | 100 | 124 |
+| 职业岗位 `jobs` | jobs.json | 200 | 200 |
+| 技能 `skills` | skills.json | 140 | 140 |
+| 物品种类 `items` | items.json | 1000 | 1000 |
+| 疾病 `diseases` | diseases.json | 80 | 80（含精神 20、成瘾 5） |
+| 证书 `certificates` | certificates.json | 30 | 30 |
+| 娱乐活动 `entertainment` | entertainment.json | 100 | 100 |
+| 随机事件 `events` | events.json | 300 | 300 |
+| 成就 `achievements` | achievements.json | 300 | 300 |
+| 图鉴条目 `codex` | codex.json | 500 | 500 |
+| 交通方式 `transport` | transport.json | 12 | 12 |
+| 金融标的 `finance` | finance.json | 40 | 56 |
+| 制造与贸易品类 `manufacturing` | manufacturing.json | 50 | 50 |
+| 奖项与荣誉 `awards` | awards.json | 40 | 40 |
+| 组织与阵营 `organizations` | organizations.json | 30 | 30 |
+| 异常实体 `anomalies` | anomalies.json | 2000 | 2000 |
+| 大型活动类型 `activities` | activities.json | 20 | 20 |
+| 第一产业品类 `primary_industry` | primary_industry.json | 30 | 35 |
+| 语言 `languages` | languages.json | ≥10 | 10 |
+| 节日 `festivals` | festivals.json | ≥10 | 10 |
+| 金手指 `goldfingers` | goldfingers.json | 60（长期 300） | 60 |
+
+- **era 门闩**：`manufacturing` 条目携带 `era` 字段（1–6，对应时代阶段），由制造域按时代门槛启用；其余内容类别的 era 门闩在其领域模块内以数值基线标注默认区间。
