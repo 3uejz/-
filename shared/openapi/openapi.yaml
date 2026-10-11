@@ -154,11 +154,15 @@ paths:
       responses:
         "200":
           description: 覆盖成功
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SaveSlot" }
         "201":
           description: 新建成功
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SaveSlot" }
@@ -286,12 +290,18 @@ paths:
       tags: [legacy]
       summary: 读取传承档案
       operationId: getLegacy
+      parameters:
+        - { $ref: "#/components/parameters/IfNoneMatch" }
       responses:
         "200":
           description: 传承档案
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
           content:
             application/json:
               schema: { $ref: "../schemas/legacy.schema.json" }
+        "304": { description: "未修改" }
+        "404": { $ref: "#/components/responses/NotFound" }
     put:
       tags: [legacy]
       summary: 写入传承档案
@@ -306,6 +316,8 @@ paths:
       responses:
         "200":
           description: 已保存
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
           content:
             application/json:
               schema: { $ref: "../schemas/legacy.schema.json" }

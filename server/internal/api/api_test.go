@@ -201,8 +201,12 @@ func TestContentConfigLegacyWorld(t *testing.T) {
 	if rec := doJSON(t, h, http.MethodPut, "/api/v1/legacy", token, map[string]any{"generation": 1}, nil); rec.Code != http.StatusOK {
 		t.Fatalf("写传承期望 200，得到 %d %s", rec.Code, rec.Body.String())
 	}
-	if rec := doJSON(t, h, http.MethodGet, "/api/v1/legacy", token, nil, nil); rec.Code != http.StatusOK {
+	rec = doJSON(t, h, http.MethodGet, "/api/v1/legacy", token, nil, nil)
+	if rec.Code != http.StatusOK {
 		t.Fatalf("读传承期望 200，得到 %d", rec.Code)
+	}
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/legacy", token, nil, map[string]string{"If-None-Match": rec.Header().Get("ETag")}); rec.Code != http.StatusNotModified {
+		t.Fatalf("传承条件请求期望 304，得到 %d", rec.Code)
 	}
 
 	if rec := doJSON(t, h, http.MethodGet, "/api/v1/world/summary", "", nil, nil); rec.Code != http.StatusOK {
