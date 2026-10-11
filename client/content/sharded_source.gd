@@ -18,6 +18,8 @@ var disk_budget: int = 0
 var _mounted: Dictionary = {}     # shard id -> true
 var _downloaded: Dictionary = {}  # shard id -> {size, hash, last_used, path}
 var _parts: Dictionary = {}       # shard id -> { offset: true } 已完成分片
+## 无缓存目录（cache_dir==""）时的内存块回退：shard id -> { offset: PackedByteArray }。
+var _mem_parts: Dictionary = {}
 var _clock: int = 0
 
 
@@ -77,7 +79,6 @@ func download_shard(id: String) -> Dictionary:
 	var url := String(s.get("url", ""))
 	var done: Dictionary = _parts.get(id, {})
 	var got := 0
-	var buf := PackedByteArray()
 	for p in s.get("parts", []):
 		if typeof(p) != TYPE_DICTIONARY:
 			continue
@@ -91,8 +92,8 @@ func download_shard(id: String) -> Dictionary:
 		if ContentPack.sha256_hex(chunk) != String(p.get("hash", "")):
 			return {"ok": false, "reason": "part_hash_mismatch", "bytes_downloaded": got}
 		done[off] = true
+		_store_part(id, off, chunk)
 		got += length
-		buf.append_array(chunk)
 	_parts[id] = done
 	var full := _assemble(id)
 	if full.size() != int(s.get("size", full.size())):
@@ -174,15 +175,22 @@ func _evict_if_needed() -> void:
 		_downloaded.erase(victim)
 		_parts.erase(victim)
 		_remove_cache(victim)
+		_clear_parts(victim)
 
 
+## 从已落盘的块拼装整片，不再次回源（断点续传/重复调用不产生额外网络请求）。
+## 仅当某块在内存与磁盘都缺失时才回源补齐一次（例如仅丢失部分缓存）。
 func _assemble(id: String) -> PackedByteArray:
 	var s: Dictionary = shard(id)
 	var out := PackedByteArray()
 	var parts: Array = (s.get("parts", []) as Array).duplicate()
 	parts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["offset"]) < int(b["offset"]))
 	for p in parts:
-		var chunk: PackedByteArray = range_fetcher.call(String(s.get("url", "")), int(p["offset"]), int(p["length"]))
+		var off := int(p["offset"])
+		var chunk: PackedByteArray = _load_part(id, off)
+		if chunk.is_empty() and range_fetcher.is_valid():
+			chunk = range_fetcher.call(String(s.get("url", "")), off, int(p["length"]))
+			_store_part(id, off, chunk)
 		out.append_array(chunk)
 	return out
 
@@ -206,3 +214,47 @@ func _remove_cache(id: String) -> void:
 	if cache_dir == "":
 		return
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_cache_path(id)))
+
+
+func _part_path(id: String, offset: int) -> String:
+	return cache_dir.path_join("%s.%d.part" % [id, offset])
+
+
+## 落盘（有缓存目录）或存入内存（无缓存目录），供 _assemble 复用。
+func _store_part(id: String, offset: int, chunk: PackedByteArray) -> void:
+	if cache_dir == "":
+		if not _mem_parts.has(id):
+			_mem_parts[id] = {}
+		_mem_parts[id][offset] = chunk
+		return
+	DirAccess.make_dir_recursive_absolute(cache_dir)
+	var f := FileAccess.open(_part_path(id, offset), FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_buffer(chunk)
+	f.close()
+
+
+func _load_part(id: String, offset: int) -> PackedByteArray:
+	if cache_dir == "":
+		return _mem_parts.get(id, {}).get(offset, PackedByteArray())
+	var path := _part_path(id, offset)
+	if not FileAccess.file_exists(path):
+		return PackedByteArray()
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return PackedByteArray()
+	var data := f.get_buffer(f.get_length())
+	f.close()
+	return data
+
+
+func _clear_parts(id: String) -> void:
+	_mem_parts.erase(id)
+	if cache_dir == "":
+		return
+	var s: Dictionary = shard(id)
+	for p in s.get("parts", []):
+		if typeof(p) != TYPE_DICTIONARY:
+			continue
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(_part_path(id, int(p.get("offset", 0)))))

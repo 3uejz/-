@@ -11,7 +11,9 @@ class RangeFetcher:
 	extends RefCounted
 	var blobs: Dictionary = {}    # url -> PackedByteArray
 	var corrupt_part: String = "" # 命中 "<url>@<offset>" 时末字节翻转
+	var fetch_calls: int = 0       # 网络请求计数，用于断言断点续传不回源
 	func fetch(url: String, offset: int, length: int) -> PackedByteArray:
+		fetch_calls += 1
 		if not blobs.has(url):
 			return PackedByteArray()
 		var full: PackedByteArray = blobs[url]
@@ -82,11 +84,13 @@ func _test_plan_and_download() -> void:
 	var r: Dictionary = s.download_shard("east_0")
 	check(bool(r["ok"]), "分片下载成功")
 	check_eq(int(r["bytes_downloaded"]), 300, "下载字节数")
+	check_eq(f.fetch_calls, 3, "首次下载恰好请求 3 块")
 	check(s.is_downloaded("east_0"), "已缓存")
 	check_eq(s.cached_bytes(), 300, "缓存字节统计")
 	var r2: Dictionary = s.download_shard("east_0")
 	check(bool(r2["ok"]), "重复下载成功")
 	check_eq(int(r2["bytes_downloaded"]), 0, "断点续传不重复下载")
+	check_eq(f.fetch_calls, 3, "重复下载不回源（断点续传生效）")
 
 
 func _test_part_hash_mismatch() -> void:
