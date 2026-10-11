@@ -126,6 +126,8 @@ paths:
       tags: [saves]
       summary: 下载指定槽最新存档
       operationId: getSave
+      parameters:
+        - { $ref: "#/components/parameters/IfNoneMatch" }
       responses:
         "200":
           description: 存档文档
@@ -134,6 +136,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "../schemas/save.schema.json" }
+        "304": { description: "未修改" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
     put:

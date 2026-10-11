@@ -42,6 +42,11 @@ func (s *Server) handleGetSave(w http.ResponseWriter, r *http.Request, account a
 		httpx.WriteError(w, r, http.StatusInternalServerError, httpx.CodeInternal, "读取存档失败")
 		return
 	}
+	// 条件请求：存档单档可达 100MB，命中 ETag 时直接 304 省去重传。
+	if matchTag(r, saves.ETag(rec)) {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	w.Header().Set("ETag", saves.ETag(rec))
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

@@ -129,9 +129,19 @@ func TestSaveOptimisticLock(t *testing.T) {
 	if rec.Code != http.StatusOK || rec.Header().Get("ETag") == "" {
 		t.Fatalf("读取存档异常: %d", rec.Code)
 	}
+	getTag := rec.Header().Get("ETag")
 	var doc map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &doc); err != nil {
 		t.Fatalf("存档不是 JSON 对象: %v", err)
+	}
+
+	// 条件请求：匹配 ETag 时返回 304，省去大档重传。
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/saves/1", token, nil, map[string]string{"If-None-Match": getTag}); rec.Code != http.StatusNotModified {
+		t.Fatalf("匹配 ETag 期望 304，得到 %d", rec.Code)
+	}
+	// 不匹配的 ETag 仍返回 200。
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/saves/1", token, nil, map[string]string{"If-None-Match": "\"stale\""}); rec.Code != http.StatusOK {
+		t.Fatalf("不匹配 ETag 期望 200，得到 %d", rec.Code)
 	}
 }
 

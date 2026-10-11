@@ -119,6 +119,11 @@ func _test_saves() -> void:
 	check(got["ok"], "存档读取成功")
 	check_eq(got["etag"], etag1, "读取 ETag 与写入一致")
 
+	# 条件请求：携带相同 ETag 应 304（省去大档重传）
+	var cached_save: Dictionary = await net.get_save_async(1, got["etag"])
+	check(cached_save["ok"], "存档条件请求成功")
+	check(cached_save["not_modified"], "相同 ETag 返回 304")
+
 	# 乐观锁：正确 ETag 覆盖
 	var doc2 := {"meta": {"schema_version": 1, "game_version": "0.1.0", "playthrough_id": pt, "seed": 42}, "clock": {"absolute_minutes": 120}}
 	var put2: Dictionary = await net.put_save_async(1, doc2, etag1)
