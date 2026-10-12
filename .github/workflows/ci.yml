@@ -89,3 +89,73 @@ jobs:
 
       - name: 类型检查与构建
         run: npm run build
+
+  integration:
+    name: 客户端与后端活服务端联调
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: life
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: life
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U life" --health-interval 10s
+          --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 10s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: 安装图形运行依赖
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1 libfreetype6
+
+      - name: 安装 Godot 4.7.2 编辑器
+        run: |
+          set -euo pipefail
+          GODOT_VER="4.7.2-stable"
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VER}"
+          mkdir -p "$HOME/godot/editor"
+          curl -fL -o "$HOME/godot/editor.zip" "${BASE}/Godot_v4.7.2-stable_linux.x86_64.zip"
+          unzip -q "$HOME/godot/editor.zip" -d "$HOME/godot/editor"
+          echo "GODOT_BIN=$HOME/godot/editor/Godot_v4.7.2-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: 启动后端并运行客户端联调测试
+        env:
+          JWT_SECRET: ci-secret-0123456789abcdef0123456789abcdef
+          ADMIN_PASSWORD: ci-admin-pass-123456
+          DATABASE_URL: postgres://life:change-me@127.0.0.1:5432/life?sslmode=disable
+          REDIS_URL: redis://127.0.0.1:6379/0
+          SERVER_ADDR: ":8080"
+          DATA_DIR: ${{ runner.temp }}/lifetext-data
+          BACKUP_DIR: ${{ runner.temp }}/lifetext-backups
+        run: |
+          set -euo pipefail
+          ( cd server && go build -o "$RUNNER_TEMP/lifetext-server" ./cmd/server )
+          "$RUNNER_TEMP/lifetext-server" > "$RUNNER_TEMP/server.log" 2>&1 &
+          SRV=$!
+          trap 'kill "$SRV" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          echo "-- 后端健康检查"
+          curl -fsS http://127.0.0.1:8080/api/v1/health
+          "$GODOT_BIN" --headless --path client --import >/dev/null 2>&1 || true
+          echo "-- 联调测试"
+          "$GODOT_BIN" --headless --path client --script res://tests/net_live_test.gd 2>&1 | tee "$RUNNER_TEMP/net_live.log"
+          if grep -q "SKIP" "$RUNNER_TEMP/net_live.log"; then
+            echo "联调测试被跳过，后端未可达"; cat "$RUNNER_TEMP/server.log"; exit 1
+          fi
