@@ -860,6 +860,12 @@ func refresh_status() -> void:
 			_health_label.text = "健康：%.0f" % float(phys.get("health", 0.0))
 		if is_instance_valid(_mood_label):
 			_mood_label.text = "心情：%.0f" % float(psy.get("mood", 0.0))
+	if is_instance_valid(_weather_label):
+		if _sim == null:
+			_weather_label.text = "天气：--"
+		else:
+			var w: Dictionary = _sim.weather_now()
+			_weather_label.text = "天气：--" if w.is_empty() else "天气：%s %s" % [String(w.get("condition", "")), String(w.get("temperature", ""))]
 	var speed = get_node_or_null("/root/SpeedController")
 	if is_instance_valid(_speed_button) and speed != null:
 		_speed_button.text = "倍速：%dx" % int(speed.get_speed())

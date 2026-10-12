@@ -50,6 +50,7 @@ func run_tests() -> void:
 	_test_wait_advances_state_clock()
 	_test_panel_command_opens_panel()
 	_test_buy_changes_inventory()
+	_test_statusbar_weather()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -68,6 +69,13 @@ func _test_buy_changes_inventory() -> void:
 		if typeof(inst) == TYPE_DICTIONARY and String(inst.get("def_id", "")) == "item.apple":
 			count += int(inst.get("quantity", 0))
 	check_eq(count, 2, "「买 苹果 2」入包 2 个")
+
+func _test_statusbar_weather() -> void:
+	_main.submit("看天气")
+	var label = _main.get_node_or_null("Root/StatusBar/WeatherLabel")
+	check(label != null, "状态栏含天气标签")
+	if label != null:
+		check(label.text.begins_with("天气：") and label.text != "天气：--", "状态栏天气已由世界运行时填充")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
