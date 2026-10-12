@@ -58,6 +58,9 @@ func switch_place(place_key: String, lod_level: String = "") -> bool:
 		(instance as Node3D).name = "Place_%s" % place_key
 	var host: Node = scene_root if scene_root != null else self
 	host.add_child(instance)
+	# 占位场景按分组差异化：入树后注入分组（真实资产场景无此方法则跳过）。
+	if instance.has_method("set_place_group"):
+		instance.call("set_place_group", place_key)
 	_instances[place_key] = instance
 	scene_changed.emit(place_key, instance)
 	return true

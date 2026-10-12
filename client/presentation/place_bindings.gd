@@ -5,6 +5,9 @@ extends RefCounted
 
 const PLACEHOLDER := "res://presentation/scenes/placeholder_place.tscn"
 
+## 真实资产约定目录：把 <group>.tscn 放入此处即可自动替换占位，无需改动代码。
+const PLACES_DIR := "res://presentation/scenes/places/"
+
 ## 场所分组（对齐 content-catalog §1 的场所类型分组）。
 const GROUPS: Array = [
 	"residence", "dining", "retail", "medical", "education", "government",
@@ -29,6 +32,10 @@ const PLACE_GROUPS: Dictionary = {
 
 
 static func scene_for(group: String) -> String:
+	# 优先命中约定路径的真实资产；缺失时回退差异化占位场景。
+	var convention: String = PLACES_DIR + group + ".tscn"
+	if ResourceLoader.exists(convention):
+		return convention
 	return str(PLACE_GROUPS.get(group, PLACEHOLDER))
 
 

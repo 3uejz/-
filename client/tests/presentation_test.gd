@@ -22,6 +22,7 @@ func run_tests() -> void:
 	_test_lod_resolution()
 	_test_unregistered_place()
 	_test_place_bindings()
+	_test_placeholder_group_styles()
 	_test_presentation_root()
 
 
@@ -121,6 +122,27 @@ func _test_place_bindings() -> void:
 	# 默认加载器直接加载占位场景，验证绑定可实际实例化。
 	check(mgr.switch_place("medical"), "绑定场景应可加载")
 	check(mgr.get_instance("medical") != null, "应实例化医疗场所")
+	mgr.queue_free()
+
+
+func _test_placeholder_group_styles() -> void:
+	# 13 组差异化风格齐备，关键分组形状不同。
+	check_eq(PlaceholderAssets.GROUP_STYLES.size(), 13, "13 组风格齐备")
+	check_eq(String(PlaceholderAssets.group_style("medical").get("prop", "")), "prism", "医疗道具为棱柱")
+	check_eq(String(PlaceholderAssets.group_style("nature").get("prop", "")), "sphere", "自然道具为球体")
+	check_eq(String(PlaceholderAssets.group_style("unknown").get("prop", "")), "prism", "未知分组回退 special")
+	# 场景管理器注入分组后生成差异化道具。
+	var mgr := _make_manager()
+	check_eq(PlaceBindings.register_all(mgr), 13, "注册 13 个分组")
+	check(mgr.switch_place("medical"), "医疗场景可加载")
+	var inst: Node = mgr.get_instance("medical")
+	check(inst != null and inst.get_node_or_null("Props") != null, "医疗场景含 Props 容器")
+	var props: Node = inst.get_node_or_null("Props")
+	check_eq(props.get_child_count(), int(PlaceholderAssets.group_style("medical").get("props", 0)), "医疗道具数量匹配")
+	mgr.switch_place("nature")
+	var inst2: Node = mgr.get_instance("nature")
+	var props2: Node = inst2.get_node_or_null("Props")
+	check_eq(props2.get_child_count(), int(PlaceholderAssets.group_style("nature").get("props", 0)), "自然道具数量匹配")
 	mgr.queue_free()
 
 
