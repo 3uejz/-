@@ -4,6 +4,15 @@ extends "res://tests/test_base.gd"
 const PanelContentScript = preload("res://ui/panels/panel_content.gd")
 const GameStateScript = preload("res://autoload/game_state.gd")
 
+## 本轮补齐的领域摘要面板 id（与 panel_registry.PANELS 对齐）。
+const NEW_PANEL_IDS: Array[String] = [
+	"business", "organizations", "legal", "rescue", "environment", "municipal",
+	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
+	"content_industry", "engineering", "services", "transport_infra", "household",
+	"sports", "events", "awards", "digital", "epidemic", "war", "market",
+	"weather", "anomaly", "goldfinger",
+]
+
 func _suite_name() -> String:
 	return "panel_content"
 
@@ -21,6 +30,68 @@ func run_tests() -> void:
 	_test_map()
 	_test_settings()
 	_test_placeholder()
+	_test_domain_panels_render()
+	_test_domain_panels_content()
+
+func _test_domain_panels_render() -> void:
+	var player: Dictionary = GameStateScript.default_player()
+	for id in NEW_PANEL_IDS:
+		var data: Dictionary = PanelContentScript.build(id, player, Callable(), {})
+		check(data.has("sections"), "%s 返回 sections" % id)
+		check(data.has("empty"), "%s 含 empty 标志" % id)
+		check(String(data.get("title", "")) != "", "%s 有标题" % id)
+		check(data.get("sections") is Array, "%s sections 为数组" % id)
+
+func _test_domain_panels_content() -> void:
+	var player: Dictionary = GameStateScript.default_player()
+	# 债务：默认无负债 → 空态；注入借款后有明细。
+	check(bool(PanelContentScript.build("debt", player).get("empty", false)), "默认无负债空态")
+	player["finances"]["debt"] = 5000.0
+	player["finances"]["loans"] = [{"name": "房贷", "principal": 300000.0, "rate": 0.045, "status": "repaying"}]
+	var debt_data: Dictionary = PanelContentScript.build("debt", player)
+	check(not bool(debt_data.get("empty", true)), "有负债非空")
+	check_eq(_row_value(_find_section(debt_data, "负债概览"), "负债总额"), "5000", "负债总额")
+	check_eq(_row_value(_find_section(debt_data, "借款明细"), "房贷"), "本金300000 · 利率4.50% · 状态repaying", "借款明细")
+	# 医疗：注入疾病。
+	var hp: Dictionary = GameStateScript.default_player()
+	hp["health"]["diseases"] = [{"name": "感冒", "severity": 2, "status": "treating"}]
+	var med: Dictionary = PanelContentScript.build("medical", hp)
+	check(not bool(med.get("empty", true)), "有疾病非空")
+	check_eq(_row_value(_find_section(med, "疾病"), "感冒"), "严重度2 · 状态treating", "疾病行")
+	# 金手指：启用后展示系统概览。
+	var gf: Dictionary = GameStateScript.default_player()
+	gf["goldfinger"] = {"enabled": true, "points": 120, "daily_points_gained": 8, "rerolls_used": 1, "pity_counter": 3, "draw_count": 5, "items": []}
+	var gf_data: Dictionary = PanelContentScript.build("goldfinger", gf)
+	check(not bool(gf_data.get("empty", true)), "金手指启用非空")
+	check_eq(_row_value(_find_section(gf_data, "系统"), "积分"), "120", "金手指积分")
+	# 宏观行情：注入 macro。
+	var market: Dictionary = PanelContentScript.build("market", GameStateScript.default_player(), Callable(), {
+		"macro": {"gdp": 100.0, "gdp_growth": 0.02, "inflation": 0.03, "cycle_phase": "recovery"},
+	})
+	check(not bool(market.get("empty", true)), "有宏观数据非空")
+	check_eq(_row_value(_find_section(market, "宏观指标"), "周期阶段"), "recovery", "周期阶段")
+	check(String(_row_value(_find_section(market, "宏观指标"), "GDP")).begins_with("100"), "GDP 数值")
+	# 世界驱动面板：公司/组织/项目等经 world_delta 注入。
+	var world_context: Dictionary = {"world_delta": {
+		"factories": [{"name": "一号厂", "industry": "industry.mfg", "stock": 120, "capacity": 200}],
+		"organizations": [{"name": "工会", "type": "union", "members": 42, "reputation": 66}],
+		"anomalies": [{"name": "收容物-7", "class": "euclid", "containment": 3}],
+	}}
+	var biz: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), world_context)
+	check(not bool(biz.get("empty", true)), "有工厂非空")
+	check(String(_row_value(_find_section(biz, "工厂与产线"), "一号厂")).find("产能200") >= 0, "工厂产线行")
+	var org: Dictionary = PanelContentScript.build("organizations", GameStateScript.default_player(), Callable(), world_context)
+	check(not bool(org.get("empty", true)), "有组织非空")
+	check(String(_row_value(_find_section(org, "组织"), "工会")).find("成员42") >= 0, "组织成员行")
+	var ano: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player(), Callable(), world_context)
+	check(not bool(ano.get("empty", true)), "有异常非空")
+	check(String(_row_value(_find_section(ano, "异常条目"), "收容物-7")).find("收容等级3") >= 0, "异常行")
+	# 天气：注入天气摘要。
+	var weather: Dictionary = PanelContentScript.build("weather", GameStateScript.default_player(), Callable(), {
+		"weather": {"condition": "小雨", "temperature": "18°C", "wind": "3级"},
+	})
+	check(not bool(weather.get("empty", true)), "有天气非空")
+	check_eq(_row_value(_find_section(weather, "当前天气"), "天气"), "小雨", "天气状况")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

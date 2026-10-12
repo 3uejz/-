@@ -544,15 +544,19 @@ func _current_player() -> Dictionary:
 		return game.player
 	return {}
 
-## 面板外部上下文：世界区域/行程（地图）与当前设置摘要（设置）。
+## 面板外部上下文：世界增量、宏观行情、天气、疫情、区域/行程（地图）与当前设置摘要。
 func _panel_context() -> Dictionary:
 	var context: Dictionary = {"settings": _settings_summary()}
 	var game = get_node_or_null("/root/GameState")
 	if game != null:
 		var world: Dictionary = game.world_delta if game.world_delta is Dictionary else {}
+		context["world_delta"] = world
 		context["regions"] = world.get("regions", [])
+		context["epidemic"] = world.get("epidemic", [])
 		var player: Dictionary = game.player if game.player is Dictionary else {}
 		context["itineraries"] = player.get("itineraries", [])
+	if _sim != null and _sim.economy != null:
+		context["macro"] = _sim.economy.macro
 	return context
 
 func _settings_summary() -> Dictionary:
