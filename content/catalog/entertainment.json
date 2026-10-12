@@ -6,700 +6,800 @@
       "name": "登山",
       "category": "户外",
       "fee": 700,
-      "minutes": 170
+      "minutes": 170,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n14f0_04",
       "name": "滑雪",
       "category": "户外",
       "fee": 200,
-      "minutes": 70
+      "minutes": 70,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n1b41_16",
       "name": "采蘑菇",
       "category": "户外",
       "fee": 800,
-      "minutes": 190
+      "minutes": 190,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n22b5_08",
       "name": "骑行长途",
       "category": "户外",
       "fee": 400,
-      "minutes": 110
+      "minutes": 110,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n29a4_03",
       "name": "骑行",
       "category": "户外",
       "fee": 150,
-      "minutes": 60
+      "minutes": 60,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n30e4_18",
       "name": "踏青",
       "category": "户外",
       "fee": 900,
-      "minutes": 210
+      "minutes": 210,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n4430_09",
       "name": "观鸟",
       "category": "户外",
       "fee": 450,
-      "minutes": 120
+      "minutes": 120,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n47e5_07",
       "name": "野餐",
       "category": "户外",
       "fee": 350,
-      "minutes": 100
+      "minutes": 100,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n48d8_13",
       "name": "洞穴探险",
       "category": "户外",
       "fee": 650,
-      "minutes": 160
+      "minutes": 160,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n54a8_06",
       "name": "冲浪",
       "category": "户外",
       "fee": 300,
-      "minutes": 90
+      "minutes": 90,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n5736_20",
       "name": "钓鱼比赛",
       "category": "户外",
       "fee": 1000,
-      "minutes": 230
+      "minutes": 230,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n5aa2_02",
       "name": "钓鱼",
       "category": "户外",
       "fee": 100,
-      "minutes": 50
+      "minutes": 50,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n619d_15",
       "name": "划船",
       "category": "户外",
       "fee": 750,
-      "minutes": 180
+      "minutes": 180,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n87c0_11",
       "name": "漂流",
       "category": "户外",
       "fee": 550,
-      "minutes": 140
+      "minutes": 140,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.n8d19_00",
       "name": "徒步",
       "category": "户外",
       "fee": 0,
-      "minutes": 30
+      "minutes": 30,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.na07b_19",
       "name": "划桨板",
       "category": "户外",
       "fee": 950,
-      "minutes": 220
+      "minutes": 220,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.na0b4_10",
       "name": "越野跑",
       "category": "户外",
       "fee": 500,
-      "minutes": 130
+      "minutes": 130,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.nabea_05",
       "name": "攀岩",
       "category": "户外",
       "fee": 250,
-      "minutes": 80
+      "minutes": 80,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.nc5f7_12",
       "name": "滑翔",
       "category": "户外",
       "fee": 600,
-      "minutes": 150
+      "minutes": 150,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.ne745_17",
       "name": "放风筝",
       "category": "户外",
       "fee": 850,
-      "minutes": 200
+      "minutes": 200,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.nee82_21",
       "name": "越野露营",
       "category": "户外",
       "fee": 1050,
-      "minutes": 240
+      "minutes": 240,
+      "source": "generated"
     },
     {
       "content_key": "ent.n899b.nfb8c_01",
       "name": "露营",
       "category": "户外",
       "fee": 50,
-      "minutes": 40
+      "minutes": 40,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.ktv_01",
       "name": "唱 KTV",
       "category": "夜生活",
       "fee": 50,
-      "minutes": 40
+      "minutes": 40,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.n17cc_00",
       "name": "泡酒吧",
       "category": "夜生活",
       "fee": 0,
-      "minutes": 30
+      "minutes": 30,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.n3533_03",
       "name": "吃宵夜",
       "category": "夜生活",
       "fee": 150,
-      "minutes": 60
+      "minutes": 60,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.n5eda_07",
       "name": "玩密室逃脱",
       "category": "夜生活",
       "fee": 350,
-      "minutes": 100
+      "minutes": 100,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.n6e5c_05",
       "name": "看球赛直播",
       "category": "夜生活",
       "fee": 250,
-      "minutes": 80
+      "minutes": 80,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.n88fb_09",
       "name": "打深夜麻将",
       "category": "夜生活",
       "fee": 450,
-      "minutes": 120
+      "minutes": 120,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.na360_02",
       "name": "蹦夜店",
       "category": "夜生活",
       "fee": 100,
-      "minutes": 50
+      "minutes": 50,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.nbd8e_04",
       "name": "逛夜市",
       "category": "夜生活",
       "fee": 200,
-      "minutes": 70
+      "minutes": 70,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.nc81c_11",
       "name": "夜市小吃巡礼",
       "category": "夜生活",
       "fee": 550,
-      "minutes": 140
+      "minutes": 140,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.ne3a6_08",
       "name": "听现场音乐",
       "category": "夜生活",
       "fee": 400,
-      "minutes": 110
+      "minutes": 110,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.neb69_06",
       "name": "玩剧本杀",
       "category": "夜生活",
       "fee": 300,
-      "minutes": 90
+      "minutes": 90,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd386.spa_10",
       "name": "泡深夜 spa",
       "category": "夜生活",
       "fee": 500,
-      "minutes": 130
+      "minutes": 130,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n023b_17",
       "name": "冥想",
       "category": "居家",
       "fee": 850,
-      "minutes": 200
+      "minutes": 200,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n04c3_03",
       "name": "园艺",
       "category": "居家",
       "fee": 150,
-      "minutes": 60
+      "minutes": 60,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n068c_12",
       "name": "下厨",
       "category": "居家",
       "fee": 600,
-      "minutes": 150
+      "minutes": 150,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n0c46_15",
       "name": "养宠物",
       "category": "居家",
       "fee": 750,
-      "minutes": 180
+      "minutes": 180,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n157e_14",
       "name": "泡茶",
       "category": "居家",
       "fee": 700,
-      "minutes": 170
+      "minutes": 170,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n1686_16",
       "name": "写字",
       "category": "居家",
       "fee": 800,
-      "minutes": 190
+      "minutes": 190,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n36cc_01",
       "name": "追剧",
       "category": "居家",
       "fee": 50,
-      "minutes": 40
+      "minutes": 40,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n38d7_10",
       "name": "听音乐",
       "category": "居家",
       "fee": 500,
-      "minutes": 130
+      "minutes": 130,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n391a_07",
       "name": "烘焙",
       "category": "居家",
       "fee": 350,
-      "minutes": 100
+      "minutes": 100,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n53b9_00",
       "name": "电子游戏",
       "category": "居家",
       "fee": 0,
-      "minutes": 30
+      "minutes": 30,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n5585_09",
       "name": "桌游",
       "category": "居家",
       "fee": 450,
-      "minutes": 120
+      "minutes": 120,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n69cb_19",
       "name": "做手工皂",
       "category": "居家",
       "fee": 950,
-      "minutes": 220
+      "minutes": 220,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n8b03_21",
       "name": "做手账",
       "category": "居家",
       "fee": 1050,
-      "minutes": 240
+      "minutes": 240,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n8e9e_20",
       "name": "织毛衣",
       "category": "居家",
       "fee": 1000,
-      "minutes": 230
+      "minutes": 230,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n92c0_05",
       "name": "读书",
       "category": "居家",
       "fee": 250,
-      "minutes": 80
+      "minutes": 80,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.n9813_13",
       "name": "看直播",
       "category": "居家",
       "fee": 650,
-      "minutes": 160
+      "minutes": 160,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.na8be_02",
       "name": "烹饪",
       "category": "居家",
       "fee": 100,
-      "minutes": 50
+      "minutes": 50,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.naa82_18",
       "name": "涂色",
       "category": "居家",
       "fee": 900,
-      "minutes": 210
+      "minutes": 210,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.naf28_11",
       "name": "养花",
       "category": "居家",
       "fee": 550,
-      "minutes": 140
+      "minutes": 140,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.nc7b6_04",
       "name": "手工",
       "category": "居家",
       "fee": 200,
-      "minutes": 70
+      "minutes": 70,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.nf68c_06",
       "name": "拼图",
       "category": "居家",
       "fee": 300,
-      "minutes": 90
+      "minutes": 90,
+      "source": "generated"
     },
     {
       "content_key": "ent.nd9aa.ok_08",
       "name": "卡拉OK",
       "category": "居家",
       "fee": 400,
-      "minutes": 110
+      "minutes": 110,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n009a_14",
       "name": "打门球",
       "category": "竞技",
       "fee": 700,
-      "minutes": 170
+      "minutes": 170,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n16ba_13",
       "name": "飞盘",
       "category": "竞技",
       "fee": 650,
-      "minutes": 160
+      "minutes": 160,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n1799_04",
       "name": "打电竞",
       "category": "竞技",
       "fee": 200,
-      "minutes": 70
+      "minutes": 70,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n2382_00",
       "name": "踢足球",
       "category": "竞技",
       "fee": 0,
-      "minutes": 30
+      "minutes": 30,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n2cb9_11",
       "name": "练拳击",
       "category": "竞技",
       "fee": 550,
-      "minutes": 140
+      "minutes": 140,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n48da_20",
       "name": "玩滑板",
       "category": "竞技",
       "fee": 1000,
-      "minutes": 230
+      "minutes": 230,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n49b6_10",
       "name": "打高尔夫",
       "category": "竞技",
       "fee": 500,
-      "minutes": 130
+      "minutes": 130,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n536c_09",
       "name": "玩保龄球",
       "category": "竞技",
       "fee": 450,
-      "minutes": 120
+      "minutes": 120,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n5698_02",
       "name": "打羽毛球",
       "category": "竞技",
       "fee": 100,
-      "minutes": 50
+      "minutes": 50,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n5cfb_18",
       "name": "练跆拳道",
       "category": "竞技",
       "fee": 900,
-      "minutes": 210
+      "minutes": 210,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n5f79_08",
       "name": "打排球",
       "category": "竞技",
       "fee": 400,
-      "minutes": 110
+      "minutes": 110,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n6343_15",
       "name": "玩飞镖",
       "category": "竞技",
       "fee": 750,
-      "minutes": 180
+      "minutes": 180,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n63d2_06",
       "name": "打台球",
       "category": "竞技",
       "fee": 300,
-      "minutes": 90
+      "minutes": 90,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n66ef_16",
       "name": "划龙舟",
       "category": "竞技",
       "fee": 800,
-      "minutes": 190
+      "minutes": 190,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n8afd_12",
       "name": "射箭",
       "category": "竞技",
       "fee": 600,
-      "minutes": 150
+      "minutes": 150,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.n9348_05",
       "name": "下棋",
       "category": "竞技",
       "fee": 250,
-      "minutes": 80
+      "minutes": 80,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.na1f9_21",
       "name": "打沙包",
       "category": "竞技",
       "fee": 1050,
-      "minutes": 240
+      "minutes": 240,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.nab32_03",
       "name": "打乒乓",
       "category": "竞技",
       "fee": 150,
-      "minutes": 60
+      "minutes": 60,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.nb4cc_17",
       "name": "打棒球",
       "category": "竞技",
       "fee": 850,
-      "minutes": 200
+      "minutes": 200,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.nc700_19",
       "name": "打桌球",
       "category": "竞技",
       "fee": 950,
-      "minutes": 220
+      "minutes": 220,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.ncd71_01",
       "name": "打篮球",
       "category": "竞技",
       "fee": 50,
-      "minutes": 40
+      "minutes": 40,
+      "source": "generated"
     },
     {
       "content_key": "ent.ned7a.ne164_07",
       "name": "打网球",
       "category": "竞技",
       "fee": 350,
-      "minutes": 100
+      "minutes": 100,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n0675_18",
       "name": "听评书",
       "category": "文化",
       "fee": 900,
-      "minutes": 210
+      "minutes": 210,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n1413_17",
       "name": "看舞剧",
       "category": "文化",
       "fee": 850,
-      "minutes": 200
+      "minutes": 200,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n31e9_21",
       "name": "听脱口秀",
       "category": "文化",
       "fee": 1050,
-      "minutes": 240
+      "minutes": 240,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n48e9_05",
       "name": "看话剧",
       "category": "文化",
       "fee": 250,
-      "minutes": 80
+      "minutes": 80,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n533a_11",
       "name": "逛庙会",
       "category": "文化",
       "fee": 550,
-      "minutes": 140
+      "minutes": 140,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n5c8b_02",
       "name": "听音乐会",
       "category": "文化",
       "fee": 100,
-      "minutes": 50
+      "minutes": 50,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n6ff8_10",
       "name": "看戏曲",
       "category": "文化",
       "fee": 500,
-      "minutes": 130
+      "minutes": 130,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n70a4_19",
       "name": "参观故居",
       "category": "文化",
       "fee": 950,
-      "minutes": 220
+      "minutes": 220,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n81da_04",
       "name": "听讲座",
       "category": "文化",
       "fee": 200,
-      "minutes": 70
+      "minutes": 70,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n8573_15",
       "name": "看烟花",
       "category": "文化",
       "fee": 750,
-      "minutes": 180
+      "minutes": 180,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n898a_20",
       "name": "看民间艺术",
       "category": "文化",
       "fee": 1000,
-      "minutes": 230
+      "minutes": 230,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n8b7d_09",
       "name": "参加读书会",
       "category": "文化",
       "fee": 450,
-      "minutes": 120
+      "minutes": 120,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n8f60_14",
       "name": "参观科技馆",
       "category": "文化",
       "fee": 700,
-      "minutes": 170
+      "minutes": 170,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n940d_06",
       "name": "参观美术馆",
       "category": "文化",
       "fee": 300,
-      "minutes": 90
+      "minutes": 90,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.n9c84_08",
       "name": "看非遗",
       "category": "文化",
       "fee": 400,
-      "minutes": 110
+      "minutes": 110,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.na3b4_07",
       "name": "逛书店",
       "category": "文化",
       "fee": 350,
-      "minutes": 100
+      "minutes": 100,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nb3a6_16",
       "name": "看纪录片",
       "category": "文化",
       "fee": 800,
-      "minutes": 190
+      "minutes": 190,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nba90_12",
       "name": "看摄影展",
       "category": "文化",
       "fee": 600,
-      "minutes": 150
+      "minutes": 150,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nbd49_03",
       "name": "逛博物馆",
       "category": "文化",
       "fee": 150,
-      "minutes": 60
+      "minutes": 60,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nc842_13",
       "name": "听相声",
       "category": "文化",
       "fee": 650,
-      "minutes": 160
+      "minutes": 160,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nca16_01",
       "name": "看演出",
       "category": "文化",
       "fee": 50,
-      "minutes": 40
+      "minutes": 40,
+      "source": "generated"
     },
     {
       "content_key": "ent.nf673.nfd1d_00",
       "name": "看展览",
       "category": "文化",
       "fee": 0,
-      "minutes": 30
+      "minutes": 30,
+      "source": "generated"
     }
   ]
 }

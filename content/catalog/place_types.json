@@ -4,622 +4,746 @@
     {
       "content_key": "place.atm_06",
       "name": "ATM 网点",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.ktv_01",
       "name": "KTV",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n022e_05",
       "name": "急救中心",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n08f6_07",
       "name": "实验室",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.n0944_06",
       "name": "湿地",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n0b0f_08",
       "name": "康复中心",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n0b12_09",
       "name": "宠物店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n0e6f_03",
       "name": "收容站",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n0e79_07",
       "name": "出入境",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n1070_05",
       "name": "博物馆",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n13dc_01",
       "name": "教堂",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.n17a2_04",
       "name": "药店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n19ff_04",
       "name": "仓库",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.n1a5d_08",
       "name": "体育场",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n1a75_01",
       "name": "小区",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.n1cae_02",
       "name": "清真寺",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.n1e46_02",
       "name": "夜店",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n1e99_05",
       "name": "佛堂",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.n2085_03",
       "name": "政府机关",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n2122_09",
       "name": "溶洞",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n2215_09",
       "name": "小吃街",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n22d6_01",
       "name": "法院",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n2551_02",
       "name": "火锅店",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n2702_04",
       "name": "异常收容点",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n2b68_04",
       "name": "职校",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.n2b6a_01",
       "name": "专科医院",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n2c02_00",
       "name": "公园",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n2eb9_07",
       "name": "峡谷",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n2f6f_05",
       "name": "交易所",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.n386f_03",
       "name": "宿舍",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.n3b64_01",
       "name": "赌场",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n3cd8_06",
       "name": "廉租房",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.n403e_06",
       "name": "美术馆",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n41c7_08",
       "name": "体育馆",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.n4228_05",
       "name": "沙漠",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n4412_00",
       "name": "派出所",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n4ae6_01",
       "name": "便利店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n5323_00",
       "name": "工厂",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.n533e_04",
       "name": "酒吧",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n53b3_01",
       "name": "快餐店",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n53d9_01",
       "name": "小学",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.n5570_06",
       "name": "药房",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n5680_02",
       "name": "湖",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n5706_00",
       "name": "超市",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n5ac1_03",
       "name": "渔港",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.n6128_02",
       "name": "火车站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.n6432_00",
       "name": "幼儿园",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.n64d4_00",
       "name": "银行",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.n6688_08",
       "name": "产业园",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.n6856_03",
       "name": "海滩",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.n6a64_02",
       "name": "诊所",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n6ae2_06",
       "name": "车管所",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n6c39_00",
       "name": "综合医院",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n6e58_08",
       "name": "母婴店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n6ee7_03",
       "name": "网吧",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n6ef1_04",
       "name": "民政局",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n6f80_07",
       "name": "茶楼",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n7027_00",
       "name": "地铁站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.n70b1_06",
       "name": "走私码头",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n7270_06",
       "name": "工地",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.n7279_06",
       "name": "烟酒店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n75bb_03",
       "name": "道观",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.n7727_05",
       "name": "港口",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.n78a3_07",
       "name": "义庄",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n7f80_04",
       "name": "游乐场",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.n80da_00",
       "name": "黑市",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.n8615_03",
       "name": "书店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n86f8_10",
       "name": "菜市场",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.n87c3_09",
       "name": "疾控中心",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.n889a_08",
       "name": "客运站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.n8d6e_02",
       "name": "检察院",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.n9292_09",
       "name": "收费站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.n982f_05",
       "name": "夜市",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.n9c85_08",
       "name": "草原",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.na075_04",
       "name": "养老院",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.na3da_05",
       "name": "培训机构",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.na555_07",
       "name": "体检中心",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.na651_05",
       "name": "发电站",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.naa07_04",
       "name": "小贷公司",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.naa31_07",
       "name": "养殖场",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.nac08_02",
       "name": "中学",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.nac90_03",
       "name": "咖啡厅",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.nad3a_01",
       "name": "公交站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.nae95_02",
       "name": "健身房",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.nae9e_07",
       "name": "五金店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.naeac_03",
       "name": "高铁站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.nb01c_04",
       "name": "机场",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.nb06a_06",
       "name": "加油站",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.nb3f3_06",
       "name": "食堂",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.nb5be_01",
       "name": "证券营业部",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.nb98d_03",
       "name": "牙科",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.nbd73_02",
       "name": "农场",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.nc075_07",
       "name": "剧院",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.nc0aa_09",
       "name": "物流园",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     },
     {
       "content_key": "place.nc119_03",
       "name": "当铺",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.nc19e_08",
       "name": "面包房",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.nc25e_00",
       "name": "公寓",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.nc60c_04",
       "name": "心理诊所",
-      "group": "医疗"
+      "group": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "place.nc72c_02",
       "name": "保险公司",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.nc7ea_05",
       "name": "税务局",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.ncb69_07",
       "name": "理财网点",
-      "group": "金融"
+      "group": "金融",
+      "source": "generated"
     },
     {
       "content_key": "place.ncd02_11",
       "name": "台球厅",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.ncfd4_04",
       "name": "祠堂",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.nd670_00",
       "name": "影院",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.nd75a_07",
       "name": "停车场",
-      "group": "交通"
+      "group": "交通",
+      "source": "generated"
     },
     {
       "content_key": "place.nd7b8_05",
       "name": "救助站",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.nd7ba_01",
       "name": "山",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.ndf2d_04",
       "name": "森林",
-      "group": "自然"
+      "group": "自然",
+      "source": "generated"
     },
     {
       "content_key": "place.ndf4f_11",
       "name": "批发市场",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.ne54a_03",
       "name": "大学",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.ne7da_02",
       "name": "商场",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.ne7ff_09",
       "name": "电竞馆",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.neb1e_05",
       "name": "花店",
-      "group": "零售"
+      "group": "零售",
+      "source": "generated"
     },
     {
       "content_key": "place.nec67_05",
       "name": "地下拳场",
-      "group": "特殊"
+      "group": "特殊",
+      "source": "generated"
     },
     {
       "content_key": "place.nef2d_06",
       "name": "图书馆",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.nf2b2_00",
       "name": "寺庙",
-      "group": "宗教"
+      "group": "宗教",
+      "source": "generated"
     },
     {
       "content_key": "place.nf467_08",
       "name": "社保中心",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.nf54a_02",
       "name": "别墅",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.nf593_09",
       "name": "政务大厅",
-      "group": "政务"
+      "group": "政务",
+      "source": "generated"
     },
     {
       "content_key": "place.nf87e_10",
       "name": "桌游吧",
-      "group": "文娱"
+      "group": "文娱",
+      "source": "generated"
     },
     {
       "content_key": "place.nf96c_00",
       "name": "中餐厅",
-      "group": "餐饮"
+      "group": "餐饮",
+      "source": "generated"
     },
     {
       "content_key": "place.nf997_09",
       "name": "自习室",
-      "group": "教育"
+      "group": "教育",
+      "source": "generated"
     },
     {
       "content_key": "place.nfad8_07",
       "name": "民宿",
-      "group": "居住"
+      "group": "居住",
+      "source": "generated"
     },
     {
       "content_key": "place.nfb0a_01",
       "name": "矿区",
-      "group": "产业"
+      "group": "产业",
+      "source": "generated"
     }
   ]
 }

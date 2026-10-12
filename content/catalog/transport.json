@@ -5,73 +5,85 @@
       "content_key": "transport.bike",
       "name": "自行车",
       "kind": "bike",
-      "speed": 15.0
+      "speed": 15.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.bus",
       "name": "公交",
       "kind": "bus",
-      "speed": 25.0
+      "speed": 25.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.car",
       "name": "自驾",
       "kind": "car",
-      "speed": 60.0
+      "speed": 60.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.coach",
       "name": "长途汽车",
       "kind": "coach",
-      "speed": 70.0
+      "speed": 70.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.high_speed_rail",
       "name": "高铁",
       "kind": "high_speed_rail",
-      "speed": 300.0
+      "speed": 300.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.metro",
       "name": "地铁",
       "kind": "metro",
-      "speed": 40.0
+      "speed": 40.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.plane",
       "name": "飞机",
       "kind": "plane",
-      "speed": 800.0
+      "speed": 800.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.ride_hailing",
       "name": "网约车",
       "kind": "ride_hailing",
-      "speed": 45.0
+      "speed": 45.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.ship",
       "name": "轮船",
       "kind": "ship",
-      "speed": 35.0
+      "speed": 35.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.taxi",
       "name": "出租",
       "kind": "taxi",
-      "speed": 45.0
+      "speed": 45.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.train",
       "name": "火车",
       "kind": "train",
-      "speed": 90.0
+      "speed": 90.0,
+      "source": "generated"
     },
     {
       "content_key": "transport.walk",
       "name": "步行",
       "kind": "walk",
-      "speed": 5.0
+      "speed": 5.0,
+      "source": "generated"
     }
   ]
 }

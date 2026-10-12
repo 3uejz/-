@@ -83,6 +83,9 @@ def slug(text: str) -> str:
 
 def save(name: str, entries: list[dict], dry: bool) -> int:
     entries = entries[:]
+    # 补齐来源标记：缺省视为生成条目；显式 curated 的人工条目原样保留。
+    for e in entries:
+        e.setdefault("source", "generated")
     entries.sort(key=lambda e: e["content_key"])
     doc = {"category": name, "entries": entries}
     data = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
@@ -106,6 +109,8 @@ class Builder:
             return False
         entry = {"content_key": key}
         entry.update(fields)
+        # 标记来源，便于再生成时不覆盖人工策展（curated）条目。
+        entry["source"] = "generated"
         self.entries.append(entry)
         self.keys.add(key)
         self.added += 1

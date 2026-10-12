@@ -4,202 +4,242 @@
     {
       "content_key": "award.mvp_20",
       "name": "赛季 MVP",
-      "field": "体育"
+      "field": "体育",
+      "source": "generated"
     },
     {
       "content_key": "award.n090c_09",
       "name": "儿童文学奖",
-      "field": "文学"
+      "field": "文学",
+      "source": "generated"
     },
     {
       "content_key": "award.n149d_28",
       "name": "设计红星奖",
-      "field": "艺术"
+      "field": "艺术",
+      "source": "generated"
     },
     {
       "content_key": "award.n1dc3_29",
       "name": "非遗传承人",
-      "field": "艺术"
+      "field": "艺术",
+      "source": "generated"
     },
     {
       "content_key": "award.n2424_34",
       "name": "青年创业奖",
-      "field": "商业"
+      "field": "商业",
+      "source": "generated"
     },
     {
       "content_key": "award.n2d6f_11",
       "name": "最佳导演奖",
-      "field": "影视"
+      "field": "影视",
+      "source": "generated"
     },
     {
       "content_key": "award.n33da_16",
       "name": "最佳歌手",
-      "field": "音乐"
+      "field": "音乐",
+      "source": "generated"
     },
     {
       "content_key": "award.n3aa8_21",
       "name": "最佳射手",
-      "field": "体育"
+      "field": "体育",
+      "source": "generated"
     },
     {
       "content_key": "award.n3bc1_35",
       "name": "名医荣誉",
-      "field": "医疗"
+      "field": "医疗",
+      "source": "generated"
     },
     {
       "content_key": "award.n3f13_37",
       "name": "杰出律师",
-      "field": "法律"
+      "field": "法律",
+      "source": "generated"
     },
     {
       "content_key": "award.n47e4_14",
       "name": "最佳编剧奖",
-      "field": "影视"
+      "field": "影视",
+      "source": "generated"
     },
     {
       "content_key": "award.n4c30_23",
       "name": "最佳新人",
-      "field": "体育"
+      "field": "体育",
+      "source": "generated"
     },
     {
       "content_key": "award.n4c62_06",
       "name": "诗歌奖",
-      "field": "文学"
+      "field": "文学",
+      "source": "generated"
     },
     {
       "content_key": "award.n52d9_38",
       "name": "杰出工程师",
-      "field": "工程"
+      "field": "工程",
+      "source": "generated"
     },
     {
       "content_key": "award.n56f6_31",
       "name": "创新企业奖",
-      "field": "商业"
+      "field": "商业",
+      "source": "generated"
     },
     {
       "content_key": "award.n5792_08",
       "name": "散文奖",
-      "field": "文学"
+      "field": "文学",
+      "source": "generated"
     },
     {
       "content_key": "award.n5e3e_32",
       "name": "社会责任奖",
-      "field": "商业"
+      "field": "商业",
+      "source": "generated"
     },
     {
       "content_key": "award.n627c_15",
       "name": "年度专辑奖",
-      "field": "音乐"
+      "field": "音乐",
+      "source": "generated"
     },
     {
       "content_key": "award.n66db_10",
       "name": "最佳影片奖",
-      "field": "影视"
+      "field": "影视",
+      "source": "generated"
     },
     {
       "content_key": "award.n7e9c_05",
       "name": "文学奖",
-      "field": "文学"
+      "field": "文学",
+      "source": "generated"
     },
     {
       "content_key": "award.n9fbe_13",
       "name": "最佳女演员",
-      "field": "影视"
+      "field": "影视",
+      "source": "generated"
     },
     {
       "content_key": "award.naa17_17",
       "name": "最佳作曲",
-      "field": "音乐"
+      "field": "音乐",
+      "source": "generated"
     },
     {
       "content_key": "award.naa2d_24",
       "name": "终身成就奖",
-      "field": "体育"
+      "field": "体育",
+      "source": "generated"
     },
     {
       "content_key": "award.naab8_30",
       "name": "年度企业家",
-      "field": "商业"
+      "field": "商业",
+      "source": "generated"
     },
     {
       "content_key": "award.naf58_03",
       "name": "青年科学奖",
-      "field": "学术"
+      "field": "学术",
+      "source": "generated"
     },
     {
       "content_key": "award.nb660_26",
       "name": "美术金像奖",
-      "field": "艺术"
+      "field": "艺术",
+      "source": "generated"
     },
     {
       "content_key": "award.nb845_07",
       "name": "小说奖",
-      "field": "文学"
+      "field": "文学",
+      "source": "generated"
     },
     {
       "content_key": "award.nc0c8_12",
       "name": "最佳男演员",
-      "field": "影视"
+      "field": "影视",
+      "source": "generated"
     },
     {
       "content_key": "award.nc399_25",
       "name": "工艺美术大师",
-      "field": "艺术"
+      "field": "艺术",
+      "source": "generated"
     },
     {
       "content_key": "award.nccbc_36",
       "name": "杰出教师",
-      "field": "教育"
+      "field": "教育",
+      "source": "generated"
     },
     {
       "content_key": "award.nd054_39",
       "name": "杰出志愿者",
-      "field": "公益"
+      "field": "公益",
+      "source": "generated"
     },
     {
       "content_key": "award.nd144_22",
       "name": "最佳教练",
-      "field": "体育"
+      "field": "体育",
+      "source": "generated"
     },
     {
       "content_key": "award.nd64c_19",
       "name": "金曲奖",
-      "field": "音乐"
+      "field": "音乐",
+      "source": "generated"
     },
     {
       "content_key": "award.ndfb2_04",
       "name": "院士称号",
-      "field": "学术"
+      "field": "学术",
+      "source": "generated"
     },
     {
       "content_key": "award.ne250_33",
       "name": "行业领军奖",
-      "field": "商业"
+      "field": "商业",
+      "source": "generated"
     },
     {
       "content_key": "award.ne4bc_00",
       "name": "自然科学奖",
-      "field": "学术"
+      "field": "学术",
+      "source": "generated"
     },
     {
       "content_key": "award.nf16e_01",
       "name": "技术发明奖",
-      "field": "学术"
+      "field": "学术",
+      "source": "generated"
     },
     {
       "content_key": "award.nf43c_27",
       "name": "摄影金像奖",
-      "field": "艺术"
+      "field": "艺术",
+      "source": "generated"
     },
     {
       "content_key": "award.nfbe4_18",
       "name": "最佳乐队",
-      "field": "音乐"
+      "field": "音乐",
+      "source": "generated"
     },
     {
       "content_key": "award.nff22_02",
       "name": "科技进步奖",
-      "field": "学术"
+      "field": "学术",
+      "source": "generated"
     }
   ]
 }

@@ -5,481 +5,561 @@
       "content_key": "disease.anxiety",
       "name": "焦虑症",
       "category": "mental",
-      "severity": 5
+      "severity": 5,
+      "source": "generated"
     },
     {
       "content_key": "disease.arthritis",
       "name": "关节炎",
       "category": "musculoskeletal",
-      "severity": 5
+      "severity": 5,
+      "source": "generated"
     },
     {
       "content_key": "disease.burn",
       "name": "烧伤",
       "category": "injury",
-      "severity": 7
+      "severity": 7,
+      "source": "generated"
     },
     {
       "content_key": "disease.cancer_lung",
       "name": "肺癌",
       "category": "oncological",
-      "severity": 10
+      "severity": 10,
+      "source": "generated"
     },
     {
       "content_key": "disease.cancer_stomach",
       "name": "胃癌",
       "category": "oncological",
-      "severity": 10
+      "severity": 10,
+      "source": "generated"
     },
     {
       "content_key": "disease.cold",
       "name": "感冒",
       "category": "respiratory",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.dental_caries",
       "name": "龋齿",
       "category": "dental",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.depression",
       "name": "抑郁症",
       "category": "mental",
-      "severity": 7
+      "severity": 7,
+      "source": "generated"
     },
     {
       "content_key": "disease.diabetes",
       "name": "糖尿病",
       "category": "metabolic",
-      "severity": 7
+      "severity": 7,
+      "source": "generated"
     },
     {
       "content_key": "disease.fracture",
       "name": "骨折",
       "category": "injury",
-      "severity": 6
+      "severity": 6,
+      "source": "generated"
     },
     {
       "content_key": "disease.gastritis",
       "name": "胃炎",
       "category": "digestive",
-      "severity": 4
+      "severity": 4,
+      "source": "generated"
     },
     {
       "content_key": "disease.heart_disease",
       "name": "冠心病",
       "category": "cardiovascular",
-      "severity": 8
+      "severity": 8,
+      "source": "generated"
     },
     {
       "content_key": "disease.hypertension",
       "name": "高血压",
       "category": "cardiovascular",
-      "severity": 6
+      "severity": 6,
+      "source": "generated"
     },
     {
       "content_key": "disease.influenza",
       "name": "流感",
       "category": "respiratory",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.insomnia",
       "name": "失眠症",
       "category": "mental",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.myopia",
       "name": "近视",
       "category": "sensory",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n1b70_04",
       "name": "糖尿病",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n35cb_08",
       "name": "偏头痛",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n3cc5_06",
       "name": "哮喘",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n60e9_05",
       "name": "心脏病",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n6172_00",
       "name": "感冒",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n7910_02",
       "name": "胃炎",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.n844b_03",
       "name": "高血压",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.nb1f6_01",
       "name": "发烧",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.nb4d8_09",
       "name": "胃肠炎",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n16b2.nd32e_07",
       "name": "关节炎",
       "category": "常见",
-      "severity": 1
+      "severity": 1,
+      "source": "generated"
     },
     {
       "content_key": "disease.n1b77.n0c16_01",
       "name": "酒精依赖",
       "category": "成瘾",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.n1b77.n45df_02",
       "name": "药物依赖",
       "category": "成瘾",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.n1b77.n4f3e_03",
       "name": "赌博成瘾",
       "category": "成瘾",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.n1b77.n7c14_04",
       "name": "网络成瘾",
       "category": "成瘾",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.n1b77.ne995_00",
       "name": "烟瘾",
       "category": "成瘾",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.n3196_05",
       "name": "甲状腺疾病",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.n4f40_03",
       "name": "肾病",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.n65f7_01",
       "name": "过敏",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.n870c_00",
       "name": "贫血",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.nbd1e_04",
       "name": "痛风",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5259.nf164_02",
       "name": "癫痫",
       "category": "遗传慢性",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.n3b4c_04",
       "name": "脑震荡",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.n485d_02",
       "name": "创伤",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.n97a7_05",
       "name": "软组织挫伤",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.n9a91_00",
       "name": "骨折",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.n9f5e_01",
       "name": "烧伤",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.n5285.nbd55_03",
       "name": "器官损伤",
       "category": "外伤",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nb60e.n1096_02",
       "name": "农药中毒",
       "category": "职业环境",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.nb60e.n6110_03",
       "name": "重金属中毒",
       "category": "职业环境",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.nb60e.n6c27_04",
       "name": "放射病",
       "category": "职业环境",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.nb60e.n7dd9_01",
       "name": "职业性耳聋",
       "category": "职业环境",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.nb60e.ncb8e_00",
       "name": "尘肺",
       "category": "职业环境",
-      "severity": 3
+      "severity": 3,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n00b0_16",
       "name": "老年痴呆",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n2b3e_06",
       "name": "创伤后应激",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n3502_12",
       "name": "人格障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n4718_10",
       "name": "注意缺陷",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n4cd0_03",
       "name": "精神分裂",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n53d8_15",
       "name": "躯体化障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n571c_08",
       "name": "进食障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n5759_05",
       "name": "强迫症",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n623a_14",
       "name": "疑病症",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n6275_07",
       "name": "社交恐惧",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n6d1c_04",
       "name": "惊恐障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n7827_19",
       "name": "解离障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n7ab4_13",
       "name": "成瘾共病",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.n8365_18",
       "name": "适应障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.na372_09",
       "name": "睡眠障碍",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.nab18_02",
       "name": "双相",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.nc0ed_17",
       "name": "谵妄",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.nc98b_01",
       "name": "焦虑",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.nd8d5_11",
       "name": "自闭谱系",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nd88e.ne4df_00",
       "name": "抑郁",
       "category": "精神",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.n496b_07",
       "name": "水痘",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.n6190_09",
       "name": "登革热",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.n700c_03",
       "name": "肝炎",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.n708e_00",
       "name": "流感",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.na189_05",
       "name": "霍乱",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.nc65d_06",
       "name": "猩红热",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.nd224_02",
       "name": "肺结核",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.nd256_04",
       "name": "麻疹",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.nd525_08",
       "name": "痢疾",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.nfc1e.ne78b_01",
       "name": "肺炎",
       "category": "传染",
-      "severity": 2
+      "severity": 2,
+      "source": "generated"
     },
     {
       "content_key": "disease.pneumonia",
       "name": "肺炎",
       "category": "respiratory",
-      "severity": 6
+      "severity": 6,
+      "source": "generated"
     },
     {
       "content_key": "disease.ulcer",
       "name": "胃溃疡",
       "category": "digestive",
-      "severity": 6
+      "severity": 6,
+      "source": "generated"
     }
   ]
 }

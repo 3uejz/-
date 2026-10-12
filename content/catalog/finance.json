@@ -5,337 +5,393 @@
       "content_key": "fin.etf_37",
       "name": "商品 ETF",
       "kind": "fund",
-      "risk": 0.15
+      "risk": 0.15,
+      "source": "generated"
     },
     {
       "content_key": "fin.etf_38",
       "name": "黄金 ETF",
       "kind": "fund",
-      "risk": 0.16
+      "risk": 0.16,
+      "source": "generated"
     },
     {
       "content_key": "fin.n003e_21",
       "name": "利率互换",
       "kind": "derivative",
-      "risk": 0.15
+      "risk": 0.15,
+      "source": "generated"
     },
     {
       "content_key": "fin.n0b8c_25",
       "name": "大豆",
       "kind": "commodity",
-      "risk": 0.25
+      "risk": 0.25,
+      "source": "generated"
     },
     {
       "content_key": "fin.n1af7_30",
       "name": "银行理财",
       "kind": "wealth",
-      "risk": 0.06
+      "risk": 0.06,
+      "source": "generated"
     },
     {
       "content_key": "fin.n1fa4_18",
       "name": "商品期货",
       "kind": "derivative",
-      "risk": 0.4
+      "risk": 0.4,
+      "source": "generated"
     },
     {
       "content_key": "fin.n2131_34",
       "name": "年金保险",
       "kind": "insurance",
-      "risk": 0.08
+      "risk": 0.08,
+      "source": "generated"
     },
     {
       "content_key": "fin.n29b7_08",
       "name": "行业主题基金",
       "kind": "fund",
-      "risk": 0.22
+      "risk": 0.22,
+      "source": "generated"
     },
     {
       "content_key": "fin.n2c37_09",
       "name": "债券型基金",
       "kind": "fund",
-      "risk": 0.05
+      "risk": 0.05,
+      "source": "generated"
     },
     {
       "content_key": "fin.n2df4_14",
       "name": "企业债",
       "kind": "bond",
-      "risk": 0.07
+      "risk": 0.07,
+      "source": "generated"
     },
     {
       "content_key": "fin.n3455_27",
       "name": "以太坊",
       "kind": "crypto",
-      "risk": 0.9
+      "risk": 0.9,
+      "source": "generated"
     },
     {
       "content_key": "fin.n348b_24",
       "name": "铜",
       "kind": "commodity",
-      "risk": 0.3
+      "risk": 0.3,
+      "source": "generated"
     },
     {
       "content_key": "fin.n34a3_32",
       "name": "私募股权",
       "kind": "wealth",
-      "risk": 0.4
+      "risk": 0.4,
+      "source": "generated"
     },
     {
       "content_key": "fin.n3644_26",
       "name": "比特币",
       "kind": "crypto",
-      "risk": 0.85
+      "risk": 0.85,
+      "source": "generated"
     },
     {
       "content_key": "fin.n587e_01",
       "name": "科技成长股",
       "kind": "stock",
-      "risk": 0.28
+      "risk": 0.28,
+      "source": "generated"
     },
     {
       "content_key": "fin.n5b20_31",
       "name": "信托产品",
       "kind": "wealth",
-      "risk": 0.12
+      "risk": 0.12,
+      "source": "generated"
     },
     {
       "content_key": "fin.n62c6_39",
       "name": "行业债券组合",
       "kind": "bond",
-      "risk": 0.08
+      "risk": 0.08,
+      "source": "generated"
     },
     {
       "content_key": "fin.n6507_07",
       "name": "宽基指数基金",
       "kind": "fund",
-      "risk": 0.1
+      "risk": 0.1,
+      "source": "generated"
     },
     {
       "content_key": "fin.n7b46_12",
       "name": "国债",
       "kind": "bond",
-      "risk": 0.03
+      "risk": 0.03,
+      "source": "generated"
     },
     {
       "content_key": "fin.n7ec3_28",
       "name": "稳定币",
       "kind": "crypto",
-      "risk": 0.1
+      "risk": 0.1,
+      "source": "generated"
     },
     {
       "content_key": "fin.n8901_16",
       "name": "高收益债",
       "kind": "bond",
-      "risk": 0.2
+      "risk": 0.2,
+      "source": "generated"
     },
     {
       "content_key": "fin.n8df0_02",
       "name": "金融蓝筹股",
       "kind": "stock",
-      "risk": 0.14
+      "risk": 0.14,
+      "source": "generated"
     },
     {
       "content_key": "fin.n955f_10",
       "name": "货币基金",
       "kind": "fund",
-      "risk": 0.02
+      "risk": 0.02,
+      "source": "generated"
     },
     {
       "content_key": "fin.n9809_06",
       "name": "制造业指数基金",
       "kind": "fund",
-      "risk": 0.12
+      "risk": 0.12,
+      "source": "generated"
     },
     {
       "content_key": "fin.nb3bd_05",
       "name": "地产板块股",
       "kind": "stock",
-      "risk": 0.26
+      "risk": 0.26,
+      "source": "generated"
     },
     {
       "content_key": "fin.nb5f1_22",
       "name": "黄金",
       "kind": "commodity",
-      "risk": 0.16
+      "risk": 0.16,
+      "source": "generated"
     },
     {
       "content_key": "fin.nba9c_35",
       "name": "分红险",
       "kind": "insurance",
-      "risk": 0.09
+      "risk": 0.09,
+      "source": "generated"
     },
     {
       "content_key": "fin.nbe8b_11",
       "name": "对冲基金份额",
       "kind": "fund",
-      "risk": 0.3
+      "risk": 0.3,
+      "source": "generated"
     },
     {
       "content_key": "fin.nbf93_23",
       "name": "原油",
       "kind": "commodity",
-      "risk": 0.42
+      "risk": 0.42,
+      "source": "generated"
     },
     {
       "content_key": "fin.nc5b9_13",
       "name": "地方债",
       "kind": "bond",
-      "risk": 0.045
+      "risk": 0.045,
+      "source": "generated"
     },
     {
       "content_key": "fin.nc79e_15",
       "name": "可转债",
       "kind": "bond",
-      "risk": 0.12
+      "risk": 0.12,
+      "source": "generated"
     },
     {
       "content_key": "fin.nc995_04",
       "name": "医药白马股",
       "kind": "stock",
-      "risk": 0.2
+      "risk": 0.2,
+      "source": "generated"
     },
     {
       "content_key": "fin.ncc81_19",
       "name": "期权合约",
       "kind": "derivative",
-      "risk": 0.55
+      "risk": 0.55,
+      "source": "generated"
     },
     {
       "content_key": "fin.ncce8_20",
       "name": "外汇合约",
       "kind": "derivative",
-      "risk": 0.35
+      "risk": 0.35,
+      "source": "generated"
     },
     {
       "content_key": "fin.nd6b0_03",
       "name": "能源周期股",
       "kind": "stock",
-      "risk": 0.24
+      "risk": 0.24,
+      "source": "generated"
     },
     {
       "content_key": "fin.nd9fd_36",
       "name": "万能险",
       "kind": "insurance",
-      "risk": 0.07
+      "risk": 0.07,
+      "source": "generated"
     },
     {
       "content_key": "fin.neefc_00",
       "name": "消费龙头股",
       "kind": "stock",
-      "risk": 0.18
+      "risk": 0.18,
+      "source": "generated"
     },
     {
       "content_key": "fin.nfdd3_17",
       "name": "股指期货",
       "kind": "derivative",
-      "risk": 0.45
+      "risk": 0.45,
+      "source": "generated"
     },
     {
       "content_key": "fin.nft_29",
       "name": "NFT 资产",
       "kind": "crypto",
-      "risk": 0.95
+      "risk": 0.95,
+      "source": "generated"
     },
     {
       "content_key": "fin.reits_33",
       "name": "REITs",
       "kind": "wealth",
-      "risk": 0.18
+      "risk": 0.18,
+      "source": "generated"
     },
     {
       "content_key": "finance.bond_corporate",
       "name": "企业债",
       "kind": "bond",
-      "risk": 0.08
+      "risk": 0.08,
+      "source": "generated"
     },
     {
       "content_key": "finance.bond_government",
       "name": "国债",
       "kind": "bond",
-      "risk": 0.02
+      "risk": 0.02,
+      "source": "generated"
     },
     {
       "content_key": "finance.crypto",
       "name": "加密货币",
       "kind": "crypto",
-      "risk": 0.85
+      "risk": 0.85,
+      "source": "generated"
     },
     {
       "content_key": "finance.forex",
       "name": "外汇",
       "kind": "derivative",
-      "risk": 0.5
+      "risk": 0.5,
+      "source": "generated"
     },
     {
       "content_key": "finance.fund_mixed",
       "name": "混合基金",
       "kind": "fund",
-      "risk": 0.15
+      "risk": 0.15,
+      "source": "generated"
     },
     {
       "content_key": "finance.fund_money",
       "name": "货币基金",
       "kind": "fund",
-      "risk": 0.01
+      "risk": 0.01,
+      "source": "generated"
     },
     {
       "content_key": "finance.futures",
       "name": "期货",
       "kind": "derivative",
-      "risk": 0.6
+      "risk": 0.6,
+      "source": "generated"
     },
     {
       "content_key": "finance.gold",
       "name": "黄金",
       "kind": "commodity",
-      "risk": 0.12
+      "risk": 0.12,
+      "source": "generated"
     },
     {
       "content_key": "finance.insurance_health",
       "name": "健康保险",
       "kind": "insurance",
-      "risk": 0.0
+      "risk": 0.0,
+      "source": "generated"
     },
     {
       "content_key": "finance.insurance_life",
       "name": "人寿保险",
       "kind": "insurance",
-      "risk": 0.0
+      "risk": 0.0,
+      "source": "generated"
     },
     {
       "content_key": "finance.p2p",
       "name": "网络借贷",
       "kind": "credit",
-      "risk": 0.9
+      "risk": 0.9,
+      "source": "generated"
     },
     {
       "content_key": "finance.real_estate",
       "name": "房产",
       "kind": "real_estate",
-      "risk": 0.1
+      "risk": 0.1,
+      "source": "generated"
     },
     {
       "content_key": "finance.savings",
       "name": "活期存款",
       "kind": "deposit",
-      "risk": 0.0
+      "risk": 0.0,
+      "source": "generated"
     },
     {
       "content_key": "finance.stock_blue",
       "name": "蓝筹股",
       "kind": "stock",
-      "risk": 0.2
+      "risk": 0.2,
+      "source": "generated"
     },
     {
       "content_key": "finance.stock_growth",
       "name": "成长股",
       "kind": "stock",
-      "risk": 0.35
+      "risk": 0.35,
+      "source": "generated"
     },
     {
       "content_key": "finance.time_deposit",
       "name": "定期存款",
       "kind": "deposit",
-      "risk": 0.0
+      "risk": 0.0,
+      "source": "generated"
     }
   ]
 }

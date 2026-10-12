@@ -6,2100 +6,2400 @@
       "name": "初次遭遇·1级",
       "category": "anomaly",
       "metric": "anomaly_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.00_1",
       "name": "初次遭遇·3级",
       "category": "anomaly",
       "metric": "anomaly_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.00_2",
       "name": "初次遭遇·10级",
       "category": "anomaly",
       "metric": "anomaly_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.00_3",
       "name": "初次遭遇·30级",
       "category": "anomaly",
       "metric": "anomaly_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.00_4",
       "name": "初次遭遇·100级",
       "category": "anomaly",
       "metric": "anomaly_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.01_0",
       "name": "收容实体·1级",
       "category": "anomaly",
       "metric": "anomaly_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.01_1",
       "name": "收容实体·3级",
       "category": "anomaly",
       "metric": "anomaly_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.01_2",
       "name": "收容实体·10级",
       "category": "anomaly",
       "metric": "anomaly_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.01_3",
       "name": "收容实体·30级",
       "category": "anomaly",
       "metric": "anomaly_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.01_4",
       "name": "收容实体·100级",
       "category": "anomaly",
       "metric": "anomaly_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.02_0",
       "name": "觉醒能力·1级",
       "category": "anomaly",
       "metric": "anomaly_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.02_1",
       "name": "觉醒能力·3级",
       "category": "anomaly",
       "metric": "anomaly_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.02_2",
       "name": "觉醒能力·10级",
       "category": "anomaly",
       "metric": "anomaly_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.02_3",
       "name": "觉醒能力·30级",
       "category": "anomaly",
       "metric": "anomaly_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.02_4",
       "name": "觉醒能力·100级",
       "category": "anomaly",
       "metric": "anomaly_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.03_0",
       "name": "掌握术法·1级",
       "category": "anomaly",
       "metric": "anomaly_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.03_1",
       "name": "掌握术法·3级",
       "category": "anomaly",
       "metric": "anomaly_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.03_2",
       "name": "掌握术法·10级",
       "category": "anomaly",
       "metric": "anomaly_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.03_3",
       "name": "掌握术法·30级",
       "category": "anomaly",
       "metric": "anomaly_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.03_4",
       "name": "掌握术法·100级",
       "category": "anomaly",
       "metric": "anomaly_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.04_0",
       "name": "进出异常·1级",
       "category": "anomaly",
       "metric": "anomaly_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.04_1",
       "name": "进出异常·3级",
       "category": "anomaly",
       "metric": "anomaly_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.04_2",
       "name": "进出异常·10级",
       "category": "anomaly",
       "metric": "anomaly_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.04_3",
       "name": "进出异常·30级",
       "category": "anomaly",
       "metric": "anomaly_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.04_4",
       "name": "进出异常·100级",
       "category": "anomaly",
       "metric": "anomaly_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.05_0",
       "name": "窥破真相·1级",
       "category": "anomaly",
       "metric": "anomaly_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.05_1",
       "name": "窥破真相·3级",
       "category": "anomaly",
       "metric": "anomaly_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.05_2",
       "name": "窥破真相·10级",
       "category": "anomaly",
       "metric": "anomaly_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.05_3",
       "name": "窥破真相·30级",
       "category": "anomaly",
       "metric": "anomaly_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.anomaly.05_4",
       "name": "窥破真相·100级",
       "category": "anomaly",
       "metric": "anomaly_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.artist",
       "name": "艺术家",
       "category": "art",
       "metric": "art_works",
-      "threshold": 50
+      "threshold": 50,
+      "source": "generated"
     },
     {
       "content_key": "ach.athlete",
       "name": "运动健将",
       "category": "sport",
       "metric": "sport_medals",
-      "threshold": 10
+      "threshold": 10,
+      "source": "generated"
     },
     {
       "content_key": "ach.billionaire",
       "name": "亿万富翁",
       "category": "wealth",
       "metric": "net_worth",
-      "threshold": 100000000000
+      "threshold": 100000000000,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.00_0",
       "name": "首次入职·1级",
       "category": "career",
       "metric": "career_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.00_1",
       "name": "首次入职·3级",
       "category": "career",
       "metric": "career_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.00_2",
       "name": "首次入职·10级",
       "category": "career",
       "metric": "career_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.00_3",
       "name": "首次入职·30级",
       "category": "career",
       "metric": "career_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.00_4",
       "name": "首次入职·100级",
       "category": "career",
       "metric": "career_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.01_0",
       "name": "升职·1级",
       "category": "career",
       "metric": "career_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.01_1",
       "name": "升职·3级",
       "category": "career",
       "metric": "career_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.01_2",
       "name": "升职·10级",
       "category": "career",
       "metric": "career_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.01_3",
       "name": "升职·30级",
       "category": "career",
       "metric": "career_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.01_4",
       "name": "升职·100级",
       "category": "career",
       "metric": "career_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.02_0",
       "name": "成为主管·1级",
       "category": "career",
       "metric": "career_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.02_1",
       "name": "成为主管·3级",
       "category": "career",
       "metric": "career_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.02_2",
       "name": "成为主管·10级",
       "category": "career",
       "metric": "career_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.02_3",
       "name": "成为主管·30级",
       "category": "career",
       "metric": "career_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.02_4",
       "name": "成为主管·100级",
       "category": "career",
       "metric": "career_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.03_0",
       "name": "成为高管·1级",
       "category": "career",
       "metric": "career_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.03_1",
       "name": "成为高管·3级",
       "category": "career",
       "metric": "career_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.03_2",
       "name": "成为高管·10级",
       "category": "career",
       "metric": "career_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.03_3",
       "name": "成为高管·30级",
       "category": "career",
       "metric": "career_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.03_4",
       "name": "成为高管·100级",
       "category": "career",
       "metric": "career_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.04_0",
       "name": "创办公司·1级",
       "category": "career",
       "metric": "career_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.04_1",
       "name": "创办公司·3级",
       "category": "career",
       "metric": "career_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.04_2",
       "name": "创办公司·10级",
       "category": "career",
       "metric": "career_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.04_3",
       "name": "创办公司·30级",
       "category": "career",
       "metric": "career_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.04_4",
       "name": "创办公司·100级",
       "category": "career",
       "metric": "career_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.05_0",
       "name": "行业获奖·1级",
       "category": "career",
       "metric": "career_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.05_1",
       "name": "行业获奖·3级",
       "category": "career",
       "metric": "career_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.05_2",
       "name": "行业获奖·10级",
       "category": "career",
       "metric": "career_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.05_3",
       "name": "行业获奖·30级",
       "category": "career",
       "metric": "career_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.career.05_4",
       "name": "行业获奖·100级",
       "category": "career",
       "metric": "career_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.00_0",
       "name": "首个藏品·1级",
       "category": "collect",
       "metric": "collect_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.00_1",
       "name": "首个藏品·3级",
       "category": "collect",
       "metric": "collect_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.00_2",
       "name": "首个藏品·10级",
       "category": "collect",
       "metric": "collect_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.00_3",
       "name": "首个藏品·30级",
       "category": "collect",
       "metric": "collect_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.00_4",
       "name": "首个藏品·100级",
       "category": "collect",
       "metric": "collect_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.01_0",
       "name": "集齐一套·1级",
       "category": "collect",
       "metric": "collect_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.01_1",
       "name": "集齐一套·3级",
       "category": "collect",
       "metric": "collect_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.01_2",
       "name": "集齐一套·10级",
       "category": "collect",
       "metric": "collect_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.01_3",
       "name": "集齐一套·30级",
       "category": "collect",
       "metric": "collect_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.01_4",
       "name": "集齐一套·100级",
       "category": "collect",
       "metric": "collect_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.02_0",
       "name": "收藏过百·1级",
       "category": "collect",
       "metric": "collect_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.02_1",
       "name": "收藏过百·3级",
       "category": "collect",
       "metric": "collect_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.02_2",
       "name": "收藏过百·10级",
       "category": "collect",
       "metric": "collect_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.02_3",
       "name": "收藏过百·30级",
       "category": "collect",
       "metric": "collect_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.02_4",
       "name": "收藏过百·100级",
       "category": "collect",
       "metric": "collect_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.03_0",
       "name": "稀世珍品·1级",
       "category": "collect",
       "metric": "collect_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.03_1",
       "name": "稀世珍品·3级",
       "category": "collect",
       "metric": "collect_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.03_2",
       "name": "稀世珍品·10级",
       "category": "collect",
       "metric": "collect_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.03_3",
       "name": "稀世珍品·30级",
       "category": "collect",
       "metric": "collect_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.03_4",
       "name": "稀世珍品·100级",
       "category": "collect",
       "metric": "collect_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.04_0",
       "name": "藏品估值百万·1级",
       "category": "collect",
       "metric": "collect_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.04_1",
       "name": "藏品估值百万·3级",
       "category": "collect",
       "metric": "collect_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.04_2",
       "name": "藏品估值百万·10级",
       "category": "collect",
       "metric": "collect_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.04_3",
       "name": "藏品估值百万·30级",
       "category": "collect",
       "metric": "collect_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.04_4",
       "name": "藏品估值百万·100级",
       "category": "collect",
       "metric": "collect_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.05_0",
       "name": "私人博物馆·1级",
       "category": "collect",
       "metric": "collect_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.05_1",
       "name": "私人博物馆·3级",
       "category": "collect",
       "metric": "collect_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.05_2",
       "name": "私人博物馆·10级",
       "category": "collect",
       "metric": "collect_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.05_3",
       "name": "私人博物馆·30级",
       "category": "collect",
       "metric": "collect_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collect.05_4",
       "name": "私人博物馆·100级",
       "category": "collect",
       "metric": "collect_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.collector",
       "name": "收藏家",
       "category": "collection",
       "metric": "items_owned",
-      "threshold": 200
+      "threshold": 200,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.00_0",
       "name": "初次得手·1级",
       "category": "crime",
       "metric": "crime_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.00_1",
       "name": "初次得手·3级",
       "category": "crime",
       "metric": "crime_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.00_2",
       "name": "初次得手·10级",
       "category": "crime",
       "metric": "crime_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.00_3",
       "name": "初次得手·30级",
       "category": "crime",
       "metric": "crime_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.00_4",
       "name": "初次得手·100级",
       "category": "crime",
       "metric": "crime_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.01_0",
       "name": "全身而退·1级",
       "category": "crime",
       "metric": "crime_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.01_1",
       "name": "全身而退·3级",
       "category": "crime",
       "metric": "crime_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.01_2",
       "name": "全身而退·10级",
       "category": "crime",
       "metric": "crime_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.01_3",
       "name": "全身而退·30级",
       "category": "crime",
       "metric": "crime_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.01_4",
       "name": "全身而退·100级",
       "category": "crime",
       "metric": "crime_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.02_0",
       "name": "金盆洗手·1级",
       "category": "crime",
       "metric": "crime_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.02_1",
       "name": "金盆洗手·3级",
       "category": "crime",
       "metric": "crime_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.02_2",
       "name": "金盆洗手·10级",
       "category": "crime",
       "metric": "crime_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.02_3",
       "name": "金盆洗手·30级",
       "category": "crime",
       "metric": "crime_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.02_4",
       "name": "金盆洗手·100级",
       "category": "crime",
       "metric": "crime_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.03_0",
       "name": "被捕入狱·1级",
       "category": "crime",
       "metric": "crime_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.03_1",
       "name": "被捕入狱·3级",
       "category": "crime",
       "metric": "crime_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.03_2",
       "name": "被捕入狱·10级",
       "category": "crime",
       "metric": "crime_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.03_3",
       "name": "被捕入狱·30级",
       "category": "crime",
       "metric": "crime_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.03_4",
       "name": "被捕入狱·100级",
       "category": "crime",
       "metric": "crime_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.04_0",
       "name": "越狱·1级",
       "category": "crime",
       "metric": "crime_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.04_1",
       "name": "越狱·3级",
       "category": "crime",
       "metric": "crime_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.04_2",
       "name": "越狱·10级",
       "category": "crime",
       "metric": "crime_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.04_3",
       "name": "越狱·30级",
       "category": "crime",
       "metric": "crime_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.04_4",
       "name": "越狱·100级",
       "category": "crime",
       "metric": "crime_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.05_0",
       "name": "改邪归正·1级",
       "category": "crime",
       "metric": "crime_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.05_1",
       "name": "改邪归正·3级",
       "category": "crime",
       "metric": "crime_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.05_2",
       "name": "改邪归正·10级",
       "category": "crime",
       "metric": "crime_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.05_3",
       "name": "改邪归正·30级",
       "category": "crime",
       "metric": "crime_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.crime.05_4",
       "name": "改邪归正·100级",
       "category": "crime",
       "metric": "crime_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.doctorate",
       "name": "博士",
       "category": "education",
       "metric": "highest_degree",
-      "threshold": 7
+      "threshold": 7,
+      "source": "generated"
     },
     {
       "content_key": "ach.dynasty",
       "name": "百年世家",
       "category": "legacy",
       "metric": "generations",
-      "threshold": 5
+      "threshold": 5,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.00_0",
       "name": "结婚·1级",
       "category": "family",
       "metric": "family_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.00_1",
       "name": "结婚·3级",
       "category": "family",
       "metric": "family_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.00_2",
       "name": "结婚·10级",
       "category": "family",
       "metric": "family_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.00_3",
       "name": "结婚·30级",
       "category": "family",
       "metric": "family_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.00_4",
       "name": "结婚·100级",
       "category": "family",
       "metric": "family_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.01_0",
       "name": "生子·1级",
       "category": "family",
       "metric": "family_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.01_1",
       "name": "生子·3级",
       "category": "family",
       "metric": "family_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.01_2",
       "name": "生子·10级",
       "category": "family",
       "metric": "family_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.01_3",
       "name": "生子·30级",
       "category": "family",
       "metric": "family_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.01_4",
       "name": "生子·100级",
       "category": "family",
       "metric": "family_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.02_0",
       "name": "四世同堂·1级",
       "category": "family",
       "metric": "family_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.02_1",
       "name": "四世同堂·3级",
       "category": "family",
       "metric": "family_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.02_2",
       "name": "四世同堂·10级",
       "category": "family",
       "metric": "family_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.02_3",
       "name": "四世同堂·30级",
       "category": "family",
       "metric": "family_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.02_4",
       "name": "四世同堂·100级",
       "category": "family",
       "metric": "family_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.03_0",
       "name": "金婚·1级",
       "category": "family",
       "metric": "family_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.03_1",
       "name": "金婚·3级",
       "category": "family",
       "metric": "family_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.03_2",
       "name": "金婚·10级",
       "category": "family",
       "metric": "family_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.03_3",
       "name": "金婚·30级",
       "category": "family",
       "metric": "family_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.03_4",
       "name": "金婚·100级",
       "category": "family",
       "metric": "family_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.04_0",
       "name": "家庭和睦·1级",
       "category": "family",
       "metric": "family_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.04_1",
       "name": "家庭和睦·3级",
       "category": "family",
       "metric": "family_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.04_2",
       "name": "家庭和睦·10级",
       "category": "family",
       "metric": "family_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.04_3",
       "name": "家庭和睦·30级",
       "category": "family",
       "metric": "family_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.04_4",
       "name": "家庭和睦·100级",
       "category": "family",
       "metric": "family_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.05_0",
       "name": "传承三代·1级",
       "category": "family",
       "metric": "family_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.05_1",
       "name": "传承三代·3级",
       "category": "family",
       "metric": "family_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.05_2",
       "name": "传承三代·10级",
       "category": "family",
       "metric": "family_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.05_3",
       "name": "传承三代·30级",
       "category": "family",
       "metric": "family_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.family.05_4",
       "name": "传承三代·100级",
       "category": "family",
       "metric": "family_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.famous",
       "name": "名声在外",
       "category": "social",
       "metric": "fame",
-      "threshold": 80
+      "threshold": 80,
+      "source": "generated"
     },
     {
       "content_key": "ach.first_salary",
       "name": "第一桶金",
       "category": "career",
       "metric": "income",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.first_steps",
       "name": "初来乍到",
       "category": "life",
       "metric": "age",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.grandparent",
       "name": "儿孙满堂",
       "category": "family",
       "metric": "grandchildren",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.health.00_0",
       "name": "坚持锻炼·1级",
       "category": "health",
       "metric": "health_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.health.00_1",
       "name": "坚持锻炼·3级",
       "category": "health",
       "metric": "health_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.health.00_2",
       "name": "坚持锻炼·10级",
       "category": "health",
       "metric": "health_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.health.00_3",
       "name": "坚持锻炼·30级",
       "category": "health",
       "metric": "health_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.health.00_4",
       "name": "坚持锻炼·100级",
       "category": "health",
       "metric": "health_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.hermit",
       "name": "归隐山林",
       "category": "life",
       "metric": "years_offgrid",
-      "threshold": 10
+      "threshold": 10,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.00_0",
       "name": "获得表彰·1级",
       "category": "honor",
       "metric": "honor_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.00_1",
       "name": "获得表彰·3级",
       "category": "honor",
       "metric": "honor_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.00_2",
       "name": "获得表彰·10级",
       "category": "honor",
       "metric": "honor_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.00_3",
       "name": "获得表彰·30级",
       "category": "honor",
       "metric": "honor_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.00_4",
       "name": "获得表彰·100级",
       "category": "honor",
       "metric": "honor_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.01_0",
       "name": "荣获大奖·1级",
       "category": "honor",
       "metric": "honor_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.01_1",
       "name": "荣获大奖·3级",
       "category": "honor",
       "metric": "honor_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.01_2",
       "name": "荣获大奖·10级",
       "category": "honor",
       "metric": "honor_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.01_3",
       "name": "荣获大奖·30级",
       "category": "honor",
       "metric": "honor_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.01_4",
       "name": "荣获大奖·100级",
       "category": "honor",
       "metric": "honor_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.02_0",
       "name": "入选名人堂·1级",
       "category": "honor",
       "metric": "honor_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.02_1",
       "name": "入选名人堂·3级",
       "category": "honor",
       "metric": "honor_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.02_2",
       "name": "入选名人堂·10级",
       "category": "honor",
       "metric": "honor_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.02_3",
       "name": "入选名人堂·30级",
       "category": "honor",
       "metric": "honor_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.02_4",
       "name": "入选名人堂·100级",
       "category": "honor",
       "metric": "honor_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.03_0",
       "name": "当选院士·1级",
       "category": "honor",
       "metric": "honor_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.03_1",
       "name": "当选院士·3级",
       "category": "honor",
       "metric": "honor_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.03_2",
       "name": "当选院士·10级",
       "category": "honor",
       "metric": "honor_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.03_3",
       "name": "当选院士·30级",
       "category": "honor",
       "metric": "honor_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.03_4",
       "name": "当选院士·100级",
       "category": "honor",
       "metric": "honor_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.04_0",
       "name": "获得国家级荣誉·1级",
       "category": "honor",
       "metric": "honor_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.04_1",
       "name": "获得国家级荣誉·3级",
       "category": "honor",
       "metric": "honor_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.04_2",
       "name": "获得国家级荣誉·10级",
       "category": "honor",
       "metric": "honor_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.04_3",
       "name": "获得国家级荣誉·30级",
       "category": "honor",
       "metric": "honor_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.04_4",
       "name": "获得国家级荣誉·100级",
       "category": "honor",
       "metric": "honor_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.05_0",
       "name": "载入史册·1级",
       "category": "honor",
       "metric": "honor_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.05_1",
       "name": "载入史册·3级",
       "category": "honor",
       "metric": "honor_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.05_2",
       "name": "载入史册·10级",
       "category": "honor",
       "metric": "honor_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.05_3",
       "name": "载入史册·30级",
       "category": "honor",
       "metric": "honor_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.honor.05_4",
       "name": "载入史册·100级",
       "category": "honor",
       "metric": "honor_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.legend",
       "name": "传奇一生",
       "category": "life",
       "metric": "legend_score",
-      "threshold": 1000
+      "threshold": 1000,
+      "source": "generated"
     },
     {
       "content_key": "ach.longevity",
       "name": "长命百岁",
       "category": "life",
       "metric": "age",
-      "threshold": 100
+      "threshold": 100,
+      "source": "generated"
     },
     {
       "content_key": "ach.married",
       "name": "成家",
       "category": "family",
       "metric": "married",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.millionaire",
       "name": "百万富翁",
       "category": "wealth",
       "metric": "net_worth",
-      "threshold": 100000000
+      "threshold": 100000000,
+      "source": "generated"
     },
     {
       "content_key": "ach.notorious",
       "name": "臭名昭著",
       "category": "social",
       "metric": "infamy",
-      "threshold": 80
+      "threshold": 80,
+      "source": "generated"
     },
     {
       "content_key": "ach.parent",
       "name": "为人父母",
       "category": "family",
       "metric": "children",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.politician",
       "name": "位极人臣",
       "category": "career",
       "metric": "political_rank",
-      "threshold": 5
+      "threshold": 5,
+      "source": "generated"
     },
     {
       "content_key": "ach.school_graduate",
       "name": "学有所成",
       "category": "education",
       "metric": "highest_degree",
-      "threshold": 4
+      "threshold": 4,
+      "source": "generated"
     },
     {
       "content_key": "ach.second_life",
       "name": "轮回转世",
       "category": "legacy",
       "metric": "rebirths",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.skill_grandmaster",
       "name": "登峰造极",
       "category": "skill",
       "metric": "max_skill_level",
-      "threshold": 20
+      "threshold": 20,
+      "source": "generated"
     },
     {
       "content_key": "ach.skill_master",
       "name": "一技之长",
       "category": "skill",
       "metric": "max_skill_level",
-      "threshold": 10
+      "threshold": 10,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.00_0",
       "name": "结交好友·1级",
       "category": "social",
       "metric": "social_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.00_1",
       "name": "结交好友·3级",
       "category": "social",
       "metric": "social_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.00_2",
       "name": "结交好友·10级",
       "category": "social",
       "metric": "social_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.00_3",
       "name": "结交好友·30级",
       "category": "social",
       "metric": "social_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.00_4",
       "name": "结交好友·100级",
       "category": "social",
       "metric": "social_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.01_0",
       "name": "人脉过百·1级",
       "category": "social",
       "metric": "social_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.01_1",
       "name": "人脉过百·3级",
       "category": "social",
       "metric": "social_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.01_2",
       "name": "人脉过百·10级",
       "category": "social",
       "metric": "social_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.01_3",
       "name": "人脉过百·30级",
       "category": "social",
       "metric": "social_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.01_4",
       "name": "人脉过百·100级",
       "category": "social",
       "metric": "social_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.02_0",
       "name": "成为意见领袖·1级",
       "category": "social",
       "metric": "social_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.02_1",
       "name": "成为意见领袖·3级",
       "category": "social",
       "metric": "social_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.02_2",
       "name": "成为意见领袖·10级",
       "category": "social",
       "metric": "social_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.02_3",
       "name": "成为意见领袖·30级",
       "category": "social",
       "metric": "social_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.02_4",
       "name": "成为意见领袖·100级",
       "category": "social",
       "metric": "social_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.03_0",
       "name": "调解纠纷·1级",
       "category": "social",
       "metric": "social_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.03_1",
       "name": "调解纠纷·3级",
       "category": "social",
       "metric": "social_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.03_2",
       "name": "调解纠纷·10级",
       "category": "social",
       "metric": "social_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.03_3",
       "name": "调解纠纷·30级",
       "category": "social",
       "metric": "social_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.03_4",
       "name": "调解纠纷·100级",
       "category": "social",
       "metric": "social_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.04_0",
       "name": "收获挚友·1级",
       "category": "social",
       "metric": "social_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.04_1",
       "name": "收获挚友·3级",
       "category": "social",
       "metric": "social_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.04_2",
       "name": "收获挚友·10级",
       "category": "social",
       "metric": "social_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.04_3",
       "name": "收获挚友·30级",
       "category": "social",
       "metric": "social_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.04_4",
       "name": "收获挚友·100级",
       "category": "social",
       "metric": "social_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.05_0",
       "name": "广结善缘·1级",
       "category": "social",
       "metric": "social_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.05_1",
       "name": "广结善缘·3级",
       "category": "social",
       "metric": "social_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.05_2",
       "name": "广结善缘·10级",
       "category": "social",
       "metric": "social_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.05_3",
       "name": "广结善缘·30级",
       "category": "social",
       "metric": "social_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.social.05_4",
       "name": "广结善缘·100级",
       "category": "social",
       "metric": "social_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.survivor",
       "name": "大难不死",
       "category": "life",
       "metric": "near_death",
-      "threshold": 1
+      "threshold": 1,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.00_0",
       "name": "初出远门·1级",
       "category": "travel",
       "metric": "travel_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.00_1",
       "name": "初出远门·3级",
       "category": "travel",
       "metric": "travel_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.00_2",
       "name": "初出远门·10级",
       "category": "travel",
       "metric": "travel_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.00_3",
       "name": "初出远门·30级",
       "category": "travel",
       "metric": "travel_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.00_4",
       "name": "初出远门·100级",
       "category": "travel",
       "metric": "travel_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.01_0",
       "name": "游遍全省·1级",
       "category": "travel",
       "metric": "travel_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.01_1",
       "name": "游遍全省·3级",
       "category": "travel",
       "metric": "travel_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.01_2",
       "name": "游遍全省·10级",
       "category": "travel",
       "metric": "travel_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.01_3",
       "name": "游遍全省·30级",
       "category": "travel",
       "metric": "travel_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.01_4",
       "name": "游遍全省·100级",
       "category": "travel",
       "metric": "travel_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.02_0",
       "name": "走遍全国·1级",
       "category": "travel",
       "metric": "travel_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.02_1",
       "name": "走遍全国·3级",
       "category": "travel",
       "metric": "travel_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.02_2",
       "name": "走遍全国·10级",
       "category": "travel",
       "metric": "travel_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.02_3",
       "name": "走遍全国·30级",
       "category": "travel",
       "metric": "travel_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.02_4",
       "name": "走遍全国·100级",
       "category": "travel",
       "metric": "travel_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.03_0",
       "name": "踏足邻国·1级",
       "category": "travel",
       "metric": "travel_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.03_1",
       "name": "踏足邻国·3级",
       "category": "travel",
       "metric": "travel_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.03_2",
       "name": "踏足邻国·10级",
       "category": "travel",
       "metric": "travel_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.03_3",
       "name": "踏足邻国·30级",
       "category": "travel",
       "metric": "travel_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.03_4",
       "name": "踏足邻国·100级",
       "category": "travel",
       "metric": "travel_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.04_0",
       "name": "环游世界·1级",
       "category": "travel",
       "metric": "travel_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.04_1",
       "name": "环游世界·3级",
       "category": "travel",
       "metric": "travel_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.04_2",
       "name": "环游世界·10级",
       "category": "travel",
       "metric": "travel_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.04_3",
       "name": "环游世界·30级",
       "category": "travel",
       "metric": "travel_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.04_4",
       "name": "环游世界·100级",
       "category": "travel",
       "metric": "travel_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.05_0",
       "name": "抵达极地·1级",
       "category": "travel",
       "metric": "travel_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.05_1",
       "name": "抵达极地·3级",
       "category": "travel",
       "metric": "travel_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.05_2",
       "name": "抵达极地·10级",
       "category": "travel",
       "metric": "travel_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.05_3",
       "name": "抵达极地·30级",
       "category": "travel",
       "metric": "travel_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.travel.05_4",
       "name": "抵达极地·100级",
       "category": "travel",
       "metric": "travel_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.traveler",
       "name": "走南闯北",
       "category": "travel",
       "metric": "cities_visited",
-      "threshold": 20
+      "threshold": 20,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.00_0",
       "name": "第一个百万·1级",
       "category": "wealth",
       "metric": "wealth_0",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.00_1",
       "name": "第一个百万·3级",
       "category": "wealth",
       "metric": "wealth_0",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.00_2",
       "name": "第一个百万·10级",
       "category": "wealth",
       "metric": "wealth_0",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.00_3",
       "name": "第一个百万·30级",
       "category": "wealth",
       "metric": "wealth_0",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.00_4",
       "name": "第一个百万·100级",
       "category": "wealth",
       "metric": "wealth_0",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.01_0",
       "name": "第一个千万·1级",
       "category": "wealth",
       "metric": "wealth_1",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.01_1",
       "name": "第一个千万·3级",
       "category": "wealth",
       "metric": "wealth_1",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.01_2",
       "name": "第一个千万·10级",
       "category": "wealth",
       "metric": "wealth_1",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.01_3",
       "name": "第一个千万·30级",
       "category": "wealth",
       "metric": "wealth_1",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.01_4",
       "name": "第一个千万·100级",
       "category": "wealth",
       "metric": "wealth_1",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.02_0",
       "name": "资产过亿·1级",
       "category": "wealth",
       "metric": "wealth_2",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.02_1",
       "name": "资产过亿·3级",
       "category": "wealth",
       "metric": "wealth_2",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.02_2",
       "name": "资产过亿·10级",
       "category": "wealth",
       "metric": "wealth_2",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.02_3",
       "name": "资产过亿·30级",
       "category": "wealth",
       "metric": "wealth_2",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.02_4",
       "name": "资产过亿·100级",
       "category": "wealth",
       "metric": "wealth_2",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.03_0",
       "name": "投资翻倍·1级",
       "category": "wealth",
       "metric": "wealth_3",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.03_1",
       "name": "投资翻倍·3级",
       "category": "wealth",
       "metric": "wealth_3",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.03_2",
       "name": "投资翻倍·10级",
       "category": "wealth",
       "metric": "wealth_3",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.03_3",
       "name": "投资翻倍·30级",
       "category": "wealth",
       "metric": "wealth_3",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.03_4",
       "name": "投资翻倍·100级",
       "category": "wealth",
       "metric": "wealth_3",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.04_0",
       "name": "还清债务·1级",
       "category": "wealth",
       "metric": "wealth_4",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.04_1",
       "name": "还清债务·3级",
       "category": "wealth",
       "metric": "wealth_4",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.04_2",
       "name": "还清债务·10级",
       "category": "wealth",
       "metric": "wealth_4",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.04_3",
       "name": "还清债务·30级",
       "category": "wealth",
       "metric": "wealth_4",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.04_4",
       "name": "还清债务·100级",
       "category": "wealth",
       "metric": "wealth_4",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.05_0",
       "name": "实现财务自由·1级",
       "category": "wealth",
       "metric": "wealth_5",
-      "threshold": 1.0
+      "threshold": 1.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.05_1",
       "name": "实现财务自由·3级",
       "category": "wealth",
       "metric": "wealth_5",
-      "threshold": 3.0
+      "threshold": 3.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.05_2",
       "name": "实现财务自由·10级",
       "category": "wealth",
       "metric": "wealth_5",
-      "threshold": 10.0
+      "threshold": 10.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.05_3",
       "name": "实现财务自由·30级",
       "category": "wealth",
       "metric": "wealth_5",
-      "threshold": 30.0
+      "threshold": 30.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.wealth.05_4",
       "name": "实现财务自由·100级",
       "category": "wealth",
       "metric": "wealth_5",
-      "threshold": 100.0
+      "threshold": 100.0,
+      "source": "generated"
     },
     {
       "content_key": "ach.world_traveler",
       "name": "环游世界",
       "category": "travel",
       "metric": "countries_visited",
-      "threshold": 10
+      "threshold": 10,
+      "source": "generated"
     }
   ]
 }

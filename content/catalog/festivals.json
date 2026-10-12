@@ -5,61 +5,71 @@
       "content_key": "festival.n2cb7_09",
       "name": "除夕",
       "month": 1,
-      "day": 21
+      "day": 21,
+      "source": "generated"
     },
     {
       "content_key": "festival.n367b_06",
       "name": "国庆节",
       "month": 10,
-      "day": 1
+      "day": 1,
+      "source": "generated"
     },
     {
       "content_key": "festival.na21b_03",
       "name": "清明节",
       "month": 4,
-      "day": 4
+      "day": 4,
+      "source": "generated"
     },
     {
       "content_key": "festival.nad60_02",
       "name": "元宵节",
       "month": 2,
-      "day": 5
+      "day": 5,
+      "source": "generated"
     },
     {
       "content_key": "festival.nae5a_07",
       "name": "七夕",
       "month": 8,
-      "day": 14
+      "day": 14,
+      "source": "generated"
     },
     {
       "content_key": "festival.nbbb7_00",
       "name": "元旦",
       "month": 1,
-      "day": 1
+      "day": 1,
+      "source": "generated"
     },
     {
       "content_key": "festival.ncf0f_01",
       "name": "春节",
       "month": 1,
-      "day": 22
+      "day": 22,
+      "source": "generated"
     },
     {
       "content_key": "festival.nd3c2_04",
       "name": "端午节",
       "month": 6,
-      "day": 10
+      "day": 10,
+      "source": "generated"
     },
     {
       "content_key": "festival.nf0d5_08",
       "name": "重阳节",
       "month": 10,
-      "day": 4
+      "day": 4,
+      "source": "generated"
     },
     {
       "content_key": "festival.nf1a6_05",
       "name": "中秋节",
       "month": 9,
-      "day": 15
+      "day": 15,
+      "source": "generated"
     }
   ]
 }

@@ -5,3001 +5,3501 @@
       "content_key": "codex.airplane",
       "name": "飞机",
       "category": "technology",
-      "description": "在大气层内飞行的航空器。"
+      "description": "在大气层内飞行的航空器。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0473_01_0",
       "name": "生物型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的生物型条目之1。"
+      "description": "异常实体类目下的生物型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0473_01_1",
       "name": "生物型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的生物型条目之2。"
+      "description": "异常实体类目下的生物型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0473_01_2",
       "name": "生物型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的生物型条目之3。"
+      "description": "异常实体类目下的生物型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0473_01_3",
       "name": "生物型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的生物型条目之4。"
+      "description": "异常实体类目下的生物型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0473_01_4",
       "name": "生物型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的生物型条目之5。"
+      "description": "异常实体类目下的生物型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0998_03_0",
       "name": "现象型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的现象型条目之1。"
+      "description": "异常实体类目下的现象型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0998_03_1",
       "name": "现象型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的现象型条目之2。"
+      "description": "异常实体类目下的现象型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0998_03_2",
       "name": "现象型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的现象型条目之3。"
+      "description": "异常实体类目下的现象型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0998_03_3",
       "name": "现象型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的现象型条目之4。"
+      "description": "异常实体类目下的现象型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n0998_03_4",
       "name": "现象型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的现象型条目之5。"
+      "description": "异常实体类目下的现象型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1179_06_0",
       "name": "模因·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的模因条目之1。"
+      "description": "异常实体类目下的模因条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1179_06_1",
       "name": "模因·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的模因条目之2。"
+      "description": "异常实体类目下的模因条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1179_06_2",
       "name": "模因·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的模因条目之3。"
+      "description": "异常实体类目下的模因条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1179_06_3",
       "name": "模因·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的模因条目之4。"
+      "description": "异常实体类目下的模因条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1179_06_4",
       "name": "模因·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的模因条目之5。"
+      "description": "异常实体类目下的模因条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n18bb_02_0",
       "name": "地点型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的地点型条目之1。"
+      "description": "异常实体类目下的地点型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n18bb_02_1",
       "name": "地点型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的地点型条目之2。"
+      "description": "异常实体类目下的地点型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n18bb_02_2",
       "name": "地点型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的地点型条目之3。"
+      "description": "异常实体类目下的地点型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n18bb_02_3",
       "name": "地点型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的地点型条目之4。"
+      "description": "异常实体类目下的地点型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n18bb_02_4",
       "name": "地点型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的地点型条目之5。"
+      "description": "异常实体类目下的地点型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1918_00_0",
       "name": "物品型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的物品型条目之1。"
+      "description": "异常实体类目下的物品型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1918_00_1",
       "name": "物品型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的物品型条目之2。"
+      "description": "异常实体类目下的物品型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1918_00_2",
       "name": "物品型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的物品型条目之3。"
+      "description": "异常实体类目下的物品型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1918_00_3",
       "name": "物品型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的物品型条目之4。"
+      "description": "异常实体类目下的物品型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n1918_00_4",
       "name": "物品型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的物品型条目之5。"
+      "description": "异常实体类目下的物品型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4314_09_0",
       "name": "现实扭曲·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的现实扭曲条目之1。"
+      "description": "异常实体类目下的现实扭曲条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4314_09_1",
       "name": "现实扭曲·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的现实扭曲条目之2。"
+      "description": "异常实体类目下的现实扭曲条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4314_09_2",
       "name": "现实扭曲·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的现实扭曲条目之3。"
+      "description": "异常实体类目下的现实扭曲条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4314_09_3",
       "name": "现实扭曲·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的现实扭曲条目之4。"
+      "description": "异常实体类目下的现实扭曲条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4314_09_4",
       "name": "现实扭曲·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的现实扭曲条目之5。"
+      "description": "异常实体类目下的现实扭曲条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4606_05_0",
       "name": "人形·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的人形条目之1。"
+      "description": "异常实体类目下的人形条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4606_05_1",
       "name": "人形·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的人形条目之2。"
+      "description": "异常实体类目下的人形条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4606_05_2",
       "name": "人形·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的人形条目之3。"
+      "description": "异常实体类目下的人形条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4606_05_3",
       "name": "人形·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的人形条目之4。"
+      "description": "异常实体类目下的人形条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n4606_05_4",
       "name": "人形·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的人形条目之5。"
+      "description": "异常实体类目下的人形条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n5f01_04_0",
       "name": "信息型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的信息型条目之1。"
+      "description": "异常实体类目下的信息型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n5f01_04_1",
       "name": "信息型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的信息型条目之2。"
+      "description": "异常实体类目下的信息型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n5f01_04_2",
       "name": "信息型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的信息型条目之3。"
+      "description": "异常实体类目下的信息型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n5f01_04_3",
       "name": "信息型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的信息型条目之4。"
+      "description": "异常实体类目下的信息型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n5f01_04_4",
       "name": "信息型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的信息型条目之5。"
+      "description": "异常实体类目下的信息型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n88dd_08_0",
       "name": "认知危害·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的认知危害条目之1。"
+      "description": "异常实体类目下的认知危害条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n88dd_08_1",
       "name": "认知危害·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的认知危害条目之2。"
+      "description": "异常实体类目下的认知危害条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n88dd_08_2",
       "name": "认知危害·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的认知危害条目之3。"
+      "description": "异常实体类目下的认知危害条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n88dd_08_3",
       "name": "认知危害·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的认知危害条目之4。"
+      "description": "异常实体类目下的认知危害条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.n88dd_08_4",
       "name": "认知危害·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的认知危害条目之5。"
+      "description": "异常实体类目下的认知危害条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.nbce9_07_0",
       "name": "时空型·卷1",
       "category": "anomaly",
-      "description": "异常实体类目下的时空型条目之1。"
+      "description": "异常实体类目下的时空型条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.nbce9_07_1",
       "name": "时空型·卷2",
       "category": "anomaly",
-      "description": "异常实体类目下的时空型条目之2。"
+      "description": "异常实体类目下的时空型条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.nbce9_07_2",
       "name": "时空型·卷3",
       "category": "anomaly",
-      "description": "异常实体类目下的时空型条目之3。"
+      "description": "异常实体类目下的时空型条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.nbce9_07_3",
       "name": "时空型·卷4",
       "category": "anomaly",
-      "description": "异常实体类目下的时空型条目之4。"
+      "description": "异常实体类目下的时空型条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.anomaly.nbce9_07_4",
       "name": "时空型·卷5",
       "category": "anomaly",
-      "description": "异常实体类目下的时空型条目之5。"
+      "description": "异常实体类目下的时空型条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.apple",
       "name": "苹果",
       "category": "food",
-      "description": "常见水果，富含维生素。"
+      "description": "常见水果，富含维生素。",
+      "source": "generated"
     },
     {
       "content_key": "codex.bank_card",
       "name": "银行卡",
       "category": "finance",
-      "description": "银行发行的支付凭证。"
+      "description": "银行发行的支付凭证。",
+      "source": "generated"
     },
     {
       "content_key": "codex.bicycle",
       "name": "自行车",
       "category": "transport",
-      "description": "两轮人力交通工具。"
+      "description": "两轮人力交通工具。",
+      "source": "generated"
     },
     {
       "content_key": "codex.contract",
       "name": "合同",
       "category": "legal",
-      "description": "约定双方权利义务的书面文件。"
+      "description": "约定双方权利义务的书面文件。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n00db_07_0",
       "name": "猛兽·卷1",
       "category": "creature",
-      "description": "生物类目下的猛兽条目之1。"
+      "description": "生物类目下的猛兽条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n00db_07_1",
       "name": "猛兽·卷2",
       "category": "creature",
-      "description": "生物类目下的猛兽条目之2。"
+      "description": "生物类目下的猛兽条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n00db_07_2",
       "name": "猛兽·卷3",
       "category": "creature",
-      "description": "生物类目下的猛兽条目之3。"
+      "description": "生物类目下的猛兽条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n00db_07_3",
       "name": "猛兽·卷4",
       "category": "creature",
-      "description": "生物类目下的猛兽条目之4。"
+      "description": "生物类目下的猛兽条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n00db_07_4",
       "name": "猛兽·卷5",
       "category": "creature",
-      "description": "生物类目下的猛兽条目之5。"
+      "description": "生物类目下的猛兽条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n1621_03_0",
       "name": "昆虫·卷1",
       "category": "creature",
-      "description": "生物类目下的昆虫条目之1。"
+      "description": "生物类目下的昆虫条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n1621_03_1",
       "name": "昆虫·卷2",
       "category": "creature",
-      "description": "生物类目下的昆虫条目之2。"
+      "description": "生物类目下的昆虫条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n1621_03_2",
       "name": "昆虫·卷3",
       "category": "creature",
-      "description": "生物类目下的昆虫条目之3。"
+      "description": "生物类目下的昆虫条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n1621_03_3",
       "name": "昆虫·卷4",
       "category": "creature",
-      "description": "生物类目下的昆虫条目之4。"
+      "description": "生物类目下的昆虫条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n1621_03_4",
       "name": "昆虫·卷5",
       "category": "creature",
-      "description": "生物类目下的昆虫条目之5。"
+      "description": "生物类目下的昆虫条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n2554_04_0",
       "name": "菌类·卷1",
       "category": "creature",
-      "description": "生物类目下的菌类条目之1。"
+      "description": "生物类目下的菌类条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n2554_04_1",
       "name": "菌类·卷2",
       "category": "creature",
-      "description": "生物类目下的菌类条目之2。"
+      "description": "生物类目下的菌类条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n2554_04_2",
       "name": "菌类·卷3",
       "category": "creature",
-      "description": "生物类目下的菌类条目之3。"
+      "description": "生物类目下的菌类条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n2554_04_3",
       "name": "菌类·卷4",
       "category": "creature",
-      "description": "生物类目下的菌类条目之4。"
+      "description": "生物类目下的菌类条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n2554_04_4",
       "name": "菌类·卷5",
       "category": "creature",
-      "description": "生物类目下的菌类条目之5。"
+      "description": "生物类目下的菌类条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n40c6_01_0",
       "name": "走兽·卷1",
       "category": "creature",
-      "description": "生物类目下的走兽条目之1。"
+      "description": "生物类目下的走兽条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n40c6_01_1",
       "name": "走兽·卷2",
       "category": "creature",
-      "description": "生物类目下的走兽条目之2。"
+      "description": "生物类目下的走兽条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n40c6_01_2",
       "name": "走兽·卷3",
       "category": "creature",
-      "description": "生物类目下的走兽条目之3。"
+      "description": "生物类目下的走兽条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n40c6_01_3",
       "name": "走兽·卷4",
       "category": "creature",
-      "description": "生物类目下的走兽条目之4。"
+      "description": "生物类目下的走兽条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n40c6_01_4",
       "name": "走兽·卷5",
       "category": "creature",
-      "description": "生物类目下的走兽条目之5。"
+      "description": "生物类目下的走兽条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n5378_08_0",
       "name": "灵物·卷1",
       "category": "creature",
-      "description": "生物类目下的灵物条目之1。"
+      "description": "生物类目下的灵物条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n5378_08_1",
       "name": "灵物·卷2",
       "category": "creature",
-      "description": "生物类目下的灵物条目之2。"
+      "description": "生物类目下的灵物条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n5378_08_2",
       "name": "灵物·卷3",
       "category": "creature",
-      "description": "生物类目下的灵物条目之3。"
+      "description": "生物类目下的灵物条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n5378_08_3",
       "name": "灵物·卷4",
       "category": "creature",
-      "description": "生物类目下的灵物条目之4。"
+      "description": "生物类目下的灵物条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n5378_08_4",
       "name": "灵物·卷5",
       "category": "creature",
-      "description": "生物类目下的灵物条目之5。"
+      "description": "生物类目下的灵物条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n8a43_00_0",
       "name": "飞禽·卷1",
       "category": "creature",
-      "description": "生物类目下的飞禽条目之1。"
+      "description": "生物类目下的飞禽条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n8a43_00_1",
       "name": "飞禽·卷2",
       "category": "creature",
-      "description": "生物类目下的飞禽条目之2。"
+      "description": "生物类目下的飞禽条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n8a43_00_2",
       "name": "飞禽·卷3",
       "category": "creature",
-      "description": "生物类目下的飞禽条目之3。"
+      "description": "生物类目下的飞禽条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n8a43_00_3",
       "name": "飞禽·卷4",
       "category": "creature",
-      "description": "生物类目下的飞禽条目之4。"
+      "description": "生物类目下的飞禽条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.n8a43_00_4",
       "name": "飞禽·卷5",
       "category": "creature",
-      "description": "生物类目下的飞禽条目之5。"
+      "description": "生物类目下的飞禽条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na3a1_09_0",
       "name": "异种·卷1",
       "category": "creature",
-      "description": "生物类目下的异种条目之1。"
+      "description": "生物类目下的异种条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na3a1_09_1",
       "name": "异种·卷2",
       "category": "creature",
-      "description": "生物类目下的异种条目之2。"
+      "description": "生物类目下的异种条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na3a1_09_2",
       "name": "异种·卷3",
       "category": "creature",
-      "description": "生物类目下的异种条目之3。"
+      "description": "生物类目下的异种条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na3a1_09_3",
       "name": "异种·卷4",
       "category": "creature",
-      "description": "生物类目下的异种条目之4。"
+      "description": "生物类目下的异种条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na3a1_09_4",
       "name": "异种·卷5",
       "category": "creature",
-      "description": "生物类目下的异种条目之5。"
+      "description": "生物类目下的异种条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na69b_02_0",
       "name": "水族·卷1",
       "category": "creature",
-      "description": "生物类目下的水族条目之1。"
+      "description": "生物类目下的水族条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na69b_02_1",
       "name": "水族·卷2",
       "category": "creature",
-      "description": "生物类目下的水族条目之2。"
+      "description": "生物类目下的水族条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na69b_02_2",
       "name": "水族·卷3",
       "category": "creature",
-      "description": "生物类目下的水族条目之3。"
+      "description": "生物类目下的水族条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na69b_02_3",
       "name": "水族·卷4",
       "category": "creature",
-      "description": "生物类目下的水族条目之4。"
+      "description": "生物类目下的水族条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.na69b_02_4",
       "name": "水族·卷5",
       "category": "creature",
-      "description": "生物类目下的水族条目之5。"
+      "description": "生物类目下的水族条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nf700_05_0",
       "name": "草木·卷1",
       "category": "creature",
-      "description": "生物类目下的草木条目之1。"
+      "description": "生物类目下的草木条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nf700_05_1",
       "name": "草木·卷2",
       "category": "creature",
-      "description": "生物类目下的草木条目之2。"
+      "description": "生物类目下的草木条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nf700_05_2",
       "name": "草木·卷3",
       "category": "creature",
-      "description": "生物类目下的草木条目之3。"
+      "description": "生物类目下的草木条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nf700_05_3",
       "name": "草木·卷4",
       "category": "creature",
-      "description": "生物类目下的草木条目之4。"
+      "description": "生物类目下的草木条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nf700_05_4",
       "name": "草木·卷5",
       "category": "creature",
-      "description": "生物类目下的草木条目之5。"
+      "description": "生物类目下的草木条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nfb5e_06_0",
       "name": "花木·卷1",
       "category": "creature",
-      "description": "生物类目下的花木条目之1。"
+      "description": "生物类目下的花木条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nfb5e_06_1",
       "name": "花木·卷2",
       "category": "creature",
-      "description": "生物类目下的花木条目之2。"
+      "description": "生物类目下的花木条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nfb5e_06_2",
       "name": "花木·卷3",
       "category": "creature",
-      "description": "生物类目下的花木条目之3。"
+      "description": "生物类目下的花木条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nfb5e_06_3",
       "name": "花木·卷4",
       "category": "creature",
-      "description": "生物类目下的花木条目之4。"
+      "description": "生物类目下的花木条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.creature.nfb5e_06_4",
       "name": "花木·卷5",
       "category": "creature",
-      "description": "生物类目下的花木条目之5。"
+      "description": "生物类目下的花木条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1b59_01_0",
       "name": "婚俗·卷1",
       "category": "custom",
-      "description": "民俗类目下的婚俗条目之1。"
+      "description": "民俗类目下的婚俗条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1b59_01_1",
       "name": "婚俗·卷2",
       "category": "custom",
-      "description": "民俗类目下的婚俗条目之2。"
+      "description": "民俗类目下的婚俗条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1b59_01_2",
       "name": "婚俗·卷3",
       "category": "custom",
-      "description": "民俗类目下的婚俗条目之3。"
+      "description": "民俗类目下的婚俗条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1b59_01_3",
       "name": "婚俗·卷4",
       "category": "custom",
-      "description": "民俗类目下的婚俗条目之4。"
+      "description": "民俗类目下的婚俗条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1b59_01_4",
       "name": "婚俗·卷5",
       "category": "custom",
-      "description": "民俗类目下的婚俗条目之5。"
+      "description": "民俗类目下的婚俗条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1bc8_03_0",
       "name": "祭礼·卷1",
       "category": "custom",
-      "description": "民俗类目下的祭礼条目之1。"
+      "description": "民俗类目下的祭礼条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1bc8_03_1",
       "name": "祭礼·卷2",
       "category": "custom",
-      "description": "民俗类目下的祭礼条目之2。"
+      "description": "民俗类目下的祭礼条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1bc8_03_2",
       "name": "祭礼·卷3",
       "category": "custom",
-      "description": "民俗类目下的祭礼条目之3。"
+      "description": "民俗类目下的祭礼条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1bc8_03_3",
       "name": "祭礼·卷4",
       "category": "custom",
-      "description": "民俗类目下的祭礼条目之4。"
+      "description": "民俗类目下的祭礼条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n1bc8_03_4",
       "name": "祭礼·卷5",
       "category": "custom",
-      "description": "民俗类目下的祭礼条目之5。"
+      "description": "民俗类目下的祭礼条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n33b1_04_0",
       "name": "食俗·卷1",
       "category": "custom",
-      "description": "民俗类目下的食俗条目之1。"
+      "description": "民俗类目下的食俗条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n33b1_04_1",
       "name": "食俗·卷2",
       "category": "custom",
-      "description": "民俗类目下的食俗条目之2。"
+      "description": "民俗类目下的食俗条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n8631_00_0",
       "name": "节令·卷1",
       "category": "custom",
-      "description": "民俗类目下的节令条目之1。"
+      "description": "民俗类目下的节令条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n8631_00_1",
       "name": "节令·卷2",
       "category": "custom",
-      "description": "民俗类目下的节令条目之2。"
+      "description": "民俗类目下的节令条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n8631_00_2",
       "name": "节令·卷3",
       "category": "custom",
-      "description": "民俗类目下的节令条目之3。"
+      "description": "民俗类目下的节令条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n8631_00_3",
       "name": "节令·卷4",
       "category": "custom",
-      "description": "民俗类目下的节令条目之4。"
+      "description": "民俗类目下的节令条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.n8631_00_4",
       "name": "节令·卷5",
       "category": "custom",
-      "description": "民俗类目下的节令条目之5。"
+      "description": "民俗类目下的节令条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.ndfa7_02_0",
       "name": "丧仪·卷1",
       "category": "custom",
-      "description": "民俗类目下的丧仪条目之1。"
+      "description": "民俗类目下的丧仪条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.ndfa7_02_1",
       "name": "丧仪·卷2",
       "category": "custom",
-      "description": "民俗类目下的丧仪条目之2。"
+      "description": "民俗类目下的丧仪条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.ndfa7_02_2",
       "name": "丧仪·卷3",
       "category": "custom",
-      "description": "民俗类目下的丧仪条目之3。"
+      "description": "民俗类目下的丧仪条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.ndfa7_02_3",
       "name": "丧仪·卷4",
       "category": "custom",
-      "description": "民俗类目下的丧仪条目之4。"
+      "description": "民俗类目下的丧仪条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.custom.ndfa7_02_4",
       "name": "丧仪·卷5",
       "category": "custom",
-      "description": "民俗类目下的丧仪条目之5。"
+      "description": "民俗类目下的丧仪条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n0856_09_0",
       "name": "杂症·卷1",
       "category": "disease",
-      "description": "疾病类目下的杂症条目之1。"
+      "description": "疾病类目下的杂症条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n0856_09_1",
       "name": "杂症·卷2",
       "category": "disease",
-      "description": "疾病类目下的杂症条目之2。"
+      "description": "疾病类目下的杂症条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n0856_09_2",
       "name": "杂症·卷3",
       "category": "disease",
-      "description": "疾病类目下的杂症条目之3。"
+      "description": "疾病类目下的杂症条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n0856_09_3",
       "name": "杂症·卷4",
       "category": "disease",
-      "description": "疾病类目下的杂症条目之4。"
+      "description": "疾病类目下的杂症条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n0856_09_4",
       "name": "杂症·卷5",
       "category": "disease",
-      "description": "疾病类目下的杂症条目之5。"
+      "description": "疾病类目下的杂症条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n1b77_08_0",
       "name": "成瘾·卷1",
       "category": "disease",
-      "description": "疾病类目下的成瘾条目之1。"
+      "description": "疾病类目下的成瘾条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n1b77_08_1",
       "name": "成瘾·卷2",
       "category": "disease",
-      "description": "疾病类目下的成瘾条目之2。"
+      "description": "疾病类目下的成瘾条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n1b77_08_2",
       "name": "成瘾·卷3",
       "category": "disease",
-      "description": "疾病类目下的成瘾条目之3。"
+      "description": "疾病类目下的成瘾条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n1b77_08_3",
       "name": "成瘾·卷4",
       "category": "disease",
-      "description": "疾病类目下的成瘾条目之4。"
+      "description": "疾病类目下的成瘾条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n1b77_08_4",
       "name": "成瘾·卷5",
       "category": "disease",
-      "description": "疾病类目下的成瘾条目之5。"
+      "description": "疾病类目下的成瘾条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n5285_03_0",
       "name": "外伤·卷1",
       "category": "disease",
-      "description": "疾病类目下的外伤条目之1。"
+      "description": "疾病类目下的外伤条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n5285_03_1",
       "name": "外伤·卷2",
       "category": "disease",
-      "description": "疾病类目下的外伤条目之2。"
+      "description": "疾病类目下的外伤条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n5285_03_2",
       "name": "外伤·卷3",
       "category": "disease",
-      "description": "疾病类目下的外伤条目之3。"
+      "description": "疾病类目下的外伤条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n5285_03_3",
       "name": "外伤·卷4",
       "category": "disease",
-      "description": "疾病类目下的外伤条目之4。"
+      "description": "疾病类目下的外伤条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n5285_03_4",
       "name": "外伤·卷5",
       "category": "disease",
-      "description": "疾病类目下的外伤条目之5。"
+      "description": "疾病类目下的外伤条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n61d0_04_0",
       "name": "慢性病·卷1",
       "category": "disease",
-      "description": "疾病类目下的慢性病条目之1。"
+      "description": "疾病类目下的慢性病条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n61d0_04_1",
       "name": "慢性病·卷2",
       "category": "disease",
-      "description": "疾病类目下的慢性病条目之2。"
+      "description": "疾病类目下的慢性病条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n61d0_04_2",
       "name": "慢性病·卷3",
       "category": "disease",
-      "description": "疾病类目下的慢性病条目之3。"
+      "description": "疾病类目下的慢性病条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n61d0_04_3",
       "name": "慢性病·卷4",
       "category": "disease",
-      "description": "疾病类目下的慢性病条目之4。"
+      "description": "疾病类目下的慢性病条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n61d0_04_4",
       "name": "慢性病·卷5",
       "category": "disease",
-      "description": "疾病类目下的慢性病条目之5。"
+      "description": "疾病类目下的慢性病条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n7f8c_01_0",
       "name": "传染病·卷1",
       "category": "disease",
-      "description": "疾病类目下的传染病条目之1。"
+      "description": "疾病类目下的传染病条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n7f8c_01_1",
       "name": "传染病·卷2",
       "category": "disease",
-      "description": "疾病类目下的传染病条目之2。"
+      "description": "疾病类目下的传染病条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n7f8c_01_2",
       "name": "传染病·卷3",
       "category": "disease",
-      "description": "疾病类目下的传染病条目之3。"
+      "description": "疾病类目下的传染病条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n7f8c_01_3",
       "name": "传染病·卷4",
       "category": "disease",
-      "description": "疾病类目下的传染病条目之4。"
+      "description": "疾病类目下的传染病条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n7f8c_01_4",
       "name": "传染病·卷5",
       "category": "disease",
-      "description": "疾病类目下的传染病条目之5。"
+      "description": "疾病类目下的传染病条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8338_02_0",
       "name": "精神类·卷1",
       "category": "disease",
-      "description": "疾病类目下的精神类条目之1。"
+      "description": "疾病类目下的精神类条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8338_02_1",
       "name": "精神类·卷2",
       "category": "disease",
-      "description": "疾病类目下的精神类条目之2。"
+      "description": "疾病类目下的精神类条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8338_02_2",
       "name": "精神类·卷3",
       "category": "disease",
-      "description": "疾病类目下的精神类条目之3。"
+      "description": "疾病类目下的精神类条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8338_02_3",
       "name": "精神类·卷4",
       "category": "disease",
-      "description": "疾病类目下的精神类条目之4。"
+      "description": "疾病类目下的精神类条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8338_02_4",
       "name": "精神类·卷5",
       "category": "disease",
-      "description": "疾病类目下的精神类条目之5。"
+      "description": "疾病类目下的精神类条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8449_05_0",
       "name": "职业病·卷1",
       "category": "disease",
-      "description": "疾病类目下的职业病条目之1。"
+      "description": "疾病类目下的职业病条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8449_05_1",
       "name": "职业病·卷2",
       "category": "disease",
-      "description": "疾病类目下的职业病条目之2。"
+      "description": "疾病类目下的职业病条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8449_05_2",
       "name": "职业病·卷3",
       "category": "disease",
-      "description": "疾病类目下的职业病条目之3。"
+      "description": "疾病类目下的职业病条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8449_05_3",
       "name": "职业病·卷4",
       "category": "disease",
-      "description": "疾病类目下的职业病条目之4。"
+      "description": "疾病类目下的职业病条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8449_05_4",
       "name": "职业病·卷5",
       "category": "disease",
-      "description": "疾病类目下的职业病条目之5。"
+      "description": "疾病类目下的职业病条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8466_07_0",
       "name": "中毒·卷1",
       "category": "disease",
-      "description": "疾病类目下的中毒条目之1。"
+      "description": "疾病类目下的中毒条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8466_07_1",
       "name": "中毒·卷2",
       "category": "disease",
-      "description": "疾病类目下的中毒条目之2。"
+      "description": "疾病类目下的中毒条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8466_07_2",
       "name": "中毒·卷3",
       "category": "disease",
-      "description": "疾病类目下的中毒条目之3。"
+      "description": "疾病类目下的中毒条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8466_07_3",
       "name": "中毒·卷4",
       "category": "disease",
-      "description": "疾病类目下的中毒条目之4。"
+      "description": "疾病类目下的中毒条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.n8466_07_4",
       "name": "中毒·卷5",
       "category": "disease",
-      "description": "疾病类目下的中毒条目之5。"
+      "description": "疾病类目下的中毒条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.nbabf_00_0",
       "name": "常见病·卷1",
       "category": "disease",
-      "description": "疾病类目下的常见病条目之1。"
+      "description": "疾病类目下的常见病条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.nbabf_00_1",
       "name": "常见病·卷2",
       "category": "disease",
-      "description": "疾病类目下的常见病条目之2。"
+      "description": "疾病类目下的常见病条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.nbabf_00_2",
       "name": "常见病·卷3",
       "category": "disease",
-      "description": "疾病类目下的常见病条目之3。"
+      "description": "疾病类目下的常见病条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.nbabf_00_3",
       "name": "常见病·卷4",
       "category": "disease",
-      "description": "疾病类目下的常见病条目之4。"
+      "description": "疾病类目下的常见病条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.nbabf_00_4",
       "name": "常见病·卷5",
       "category": "disease",
-      "description": "疾病类目下的常见病条目之5。"
+      "description": "疾病类目下的常见病条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.ne63b_06_0",
       "name": "遗传病·卷1",
       "category": "disease",
-      "description": "疾病类目下的遗传病条目之1。"
+      "description": "疾病类目下的遗传病条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.ne63b_06_1",
       "name": "遗传病·卷2",
       "category": "disease",
-      "description": "疾病类目下的遗传病条目之2。"
+      "description": "疾病类目下的遗传病条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.ne63b_06_2",
       "name": "遗传病·卷3",
       "category": "disease",
-      "description": "疾病类目下的遗传病条目之3。"
+      "description": "疾病类目下的遗传病条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.ne63b_06_3",
       "name": "遗传病·卷4",
       "category": "disease",
-      "description": "疾病类目下的遗传病条目之4。"
+      "description": "疾病类目下的遗传病条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.disease.ne63b_06_4",
       "name": "遗传病·卷5",
       "category": "disease",
-      "description": "疾病类目下的遗传病条目之5。"
+      "description": "疾病类目下的遗传病条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.driver_license",
       "name": "驾照",
       "category": "legal",
-      "description": "准许驾驶机动车的证件。"
+      "description": "准许驾驶机动车的证件。",
+      "source": "generated"
     },
     {
       "content_key": "codex.dumpling",
       "name": "饺子",
       "category": "culture",
-      "description": "节庆食物，象征团圆。"
+      "description": "节庆食物，象征团圆。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n0c4d_07_0",
       "name": "争端·卷1",
       "category": "event",
-      "description": "事件类目下的争端条目之1。"
+      "description": "事件类目下的争端条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n0c4d_07_1",
       "name": "争端·卷2",
       "category": "event",
-      "description": "事件类目下的争端条目之2。"
+      "description": "事件类目下的争端条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n0c4d_07_2",
       "name": "争端·卷3",
       "category": "event",
-      "description": "事件类目下的争端条目之3。"
+      "description": "事件类目下的争端条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n0c4d_07_3",
       "name": "争端·卷4",
       "category": "event",
-      "description": "事件类目下的争端条目之4。"
+      "description": "事件类目下的争端条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n0c4d_07_4",
       "name": "争端·卷5",
       "category": "event",
-      "description": "事件类目下的争端条目之5。"
+      "description": "事件类目下的争端条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n2800_09_0",
       "name": "奇闻·卷1",
       "category": "event",
-      "description": "事件类目下的奇闻条目之1。"
+      "description": "事件类目下的奇闻条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n2800_09_1",
       "name": "奇闻·卷2",
       "category": "event",
-      "description": "事件类目下的奇闻条目之2。"
+      "description": "事件类目下的奇闻条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n2800_09_2",
       "name": "奇闻·卷3",
       "category": "event",
-      "description": "事件类目下的奇闻条目之3。"
+      "description": "事件类目下的奇闻条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n2800_09_3",
       "name": "奇闻·卷4",
       "category": "event",
-      "description": "事件类目下的奇闻条目之4。"
+      "description": "事件类目下的奇闻条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n2800_09_4",
       "name": "奇闻·卷5",
       "category": "event",
-      "description": "事件类目下的奇闻条目之5。"
+      "description": "事件类目下的奇闻条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n3d26_06_0",
       "name": "灾难·卷1",
       "category": "event",
-      "description": "事件类目下的灾难条目之1。"
+      "description": "事件类目下的灾难条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n3d26_06_1",
       "name": "灾难·卷2",
       "category": "event",
-      "description": "事件类目下的灾难条目之2。"
+      "description": "事件类目下的灾难条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n3d26_06_2",
       "name": "灾难·卷3",
       "category": "event",
-      "description": "事件类目下的灾难条目之3。"
+      "description": "事件类目下的灾难条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n3d26_06_3",
       "name": "灾难·卷4",
       "category": "event",
-      "description": "事件类目下的灾难条目之4。"
+      "description": "事件类目下的灾难条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n3d26_06_4",
       "name": "灾难·卷5",
       "category": "event",
-      "description": "事件类目下的灾难条目之5。"
+      "description": "事件类目下的灾难条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n4543_08_0",
       "name": "变迁·卷1",
       "category": "event",
-      "description": "事件类目下的变迁条目之1。"
+      "description": "事件类目下的变迁条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n4543_08_1",
       "name": "变迁·卷2",
       "category": "event",
-      "description": "事件类目下的变迁条目之2。"
+      "description": "事件类目下的变迁条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n4543_08_2",
       "name": "变迁·卷3",
       "category": "event",
-      "description": "事件类目下的变迁条目之3。"
+      "description": "事件类目下的变迁条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n4543_08_3",
       "name": "变迁·卷4",
       "category": "event",
-      "description": "事件类目下的变迁条目之4。"
+      "description": "事件类目下的变迁条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n4543_08_4",
       "name": "变迁·卷5",
       "category": "event",
-      "description": "事件类目下的变迁条目之5。"
+      "description": "事件类目下的变迁条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n7c5a_03_0",
       "name": "事故·卷1",
       "category": "event",
-      "description": "事件类目下的事故条目之1。"
+      "description": "事件类目下的事故条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n7c5a_03_1",
       "name": "事故·卷2",
       "category": "event",
-      "description": "事件类目下的事故条目之2。"
+      "description": "事件类目下的事故条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n7c5a_03_2",
       "name": "事故·卷3",
       "category": "event",
-      "description": "事件类目下的事故条目之3。"
+      "description": "事件类目下的事故条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n7c5a_03_3",
       "name": "事故·卷4",
       "category": "event",
-      "description": "事件类目下的事故条目之4。"
+      "description": "事件类目下的事故条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n7c5a_03_4",
       "name": "事故·卷5",
       "category": "event",
-      "description": "事件类目下的事故条目之5。"
+      "description": "事件类目下的事故条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n973b_05_0",
       "name": "庆典·卷1",
       "category": "event",
-      "description": "事件类目下的庆典条目之1。"
+      "description": "事件类目下的庆典条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n973b_05_1",
       "name": "庆典·卷2",
       "category": "event",
-      "description": "事件类目下的庆典条目之2。"
+      "description": "事件类目下的庆典条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n973b_05_2",
       "name": "庆典·卷3",
       "category": "event",
-      "description": "事件类目下的庆典条目之3。"
+      "description": "事件类目下的庆典条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n973b_05_3",
       "name": "庆典·卷4",
       "category": "event",
-      "description": "事件类目下的庆典条目之4。"
+      "description": "事件类目下的庆典条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n973b_05_4",
       "name": "庆典·卷5",
       "category": "event",
-      "description": "事件类目下的庆典条目之5。"
+      "description": "事件类目下的庆典条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n99dd_02_0",
       "name": "命案·卷1",
       "category": "event",
-      "description": "事件类目下的命案条目之1。"
+      "description": "事件类目下的命案条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n99dd_02_1",
       "name": "命案·卷2",
       "category": "event",
-      "description": "事件类目下的命案条目之2。"
+      "description": "事件类目下的命案条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n99dd_02_2",
       "name": "命案·卷3",
       "category": "event",
-      "description": "事件类目下的命案条目之3。"
+      "description": "事件类目下的命案条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n99dd_02_3",
       "name": "命案·卷4",
       "category": "event",
-      "description": "事件类目下的命案条目之4。"
+      "description": "事件类目下的命案条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.n99dd_02_4",
       "name": "命案·卷5",
       "category": "event",
-      "description": "事件类目下的命案条目之5。"
+      "description": "事件类目下的命案条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nb5ef_00_0",
       "name": "天灾·卷1",
       "category": "event",
-      "description": "事件类目下的天灾条目之1。"
+      "description": "事件类目下的天灾条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nb5ef_00_1",
       "name": "天灾·卷2",
       "category": "event",
-      "description": "事件类目下的天灾条目之2。"
+      "description": "事件类目下的天灾条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nb5ef_00_2",
       "name": "天灾·卷3",
       "category": "event",
-      "description": "事件类目下的天灾条目之3。"
+      "description": "事件类目下的天灾条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nb5ef_00_3",
       "name": "天灾·卷4",
       "category": "event",
-      "description": "事件类目下的天灾条目之4。"
+      "description": "事件类目下的天灾条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nb5ef_00_4",
       "name": "天灾·卷5",
       "category": "event",
-      "description": "事件类目下的天灾条目之5。"
+      "description": "事件类目下的天灾条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf34b_01_0",
       "name": "人祸·卷1",
       "category": "event",
-      "description": "事件类目下的人祸条目之1。"
+      "description": "事件类目下的人祸条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf34b_01_1",
       "name": "人祸·卷2",
       "category": "event",
-      "description": "事件类目下的人祸条目之2。"
+      "description": "事件类目下的人祸条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf34b_01_2",
       "name": "人祸·卷3",
       "category": "event",
-      "description": "事件类目下的人祸条目之3。"
+      "description": "事件类目下的人祸条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf34b_01_3",
       "name": "人祸·卷4",
       "category": "event",
-      "description": "事件类目下的人祸条目之4。"
+      "description": "事件类目下的人祸条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf34b_01_4",
       "name": "人祸·卷5",
       "category": "event",
-      "description": "事件类目下的人祸条目之5。"
+      "description": "事件类目下的人祸条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf79d_04_0",
       "name": "集会·卷1",
       "category": "event",
-      "description": "事件类目下的集会条目之1。"
+      "description": "事件类目下的集会条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf79d_04_1",
       "name": "集会·卷2",
       "category": "event",
-      "description": "事件类目下的集会条目之2。"
+      "description": "事件类目下的集会条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf79d_04_2",
       "name": "集会·卷3",
       "category": "event",
-      "description": "事件类目下的集会条目之3。"
+      "description": "事件类目下的集会条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf79d_04_3",
       "name": "集会·卷4",
       "category": "event",
-      "description": "事件类目下的集会条目之4。"
+      "description": "事件类目下的集会条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.event.nf79d_04_4",
       "name": "集会·卷5",
       "category": "event",
-      "description": "事件类目下的集会条目之5。"
+      "description": "事件类目下的集会条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.festival_midautumn",
       "name": "中秋",
       "category": "festival",
-      "description": "赏月团圆的传统节日。"
+      "description": "赏月团圆的传统节日。",
+      "source": "generated"
     },
     {
       "content_key": "codex.festival_spring",
       "name": "春节",
       "category": "festival",
-      "description": "最重要的传统节日。"
+      "description": "最重要的传统节日。",
+      "source": "generated"
     },
     {
       "content_key": "codex.hospital",
       "name": "医院",
       "category": "place",
-      "description": "诊治疾病的场所。"
+      "description": "诊治疾病的场所。",
+      "source": "generated"
     },
     {
       "content_key": "codex.id_card",
       "name": "身份证",
       "category": "legal",
-      "description": "证明公民身份的法定证件。"
+      "description": "证明公民身份的法定证件。",
+      "source": "generated"
     },
     {
       "content_key": "codex.internet",
       "name": "互联网",
       "category": "technology",
-      "description": "全球互联的信息网络。"
+      "description": "全球互联的信息网络。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n3a46_09_0",
       "name": "杂物·卷1",
       "category": "item",
-      "description": "物品类目下的杂物条目之1。"
+      "description": "物品类目下的杂物条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n3a46_09_1",
       "name": "杂物·卷2",
       "category": "item",
-      "description": "物品类目下的杂物条目之2。"
+      "description": "物品类目下的杂物条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n3a46_09_2",
       "name": "杂物·卷3",
       "category": "item",
-      "description": "物品类目下的杂物条目之3。"
+      "description": "物品类目下的杂物条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n3a46_09_3",
       "name": "杂物·卷4",
       "category": "item",
-      "description": "物品类目下的杂物条目之4。"
+      "description": "物品类目下的杂物条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n3a46_09_4",
       "name": "杂物·卷5",
       "category": "item",
-      "description": "物品类目下的杂物条目之5。"
+      "description": "物品类目下的杂物条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n4ecb_01_0",
       "name": "工具·卷1",
       "category": "item",
-      "description": "物品类目下的工具条目之1。"
+      "description": "物品类目下的工具条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n4ecb_01_1",
       "name": "工具·卷2",
       "category": "item",
-      "description": "物品类目下的工具条目之2。"
+      "description": "物品类目下的工具条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n4ecb_01_2",
       "name": "工具·卷3",
       "category": "item",
-      "description": "物品类目下的工具条目之3。"
+      "description": "物品类目下的工具条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n4ecb_01_3",
       "name": "工具·卷4",
       "category": "item",
-      "description": "物品类目下的工具条目之4。"
+      "description": "物品类目下的工具条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n4ecb_01_4",
       "name": "工具·卷5",
       "category": "item",
-      "description": "物品类目下的工具条目之5。"
+      "description": "物品类目下的工具条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n591f_03_0",
       "name": "食药品·卷1",
       "category": "item",
-      "description": "物品类目下的食药品条目之1。"
+      "description": "物品类目下的食药品条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n591f_03_1",
       "name": "食药品·卷2",
       "category": "item",
-      "description": "物品类目下的食药品条目之2。"
+      "description": "物品类目下的食药品条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n591f_03_2",
       "name": "食药品·卷3",
       "category": "item",
-      "description": "物品类目下的食药品条目之3。"
+      "description": "物品类目下的食药品条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n591f_03_3",
       "name": "食药品·卷4",
       "category": "item",
-      "description": "物品类目下的食药品条目之4。"
+      "description": "物品类目下的食药品条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n591f_03_4",
       "name": "食药品·卷5",
       "category": "item",
-      "description": "物品类目下的食药品条目之5。"
+      "description": "物品类目下的食药品条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n6a16_04_0",
       "name": "电子品·卷1",
       "category": "item",
-      "description": "物品类目下的电子品条目之1。"
+      "description": "物品类目下的电子品条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n6a16_04_1",
       "name": "电子品·卷2",
       "category": "item",
-      "description": "物品类目下的电子品条目之2。"
+      "description": "物品类目下的电子品条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n6a16_04_2",
       "name": "电子品·卷3",
       "category": "item",
-      "description": "物品类目下的电子品条目之3。"
+      "description": "物品类目下的电子品条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n6a16_04_3",
       "name": "电子品·卷4",
       "category": "item",
-      "description": "物品类目下的电子品条目之4。"
+      "description": "物品类目下的电子品条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n6a16_04_4",
       "name": "电子品·卷5",
       "category": "item",
-      "description": "物品类目下的电子品条目之5。"
+      "description": "物品类目下的电子品条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n72ca_05_0",
       "name": "书籍·卷1",
       "category": "item",
-      "description": "物品类目下的书籍条目之1。"
+      "description": "物品类目下的书籍条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n72ca_05_1",
       "name": "书籍·卷2",
       "category": "item",
-      "description": "物品类目下的书籍条目之2。"
+      "description": "物品类目下的书籍条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n72ca_05_2",
       "name": "书籍·卷3",
       "category": "item",
-      "description": "物品类目下的书籍条目之3。"
+      "description": "物品类目下的书籍条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n72ca_05_3",
       "name": "书籍·卷4",
       "category": "item",
-      "description": "物品类目下的书籍条目之4。"
+      "description": "物品类目下的书籍条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n72ca_05_4",
       "name": "书籍·卷5",
       "category": "item",
-      "description": "物品类目下的书籍条目之5。"
+      "description": "物品类目下的书籍条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n90f8_06_0",
       "name": "收藏品·卷1",
       "category": "item",
-      "description": "物品类目下的收藏品条目之1。"
+      "description": "物品类目下的收藏品条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n90f8_06_1",
       "name": "收藏品·卷2",
       "category": "item",
-      "description": "物品类目下的收藏品条目之2。"
+      "description": "物品类目下的收藏品条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n90f8_06_2",
       "name": "收藏品·卷3",
       "category": "item",
-      "description": "物品类目下的收藏品条目之3。"
+      "description": "物品类目下的收藏品条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n90f8_06_3",
       "name": "收藏品·卷4",
       "category": "item",
-      "description": "物品类目下的收藏品条目之4。"
+      "description": "物品类目下的收藏品条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.n90f8_06_4",
       "name": "收藏品·卷5",
       "category": "item",
-      "description": "物品类目下的收藏品条目之5。"
+      "description": "物品类目下的收藏品条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.na172_00_0",
       "name": "器物·卷1",
       "category": "item",
-      "description": "物品类目下的器物条目之1。"
+      "description": "物品类目下的器物条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.na172_00_1",
       "name": "器物·卷2",
       "category": "item",
-      "description": "物品类目下的器物条目之2。"
+      "description": "物品类目下的器物条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.na172_00_2",
       "name": "器物·卷3",
       "category": "item",
-      "description": "物品类目下的器物条目之3。"
+      "description": "物品类目下的器物条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.na172_00_3",
       "name": "器物·卷4",
       "category": "item",
-      "description": "物品类目下的器物条目之4。"
+      "description": "物品类目下的器物条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.na172_00_4",
       "name": "器物·卷5",
       "category": "item",
-      "description": "物品类目下的器物条目之5。"
+      "description": "物品类目下的器物条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nedc4_02_0",
       "name": "服饰·卷1",
       "category": "item",
-      "description": "物品类目下的服饰条目之1。"
+      "description": "物品类目下的服饰条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nedc4_02_1",
       "name": "服饰·卷2",
       "category": "item",
-      "description": "物品类目下的服饰条目之2。"
+      "description": "物品类目下的服饰条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nedc4_02_2",
       "name": "服饰·卷3",
       "category": "item",
-      "description": "物品类目下的服饰条目之3。"
+      "description": "物品类目下的服饰条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nedc4_02_3",
       "name": "服饰·卷4",
       "category": "item",
-      "description": "物品类目下的服饰条目之4。"
+      "description": "物品类目下的服饰条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nedc4_02_4",
       "name": "服饰·卷5",
       "category": "item",
-      "description": "物品类目下的服饰条目之5。"
+      "description": "物品类目下的服饰条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nf157_08_0",
       "name": "材料·卷1",
       "category": "item",
-      "description": "物品类目下的材料条目之1。"
+      "description": "物品类目下的材料条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nf157_08_1",
       "name": "材料·卷2",
       "category": "item",
-      "description": "物品类目下的材料条目之2。"
+      "description": "物品类目下的材料条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nf157_08_2",
       "name": "材料·卷3",
       "category": "item",
-      "description": "物品类目下的材料条目之3。"
+      "description": "物品类目下的材料条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nf157_08_3",
       "name": "材料·卷4",
       "category": "item",
-      "description": "物品类目下的材料条目之4。"
+      "description": "物品类目下的材料条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nf157_08_4",
       "name": "材料·卷5",
       "category": "item",
-      "description": "物品类目下的材料条目之5。"
+      "description": "物品类目下的材料条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nfc26_07_0",
       "name": "机械·卷1",
       "category": "item",
-      "description": "物品类目下的机械条目之1。"
+      "description": "物品类目下的机械条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nfc26_07_1",
       "name": "机械·卷2",
       "category": "item",
-      "description": "物品类目下的机械条目之2。"
+      "description": "物品类目下的机械条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nfc26_07_2",
       "name": "机械·卷3",
       "category": "item",
-      "description": "物品类目下的机械条目之3。"
+      "description": "物品类目下的机械条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nfc26_07_3",
       "name": "机械·卷4",
       "category": "item",
-      "description": "物品类目下的机械条目之4。"
+      "description": "物品类目下的机械条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.item.nfc26_07_4",
       "name": "机械·卷5",
       "category": "item",
-      "description": "物品类目下的机械条目之5。"
+      "description": "物品类目下的机械条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n0c1b_06_0",
       "name": "河畔·卷1",
       "category": "location",
-      "description": "地点类目下的河畔条目之1。"
+      "description": "地点类目下的河畔条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n0c1b_06_1",
       "name": "河畔·卷2",
       "category": "location",
-      "description": "地点类目下的河畔条目之2。"
+      "description": "地点类目下的河畔条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n0c1b_06_2",
       "name": "河畔·卷3",
       "category": "location",
-      "description": "地点类目下的河畔条目之3。"
+      "description": "地点类目下的河畔条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n0c1b_06_3",
       "name": "河畔·卷4",
       "category": "location",
-      "description": "地点类目下的河畔条目之4。"
+      "description": "地点类目下的河畔条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n0c1b_06_4",
       "name": "河畔·卷5",
       "category": "location",
-      "description": "地点类目下的河畔条目之5。"
+      "description": "地点类目下的河畔条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n2c02_01_0",
       "name": "公园·卷1",
       "category": "location",
-      "description": "地点类目下的公园条目之1。"
+      "description": "地点类目下的公园条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n2c02_01_1",
       "name": "公园·卷2",
       "category": "location",
-      "description": "地点类目下的公园条目之2。"
+      "description": "地点类目下的公园条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n2c02_01_2",
       "name": "公园·卷3",
       "category": "location",
-      "description": "地点类目下的公园条目之3。"
+      "description": "地点类目下的公园条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n2c02_01_3",
       "name": "公园·卷4",
       "category": "location",
-      "description": "地点类目下的公园条目之4。"
+      "description": "地点类目下的公园条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n2c02_01_4",
       "name": "公园·卷5",
       "category": "location",
-      "description": "地点类目下的公园条目之5。"
+      "description": "地点类目下的公园条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n3ad7_03_0",
       "name": "车站·卷1",
       "category": "location",
-      "description": "地点类目下的车站条目之1。"
+      "description": "地点类目下的车站条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n3ad7_03_1",
       "name": "车站·卷2",
       "category": "location",
-      "description": "地点类目下的车站条目之2。"
+      "description": "地点类目下的车站条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n3ad7_03_2",
       "name": "车站·卷3",
       "category": "location",
-      "description": "地点类目下的车站条目之3。"
+      "description": "地点类目下的车站条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n3ad7_03_3",
       "name": "车站·卷4",
       "category": "location",
-      "description": "地点类目下的车站条目之4。"
+      "description": "地点类目下的车站条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n3ad7_03_4",
       "name": "车站·卷5",
       "category": "location",
-      "description": "地点类目下的车站条目之5。"
+      "description": "地点类目下的车站条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n5b6c_00_0",
       "name": "街巷·卷1",
       "category": "location",
-      "description": "地点类目下的街巷条目之1。"
+      "description": "地点类目下的街巷条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n5b6c_00_1",
       "name": "街巷·卷2",
       "category": "location",
-      "description": "地点类目下的街巷条目之2。"
+      "description": "地点类目下的街巷条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n5b6c_00_2",
       "name": "街巷·卷3",
       "category": "location",
-      "description": "地点类目下的街巷条目之3。"
+      "description": "地点类目下的街巷条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n5b6c_00_3",
       "name": "街巷·卷4",
       "category": "location",
-      "description": "地点类目下的街巷条目之4。"
+      "description": "地点类目下的街巷条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n5b6c_00_4",
       "name": "街巷·卷5",
       "category": "location",
-      "description": "地点类目下的街巷条目之5。"
+      "description": "地点类目下的街巷条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n6473_07_0",
       "name": "山丘·卷1",
       "category": "location",
-      "description": "地点类目下的山丘条目之1。"
+      "description": "地点类目下的山丘条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n6473_07_1",
       "name": "山丘·卷2",
       "category": "location",
-      "description": "地点类目下的山丘条目之2。"
+      "description": "地点类目下的山丘条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n6473_07_2",
       "name": "山丘·卷3",
       "category": "location",
-      "description": "地点类目下的山丘条目之3。"
+      "description": "地点类目下的山丘条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n6473_07_3",
       "name": "山丘·卷4",
       "category": "location",
-      "description": "地点类目下的山丘条目之4。"
+      "description": "地点类目下的山丘条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n6473_07_4",
       "name": "山丘·卷5",
       "category": "location",
-      "description": "地点类目下的山丘条目之5。"
+      "description": "地点类目下的山丘条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n7727_08_0",
       "name": "港口·卷1",
       "category": "location",
-      "description": "地点类目下的港口条目之1。"
+      "description": "地点类目下的港口条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n7727_08_1",
       "name": "港口·卷2",
       "category": "location",
-      "description": "地点类目下的港口条目之2。"
+      "description": "地点类目下的港口条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n7727_08_2",
       "name": "港口·卷3",
       "category": "location",
-      "description": "地点类目下的港口条目之3。"
+      "description": "地点类目下的港口条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n7727_08_3",
       "name": "港口·卷4",
       "category": "location",
-      "description": "地点类目下的港口条目之4。"
+      "description": "地点类目下的港口条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n7727_08_4",
       "name": "港口·卷5",
       "category": "location",
-      "description": "地点类目下的港口条目之5。"
+      "description": "地点类目下的港口条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n92f4_09_0",
       "name": "广场·卷1",
       "category": "location",
-      "description": "地点类目下的广场条目之1。"
+      "description": "地点类目下的广场条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n92f4_09_1",
       "name": "广场·卷2",
       "category": "location",
-      "description": "地点类目下的广场条目之2。"
+      "description": "地点类目下的广场条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n92f4_09_2",
       "name": "广场·卷3",
       "category": "location",
-      "description": "地点类目下的广场条目之3。"
+      "description": "地点类目下的广场条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n92f4_09_3",
       "name": "广场·卷4",
       "category": "location",
-      "description": "地点类目下的广场条目之4。"
+      "description": "地点类目下的广场条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.n92f4_09_4",
       "name": "广场·卷5",
       "category": "location",
-      "description": "地点类目下的广场条目之5。"
+      "description": "地点类目下的广场条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.na961_02_0",
       "name": "地标·卷1",
       "category": "location",
-      "description": "地点类目下的地标条目之1。"
+      "description": "地点类目下的地标条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.na961_02_1",
       "name": "地标·卷2",
       "category": "location",
-      "description": "地点类目下的地标条目之2。"
+      "description": "地点类目下的地标条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.na961_02_2",
       "name": "地标·卷3",
       "category": "location",
-      "description": "地点类目下的地标条目之3。"
+      "description": "地点类目下的地标条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.na961_02_3",
       "name": "地标·卷4",
       "category": "location",
-      "description": "地点类目下的地标条目之4。"
+      "description": "地点类目下的地标条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.na961_02_4",
       "name": "地标·卷5",
       "category": "location",
-      "description": "地点类目下的地标条目之5。"
+      "description": "地点类目下的地标条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nb65a_04_0",
       "name": "商圈·卷1",
       "category": "location",
-      "description": "地点类目下的商圈条目之1。"
+      "description": "地点类目下的商圈条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nb65a_04_1",
       "name": "商圈·卷2",
       "category": "location",
-      "description": "地点类目下的商圈条目之2。"
+      "description": "地点类目下的商圈条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nb65a_04_2",
       "name": "商圈·卷3",
       "category": "location",
-      "description": "地点类目下的商圈条目之3。"
+      "description": "地点类目下的商圈条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nb65a_04_3",
       "name": "商圈·卷4",
       "category": "location",
-      "description": "地点类目下的商圈条目之4。"
+      "description": "地点类目下的商圈条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nb65a_04_4",
       "name": "商圈·卷5",
       "category": "location",
-      "description": "地点类目下的商圈条目之5。"
+      "description": "地点类目下的商圈条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nbac4_05_0",
       "name": "古迹·卷1",
       "category": "location",
-      "description": "地点类目下的古迹条目之1。"
+      "description": "地点类目下的古迹条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nbac4_05_1",
       "name": "古迹·卷2",
       "category": "location",
-      "description": "地点类目下的古迹条目之2。"
+      "description": "地点类目下的古迹条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nbac4_05_2",
       "name": "古迹·卷3",
       "category": "location",
-      "description": "地点类目下的古迹条目之3。"
+      "description": "地点类目下的古迹条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nbac4_05_3",
       "name": "古迹·卷4",
       "category": "location",
-      "description": "地点类目下的古迹条目之4。"
+      "description": "地点类目下的古迹条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.location.nbac4_05_4",
       "name": "古迹·卷5",
       "category": "location",
-      "description": "地点类目下的古迹条目之5。"
+      "description": "地点类目下的古迹条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n020c_07_0",
       "name": "野史·卷1",
       "category": "lore",
-      "description": "见闻类目下的野史条目之1。"
+      "description": "见闻类目下的野史条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n020c_07_1",
       "name": "野史·卷2",
       "category": "lore",
-      "description": "见闻类目下的野史条目之2。"
+      "description": "见闻类目下的野史条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n020c_07_2",
       "name": "野史·卷3",
       "category": "lore",
-      "description": "见闻类目下的野史条目之3。"
+      "description": "见闻类目下的野史条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n020c_07_3",
       "name": "野史·卷4",
       "category": "lore",
-      "description": "见闻类目下的野史条目之4。"
+      "description": "见闻类目下的野史条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n020c_07_4",
       "name": "野史·卷5",
       "category": "lore",
-      "description": "见闻类目下的野史条目之5。"
+      "description": "见闻类目下的野史条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n0a1b_08_0",
       "name": "民谣·卷1",
       "category": "lore",
-      "description": "见闻类目下的民谣条目之1。"
+      "description": "见闻类目下的民谣条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n0a1b_08_1",
       "name": "民谣·卷2",
       "category": "lore",
-      "description": "见闻类目下的民谣条目之2。"
+      "description": "见闻类目下的民谣条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n0a1b_08_2",
       "name": "民谣·卷3",
       "category": "lore",
-      "description": "见闻类目下的民谣条目之3。"
+      "description": "见闻类目下的民谣条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n0a1b_08_3",
       "name": "民谣·卷4",
       "category": "lore",
-      "description": "见闻类目下的民谣条目之4。"
+      "description": "见闻类目下的民谣条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n0a1b_08_4",
       "name": "民谣·卷5",
       "category": "lore",
-      "description": "见闻类目下的民谣条目之5。"
+      "description": "见闻类目下的民谣条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n1916_09_0",
       "name": "手记·卷1",
       "category": "lore",
-      "description": "见闻类目下的手记条目之1。"
+      "description": "见闻类目下的手记条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n1916_09_1",
       "name": "手记·卷2",
       "category": "lore",
-      "description": "见闻类目下的手记条目之2。"
+      "description": "见闻类目下的手记条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n1916_09_2",
       "name": "手记·卷3",
       "category": "lore",
-      "description": "见闻类目下的手记条目之3。"
+      "description": "见闻类目下的手记条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n1916_09_3",
       "name": "手记·卷4",
       "category": "lore",
-      "description": "见闻类目下的手记条目之4。"
+      "description": "见闻类目下的手记条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n1916_09_4",
       "name": "手记·卷5",
       "category": "lore",
-      "description": "见闻类目下的手记条目之5。"
+      "description": "见闻类目下的手记条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n24c2_05_0",
       "name": "古籍·卷1",
       "category": "lore",
-      "description": "见闻类目下的古籍条目之1。"
+      "description": "见闻类目下的古籍条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n24c2_05_1",
       "name": "古籍·卷2",
       "category": "lore",
-      "description": "见闻类目下的古籍条目之2。"
+      "description": "见闻类目下的古籍条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n24c2_05_2",
       "name": "古籍·卷3",
       "category": "lore",
-      "description": "见闻类目下的古籍条目之3。"
+      "description": "见闻类目下的古籍条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n24c2_05_3",
       "name": "古籍·卷4",
       "category": "lore",
-      "description": "见闻类目下的古籍条目之4。"
+      "description": "见闻类目下的古籍条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n24c2_05_4",
       "name": "古籍·卷5",
       "category": "lore",
-      "description": "见闻类目下的古籍条目之5。"
+      "description": "见闻类目下的古籍条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n48b6_03_0",
       "name": "秘辛·卷1",
       "category": "lore",
-      "description": "见闻类目下的秘辛条目之1。"
+      "description": "见闻类目下的秘辛条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n48b6_03_1",
       "name": "秘辛·卷2",
       "category": "lore",
-      "description": "见闻类目下的秘辛条目之2。"
+      "description": "见闻类目下的秘辛条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n48b6_03_2",
       "name": "秘辛·卷3",
       "category": "lore",
-      "description": "见闻类目下的秘辛条目之3。"
+      "description": "见闻类目下的秘辛条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n48b6_03_3",
       "name": "秘辛·卷4",
       "category": "lore",
-      "description": "见闻类目下的秘辛条目之4。"
+      "description": "见闻类目下的秘辛条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n48b6_03_4",
       "name": "秘辛·卷5",
       "category": "lore",
-      "description": "见闻类目下的秘辛条目之5。"
+      "description": "见闻类目下的秘辛条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n528c_00_0",
       "name": "传说·卷1",
       "category": "lore",
-      "description": "见闻类目下的传说条目之1。"
+      "description": "见闻类目下的传说条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n528c_00_1",
       "name": "传说·卷2",
       "category": "lore",
-      "description": "见闻类目下的传说条目之2。"
+      "description": "见闻类目下的传说条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n528c_00_2",
       "name": "传说·卷3",
       "category": "lore",
-      "description": "见闻类目下的传说条目之3。"
+      "description": "见闻类目下的传说条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n528c_00_3",
       "name": "传说·卷4",
       "category": "lore",
-      "description": "见闻类目下的传说条目之4。"
+      "description": "见闻类目下的传说条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n528c_00_4",
       "name": "传说·卷5",
       "category": "lore",
-      "description": "见闻类目下的传说条目之5。"
+      "description": "见闻类目下的传说条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n57a3_06_0",
       "name": "碑文·卷1",
       "category": "lore",
-      "description": "见闻类目下的碑文条目之1。"
+      "description": "见闻类目下的碑文条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n57a3_06_1",
       "name": "碑文·卷2",
       "category": "lore",
-      "description": "见闻类目下的碑文条目之2。"
+      "description": "见闻类目下的碑文条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n57a3_06_2",
       "name": "碑文·卷3",
       "category": "lore",
-      "description": "见闻类目下的碑文条目之3。"
+      "description": "见闻类目下的碑文条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n57a3_06_3",
       "name": "碑文·卷4",
       "category": "lore",
-      "description": "见闻类目下的碑文条目之4。"
+      "description": "见闻类目下的碑文条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n57a3_06_4",
       "name": "碑文·卷5",
       "category": "lore",
-      "description": "见闻类目下的碑文条目之5。"
+      "description": "见闻类目下的碑文条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n8149_01_0",
       "name": "轶事·卷1",
       "category": "lore",
-      "description": "见闻类目下的轶事条目之1。"
+      "description": "见闻类目下的轶事条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n8149_01_1",
       "name": "轶事·卷2",
       "category": "lore",
-      "description": "见闻类目下的轶事条目之2。"
+      "description": "见闻类目下的轶事条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n8149_01_2",
       "name": "轶事·卷3",
       "category": "lore",
-      "description": "见闻类目下的轶事条目之3。"
+      "description": "见闻类目下的轶事条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n8149_01_3",
       "name": "轶事·卷4",
       "category": "lore",
-      "description": "见闻类目下的轶事条目之4。"
+      "description": "见闻类目下的轶事条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.n8149_01_4",
       "name": "轶事·卷5",
       "category": "lore",
-      "description": "见闻类目下的轶事条目之5。"
+      "description": "见闻类目下的轶事条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.ncff3_04_0",
       "name": "谚语·卷1",
       "category": "lore",
-      "description": "见闻类目下的谚语条目之1。"
+      "description": "见闻类目下的谚语条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.ncff3_04_1",
       "name": "谚语·卷2",
       "category": "lore",
-      "description": "见闻类目下的谚语条目之2。"
+      "description": "见闻类目下的谚语条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.ncff3_04_2",
       "name": "谚语·卷3",
       "category": "lore",
-      "description": "见闻类目下的谚语条目之3。"
+      "description": "见闻类目下的谚语条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.ncff3_04_3",
       "name": "谚语·卷4",
       "category": "lore",
-      "description": "见闻类目下的谚语条目之4。"
+      "description": "见闻类目下的谚语条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.ncff3_04_4",
       "name": "谚语·卷5",
       "category": "lore",
-      "description": "见闻类目下的谚语条目之5。"
+      "description": "见闻类目下的谚语条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.nfbae_02_0",
       "name": "掌故·卷1",
       "category": "lore",
-      "description": "见闻类目下的掌故条目之1。"
+      "description": "见闻类目下的掌故条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.nfbae_02_1",
       "name": "掌故·卷2",
       "category": "lore",
-      "description": "见闻类目下的掌故条目之2。"
+      "description": "见闻类目下的掌故条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.nfbae_02_2",
       "name": "掌故·卷3",
       "category": "lore",
-      "description": "见闻类目下的掌故条目之3。"
+      "description": "见闻类目下的掌故条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.nfbae_02_3",
       "name": "掌故·卷4",
       "category": "lore",
-      "description": "见闻类目下的掌故条目之4。"
+      "description": "见闻类目下的掌故条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.lore.nfbae_02_4",
       "name": "掌故·卷5",
       "category": "lore",
-      "description": "见闻类目下的掌故条目之5。"
+      "description": "见闻类目下的掌故条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.market",
       "name": "菜市场",
       "category": "place",
-      "description": "买卖生鲜食材的场所。"
+      "description": "买卖生鲜食材的场所。",
+      "source": "generated"
     },
     {
       "content_key": "codex.mobile_phone",
       "name": "手机",
       "category": "technology",
-      "description": "随身通讯与计算设备。"
+      "description": "随身通讯与计算设备。",
+      "source": "generated"
     },
     {
       "content_key": "codex.mountain",
       "name": "山",
       "category": "nature",
-      "description": "显著隆起的地貌。"
+      "description": "显著隆起的地貌。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n3da1_03_0",
       "name": "会社·卷1",
       "category": "organization",
-      "description": "组织类目下的会社条目之1。"
+      "description": "组织类目下的会社条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n3da1_03_1",
       "name": "会社·卷2",
       "category": "organization",
-      "description": "组织类目下的会社条目之2。"
+      "description": "组织类目下的会社条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n3da1_03_2",
       "name": "会社·卷3",
       "category": "organization",
-      "description": "组织类目下的会社条目之3。"
+      "description": "组织类目下的会社条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n3da1_03_3",
       "name": "会社·卷4",
       "category": "organization",
-      "description": "组织类目下的会社条目之4。"
+      "description": "组织类目下的会社条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n3da1_03_4",
       "name": "会社·卷5",
       "category": "organization",
-      "description": "组织类目下的会社条目之5。"
+      "description": "组织类目下的会社条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n5f54_08_0",
       "name": "帮派·卷1",
       "category": "organization",
-      "description": "组织类目下的帮派条目之1。"
+      "description": "组织类目下的帮派条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n5f54_08_1",
       "name": "帮派·卷2",
       "category": "organization",
-      "description": "组织类目下的帮派条目之2。"
+      "description": "组织类目下的帮派条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n5f54_08_2",
       "name": "帮派·卷3",
       "category": "organization",
-      "description": "组织类目下的帮派条目之3。"
+      "description": "组织类目下的帮派条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n5f54_08_3",
       "name": "帮派·卷4",
       "category": "organization",
-      "description": "组织类目下的帮派条目之4。"
+      "description": "组织类目下的帮派条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n5f54_08_4",
       "name": "帮派·卷5",
       "category": "organization",
-      "description": "组织类目下的帮派条目之5。"
+      "description": "组织类目下的帮派条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n647b_00_0",
       "name": "行会·卷1",
       "category": "organization",
-      "description": "组织类目下的行会条目之1。"
+      "description": "组织类目下的行会条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n647b_00_1",
       "name": "行会·卷2",
       "category": "organization",
-      "description": "组织类目下的行会条目之2。"
+      "description": "组织类目下的行会条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n647b_00_2",
       "name": "行会·卷3",
       "category": "organization",
-      "description": "组织类目下的行会条目之3。"
+      "description": "组织类目下的行会条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n647b_00_3",
       "name": "行会·卷4",
       "category": "organization",
-      "description": "组织类目下的行会条目之4。"
+      "description": "组织类目下的行会条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n647b_00_4",
       "name": "行会·卷5",
       "category": "organization",
-      "description": "组织类目下的行会条目之5。"
+      "description": "组织类目下的行会条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n716c_09_0",
       "name": "机构·卷1",
       "category": "organization",
-      "description": "组织类目下的机构条目之1。"
+      "description": "组织类目下的机构条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n716c_09_1",
       "name": "机构·卷2",
       "category": "organization",
-      "description": "组织类目下的机构条目之2。"
+      "description": "组织类目下的机构条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n716c_09_2",
       "name": "机构·卷3",
       "category": "organization",
-      "description": "组织类目下的机构条目之3。"
+      "description": "组织类目下的机构条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n716c_09_3",
       "name": "机构·卷4",
       "category": "organization",
-      "description": "组织类目下的机构条目之4。"
+      "description": "组织类目下的机构条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n716c_09_4",
       "name": "机构·卷5",
       "category": "organization",
-      "description": "组织类目下的机构条目之5。"
+      "description": "组织类目下的机构条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n7826_02_0",
       "name": "门派·卷1",
       "category": "organization",
-      "description": "组织类目下的门派条目之1。"
+      "description": "组织类目下的门派条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n7826_02_1",
       "name": "门派·卷2",
       "category": "organization",
-      "description": "组织类目下的门派条目之2。"
+      "description": "组织类目下的门派条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n7826_02_2",
       "name": "门派·卷3",
       "category": "organization",
-      "description": "组织类目下的门派条目之3。"
+      "description": "组织类目下的门派条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n7826_02_3",
       "name": "门派·卷4",
       "category": "organization",
-      "description": "组织类目下的门派条目之4。"
+      "description": "组织类目下的门派条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n7826_02_4",
       "name": "门派·卷5",
       "category": "organization",
-      "description": "组织类目下的门派条目之5。"
+      "description": "组织类目下的门派条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n8b5b_04_0",
       "name": "军团·卷1",
       "category": "organization",
-      "description": "组织类目下的军团条目之1。"
+      "description": "组织类目下的军团条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n8b5b_04_1",
       "name": "军团·卷2",
       "category": "organization",
-      "description": "组织类目下的军团条目之2。"
+      "description": "组织类目下的军团条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n8b5b_04_2",
       "name": "军团·卷3",
       "category": "organization",
-      "description": "组织类目下的军团条目之3。"
+      "description": "组织类目下的军团条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n8b5b_04_3",
       "name": "军团·卷4",
       "category": "organization",
-      "description": "组织类目下的军团条目之4。"
+      "description": "组织类目下的军团条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n8b5b_04_4",
       "name": "军团·卷5",
       "category": "organization",
-      "description": "组织类目下的军团条目之5。"
+      "description": "组织类目下的军团条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n900f_07_0",
       "name": "世家·卷1",
       "category": "organization",
-      "description": "组织类目下的世家条目之1。"
+      "description": "组织类目下的世家条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n900f_07_1",
       "name": "世家·卷2",
       "category": "organization",
-      "description": "组织类目下的世家条目之2。"
+      "description": "组织类目下的世家条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n900f_07_2",
       "name": "世家·卷3",
       "category": "organization",
-      "description": "组织类目下的世家条目之3。"
+      "description": "组织类目下的世家条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n900f_07_3",
       "name": "世家·卷4",
       "category": "organization",
-      "description": "组织类目下的世家条目之4。"
+      "description": "组织类目下的世家条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.n900f_07_4",
       "name": "世家·卷5",
       "category": "organization",
-      "description": "组织类目下的世家条目之5。"
+      "description": "组织类目下的世家条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nccbc_06_0",
       "name": "联盟·卷1",
       "category": "organization",
-      "description": "组织类目下的联盟条目之1。"
+      "description": "组织类目下的联盟条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nccbc_06_1",
       "name": "联盟·卷2",
       "category": "organization",
-      "description": "组织类目下的联盟条目之2。"
+      "description": "组织类目下的联盟条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nccbc_06_2",
       "name": "联盟·卷3",
       "category": "organization",
-      "description": "组织类目下的联盟条目之3。"
+      "description": "组织类目下的联盟条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nccbc_06_3",
       "name": "联盟·卷4",
       "category": "organization",
-      "description": "组织类目下的联盟条目之4。"
+      "description": "组织类目下的联盟条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nccbc_06_4",
       "name": "联盟·卷5",
       "category": "organization",
-      "description": "组织类目下的联盟条目之5。"
+      "description": "组织类目下的联盟条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nd201_01_0",
       "name": "商帮·卷1",
       "category": "organization",
-      "description": "组织类目下的商帮条目之1。"
+      "description": "组织类目下的商帮条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nd201_01_1",
       "name": "商帮·卷2",
       "category": "organization",
-      "description": "组织类目下的商帮条目之2。"
+      "description": "组织类目下的商帮条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nd201_01_2",
       "name": "商帮·卷3",
       "category": "organization",
-      "description": "组织类目下的商帮条目之3。"
+      "description": "组织类目下的商帮条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nd201_01_3",
       "name": "商帮·卷4",
       "category": "organization",
-      "description": "组织类目下的商帮条目之4。"
+      "description": "组织类目下的商帮条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.nd201_01_4",
       "name": "商帮·卷5",
       "category": "organization",
-      "description": "组织类目下的商帮条目之5。"
+      "description": "组织类目下的商帮条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.ndc2c_05_0",
       "name": "教团·卷1",
       "category": "organization",
-      "description": "组织类目下的教团条目之1。"
+      "description": "组织类目下的教团条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.ndc2c_05_1",
       "name": "教团·卷2",
       "category": "organization",
-      "description": "组织类目下的教团条目之2。"
+      "description": "组织类目下的教团条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.ndc2c_05_2",
       "name": "教团·卷3",
       "category": "organization",
-      "description": "组织类目下的教团条目之3。"
+      "description": "组织类目下的教团条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.ndc2c_05_3",
       "name": "教团·卷4",
       "category": "organization",
-      "description": "组织类目下的教团条目之4。"
+      "description": "组织类目下的教团条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.organization.ndc2c_05_4",
       "name": "教团·卷5",
       "category": "organization",
-      "description": "组织类目下的教团条目之5。"
+      "description": "组织类目下的教团条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.park",
       "name": "公园",
       "category": "place",
-      "description": "公共休闲绿地。"
+      "description": "公共休闲绿地。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n1e3a_01_0",
       "name": "商贾·卷1",
       "category": "person",
-      "description": "人物类目下的商贾条目之1。"
+      "description": "人物类目下的商贾条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n1e3a_01_1",
       "name": "商贾·卷2",
       "category": "person",
-      "description": "人物类目下的商贾条目之2。"
+      "description": "人物类目下的商贾条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n1e3a_01_2",
       "name": "商贾·卷3",
       "category": "person",
-      "description": "人物类目下的商贾条目之3。"
+      "description": "人物类目下的商贾条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n1e3a_01_3",
       "name": "商贾·卷4",
       "category": "person",
-      "description": "人物类目下的商贾条目之4。"
+      "description": "人物类目下的商贾条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n1e3a_01_4",
       "name": "商贾·卷5",
       "category": "person",
-      "description": "人物类目下的商贾条目之5。"
+      "description": "人物类目下的商贾条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n243e_02_0",
       "name": "游侠·卷1",
       "category": "person",
-      "description": "人物类目下的游侠条目之1。"
+      "description": "人物类目下的游侠条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n243e_02_1",
       "name": "游侠·卷2",
       "category": "person",
-      "description": "人物类目下的游侠条目之2。"
+      "description": "人物类目下的游侠条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n243e_02_2",
       "name": "游侠·卷3",
       "category": "person",
-      "description": "人物类目下的游侠条目之3。"
+      "description": "人物类目下的游侠条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n243e_02_3",
       "name": "游侠·卷4",
       "category": "person",
-      "description": "人物类目下的游侠条目之4。"
+      "description": "人物类目下的游侠条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n243e_02_4",
       "name": "游侠·卷5",
       "category": "person",
-      "description": "人物类目下的游侠条目之5。"
+      "description": "人物类目下的游侠条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n2aad_05_0",
       "name": "艺者·卷1",
       "category": "person",
-      "description": "人物类目下的艺者条目之1。"
+      "description": "人物类目下的艺者条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n2aad_05_1",
       "name": "艺者·卷2",
       "category": "person",
-      "description": "人物类目下的艺者条目之2。"
+      "description": "人物类目下的艺者条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n2aad_05_2",
       "name": "艺者·卷3",
       "category": "person",
-      "description": "人物类目下的艺者条目之3。"
+      "description": "人物类目下的艺者条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n2aad_05_3",
       "name": "艺者·卷4",
       "category": "person",
-      "description": "人物类目下的艺者条目之4。"
+      "description": "人物类目下的艺者条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n2aad_05_4",
       "name": "艺者·卷5",
       "category": "person",
-      "description": "人物类目下的艺者条目之5。"
+      "description": "人物类目下的艺者条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n40b7_08_0",
       "name": "僧道·卷1",
       "category": "person",
-      "description": "人物类目下的僧道条目之1。"
+      "description": "人物类目下的僧道条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n40b7_08_1",
       "name": "僧道·卷2",
       "category": "person",
-      "description": "人物类目下的僧道条目之2。"
+      "description": "人物类目下的僧道条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n40b7_08_2",
       "name": "僧道·卷3",
       "category": "person",
-      "description": "人物类目下的僧道条目之3。"
+      "description": "人物类目下的僧道条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n40b7_08_3",
       "name": "僧道·卷4",
       "category": "person",
-      "description": "人物类目下的僧道条目之4。"
+      "description": "人物类目下的僧道条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n40b7_08_4",
       "name": "僧道·卷5",
       "category": "person",
-      "description": "人物类目下的僧道条目之5。"
+      "description": "人物类目下的僧道条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n5890_06_0",
       "name": "学者·卷1",
       "category": "person",
-      "description": "人物类目下的学者条目之1。"
+      "description": "人物类目下的学者条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n5890_06_1",
       "name": "学者·卷2",
       "category": "person",
-      "description": "人物类目下的学者条目之2。"
+      "description": "人物类目下的学者条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n5890_06_2",
       "name": "学者·卷3",
       "category": "person",
-      "description": "人物类目下的学者条目之3。"
+      "description": "人物类目下的学者条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n5890_06_3",
       "name": "学者·卷4",
       "category": "person",
-      "description": "人物类目下的学者条目之4。"
+      "description": "人物类目下的学者条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n5890_06_4",
       "name": "学者·卷5",
       "category": "person",
-      "description": "人物类目下的学者条目之5。"
+      "description": "人物类目下的学者条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7045_00_0",
       "name": "工匠·卷1",
       "category": "person",
-      "description": "人物类目下的工匠条目之1。"
+      "description": "人物类目下的工匠条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7045_00_1",
       "name": "工匠·卷2",
       "category": "person",
-      "description": "人物类目下的工匠条目之2。"
+      "description": "人物类目下的工匠条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7045_00_2",
       "name": "工匠·卷3",
       "category": "person",
-      "description": "人物类目下的工匠条目之3。"
+      "description": "人物类目下的工匠条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7045_00_3",
       "name": "工匠·卷4",
       "category": "person",
-      "description": "人物类目下的工匠条目之4。"
+      "description": "人物类目下的工匠条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7045_00_4",
       "name": "工匠·卷5",
       "category": "person",
-      "description": "人物类目下的工匠条目之5。"
+      "description": "人物类目下的工匠条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7148_04_0",
       "name": "官员·卷1",
       "category": "person",
-      "description": "人物类目下的官员条目之1。"
+      "description": "人物类目下的官员条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7148_04_1",
       "name": "官员·卷2",
       "category": "person",
-      "description": "人物类目下的官员条目之2。"
+      "description": "人物类目下的官员条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7148_04_2",
       "name": "官员·卷3",
       "category": "person",
-      "description": "人物类目下的官员条目之3。"
+      "description": "人物类目下的官员条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7148_04_3",
       "name": "官员·卷4",
       "category": "person",
-      "description": "人物类目下的官员条目之4。"
+      "description": "人物类目下的官员条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.n7148_04_4",
       "name": "官员·卷5",
       "category": "person",
-      "description": "人物类目下的官员条目之5。"
+      "description": "人物类目下的官员条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nb2fd_03_0",
       "name": "隐士·卷1",
       "category": "person",
-      "description": "人物类目下的隐士条目之1。"
+      "description": "人物类目下的隐士条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nb2fd_03_1",
       "name": "隐士·卷2",
       "category": "person",
-      "description": "人物类目下的隐士条目之2。"
+      "description": "人物类目下的隐士条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nb2fd_03_2",
       "name": "隐士·卷3",
       "category": "person",
-      "description": "人物类目下的隐士条目之3。"
+      "description": "人物类目下的隐士条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nb2fd_03_3",
       "name": "隐士·卷4",
       "category": "person",
-      "description": "人物类目下的隐士条目之4。"
+      "description": "人物类目下的隐士条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nb2fd_03_4",
       "name": "隐士·卷5",
       "category": "person",
-      "description": "人物类目下的隐士条目之5。"
+      "description": "人物类目下的隐士条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd166_07_0",
       "name": "医者·卷1",
       "category": "person",
-      "description": "人物类目下的医者条目之1。"
+      "description": "人物类目下的医者条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd166_07_1",
       "name": "医者·卷2",
       "category": "person",
-      "description": "人物类目下的医者条目之2。"
+      "description": "人物类目下的医者条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd166_07_2",
       "name": "医者·卷3",
       "category": "person",
-      "description": "人物类目下的医者条目之3。"
+      "description": "人物类目下的医者条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd166_07_3",
       "name": "医者·卷4",
       "category": "person",
-      "description": "人物类目下的医者条目之4。"
+      "description": "人物类目下的医者条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd166_07_4",
       "name": "医者·卷5",
       "category": "person",
-      "description": "人物类目下的医者条目之5。"
+      "description": "人物类目下的医者条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd4eb_09_0",
       "name": "异人·卷1",
       "category": "person",
-      "description": "人物类目下的异人条目之1。"
+      "description": "人物类目下的异人条目之1。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd4eb_09_1",
       "name": "异人·卷2",
       "category": "person",
-      "description": "人物类目下的异人条目之2。"
+      "description": "人物类目下的异人条目之2。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd4eb_09_2",
       "name": "异人·卷3",
       "category": "person",
-      "description": "人物类目下的异人条目之3。"
+      "description": "人物类目下的异人条目之3。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd4eb_09_3",
       "name": "异人·卷4",
       "category": "person",
-      "description": "人物类目下的异人条目之4。"
+      "description": "人物类目下的异人条目之4。",
+      "source": "generated"
     },
     {
       "content_key": "codex.person.nd4eb_09_4",
       "name": "异人·卷5",
       "category": "person",
-      "description": "人物类目下的异人条目之5。"
+      "description": "人物类目下的异人条目之5。",
+      "source": "generated"
     },
     {
       "content_key": "codex.pork",
       "name": "猪肉",
       "category": "food",
-      "description": "常见肉类食材。"
+      "description": "常见肉类食材。",
+      "source": "generated"
     },
     {
       "content_key": "codex.rain",
       "name": "雨",
       "category": "nature",
-      "description": "常见天气现象。"
+      "description": "常见天气现象。",
+      "source": "generated"
     },
     {
       "content_key": "codex.river",
       "name": "河流",
       "category": "nature",
-      "description": "地表水汇集流动形成的水道。"
+      "description": "地表水汇集流动形成的水道。",
+      "source": "generated"
     },
     {
       "content_key": "codex.school",
       "name": "学校",
       "category": "place",
-      "description": "进行教育的场所。"
+      "description": "进行教育的场所。",
+      "source": "generated"
     },
     {
       "content_key": "codex.snow",
       "name": "雪",
       "category": "nature",
-      "description": "冬季降水现象。"
+      "description": "冬季降水现象。",
+      "source": "generated"
     },
     {
       "content_key": "codex.spectacles",
       "name": "眼镜",
       "category": "daily",
-      "description": "矫正视力的工具。"
+      "description": "矫正视力的工具。",
+      "source": "generated"
     },
     {
       "content_key": "codex.stars",
       "name": "星空",
       "category": "nature",
-      "description": "夜空中可见的天体。"
+      "description": "夜空中可见的天体。",
+      "source": "generated"
     },
     {
       "content_key": "codex.tea",
       "name": "茶",
       "category": "culture",
-      "description": "传统饮品，讲究冲泡。"
+      "description": "传统饮品，讲究冲泡。",
+      "source": "generated"
     },
     {
       "content_key": "codex.temple",
       "name": "寺庙",
       "category": "place",
-      "description": "宗教活动场所。"
+      "description": "宗教活动场所。",
+      "source": "generated"
     },
     {
       "content_key": "codex.train",
       "name": "火车",
       "category": "technology",
-      "description": "沿轨道行驶的交通工具。"
+      "description": "沿轨道行驶的交通工具。",
+      "source": "generated"
     },
     {
       "content_key": "codex.umbrella",
       "name": "雨伞",
       "category": "daily",
-      "description": "遮雨工具。"
+      "description": "遮雨工具。",
+      "source": "generated"
     },
     {
       "content_key": "codex.wallet",
       "name": "钱包",
       "category": "daily",
-      "description": "存放现金与证件的物件。"
+      "description": "存放现金与证件的物件。",
+      "source": "generated"
     }
   ]
 }

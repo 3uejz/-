@@ -4,102 +4,122 @@
     {
       "content_key": "activity.n01fc_01",
       "name": "科技发布会",
-      "kind": "会展"
+      "kind": "会展",
+      "source": "generated"
     },
     {
       "content_key": "activity.n0779_06",
       "name": "露天音乐节",
-      "kind": "演出"
+      "kind": "演出",
+      "source": "generated"
     },
     {
       "content_key": "activity.n07e3_11",
       "name": "锦标赛",
-      "kind": "赛事"
+      "kind": "赛事",
+      "source": "generated"
     },
     {
       "content_key": "activity.n234e_18",
       "name": "烟花大会",
-      "kind": "节庆"
+      "kind": "节庆",
+      "source": "generated"
     },
     {
       "content_key": "activity.n2895_12",
       "name": "电竞总决赛",
-      "kind": "赛事"
+      "kind": "赛事",
+      "source": "generated"
     },
     {
       "content_key": "activity.n4087_13",
       "name": "城市马拉松",
-      "kind": "赛事"
+      "kind": "赛事",
+      "source": "generated"
     },
     {
       "content_key": "activity.n4cd7_08",
       "name": "舞蹈专场",
-      "kind": "演出"
+      "kind": "演出",
+      "source": "generated"
     },
     {
       "content_key": "activity.n73b5_07",
       "name": "话剧巡演",
-      "kind": "演出"
+      "kind": "演出",
+      "source": "generated"
     },
     {
       "content_key": "activity.n7d91_03",
       "name": "招聘会",
-      "kind": "会展"
+      "kind": "会展",
+      "source": "generated"
     },
     {
       "content_key": "activity.n908c_15",
       "name": "元宵灯会",
-      "kind": "节庆"
+      "kind": "节庆",
+      "source": "generated"
     },
     {
       "content_key": "activity.na17e_02",
       "name": "春季订货会",
-      "kind": "会展"
+      "kind": "会展",
+      "source": "generated"
     },
     {
       "content_key": "activity.na53c_09",
       "name": "戏曲汇演",
-      "kind": "演出"
+      "kind": "演出",
+      "source": "generated"
     },
     {
       "content_key": "activity.nabfd_19",
       "name": "花车巡游",
-      "kind": "节庆"
+      "kind": "节庆",
+      "source": "generated"
     },
     {
       "content_key": "activity.nac9d_16",
       "name": "新春庙会",
-      "kind": "节庆"
+      "kind": "节庆",
+      "source": "generated"
     },
     {
       "content_key": "activity.nb39c_17",
       "name": "嘉年华",
-      "kind": "节庆"
+      "kind": "节庆",
+      "source": "generated"
     },
     {
       "content_key": "activity.nb403_04",
       "name": "房车展",
-      "kind": "会展"
+      "kind": "会展",
+      "source": "generated"
     },
     {
       "content_key": "activity.nbc84_05",
       "name": "演唱会",
-      "kind": "演出"
+      "kind": "演出",
+      "source": "generated"
     },
     {
       "content_key": "activity.nc4b0_14",
       "name": "田径运动会",
-      "kind": "赛事"
+      "kind": "赛事",
+      "source": "generated"
     },
     {
       "content_key": "activity.ne65c_10",
       "name": "体育联赛",
-      "kind": "赛事"
+      "kind": "赛事",
+      "source": "generated"
     },
     {
       "content_key": "activity.nf51b_00",
       "name": "行业博览会",
-      "kind": "会展"
+      "kind": "会展",
+      "source": "generated"
     }
   ]
 }

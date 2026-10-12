@@ -4,152 +4,182 @@
     {
       "content_key": "cert.a_03",
       "name": "A 类驾照",
-      "issuer": "交通"
+      "issuer": "交通",
+      "source": "generated"
     },
     {
       "content_key": "cert.accounting",
       "name": "会计证",
-      "issuer": "finance"
+      "issuer": "finance",
+      "source": "generated"
     },
     {
       "content_key": "cert.b_04",
       "name": "B 类驾照",
-      "issuer": "交通"
+      "issuer": "交通",
+      "source": "generated"
     },
     {
       "content_key": "cert.builder",
       "name": "建造师",
-      "issuer": "construction"
+      "issuer": "construction",
+      "source": "generated"
     },
     {
       "content_key": "cert.c1_02",
       "name": "C1 驾照",
-      "issuer": "交通"
+      "issuer": "交通",
+      "source": "generated"
     },
     {
       "content_key": "cert.chef",
       "name": "厨师证",
-      "issuer": "labor"
+      "issuer": "labor",
+      "source": "generated"
     },
     {
       "content_key": "cert.driver_license",
       "name": "驾照",
-      "issuer": "government"
+      "issuer": "government",
+      "source": "generated"
     },
     {
       "content_key": "cert.electrician",
       "name": "电工证",
-      "issuer": "labor"
+      "issuer": "labor",
+      "source": "generated"
     },
     {
       "content_key": "cert.fitness_coach",
       "name": "健身教练证",
-      "issuer": "sports"
+      "issuer": "sports",
+      "source": "generated"
     },
     {
       "content_key": "cert.guide",
       "name": "导游证",
-      "issuer": "tourism"
+      "issuer": "tourism",
+      "source": "generated"
     },
     {
       "content_key": "cert.household",
       "name": "户口本",
-      "issuer": "government"
+      "issuer": "government",
+      "source": "generated"
     },
     {
       "content_key": "cert.id_card",
       "name": "身份证",
-      "issuer": "government"
+      "issuer": "government",
+      "source": "generated"
     },
     {
       "content_key": "cert.lawyer",
       "name": "律师执业证",
-      "issuer": "justice"
+      "issuer": "justice",
+      "source": "generated"
     },
     {
       "content_key": "cert.n1ef8_00",
       "name": "身份证",
-      "issuer": "公安"
+      "issuer": "公安",
+      "source": "generated"
     },
     {
       "content_key": "cert.n7a23_08",
       "name": "会计证",
-      "issuer": "财政"
+      "issuer": "财政",
+      "source": "generated"
     },
     {
       "content_key": "cert.n7a9f_06",
       "name": "签证",
-      "issuer": "出入境"
+      "issuer": "出入境",
+      "source": "generated"
     },
     {
       "content_key": "cert.n92d9_10",
       "name": "医师资格证",
-      "issuer": "卫生"
+      "issuer": "卫生",
+      "source": "generated"
     },
     {
       "content_key": "cert.n9ed0_01",
       "name": "户口本",
-      "issuer": "公安"
+      "issuer": "公安",
+      "source": "generated"
     },
     {
       "content_key": "cert.nc532_07",
       "name": "教师资格证",
-      "issuer": "教育"
+      "issuer": "教育",
+      "source": "generated"
     },
     {
       "content_key": "cert.ncce4_09",
       "name": "律师执业证",
-      "issuer": "司法"
+      "issuer": "司法",
+      "source": "generated"
     },
     {
       "content_key": "cert.ne15b_11",
       "name": "护士证",
-      "issuer": "卫生"
+      "issuer": "卫生",
+      "source": "generated"
     },
     {
       "content_key": "cert.ne33d_05",
       "name": "护照",
-      "issuer": "出入境"
+      "issuer": "出入境",
+      "source": "generated"
     },
     {
       "content_key": "cert.nurse",
       "name": "护士证",
-      "issuer": "medical"
+      "issuer": "medical",
+      "source": "generated"
     },
     {
       "content_key": "cert.passport",
       "name": "护照",
-      "issuer": "government"
+      "issuer": "government",
+      "source": "generated"
     },
     {
       "content_key": "cert.physician",
       "name": "医师资格证",
-      "issuer": "medical"
+      "issuer": "medical",
+      "source": "generated"
     },
     {
       "content_key": "cert.pilot",
       "name": "飞行执照",
-      "issuer": "aviation"
+      "issuer": "aviation",
+      "source": "generated"
     },
     {
       "content_key": "cert.psychologist",
       "name": "心理咨询师",
-      "issuer": "medical"
+      "issuer": "medical",
+      "source": "generated"
     },
     {
       "content_key": "cert.teacher",
       "name": "教师资格证",
-      "issuer": "education"
+      "issuer": "education",
+      "source": "generated"
     },
     {
       "content_key": "cert.translator",
       "name": "翻译证",
-      "issuer": "education"
+      "issuer": "education",
+      "source": "generated"
     },
     {
       "content_key": "cert.welder",
       "name": "焊工证",
-      "issuer": "labor"
+      "issuer": "labor",
+      "source": "generated"
     }
   ]
 }
