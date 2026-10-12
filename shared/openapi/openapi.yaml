@@ -17,11 +17,31 @@ tags:
   - name: telemetry
   - name: world
   - name: admin
+  - name: meta
 
 security:
   - bearerAuth: []
 
 paths:
+  /health:
+    get:
+      tags: [meta]
+      summary: 存活探针
+      security: []
+      operationId: health
+      responses:
+        "200":
+          description: 服务存活
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, time, version]
+                properties:
+                  status: { type: string, examples: ["ok"] }
+                  time: { type: string, format: date-time }
+                  version: { type: string }
+
   /auth/register:
     post:
       tags: [auth]
