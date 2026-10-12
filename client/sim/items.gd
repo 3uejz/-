@@ -189,13 +189,15 @@ func durability_ratio(inst: Dictionary) -> float:
 
 ## 购买：经 EconomySystem 从 account 转账给 seller 后入包。economy 为空则离线入包。
 func buy(player: Dictionary, economy, account: String, def_id: String,
-		qty: int = 1, market = null, season: String = "", seller: String = "market") -> Dictionary:
+		qty: int = 1, market = null, season: String = "", seller: String = "market",
+		region_mult: float = 1.0) -> Dictionary:
 	if get_def(def_id).is_empty():
 		return {"ok": false, "reason": "unknown_def", "cost_minor": 0}
 	qty = maxi(1, qty)
 	if not can_add(player, def_id, qty):
 		return {"ok": false, "reason": "over_capacity", "cost_minor": 0}
-	var cost: int = price_minor(def_id, market, season, 1.0) * qty
+	var mult: float = region_mult if region_mult > 0.0 else 1.0
+	var cost: int = int(round(float(price_minor(def_id, market, season, 1.0) * qty) * mult))
 	if economy == null:
 		add(player, def_id, qty)
 		return {"ok": true, "cost_minor": cost, "offline": true, "id": def_id, "quantity": qty}
@@ -209,12 +211,14 @@ func buy(player: Dictionary, economy, account: String, def_id: String,
 
 ## 出售：按二手折价入账（money 从 buyer 转来），先扣物再收款。
 func sell(player: Dictionary, economy, account: String, def_id: String, qty: int = 1,
-		market = null, season: String = "", buyer: String = "market", condition: float = 0.6) -> Dictionary:
+		market = null, season: String = "", buyer: String = "market", condition: float = 0.6,
+		region_mult: float = 1.0) -> Dictionary:
 	qty = maxi(1, qty)
 	if count(player, def_id) < qty:
 		return {"ok": false, "reason": "not_owned", "proceeds_minor": 0}
 	var unit: int = price_minor(def_id, market, season, clampf(condition, 0.0, 1.0))
-	var proceeds: int = unit * qty
+	var mult: float = region_mult if region_mult > 0.0 else 1.0
+	var proceeds: int = int(round(float(unit * qty) * mult))
 	remove(player, def_id, qty)
 	if economy != null:
 		economy.transfer(buyer, account, proceeds, "sell:" + def_id)

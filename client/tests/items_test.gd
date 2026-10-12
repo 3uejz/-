@@ -22,6 +22,7 @@ func run_tests() -> void:
 	_test_durability_and_repair()
 	_test_depreciation()
 	_test_pricing_and_market()
+	_test_region_price_multiplier()
 	_test_ownership_and_pawn_redeem()
 	_test_give_and_inherit()
 	_test_buy_sell_conservation()
@@ -149,6 +150,23 @@ func _test_pricing_and_market() -> void:
 	var mp: int = sys.price_minor("item.apple", market)
 	check(mp > 0, "接入市场后价格为正")
 	check(mp != 5 * scale, "接入市场后使用市场价")
+
+
+## 区域物价系数：同一件商品在物价更高的区域更贵。
+func _test_region_price_multiplier() -> void:
+	var sys = ItemScript.new()
+	sys.register_starter_catalog()
+	var e1 = EconomyScript.new(7)
+	e1.open_account("p", 100000)
+	e1.open_account("market", 0)
+	var p1: Dictionary = _player()
+	var base: Dictionary = sys.buy(p1, e1, "p", "item.apple", 1)
+	var e2 = EconomyScript.new(7)
+	e2.open_account("p", 100000)
+	e2.open_account("market", 0)
+	var p2: Dictionary = _player()
+	var up: Dictionary = sys.buy(p2, e2, "p", "item.apple", 1, null, "", "market", 2.0)
+	check_eq(int(up.get("cost_minor", 0)), int(base.get("cost_minor", 0)) * 2, "区域物价系数作用于购买成本")
 
 
 # --- 物权 ---

@@ -206,7 +206,7 @@ func _buy(intent) -> Dictionary:
 	if not host.items.has_def(item_id):
 		return _fail("未知物品「%s」。" % item_id)
 	var qty := _quantity(intent)
-	var r: Dictionary = host.items.buy(host.player(), host.economy, host.account_id(), item_id, qty)
+	var r: Dictionary = host.items.buy(host.player(), host.economy, host.account_id(), item_id, qty, null, "", "market", host.region_price_index())
 	if not bool(r.get("ok", false)):
 		return _fail("购买失败：%s。" % String(r.get("reason", "")))
 	host.sync_finances()
@@ -219,7 +219,7 @@ func _sell(intent) -> Dictionary:
 	if item_id.is_empty():
 		return _fail("请指定要出售的物品。")
 	var qty := _quantity(intent)
-	var r: Dictionary = host.items.sell(host.player(), host.economy, host.account_id(), item_id, qty)
+	var r: Dictionary = host.items.sell(host.player(), host.economy, host.account_id(), item_id, qty, null, "", "market", 0.6, host.region_price_index())
 	if not bool(r.get("ok", false)):
 		return _fail("出售失败：%s。" % String(r.get("reason", "")))
 	host.sync_finances()

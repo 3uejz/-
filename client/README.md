@@ -62,6 +62,7 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 主壳 `_panel_context()` 经 `current_region_id()`/`regions_view()`/`weather_now()`/`weather_panel_data()` 向地图与天气面板提供所在区域、实时天气与未来 7 日预报；旅行/搬迁经 `set_home_region()` 切换。
 - 地图面板（`看地图`）内嵌 `ui/map/map_view.tscn` 绘制可缩放的 2D 混合地图，并注入 `SimHost.geo`。
 - 地理由种子确定性生成、不入档（design：存档只记变化量）；区域增量在 `advance()` 后写入 `world_delta.regions`（符合 `region_delta` 契约，经济/气候等收进 `snapshot`），读档时经 `load_deltas()` 恢复并按地理重建气候。
+- 宏观→微观：买卖经 `SimHost.region_price_index()` 把所在区域物价指数传入 `items.buy/sell`（`region_mult`，缺省 1.0），物价随区域与年份通胀而变。
 
 ## 面板与表现层
 

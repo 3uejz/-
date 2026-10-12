@@ -216,6 +216,14 @@ func _zone_for_region(region_id: String) -> String:
 func current_region_id() -> String:
 	return _home_region_id
 
+## 当前所在区域的物价指数（相对全国基准，1.0 为基准）；无区域时返回 1.0。
+func region_price_index() -> float:
+	var rid: String = current_region_id()
+	if rid == "" or regions == null or not regions.has_region(rid):
+		return 1.0
+	var idx: float = float(regions.get_region(rid).price_index)
+	return idx if idx > 0.0 else 1.0
+
 ## 指定所在区域：登记为活动区并绑定气候带（供旅行/搬迁接线）。
 func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	if geo != null and geo.count() > 0 and not geo.has_node(region_id):
