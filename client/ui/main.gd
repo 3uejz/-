@@ -6,6 +6,7 @@ extends Control
 const ParserScript = preload("res://command/command_parser.gd")
 const SimHostScript = preload("res://sim/sim_host.gd")
 const ExecutorScript = preload("res://command/intent_executor.gd")
+const TimeDriverScript = preload("res://sim/time_driver.gd")
 const SaveManagerScript = preload("res://sim/save_manager.gd")
 const NarratorScript = preload("res://sim/narrator.gd")
 const PaletteScript = preload("res://ui/settings/accessibility_palette.gd")
@@ -45,6 +46,8 @@ var _parser
 var _narrator
 var _sim                                  ## SimHost：玩法接线层
 var _executor                             ## IntentExecutor：意图 → 模拟
+var _time_driver                          ## TimeDriver：挂机实时世界的分钟换算
+var _auto_time: bool = false              ## 是否随现实时间推进（真实窗口开，headless 关）
 var _save_manager                         ## SaveManager：本地存读档
 var _palette
 var _command_handler: Callable = Callable()
@@ -106,6 +109,8 @@ func _ready() -> void:
 	_parser = ParserScript.new()
 	_narrator = NarratorScript.new()
 	_init_simulation()
+	_time_driver = TimeDriverScript.new()
+	_auto_time = _auto_time_supported()
 	_palette = PaletteScript.new()
 	_theme_manager = ThemeManagerScript.new()
 	_theme_manager.apply_to(self)
@@ -147,6 +152,69 @@ func _init_simulation() -> void:
 	_sim = SimHostScript.new(game, seed)
 	_executor = ExecutorScript.new(_sim)
 	set_command_handler(_on_intent)
+
+# --- 挂机实时世界（R1 / M0） ---
+
+## 实时推进仅在真实窗口运行；headless（测试/CI）下关闭，保证测试确定性。
+func _auto_time_supported() -> bool:
+	return DisplayServer.get_name() != "headless"
+
+## 供测试或设置显式开关实时推进。
+func set_auto_time(enabled: bool) -> void:
+	_auto_time = enabled
+	if not enabled and _time_driver != null:
+		_time_driver.reset()
+
+func auto_time_enabled() -> bool:
+	return _auto_time
+
+## 每帧按「现实增量 × 倍速」推进游戏内时钟与生理，并刷新状态栏。
+func _process(delta: float) -> void:
+	if not _auto_time or _sim == null or _time_driver == null:
+		return
+	if _sim.is_dead():
+		return
+	var speed = get_node_or_null("/root/SpeedController")
+	if speed == null:
+		return
+	var minutes: int = _time_driver.consume(int(speed.get_speed()), delta)
+	if minutes > 0:
+		_advance_realtime(speed, minutes)
+
+## 推进实时分钟；尊重快进目标（到达即停）、派发分层 tick、处理死亡/濒死中断。
+func _advance_realtime(speed, minutes: int) -> void:
+	var cap: int = minutes
+	var target := int(speed.target_minutes())
+	if target >= 0:
+		var remain: int = target - _sim.now_minutes()
+		if remain <= 0:
+			speed.clear_target()
+			speed.set_speed(1)
+			return
+		cap = mini(minutes, remain)
+	var result: Dictionary = _sim.advance(cap)
+	var scheduler = get_node_or_null("/root/TickScheduler")
+	if scheduler != null:
+		scheduler.tick(_sim.now_minutes())
+	_apply_clock()
+	_handle_time_events(result, speed)
+	if target >= 0 and _sim.now_minutes() >= target:
+		speed.clear_target()
+		speed.set_speed(1)
+	refresh_status()
+
+## 实时推进产生的事件：死亡/濒死即暂停并提示（R1 健康危机中断）。
+func _handle_time_events(result: Dictionary, speed) -> void:
+	for e in result.get("events", []):
+		if typeof(e) != TYPE_DICTIONARY:
+			continue
+		match String((e as Dictionary).get("type", "")):
+			"death":
+				append_message("你走到了生命的尽头。", "danger")
+				speed.set_speed(0)
+			"dying":
+				append_message("你已油尽灯枯，随时可能离世。", "warning")
+				speed.set_speed(0)
 
 ## 指令意图执行：落到模拟系统，回显叙事、推进时钟、打开面板、处理元动作。
 func _on_intent(intent) -> void:

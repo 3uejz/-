@@ -13,6 +13,7 @@ autoload/   GameState / WorldClock / TickScheduler / SpeedController / Net（Aut
 sim/        确定性模拟系统（110+ 领域系统；rng.gd=SplitMix64，gregorian.gd=公历映射，baseline.gd=数值基线）
 sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、按分钟推进、回写经济镜像
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
+sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
 ui/         主界面壳（main.tscn）与面板（注册表 37 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
@@ -35,6 +36,21 @@ tests/      headless 测试（test_base.gd 基类 + 各 suite）
 
 指令输入的解析目录（物品/技能）来自 `SimHost` 注册的起步目录；未链接到目录的名称由执行器按名称回退匹配。
 执行器经 `sim/flavor.gd` 为等待/睡/吃/锻炼/工作/学习等动作生成时段场景化的措辞变体。
+
+## 挂机实时世界
+
+除指令推进外，`main.gd._process()` 每帧按「现实增量 × 倍速」自动推进游戏内时钟与生理，
+构成挂机实时世界（R1 / M0）：
+
+```
+_process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
+               → SimHost.advance(分钟) + TickScheduler.tick(now) + 刷新状态栏
+```
+
+- `sim/time_driver.gd`（`TimeDriver`）：把现实秒按倍速换算为游戏分钟，余数累积防漂移、单帧封顶 1 天。
+- 快进目标（`SpeedController.target_minutes`）到达即停并回落 1 倍速；玩家死亡时暂停推进。
+- **headless（测试/CI）下自动关闭**（`_auto_time_supported()` 判 `DisplayServer.get_name()`），
+  保证测试确定性；可用 `set_auto_time()`/`auto_time_enabled()` 显式开关。
 
 ## 面板与表现层
 
