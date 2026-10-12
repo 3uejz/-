@@ -127,3 +127,14 @@ Entries discovered by the Agent during task execution should follow this format:
   - 本地连真实存储跑后端：先 `bash scripts/services.sh start`；创建 PG 角色/库 `life`（密码 `change-me`，与 `deploy/docker-compose.yml` 默认一致）后，用 `JWT_SECRET`(≥32B)/`ADMIN_PASSWORD`/`DATABASE_URL=postgres://life:change-me@127.0.0.1:5432/life?sslmode=disable`/`REDIS_URL=redis://127.0.0.1:6379/0` 启动 `server`（不配 DATABASE_URL 则回退进程内内存存储）。缺 `JWT_SECRET` 会拒绝启动（R37.12）。
   - `client/tests/net_live_test.gd` 会用真实 `HttpTransport` 打到 `http://127.0.0.1:8080`；后端不可达时打印 SKIP 且退出 0，故离线 `scripts/test.sh` 仍然通过。该套件以 `--script` 运行，Autoload 不挂载，实例化 net 后须 `add_child` 到 root 并 `await process_frame` 后 HTTPRequest 才在树内。
   - `.github/workflows/ci.yml` 现含三个作业：一致性校验与后端测试、Godot 客户端测试、管理后台构建。
+
+[Project Knowledge Summary]
+- Date: 2026-10-12
+- Context: Discovered by Agent while wiring the gameplay layer (SimHost / IntentExecutor) into the UI shell
+- Category: Testing Methods
+- Instructions:
+  - 更正：Godot 4.7.2 以 `--script` 运行时，project.godot 里的 Autoload **是挂载的**（root 下存在 GameState/WorldClock/TickScheduler/SpeedController/Net，可 `root.get_node_or_null("GameState")` 取到）。此前“--script 不挂载 Autoload”的说法不成立；写测试时若需干净实例可先判空再手动 `preload(...).new()` 挂载，但不要假定其不存在。
+  - 端到端接线测试范式（见 `client/tests/gameplay_wiring_test.gd`）：`root.get_node_or_null("GameState")` 复用 Autoload（或自建并 `add_child`）→ `new_game(seed)` → `load("res://ui/main.tscn").instantiate()` + `add_child` → 在 `_process` 首帧后调用 `_main.submit("...")`，断言 `GameState.clock.absolute_minutes` / `player.inventory` 等状态变化，最后 `_main.free()`。
+  - 玩法接线结构：`client/sim/sim_host.gd`（SimHost：绑定 GameState、惰性挂载系统、`advance(minutes)` 推进生理并同步 `state.clock.absolute_minutes`、`sync_finances()` 回写 `player.finances`）与 `client/command/intent_executor.gd`（IntentExecutor：动词 → 系统 → `{ok,narration,minutes,panel,action,error}`）。main.gd `_init_simulation()` 注入 `set_command_handler(_on_intent)`，并把 `state.clock` 镜像到 WorldClock 供日历展示（避免双时间源）。
+  - 岗位/机构名要按名称回退匹配：`求职`、`锻炼` 等动词在 verb_registry 中不声明 object_types，未识别文本会落在 `intent.params["method"]`，执行器用 `_find_by_name` 在系统 `ids()/get_def()` 上做名称匹配。`command_parser.gd` 已改为在任何 unresolved 情况下都写入 `method`（原先仅在对象非空时写入）。
+

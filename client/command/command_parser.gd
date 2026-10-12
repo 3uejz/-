@@ -158,7 +158,8 @@ func _parse_single(raw: String, context: Dictionary, source: String):
 	if not unresolved.is_empty() and resolved["objects"].is_empty():
 		invalid = true
 		reason = "无法识别对象「%s」" % unresolved
-	elif not unresolved.is_empty():
+	# 未识别文本始终保留在 method 参数中，供执行层按名称再做一次目录回退匹配。
+	if not unresolved.is_empty():
 		intent.params["method"] = unresolved
 
 	# 省略补全与代词还原：按动词声明的对象类型填充上下文槽。

@@ -159,6 +159,11 @@ func has_def(id: String) -> bool:
 	return _defs.has(id)
 
 
+## 已注册技能 id 列表（与 jobs/items 目录接口保持一致）。
+func ids() -> Array:
+	return _defs.keys()
+
+
 func get_def(id: String) -> Dictionary:
 	return _defs.get(id, {})
 

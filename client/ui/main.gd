@@ -4,6 +4,9 @@ extends Control
 ## 结构与接线为主，模拟逻辑在 sim/ 与 command/，保证 headless 可加载。
 
 const ParserScript = preload("res://command/command_parser.gd")
+const SimHostScript = preload("res://sim/sim_host.gd")
+const ExecutorScript = preload("res://command/intent_executor.gd")
+const SaveManagerScript = preload("res://sim/save_manager.gd")
 const NarratorScript = preload("res://sim/narrator.gd")
 const PaletteScript = preload("res://ui/settings/accessibility_palette.gd")
 const ThemeManagerScript = preload("res://ui/theme/theme_manager.gd")
@@ -40,6 +43,9 @@ const QUICK_ACTIONS: Array = [
 
 var _parser
 var _narrator
+var _sim                                  ## SimHost：玩法接线层
+var _executor                             ## IntentExecutor：意图 → 模拟
+var _save_manager                         ## SaveManager：本地存读档
 var _palette
 var _command_handler: Callable = Callable()
 var _theme_manager
@@ -99,6 +105,7 @@ const VERB_PANELS: Dictionary = {
 func _ready() -> void:
 	_parser = ParserScript.new()
 	_narrator = NarratorScript.new()
+	_init_simulation()
 	_palette = PaletteScript.new()
 	_theme_manager = ThemeManagerScript.new()
 	_theme_manager.apply_to(self)
@@ -128,6 +135,95 @@ func _connect_nodes() -> void:
 func set_command_handler(handler: Callable) -> void:
 	_command_handler = handler
 
+# --- 玩法接线（任务 3/4/23） ---
+
+## 挂载玩法接线层：SimHost 绑定 GameState，IntentExecutor 作为指令执行器。
+## Autoload（GameState）缺失时跳过，保证 headless/单元加载不报错。
+func _init_simulation() -> void:
+	var game = get_node_or_null("/root/GameState")
+	if game == null:
+		return
+	var seed: int = int(game.meta.get("seed", 0)) if game.meta is Dictionary else 0
+	_sim = SimHostScript.new(game, seed)
+	_executor = ExecutorScript.new(_sim)
+	set_command_handler(_on_intent)
+
+## 指令意图执行：落到模拟系统，回显叙事、推进时钟、打开面板、处理元动作。
+func _on_intent(intent) -> void:
+	if _executor == null:
+		return
+	var result: Dictionary = _executor.execute(intent)
+	if not bool(result.get("ok", false)):
+		append_message(String(result.get("error", "执行失败")), "danger")
+		refresh_status()
+		return
+	for line in result.get("narration", []):
+		append_message(String(line), "info")
+	if int(result.get("minutes", 0)) > 0:
+		_apply_clock()
+	var pid := String(result.get("panel", ""))
+	if pid != "":
+		open_panel(pid)
+	var action := String(result.get("action", ""))
+	if action != "":
+		_handle_action(action)
+	refresh_status()
+
+## 把游戏内时钟（GameState.clock.absolute_minutes）镜像到 WorldClock 供日历展示。
+func _apply_clock() -> void:
+	var game = get_node_or_null("/root/GameState")
+	if game == null or not (game.clock is Dictionary):
+		return
+	var clock = get_node_or_null("/root/WorldClock")
+	if clock != null:
+		clock.set_minutes(int(game.clock.get("absolute_minutes", 0)))
+
+func _handle_action(action: String) -> void:
+	match action:
+		"save":
+			_do_save()
+		"load":
+			_do_load()
+		"pause":
+			_on_pause()
+		"speed":
+			_on_speed()
+		"restart":
+			append_message("重开新的一生请在「设置」面板确认。", "warning")
+		_:
+			pass
+
+func _save_manager_instance():
+	if _save_manager == null:
+		_save_manager = SaveManagerScript.new("user://saves")
+	return _save_manager
+
+func _do_save() -> void:
+	var game = get_node_or_null("/root/GameState")
+	if game == null:
+		append_message("当前无游戏状态，无法存档。", "danger")
+		return
+	var r: Dictionary = _save_manager_instance().save("1", game.to_dict())
+	if bool(r.get("ok", false)):
+		append_message("已存档到槽位 1。", "success")
+	else:
+		append_message("存档失败：%s" % String(r.get("error", "")), "danger")
+
+func _do_load() -> void:
+	var r: Dictionary = _save_manager_instance().load("1")
+	if not bool(r.get("ok", false)):
+		append_message("读档失败：%s" % String(r.get("error", "")), "danger")
+		return
+	var game = get_node_or_null("/root/GameState")
+	if game == null:
+		return
+	game.from_dict(r["doc"])
+	# 重新绑定模拟层到载入后的状态，并同步时钟。
+	_init_simulation()
+	_apply_clock()
+	refresh_status()
+	append_message("已读取槽位 1。", "success")
+
 # --- 输入与解析 ---
 
 func _on_submit_text(text: String) -> void:
@@ -148,8 +244,10 @@ func submit(text: String) -> void:
 	var intent = _parser.parse(raw, _context())
 	_record_history(raw)
 	if not intent.ok:
-		_append_intent_failure(intent)
-		return
+		# 未知动词或多义候选：提示用户；其余（对象未链接目录）交给执行器按名称回退处理。
+		if not intent.options.is_empty() or String(intent.verb) == "":
+			_append_intent_failure(intent)
+			return
 	append_message(_format_intent(intent), "success")
 	if _command_handler.is_valid():
 		_command_handler.call(intent)
@@ -195,7 +293,23 @@ func _record_history(raw: String) -> void:
 
 ## 解析上下文：由面板/GameState 提供；此处给出可用的最小上下文。
 func _context() -> Dictionary:
-	return {"slots": {}, "recent": []}
+	return {"slots": {}, "recent": [], "catalogs": _catalogs()}
+
+## 由玩法接线层导出解析目录（物品/技能/岗位），让对象能链接到具体 id。
+func _catalogs() -> Dictionary:
+	if _sim == null:
+		return {}
+	return {
+		"item": _catalog_entries(_sim.items),
+		"skill": _catalog_entries(_sim.skills),
+	}
+
+func _catalog_entries(system) -> Array:
+	var out: Array = []
+	for idv in system.ids():
+		var d: Dictionary = system.get_def(String(idv))
+		out.append({"id": String(idv), "name": String(d.get("name", ""))})
+	return out
 
 # --- 动作面板 ---
 
