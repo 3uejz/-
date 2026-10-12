@@ -1,0 +1,148 @@
+{
+  "generator": "meshgen",
+  "groups": [
+    {
+      "group": "residence",
+      "path": "client/assets/models/place_groups/residence.glb",
+      "bytes": 4852,
+      "parts": 7,
+      "size": [
+        20.0,
+        5.0,
+        20.0
+      ]
+    },
+    {
+      "group": "dining",
+      "path": "client/assets/models/place_groups/dining.glb",
+      "bytes": 10156,
+      "parts": 9,
+      "size": [
+        20.0,
+        3.6,
+        20.0
+      ]
+    },
+    {
+      "group": "retail",
+      "path": "client/assets/models/place_groups/retail.glb",
+      "bytes": 5372,
+      "parts": 7,
+      "size": [
+        20.0,
+        4.2,
+        20.0
+      ]
+    },
+    {
+      "group": "medical",
+      "path": "client/assets/models/place_groups/medical.glb",
+      "bytes": 3044,
+      "parts": 4,
+      "size": [
+        20.0,
+        5.2,
+        20.0
+      ]
+    },
+    {
+      "group": "education",
+      "path": "client/assets/models/place_groups/education.glb",
+      "bytes": 13856,
+      "parts": 8,
+      "size": [
+        20.0,
+        5.4,
+        20.0
+      ]
+    },
+    {
+      "group": "government",
+      "path": "client/assets/models/place_groups/government.glb",
+      "bytes": 9408,
+      "parts": 11,
+      "size": [
+        20.0,
+        9.2,
+        20.0
+      ]
+    },
+    {
+      "group": "transport",
+      "path": "client/assets/models/place_groups/transport.glb",
+      "bytes": 6432,
+      "parts": 7,
+      "size": [
+        20.0,
+        5.05,
+        20.0
+      ]
+    },
+    {
+      "group": "culture",
+      "path": "client/assets/models/place_groups/culture.glb",
+      "bytes": 32512,
+      "parts": 4,
+      "size": [
+        20.0,
+        8.9,
+        20.0
+      ]
+    },
+    {
+      "group": "religion",
+      "path": "client/assets/models/place_groups/religion.glb",
+      "bytes": 6120,
+      "parts": 8,
+      "size": [
+        20.0,
+        8.99,
+        20.0
+      ]
+    },
+    {
+      "group": "industry",
+      "path": "client/assets/models/place_groups/industry.glb",
+      "bytes": 6440,
+      "parts": 6,
+      "size": [
+        20.0,
+        6.4,
+        20.0
+      ]
+    },
+    {
+      "group": "finance",
+      "path": "client/assets/models/place_groups/finance.glb",
+      "bytes": 4168,
+      "parts": 6,
+      "size": [
+        20.0,
+        17.5,
+        20.0
+      ]
+    },
+    {
+      "group": "nature",
+      "path": "client/assets/models/place_groups/nature.glb",
+      "bytes": 21340,
+      "parts": 10,
+      "size": [
+        20.0,
+        6.28,
+        20.0
+      ]
+    },
+    {
+      "group": "special",
+      "path": "client/assets/models/place_groups/special.glb",
+      "bytes": 31784,
+      "parts": 5,
+      "size": [
+        20.0,
+        12.3,
+        20.0
+      ]
+    }
+  ]
+}

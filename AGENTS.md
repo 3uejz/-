@@ -61,7 +61,7 @@ engine-modules/ 项目专用引擎模块 overlay（lifetext_*）
 engine-patches/ 少量核心补丁（模块无法实现时）
 shared/         跨语言共享规格（JSON Schema、协议、一致性测试数据）
 content/        内容源（职业、技能、物品、事件、地图等）
-tools/          内容生产工具链（导入、校验、打包）与代码生成器（genbaseline）
+tools/          内容生产工具链（导入、校验、打包）、代码生成器（genbaseline）与程序化 3D 资产生成器（meshgen）
 deploy/         私有服务器部署（docker-compose、Dockerfile）
 scripts/        开发脚本（doctor、services、setup-engine、build-engine）
 prototype/      历史 H5 原型，仅作移植参考，不参与构建、不进 CI、勿被目标工程引用

@@ -5,6 +5,16 @@
 - 输入：`content/catalog/` 下的源数据（JSON/CSV）
 - 输出：`build/content/` 下的轻量二进制内容包（`.ltpack`）与 `manifest.json` 差量清单
 - 语言：Go，保持可 CI 化；纳入 `scripts/test.sh` 与 `.github/workflows/ci.yml`
+- 例外：`meshgen/` 为 Python 程序化 3D 资产生成器，本地/离线运行，不入 CI
+
+## meshgen/
+
+程序化 3D 资产生成器（Python，纯 CPU）。把 13 个场所分组编译为确定性 `.glb`，输出到
+`client/assets/models/place_groups/`。依赖装在隔离环境 `.toolchain/meshgen-venv`。详见 `meshgen/README.md`。
+
+```bash
+.toolchain/meshgen-venv/bin/python tools/meshgen/meshgen.py --all --manifest
+```
 
 ## genbaseline/
 

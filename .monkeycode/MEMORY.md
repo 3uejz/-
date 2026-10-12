@@ -138,3 +138,13 @@ Entries discovered by the Agent during task execution should follow this format:
   - 玩法接线结构：`client/sim/sim_host.gd`（SimHost：绑定 GameState、惰性挂载系统、`advance(minutes)` 推进生理并同步 `state.clock.absolute_minutes`、`sync_finances()` 回写 `player.finances`）与 `client/command/intent_executor.gd`（IntentExecutor：动词 → 系统 → `{ok,narration,minutes,panel,action,error}`）。main.gd `_init_simulation()` 注入 `set_command_handler(_on_intent)`，并把 `state.clock` 镜像到 WorldClock 供日历展示（避免双时间源）。
   - 岗位/机构名要按名称回退匹配：`求职`、`锻炼` 等动词在 verb_registry 中不声明 object_types，未识别文本会落在 `intent.params["method"]`，执行器用 `_find_by_name` 在系统 `ids()/get_def()` 上做名称匹配。`command_parser.gd` 已改为在任何 unresolved 情况下都写入 `method`（原先仅在对象非空时写入）。
 
+[Project Knowledge Summary]
+- Date: 2026-10-12
+- Context: Discovered by Agent while adding a 3D asset generator（用户要求「给自己加载 3D 生成工具」）
+- Category: Build Methods
+- Instructions:
+  - 本开发环境**无 GPU**（无 `/dev/nvidia*`、无 `nvidia-smi`、无 ROCm）、2 核 CPU、约 750MB 可用内存、无 swap。扩散式文生 3D（TripoSR / Shap-E / Stable-Fast-3D / InstantMesh / Hunyuan3D 等）在此**无法运行**（最低需数 GB 显存/内存）。如需 AI 生成的 3D 模型，走云端 3D API（用户自备密钥）或 GPU 机器。
+  - 已落地程序化 3D 生成器 `tools/meshgen/`（Python + trimesh，纯 CPU）。隔离环境 `.toolchain/meshgen-venv`（`.toolchain/` 已 gitignore；创建 venv 需先 `apt-get install -y python3.11-venv`）。
+  - 生成命令：`.toolchain/meshgen-venv/bin/python tools/meshgen/meshgen.py --all --manifest`；产物 `client/assets/models/place_groups/<group>.glb`（13 个场所分组），确定性（重复运行字节一致）。该路径为留给真实/自建模型的约定槽位；参考样例另存 `tools/meshgen/samples/place_groups/`（不在 Godot 扫描范围）。
+  - 导入约定：`.glb` 由 Godot 导入，`.glb.import` 文件**随仓库提交**（`.godot/` 仍忽略）；改模型后跑 `.toolchain/godot --headless --path client --import` 重新导入。真实 `.glb` 按同名覆盖即替换，零改代码。详见 `tools/meshgen/README.md` 与 `client/assets/README.md`。
+

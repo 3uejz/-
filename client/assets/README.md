@@ -29,6 +29,14 @@ presentation/
   `transport` / `culture` / `religion` / `industry` / `finance` / `nature` / `special`。
 - 插画键：`illus.<name>` → `art/illustrations/<name>.(tres|png|svg|webp)`。
 
+## 场所分组模型槽位
+
+约定槽位：`models/place_groups/<group>.glb`（`<group>` 为 13 个场所分组之一）。此槽位留给真实/自建模型，
+放入后由表现层按同名替换占位，无需改代码。
+
+如需程序化生成一版打底，可运行 `tools/meshgen/`（纯 CPU，详见 `tools/meshgen/README.md`），
+其默认输出即写入本槽位；参考样例另存于 `tools/meshgen/samples/place_groups/`。
+
 ## LOD 约定
 
 - 场所场景按距离分三级：`near` / `mid` / `far`。
