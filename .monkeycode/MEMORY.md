@@ -118,3 +118,12 @@ Entries discovered by the Agent during task execution should follow this format:
   - windows-template 作业流程：SCons 构建自定义模板 → 安装官方 4.7.2 编辑器 → 注册模板为 `%APPDATA%\Godot\export_templates\4.7.2.stable\windows_release_x86_64.exe` → 用该模板导出客户端 → headless 冒烟运行导出程序。
   - 坑：Windows 编辑器要用 `Godot_v4.7.2-stable_win64_console.exe`（GUI 版不挂控制台，PowerShell 既不等待也拿不到退出码/日志）；导出路径传绝对路径，导出程序是 GUI 子系统，需用 `Start-Process -Wait -PassThru` 才能拿到退出码。
   - 查询本仓库 CI 状态：GitHub API 未认证会被限流（60/h）；可用 `git credential fill`（host=github.com）取 token 后以 `Authorization: Bearer` 调 `/repos/3uejz/-/actions/...`，勿在任何输出中打印 token。
+
+[Project Knowledge Summary]
+- Date: 2026-10-11
+- Context: Discovered by Agent while running 客户端↔后端本地端到端联调
+- Category: Testing Methods
+- Instructions:
+  - 本地连真实存储跑后端：先 `bash scripts/services.sh start`；创建 PG 角色/库 `life`（密码 `change-me`，与 `deploy/docker-compose.yml` 默认一致）后，用 `JWT_SECRET`(≥32B)/`ADMIN_PASSWORD`/`DATABASE_URL=postgres://life:change-me@127.0.0.1:5432/life?sslmode=disable`/`REDIS_URL=redis://127.0.0.1:6379/0` 启动 `server`（不配 DATABASE_URL 则回退进程内内存存储）。缺 `JWT_SECRET` 会拒绝启动（R37.12）。
+  - `client/tests/net_live_test.gd` 会用真实 `HttpTransport` 打到 `http://127.0.0.1:8080`；后端不可达时打印 SKIP 且退出 0，故离线 `scripts/test.sh` 仍然通过。该套件以 `--script` 运行，Autoload 不挂载，实例化 net 后须 `add_child` 到 root 并 `await process_frame` 后 HTTPRequest 才在树内。
+  - `.github/workflows/ci.yml` 现含三个作业：一致性校验与后端测试、Godot 客户端测试、管理后台构建。
