@@ -623,8 +623,16 @@ func _panel_context() -> Dictionary:
 		context["epidemic"] = world.get("epidemic", [])
 		var player: Dictionary = game.player if game.player is Dictionary else {}
 		context["itineraries"] = player.get("itineraries", [])
-	if _sim != null and _sim.economy != null:
-		context["macro"] = _sim.economy.macro
+	if _sim != null:
+		if _sim.economy != null:
+			context["macro"] = _sim.economy.macro
+		var regions_view: Array = _sim.regions_view()
+		if not regions_view.is_empty():
+			context["regions"] = regions_view
+		context["current_region"] = _sim.current_region_id()
+		var w: Dictionary = _sim.weather_now()
+		if not w.is_empty():
+			context["weather"] = w
 	return context
 
 func _settings_summary() -> Dictionary:
