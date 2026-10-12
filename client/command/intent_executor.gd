@@ -13,6 +13,8 @@ const WEEK: int = 10080
 const MONTH: int = 43200
 const YEAR: int = 525600
 
+const FlavorScript = preload("res://sim/flavor.gd")
+
 var host                        # SimHost
 var panels: Array = []          # 本次执行请求打开的面板 id（复合指令取最后一个）
 
@@ -132,15 +134,15 @@ func _help() -> Dictionary:
 
 func _wait(intent) -> Dictionary:
 	var minutes := _duration_minutes(intent, HOUR)
-	return _advance_time(minutes, {})
+	return _advance_time(minutes, {}, "wait")
 
 func _sleep(intent) -> Dictionary:
 	var minutes := _duration_minutes(intent, 8 * HOUR)
-	return _advance_time(minutes, {"asleep": true})
+	return _advance_time(minutes, {"asleep": true}, "sleep")
 
 func _exercise(intent) -> Dictionary:
 	var minutes := _duration_minutes(intent, HOUR)
-	var r: Dictionary = _advance_time(minutes, {"labor_intensity": 0.6})
+	var r: Dictionary = _advance_time(minutes, {"labor_intensity": 0.6}, "exercise")
 	# 若指定了技能，一并计入练习；否则尝试体质类技能。
 	var sid := _object_id(intent, "skill")
 	if sid.is_empty():
@@ -160,7 +162,7 @@ func _work(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法工作：%s" % String(r.get("reason", "")))
 	# work() 已扣体力与心情，这里只推进剩余代谢时间，避免重复扣减。
-	var adv: Dictionary = _advance_time(minutes, {})
+	var adv: Dictionary = _advance_time(minutes, {}, "work")
 	var lines: Array = adv["narration"]
 	lines.append("工作 %s，绩效 %.0f。" % [_duration_text(minutes), float(r.get("performance", 0.0))])
 	return _ok(lines, minutes, "")
@@ -175,7 +177,7 @@ func _study(intent) -> Dictionary:
 	var r: Dictionary = _practice(sid, float(minutes) / 60.0)
 	if not bool(r.get("ok", false)):
 		return _fail("无法学习 %s：%s" % [_skill_name(sid), String(r.get("reason", ""))])
-	var adv: Dictionary = _advance_time(minutes, {})
+	var adv: Dictionary = _advance_time(minutes, {}, "study")
 	var lines: Array = adv["narration"]
 	lines.append("学习了 %s %s，当前等级 %d。" % [_skill_name(sid), _duration_text(minutes), int(r.get("level", 0))])
 	if int(r.get("level_up", 0)) > 0:
@@ -202,7 +204,8 @@ func _eat(intent) -> Dictionary:
 	if not bool(r.get("applied", false)):
 		return _fail("无法进食。")
 	host.sync_finances()
-	return _ok(["你吃了一餐，饱食度 +%.0f。" % float(r.get("satiety_added", 0.0))], 0, "")
+	return _ok([FlavorScript.time_line("eat", host.now_minutes()),
+		"你吃了一餐，饱食度 +%.0f。" % float(r.get("satiety_added", 0.0))], 0, "")
 
 func _buy(intent) -> Dictionary:
 	var item_id := _object_id(intent, "item")
@@ -216,7 +219,8 @@ func _buy(intent) -> Dictionary:
 		return _fail("购买失败：%s。" % String(r.get("reason", "")))
 	host.sync_finances()
 	var cost := float(r.get("cost_minor", 0)) / 100.0
-	return _ok(["你买了 %s×%d，花费 %.0f 元。" % [_item_name(item_id), qty, cost]], 0, "")
+	return _ok([FlavorScript.time_line("buy", host.now_minutes()),
+		"你买了 %s×%d，花费 %.0f 元。" % [_item_name(item_id), qty, cost]], 0, "")
 
 func _sell(intent) -> Dictionary:
 	var item_id := _object_id(intent, "item")
@@ -228,7 +232,8 @@ func _sell(intent) -> Dictionary:
 		return _fail("出售失败：%s。" % String(r.get("reason", "")))
 	host.sync_finances()
 	var proceeds := float(r.get("proceeds_minor", 0)) / 100.0
-	return _ok(["你卖出 %s×%d，得到 %.0f 元。" % [_item_name(item_id), qty, proceeds]], 0, "")
+	return _ok([FlavorScript.time_line("sell", host.now_minutes()),
+		"你卖出 %s×%d，得到 %.0f 元。" % [_item_name(item_id), qty, proceeds]], 0, "")
 
 func _deposit(intent) -> Dictionary:
 	var minor := _amount_minor(intent)
@@ -240,7 +245,8 @@ func _deposit(intent) -> Dictionary:
 	if not host.bank.deposit(host.economy, acct, minor):
 		return _fail("存款失败。")
 	host.sync_finances()
-	return _ok(["存入 %.0f 元。" % (float(minor) / 100.0)], 0, "")
+	return _ok([FlavorScript.time_line("bank", host.now_minutes()),
+		"存入 %.0f 元。" % (float(minor) / 100.0)], 0, "")
 
 func _withdraw(intent) -> Dictionary:
 	var minor := _amount_minor(intent)
@@ -252,7 +258,8 @@ func _withdraw(intent) -> Dictionary:
 	if not host.bank.withdraw(host.economy, acct, minor):
 		return _fail("取款失败。")
 	host.sync_finances()
-	return _ok(["取出 %.0f 元。" % (float(minor) / 100.0)], 0, "")
+	return _ok([FlavorScript.time_line("bank", host.now_minutes()),
+		"取出 %.0f 元。" % (float(minor) / 100.0)], 0, "")
 
 func _job_apply(intent) -> Dictionary:
 	var job_id := _object_id(intent, "location")
@@ -285,16 +292,20 @@ func _interact(intent, type: String) -> Dictionary:
 	var r: Dictionary = host.relations.apply_interaction(host.player(), target, type, {"minute": host.now_minutes()})
 	if not bool(r.get("ok", false)):
 		return _fail("互动失败：%s" % String(r.get("reason", "")))
-	return _ok(["你与 %s 互动（%s）。" % [target, String(r.get("level", ""))]], 0, "")
+	return _ok([FlavorScript.time_line("interact", host.now_minutes()),
+		"你与 %s 互动（%s）。" % [target, String(r.get("level", ""))]], 0, "")
 
 # --- 通用推进与叙事 ---
 
 ## 推进 time_minutes 并生成生理概况叙事。
-func _advance_time(minutes: int, opts: Dictionary) -> Dictionary:
+func _advance_time(minutes: int, opts: Dictionary, flavor_key: String = "") -> Dictionary:
 	var r: Dictionary = host.advance(minutes, opts)
 	var p: Dictionary = host.player()["attrs"]["physiological"]
 	var events: Array = r.get("events", [])
-	var lines: Array = ["时间推进 %s。" % _duration_text(minutes)]
+	var lines: Array = []
+	if flavor_key != "":
+		lines.append(FlavorScript.time_line(flavor_key, host.now_minutes()))
+	lines.append("时间推进 %s。" % _duration_text(minutes))
 	if _has_event(events, "death"):
 		lines.append("你走到了生命的尽头。")
 	elif _has_event(events, "dying"):

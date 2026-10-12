@@ -12,8 +12,12 @@ Godot 4.7.2-stable 桌面端工程。玩法由中文文字指令驱动，表现�
 autoload/   GameState / WorldClock / TickScheduler / SpeedController / Net（Autoload 单例）
 sim/        确定性模拟系统（110+ 领域系统；rng.gd=SplitMix64，gregorian.gd=公历映射，baseline.gd=数值基线）
 sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、按分钟推进、回写经济镜像
+sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 37 面板）、面板内容装配
+ui/         主界面壳（main.tscn）与面板（注册表 37 面板）、面板内容装配（panel_content.gd）
+presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
+assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
+art/        叙事插画（illustrations/）
 net/        REST 客户端与网关
 content/    内容包加载（清单/差量/校验）
 tests/      headless 测试（test_base.gd 基类 + 各 suite）
@@ -30,6 +34,15 @@ tests/      headless 测试（test_base.gd 基类 + 各 suite）
 ```
 
 指令输入的解析目录（物品/技能）来自 `SimHost` 注册的起步目录；未链接到目录的名称由执行器按名称回退匹配。
+执行器经 `sim/flavor.gd` 为等待/睡/吃/锻炼/工作/学习等动作生成时段场景化的措辞变体。
+
+## 面板与表现层
+
+- **37 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+  领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
+- **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
+  按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入
+  `presentation/scenes/places/<group>.tscn` 即自动替换，零改代码（见 `assets/README.md`）。
 
 ## 测试
 
