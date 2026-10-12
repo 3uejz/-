@@ -24,6 +24,11 @@ jobs:
       - name: 共享 schema 校验
         run: python3 scripts/validate_schemas.py
 
+      - name: OpenAPI 路由一致性
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 scripts/check_openapi.py
+
       - name: 内容工具链测试与校验
         run: |
           cd tools/contentbuilder

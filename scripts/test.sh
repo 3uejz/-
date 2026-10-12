@@ -16,6 +16,9 @@ echo "== 数值基线生成物校验 =="
 echo "== 共享 schema 校验 =="
 "$PYTHON_BIN" "$ROOT/scripts/validate_schemas.py"
 
+echo "== OpenAPI 路由一致性 =="
+"$PYTHON_BIN" "$ROOT/scripts/check_openapi.py"
+
 echo "== 内容工具链测试与内容校验 =="
 (
   cd "$ROOT/tools/contentbuilder"
