@@ -108,20 +108,70 @@ func _ensure_world() -> void:
 	_seeded = true
 	_ensure_world_geo()
 
-## 建立世界运行时：种子确定性生成六级地理，登记玩家所在城市为活动区域（含气候带），
-## 使区域人口/经济与天气随游戏内时钟演化（R5/R50、D1/D2）。地理不入档，同种子可复现。
+## 建立世界运行时：种子确定性生成六级地理，载入存档中的区域增量，登记玩家所在城市为
+## 活动区域并绑定气候带，使区域人口/经济与天气随游戏内时钟演化（R5/R50、D1/D2）。
+## 地理不入档（同种子可复现）；区域增量写入 world_delta.regions（design：存档只记变化量）。
 func _ensure_world_geo() -> void:
 	if state == null:
 		return
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
+	# 载入存档中的区域增量（地理由种子重建，存档只存变化量）。
+	var saved: Array = _saved_regions()
+	if not saved.is_empty() and regions.region_ids().is_empty():
+		regions.load_deltas(saved)
 	_home_region_id = _resolve_home_region_id()
 	if _home_region_id != "" and not regions.has_region(_home_region_id):
 		regions.register_region(_home_region_id, _geo_region_opts(_home_region_id))
+	if _home_region_id != "":
 		regions.enter(_home_region_id, now_minutes())
-	if _home_region_id != "" and not weather.has_region(_home_region_id):
-		weather.register_region(_home_region_id, _zone_for_region(_home_region_id))
+	# 补齐气候（存档不持久化气候，按地理重建）并为每个区域绑定天气气候带。
+	for rid in regions.region_ids():
+		var region = regions.get_region(rid)
+		if region != null and String(region.climate) == "":
+			region.climate = _climate_for_region(String(rid))
+		if not weather.has_region(String(rid)):
+			weather.register_region(String(rid), _zone_for_region(String(rid)))
+
+func _saved_regions() -> Array:
+	if state == null or not (state.world_delta is Dictionary):
+		return []
+	var raw: Variant = (state.world_delta as Dictionary).get("regions", [])
+	return raw if raw is Array else []
+
+func _climate_for_region(region_id: String) -> String:
+	var node = geo.get_node(region_id)
+	return String(node.attributes.get("climate", "")) if node != null else ""
+
+## 区域增量（world_delta.regions，符合 region_delta schema）：仅持久化契约允许的字段，
+## 经济/气候等附加量收进 snapshot（additionalProperties=true）。
+func regions_delta() -> Array:
+	var out: Array = []
+	if regions == null:
+		return out
+	for id in regions.region_ids():
+		var r = regions.get_region(id)
+		if r == null:
+			continue
+		var snap: Dictionary = r.snapshot.duplicate(true)
+		snap["economy"] = r.economy
+		snap["climate"] = r.climate
+		out.append({
+			"region_key": String(id),
+			"population": int(r.population),
+			"price_index": float(r.price_index),
+			"safety": float(r.safety),
+			"last_simulated_minute": int(r.last_simulated_minute),
+			"snapshot": snap,
+		})
+	return out
+
+## 把当前区域增量写回 world_delta.regions（供存档与面板读取）。
+func _persist_regions() -> void:
+	if state == null or not (state.world_delta is Dictionary):
+		return
+	(state.world_delta as Dictionary)["regions"] = regions_delta()
 
 ## 由地理节点派生区域初始状态（人口/经济/物价/治安/气候），并锚定到当前时刻。
 func _geo_region_opts(region_id: String) -> Dictionary:
@@ -241,9 +291,9 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	# 游戏内时钟（存档字段）随模拟推进；UI 日历由 main 镜像到 WorldClock。
 	var clock: Dictionary = state.clock
 	clock["absolute_minutes"] = int(clock.get("absolute_minutes", 0)) + minutes
-	# 活动区域随分钟推进（人口/经济日级结算）；天气按当前时刻查询式演化，无需 tick。
-	regions.advance_now(minutes)
+	# 活动区域随分钟推进（人口/经济日级结算）并写回存档增量；天气按当前时刻查询式演化，无需 tick。
 	regions.tick_minute(int(clock["absolute_minutes"]))
+	_persist_regions()
 	if bool(r.get("dead", false)):
 		events.append({"type": "death"})
 	elif bool(r.get("dying", false)):

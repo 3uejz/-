@@ -20,6 +20,7 @@ func run_tests() -> void:
 	_test_advance_evolves_region()
 	_test_deterministic()
 	_test_set_home_region()
+	_test_persist_and_reload()
 
 func _test_home_region_registered() -> void:
 	var host = _setup()
@@ -70,3 +71,27 @@ func _test_set_home_region() -> void:
 	check(host.regions.is_active("cn.shanghai"), "新所在区域为活动区")
 	check(host.regions.get_region("cn.shanghai").population > 0, "新所在区域人口取自地理")
 	check(not host.set_home_region("xx.nowhere"), "未知区域被拒绝")
+
+func _test_persist_and_reload() -> void:
+	var state = GameStateScript.new()
+	state.new_game(13)
+	var host = SimHostScript.new(state, 13)
+	host.advance(2880)
+	var saved: Array = state.world_delta.get("regions", [])
+	check_eq(saved.size(), 1, "区域增量写入 world_delta.regions")
+	check_eq(String(saved[0]["region_key"]), "cn.beijing", "增量含所在区域键")
+	var allowed: Array = ["region_key", "population", "price_index", "safety", "last_simulated_minute", "snapshot"]
+	for k in saved[0].keys():
+		check(allowed.has(String(k)), "字段符合 region_delta 契约：%s" % k)
+	var before = host.regions.get_region("cn.beijing")
+	var pop_before: int = before.population
+	var last_before: int = before.last_simulated_minute
+	# 模拟读档：同一状态对象新建 SimHost，应从 world_delta 恢复区域。
+	var reloaded = SimHostScript.new(state, 13)
+	var r2 = reloaded.regions.get_region("cn.beijing")
+	check(r2 != null, "读档后所在区域已恢复")
+	if r2 != null:
+		check_eq(r2.last_simulated_minute, last_before, "读档保留模拟时刻")
+		check_eq(r2.population, pop_before, "读档保留人口")
+	check(reloaded.weather.has_region("cn.beijing"), "读档后重新绑定气候带")
+
