@@ -5,6 +5,7 @@ const GameStateScript = preload("res://autoload/game_state.gd")
 const SimHostScript = preload("res://sim/sim_host.gd")
 const ExecutorScript = preload("res://command/intent_executor.gd")
 const ParserScript = preload("res://command/command_parser.gd")
+const VerbRegistryScript = preload("res://command/verb_registry.gd")
 
 var state
 var host
@@ -27,6 +28,7 @@ func _run(raw: String) -> Dictionary:
 func run_tests() -> void:
 	_test_help()
 	_test_panel_open()
+	_test_all_panel_verbs()
 	_test_unknown_verb()
 	_test_wait_advances_clock()
 	_test_eat_generic()
@@ -51,6 +53,14 @@ func _test_panel_open() -> void:
 	check(bool(r["ok"]), "看自己成功")
 	check_eq(String(r["panel"]), "character", "打开角色面板")
 	check_eq(int(r["minutes"]), 0, "看面板不耗时")
+
+func _test_all_panel_verbs() -> void:
+	_setup()
+	for key in VerbRegistryScript.PANEL_VERBS.keys():
+		var verb := String(key)
+		var r: Dictionary = _run(verb)
+		check(bool(r["ok"]), "面板动词可执行：%s" % verb)
+		check_eq(String(r["panel"]), String(VerbRegistryScript.PANEL_VERBS[key]), "面板动词打开正确面板：%s" % verb)
 
 func _test_unknown_verb() -> void:
 	_setup()

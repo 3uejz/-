@@ -14,6 +14,7 @@ const MONTH: int = 43200
 const YEAR: int = 525600
 
 const FlavorScript = preload("res://sim/flavor.gd")
+const VerbRegistryScript = preload("res://command/verb_registry.gd")
 
 var host                        # SimHost
 var panels: Array = []          # 本次执行请求打开的面板 id（复合指令取最后一个）
@@ -58,19 +59,6 @@ func _dispatch(intent) -> Dictionary:
 	match String(intent.verb):
 		"帮助", "查看":
 			return _help()
-		# 面板查询
-		"看自己":
-			return _panel("character", "查看角色与属性。")
-		"看技能":
-			return _panel("skills", "查看技能树。")
-		"看背包":
-			return _panel("inventory", "查看背包与装备。")
-		"看关系":
-			return _panel("relations", "查看人际关系。")
-		"看地图":
-			return _panel("map", "查看地图。")
-		"看资产":
-			return _panel("finance", "查看财务与资产。")
 		# 时间推进
 		"等待", "快进":
 			return _wait(intent)
@@ -118,6 +106,10 @@ func _dispatch(intent) -> Dictionary:
 		"重开":
 			return _action("restart", "已请求重开新的一生。")
 		_:
+			# 面板查询：任意登记的面板动词「看 X」→ 打开对应面板。
+			var pid := String(VerbRegistryScript.PANEL_VERBS.get(String(intent.verb), ""))
+			if pid != "":
+				return _panel(pid, "打开面板：%s。" % String(intent.verb))
 			return _stub(String(intent.verb))
 
 # --- 处理器 ---
@@ -125,7 +117,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 状态：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看行情 / 看天气 …（全部 37 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",

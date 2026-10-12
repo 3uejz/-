@@ -11,6 +11,24 @@ var _alias_index: Dictionary = {}    ## 别名（含规范名）-> 规范动词
 var _sorted_aliases: Array = []      ## 排序后的别名表
 var _category_order: Array = []      ## 分类出现顺序（确定性）
 
+## 面板查询动词 → 面板 id（与 ui/panel_registry.gd 的 PANELS 对齐）。
+## 供 IntentExecutor 解析「看 X」类动词并打开对应面板，满足「所有面板支持中文指令打开」。
+const PANEL_VERBS: Dictionary = {
+	"看自己": "character", "看技能": "skills", "看背包": "inventory",
+	"看关系": "relations", "看地图": "map", "看资产": "finance",
+	"看工作": "career", "看成就": "achievements", "看家族史": "family",
+	"看经营": "business", "看组织": "organizations", "看案件": "legal",
+	"看灾害": "rescue", "看环保": "environment", "看市政": "municipal",
+	"看债务": "debt", "看维权": "consumer", "看福利": "welfare",
+	"看殡葬": "funeral", "看玄学": "metaphysics", "看医疗": "medical",
+	"看文娱": "content_industry", "看工程": "engineering", "看服务": "services",
+	"看交通": "transport_infra", "看家庭": "household", "看体育": "sports",
+	"看活动": "events", "看奖项": "awards", "看数字": "digital",
+	"看疫情": "epidemic", "看军旅": "war", "看行情": "market",
+	"看天气": "weather", "看异常": "anomaly", "看系统": "goldfinger",
+	"看设置": "settings",
+}
+
 func _init() -> void:
 	_seed_core()
 
@@ -306,6 +324,18 @@ func _seed_core() -> void:
 		_seed("感知", ["感应"], [], [], "异常", "感知 <异常>", "感知异常", true),
 		_seed("收容", ["封印"], [], [], "异常", "收容 <异常实体>", "收容异常实体", true),
 	]
+	# 面板查询：PANEL_VERBS 中尚未登记的面板动词统一登记，
+	# 确保全部 37 个面板都能通过中文指令「看 X」打开（与 ui/panel_registry 对齐）。
+	var seeded: Dictionary = {}
+	for d in defs:
+		seeded[String((d as Dictionary)["verb"])] = true
+	for key in PANEL_VERBS.keys():
+		var verb := String(key)
+		if seeded.has(verb):
+			continue
+		var pid := String(PANEL_VERBS[key])
+		var hidden := pid == "anomaly" or pid == "goldfinger"
+		defs.append(_seed(verb, [], [], [], "面板查询", verb, "查看%s面板" % verb.trim_prefix("看"), hidden))
 	register_all(defs)
 
 func _seed(verb: String, aliases: Array, object_types: Array, params: Array, category: String, usage: String, description: String, hidden: bool = false) -> Dictionary:
