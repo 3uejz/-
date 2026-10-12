@@ -23,6 +23,7 @@ const BaselineScript = preload("res://sim/baseline.gd")
 const GeoScript = preload("res://sim/geo.gd")
 const RegionManagerScript = preload("res://sim/region_manager.gd")
 const DomainWakeScript = preload("res://sim/domain_wake.gd")
+const GregorianScript = preload("res://sim/gregorian.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 首发默认国家（无有效 nation 时降级，见 design「首发单城」）。
@@ -267,6 +268,38 @@ func weather_now() -> Dictionary:
 	if not warnings.is_empty():
 		out["warning"] = String(warnings[0].get("message", ""))
 	return out
+
+## 天气面板数据：当前天气 + 未来 7 日预报（structured rows）。
+func weather_panel_data() -> Dictionary:
+	var out: Dictionary = weather_now()
+	if out.is_empty():
+		return out
+	out["forecast"] = weather_forecast_rows()
+	return out
+
+## 未来 N 日预报（供天气面板展示）：[{label, value}]。
+func weather_forecast_rows(days: int = 7) -> Array:
+	var rid: String = current_region_id()
+	if rid == "" or weather == null or not weather.has_region(rid):
+		return []
+	var fc: Array = weather.forecast(rid, now_minutes(), 0, days)
+	var out: Array = []
+	for row in fc:
+		var day: int = int(row.get("day", 0))
+		var lead: int = int(row.get("lead", 0))
+		var label: String = "今日" if lead == 0 else ("明日" if lead == 1 else _short_date(day))
+		var hi: int = int(round(float(row.get("temperature_high_c", 0.0))))
+		var lo: int = int(round(float(row.get("temperature_low_c", 0.0))))
+		var prec: float = float(row.get("precipitation_mm", 0.0))
+		out.append({
+			"label": label,
+			"value": "%s %d~%d°C 降水%.1fmm" % [String(row.get("condition_name", "")), lo, hi, prec],
+		})
+	return out
+
+func _short_date(day_index: int) -> String:
+	var cal: Dictionary = GregorianScript.from_absolute_minutes(day_index * MINUTES_PER_DAY)
+	return "%d/%d" % [int(cal.get("month", 1)), int(cal.get("day", 1))]
 
 ## 把经济运行账户余额回写到 player.finances（最小货币单位 → 主单位）。
 func sync_finances() -> void:

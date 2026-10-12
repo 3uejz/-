@@ -92,6 +92,16 @@ func _test_domain_panels_content() -> void:
 	})
 	check(not bool(weather.get("empty", true)), "有天气非空")
 	check_eq(_row_value(_find_section(weather, "当前天气"), "天气"), "小雨", "天气状况")
+	# 天气：注入 7 日预报时新增预报分区。
+	var weather_fc: Dictionary = PanelContentScript.build("weather", GameStateScript.default_player(), Callable(), {
+		"weather": {
+			"condition": "晴", "temperature": "20°C",
+			"forecast": [{"label": "今日", "value": "晴 12~22°C 降水0.0mm"}],
+		},
+	})
+	var fc_section: Dictionary = _find_section(weather_fc, "未来 7 日")
+	check(not fc_section.is_empty(), "预报分区存在")
+	check_eq(_row_value(fc_section, "今日"), "晴 12~22°C 降水0.0mm", "预报行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

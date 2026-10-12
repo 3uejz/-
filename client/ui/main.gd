@@ -630,7 +630,7 @@ func _panel_context() -> Dictionary:
 		if not regions_view.is_empty():
 			context["regions"] = regions_view
 		context["current_region"] = _sim.current_region_id()
-		var w: Dictionary = _sim.weather_now()
+		var w: Dictionary = _sim.weather_panel_data()
 		if not w.is_empty():
 			context["weather"] = w
 	return context

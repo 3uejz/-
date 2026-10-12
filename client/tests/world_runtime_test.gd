@@ -20,6 +20,7 @@ func run_tests() -> void:
 	_test_advance_evolves_region()
 	_test_deterministic()
 	_test_set_home_region()
+	_test_weather_forecast()
 	_test_persist_and_reload()
 
 func _test_home_region_registered() -> void:
@@ -71,6 +72,18 @@ func _test_set_home_region() -> void:
 	check(host.regions.is_active("cn.shanghai"), "新所在区域为活动区")
 	check(host.regions.get_region("cn.shanghai").population > 0, "新所在区域人口取自地理")
 	check(not host.set_home_region("xx.nowhere"), "未知区域被拒绝")
+
+func _test_weather_forecast() -> void:
+	var state = GameStateScript.new()
+	state.new_game(13)
+	var host = SimHostScript.new(state, 13)
+	var data: Dictionary = host.weather_panel_data()
+	check(data.has("condition"), "面板数据含当前天气")
+	var fc: Array = data.get("forecast", [])
+	check_eq(fc.size(), 7, "预报 7 日")
+	if not fc.is_empty():
+		check_eq(String(fc[0]["label"]), "今日", "首日标记为今日")
+		check(String(fc[0]["value"]).contains("°C"), "预报含气温区间")
 
 func _test_persist_and_reload() -> void:
 	var state = GameStateScript.new()

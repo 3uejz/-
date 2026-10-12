@@ -798,7 +798,16 @@ static func weather(player: Dictionary, context: Dictionary, name_resolver: Call
 			rows.append({"label": String(labels[key]), "value": str(d[key])})
 	if rows.is_empty():
 		return _empty("天气预报", "暂无天气数据；按气候带给出近期均值")
-	return _ok([_section("当前天气", rows)])
+	var sections: Array = [_section("当前天气", rows)]
+	var fc: Variant = d.get("forecast", [])
+	if fc is Array and not (fc as Array).is_empty():
+		var frows: Array = []
+		for item in fc:
+			if item is Dictionary:
+				frows.append({"label": str((item as Dictionary).get("label", "")), "value": str((item as Dictionary).get("value", ""))})
+		if not frows.is_empty():
+			sections.append(_section("未来 7 日", frows))
+	return _ok(sections)
 
 static func anomaly(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
