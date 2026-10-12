@@ -522,8 +522,23 @@ func _fill_panel_content(container: VBoxContainer, id: String) -> void:
 			for row in section.get("rows", []):
 				container.add_child(_row_node(String(row.get("label", "")), String(row.get("value", ""))))
 			container.add_child(HSeparator.new())
+	if id == "map":
+		_mount_map_view(container)
 	if id == "settings":
 		_build_settings_controls(container)
+
+## 地图面板内嵌 2D 混合地图控件（R42），注入当前地理数据。
+func _mount_map_view(container: VBoxContainer) -> void:
+	if _sim == null or _sim.geo == null:
+		return
+	var scene := load("res://ui/map/map_view.tscn")
+	if scene == null:
+		return
+	var view: Control = scene.instantiate()
+	view.custom_minimum_size = Vector2(280, 220)
+	container.add_child(view)
+	if view.has_method("setup"):
+		view.setup(_sim.geo, null)
 
 ## 设置面板的实时预览控件：切主题/配色/主色即时重生成 Theme 并刷新抽屉（ui.md 10）。
 func _build_settings_controls(container: VBoxContainer) -> void:

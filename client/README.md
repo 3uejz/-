@@ -60,6 +60,7 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - `sim/region_manager.gd`（`RegionManager`）在 `SimHost.advance()` 中随游戏内时钟推进活动区域的人口/经济日级结算；`sim/domain_wake.gd`（`DomainWake`）注入其中，供案件/灾害/工程等条目在休眠窗口补算。
 - `sim/weather.gd`（`WeatherSystem`）按区域 + 当前时刻**查询式**演化，无需逐帧 tick。
 - 主壳 `_panel_context()` 经 `current_region_id()`/`regions_view()`/`weather_now()`/`weather_panel_data()` 向地图与天气面板提供所在区域、实时天气与未来 7 日预报；旅行/搬迁经 `set_home_region()` 切换。
+- 地图面板（`看地图`）内嵌 `ui/map/map_view.tscn` 绘制可缩放的 2D 混合地图，并注入 `SimHost.geo`。
 - 地理由种子确定性生成、不入档（design：存档只记变化量）；区域增量在 `advance()` 后写入 `world_delta.regions`（符合 `region_delta` 契约，经济/气候等收进 `snapshot`），读档时经 `load_deltas()` 恢复并按地理重建气候。
 
 ## 面板与表现层

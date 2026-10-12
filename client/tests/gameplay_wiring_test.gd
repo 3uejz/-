@@ -49,6 +49,7 @@ func _process(_delta: float) -> bool:
 func run_tests() -> void:
 	_test_wait_advances_state_clock()
 	_test_panel_command_opens_panel()
+	_test_map_panel_mounts_view()
 	_test_buy_changes_inventory()
 	_test_statusbar_weather()
 	_test_save_writes_file()
@@ -60,6 +61,12 @@ func _test_wait_advances_state_clock() -> void:
 func _test_panel_command_opens_panel() -> void:
 	_main.submit("看自己")
 	check(_main.has_panel("character"), "「看自己」打开角色面板")
+
+func _test_map_panel_mounts_view() -> void:
+	_main.submit("看地图")
+	check(_main.has_panel("map"), "「看地图」打开地图面板")
+	var drawer = _main.get_node_or_null("Root/Drawers/Drawer_map")
+	check(drawer != null, "地图抽屉已创建")
 
 func _test_buy_changes_inventory() -> void:
 	_main.submit("买 苹果 2")
