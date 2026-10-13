@@ -21,6 +21,7 @@ const PANEL_VERBS: Dictionary = {
 	"看灾害": "rescue", "看环保": "environment", "看市政": "municipal",
 	"看债务": "debt", "看维权": "consumer", "看福利": "welfare",
 	"看殡葬": "funeral", "看玄学": "metaphysics", "看医疗": "medical",
+	"看心理": "mental",
 	"看文娱": "content_industry", "看工程": "engineering", "看服务": "services",
 	"看交通": "transport_infra", "看家庭": "household", "看体育": "sports",
 	"看活动": "events", "看奖项": "awards", "看数字": "digital",
@@ -320,6 +321,12 @@ func _seed_core() -> void:
 		_seed("看病", ["就诊"], ["location", "person"], [], "医疗与法律", "看病 <医生> [症状]", "就医问诊"),
 		_seed("住院", ["入院"], ["location"], ["duration"], "医疗与法律", "住院 <天数>", "办理住院"),
 		_seed("手术", ["开刀"], ["location"], [], "医疗与法律", "手术 <项目>", "接受手术"),
+		# 心理与精神健康
+		_seed("心理咨询", ["看心理医生"], ["mental_disorder"], [], "医疗与法律", "心理咨询 [病种]", "接受心理咨询"),
+		_seed("心理治疗", ["认知行为治疗", "CBT"], ["mental_disorder"], [], "医疗与法律", "心理治疗 [病种]", "接受认知行为治疗"),
+		_seed("精神科用药", ["服药治疗", "精神科"], ["mental_disorder"], [], "医疗与法律", "精神科用药 [病种]", "接受药物治疗"),
+		_seed("重症干预", ["危机干预"], [], [], "医疗与法律", "重症干预", "接受重症心理干预"),
+		_seed("放松", ["正念", "冥想", "减压"], [], [], "生理与日常", "放松", "放松身心、缓解压力"),
 		# 面板查询
 		_seed("看自己", ["看角色", "属性"], [], [], "面板查询", "看自己", "查看角色与属性"),
 		_seed("看技能", ["技能树"], [], [], "面板查询", "看技能", "查看技能树"),
@@ -339,7 +346,7 @@ func _seed_core() -> void:
 		_seed("收容", ["封印"], [], [], "异常", "收容 <异常实体>", "收容异常实体", true),
 	]
 	# 面板查询：PANEL_VERBS 中尚未登记的面板动词统一登记，
-	# 确保全部 38 个面板都能通过中文指令「看 X」打开（与 ui/panel_registry 对齐）。
+	# 确保全部 39 个面板都能通过中文指令「看 X」打开（与 ui/panel_registry 对齐）。
 	var seeded: Dictionary = {}
 	for d in defs:
 		seeded[String((d as Dictionary)["verb"])] = true

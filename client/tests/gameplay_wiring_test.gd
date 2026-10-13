@@ -57,6 +57,7 @@ func run_tests() -> void:
 	_test_family_commands()
 	_test_pet_commands()
 	_test_adoption_commands()
+	_test_mental_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -144,6 +145,20 @@ func _test_adoption_commands() -> void:
 	var npc: Dictionary = sim.acquaintances()[0]
 	_main.submit("指定监护人 " + String(npc.get("name", "")))
 	check_eq(sim.guardians().size(), 1, "「指定监护人 <人物>」写入监护人")
+
+func _test_mental_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 100000000, "test")
+	_main.submit("看心理")
+	check(_main.has_panel("mental"), "「看心理」打开精神健康面板")
+	# 强制发作一个病种，再经指令治疗（结果三态，不校验具体态）。
+	sim.mental_onset("anxiety")
+	_main.submit("心理咨询 焦虑症")
+	check(sim.mental.disorders_count() >= 20, "精神疾病库覆盖 20+ 病种")
+	# 放松降低压力。
+	_game.player["attrs"]["psychological"]["stress"] = 80.0
+	_main.submit("放松")
+	check(float(_game.player["attrs"]["psychological"]["stress"]) < 80.0, "「放松」缓解压力")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

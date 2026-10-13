@@ -30,6 +30,8 @@ const PropertyScript = preload("res://sim/property.gd")
 const InheritanceScript = preload("res://sim/inheritance.gd")
 const PetScript = preload("res://sim/pet.gd")
 const ParentingScript = preload("res://sim/parenting.gd")
+const MentalHealthScript = preload("res://sim/mental_health.gd")
+const PersonalityScript = preload("res://sim/personality.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -80,6 +82,8 @@ var property                    ## 房产（PropertySystem）
 var inheritance                ## 继承（InheritanceSystem）
 var pet                         ## 宠物（PetSystem）
 var parenting                   ## 育儿与成长（ParentingSystem）
+var mental                      ## 精神疾病与情绪（MentalHealthSystem）
+var personality                 ## 大五人格与标签（PersonalitySystem）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -112,6 +116,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	inheritance = InheritanceScript.new()
 	pet = PetScript.new()
 	parenting = ParentingScript.new()
+	mental = MentalHealthScript.new()
+	personality = PersonalityScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -160,6 +166,10 @@ func _ensure_world_geo() -> void:
 		var sr: Variant = (state.sim_runtime as Dictionary).get("survival", {})
 		if sr is Dictionary and not (sr as Dictionary).is_empty():
 			survival.from_dict(sr)
+		# 恢复精神疾病病程运行时（三维病程/复发/治疗标志）。
+		var mr: Variant = (state.sim_runtime as Dictionary).get("mental", {})
+		if mr is Dictionary and not (mr as Dictionary).is_empty():
+			mental.from_dict(mr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -571,6 +581,200 @@ func _persist_survival() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["survival"] = survival.to_dict()
+
+# --- 心理与精神健康（D4） ---
+
+## 人格派生标签（阈值/组合，供面板与叙述层）。
+func personality_tags() -> Array:
+	return personality.derive_tags(player().get("attrs", {}).get("personality", {}))
+
+## 当前情绪状态（平静/焦虑/抑郁/亢奋）。
+func emotion_state() -> String:
+	var psych: Dictionary = player().get("attrs", {}).get("psychological", {})
+	return mental.emotion_state(float(psych.get("mood", 50.0)), float(psych.get("stress", 40.0)))
+
+## 精神疾病目录（供解析器链接「心理咨询 <病种>」）。
+func mental_disorders_catalog() -> Array:
+	return mental.disorders_catalog()
+
+## 治疗方式目录（咨询/药物/CBT/住院/重症干预）。
+func mental_treatment_catalog() -> Array:
+	return mental.treatments_catalog()
+
+## 刷新心理结算：推进三维病程、按压力与长期低值掷骰新发、回写玩家心理与精神疾病数组。
+## 返回本时段新发作列表。
+func _refresh_mental(minutes: int) -> Array:
+	var events: Array = []
+	if is_dead():
+		return events
+	mental.advance(minutes, rng)
+	var psych: Dictionary = player().get("attrs", {}).get("psychological", {})
+	var stress: float = float(psych.get("stress", 40.0))
+	# 幸福长期低值抬高精神疾病风险（R44.8）。
+	var happy_mult: float = happiness.disorder_risk_multiplier(
+		float(psych.get("happiness", 50.0)), float(psych.get("meaning", 50.0)), day_index())
+	if stress >= float(MentalHealthScript.STRESS_DISORDER_THRESHOLD) or happy_mult > 1.05:
+		for hit in mental.roll_triggers(player().get("attrs", {}).get("personality", {}), stress, now_minutes(), rng, "stress", happy_mult):
+			events.append({"type": "mental_disorder", "name": String(hit.get("name", ""))})
+	_update_happiness()
+	_sync_mental()
+	return events
+
+## 依关系/事业/健康/信仰/意义感结算幸福与意义，写入心理属性（R44.7）。
+func _update_happiness() -> void:
+	if is_dead():
+		return
+	var attrs: Dictionary = player().get("attrs", {})
+	var phys: Dictionary = attrs.get("physiological", {})
+	var values: Dictionary = attrs.get("values", {})
+	var fam: Dictionary = player().get("family", {})
+	# 关系：好感均值映射到 0..100（无关系取人群基线 50）。
+	var relations: Array = player().get("relations", [])
+	var rel_score: float = 50.0
+	if not relations.is_empty():
+		var acc: float = 0.0
+		for r in relations:
+			if r is Dictionary:
+				acc += clampf((float(r.get("favor", 0.0)) + 100.0) / 2.0, 0.0, 100.0)
+		rel_score = acc / float(relations.size())
+	# 事业：有工作按绩效，无业取 40。
+	var job: Dictionary = player().get("job", {})
+	var career_score: float = 40.0
+	if not job.is_empty():
+		career_score = clampf(float(job.get("performance", 60.0)), 0.0, 100.0)
+	# 信仰：物质—精神轴偏向精神即高。
+	var faith_score: float = clampf(float(values.get("material_spiritual", 50.0)), 0.0, 100.0)
+	# 意义感分量：追求（精神轴）、家庭（有配偶/子女）、成就（数量）、价值观一致性。
+	var pursuit: float = faith_score
+	var family_c: float = 30.0
+	if String(fam.get("spouse_id", "")) != "":
+		family_c += 35.0
+	family_c += minf(35.0, float((fam.get("children_ids", []) as Array).size()) * 15.0)
+	var ach_count: int = (player().get("achievements", []) as Array).size()
+	var achievement: float = clampf(30.0 + float(ach_count) * 5.0, 0.0, 100.0)
+	var consistency: float = clampf(100.0 - absf(float(values.get("conservative_open", 50.0)) - 50.0) * 2.0, 0.0, 100.0)
+	happiness.update(player(), {
+		"relations": rel_score,
+		"career": career_score,
+		"health": clampf(float(phys.get("health", 50.0)), 0.0, 100.0),
+		"faith": faith_score,
+		"pursuit": pursuit,
+		"family": family_c,
+		"achievement": achievement,
+		"values_consistency": consistency,
+	})
+
+## 回写 player.health.mental（schema 白名单字段）。
+func _sync_mental() -> void:
+	var health: Dictionary = player().get("health", {})
+	health["mental"] = mental.mental_entries(now_minutes())
+	player()["health"] = health
+
+## 持久化精神疾病运行时到 state.sim_runtime。
+func _persist_mental() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["mental"] = mental.to_dict()
+
+## 情绪事件调整（如放松/打击）：写入心情与压力，返回调整后状态。
+func apply_emotion_event(event: String) -> Dictionary:
+	return mental.adjust_mood_stress(player(), event)
+
+## 放松/正念：缓解压力、提振心情（无对应治疗，仅日常调节）。
+func relax() -> Dictionary:
+	var before: Dictionary = player().get("attrs", {}).get("psychological", {})
+	var r: Dictionary = apply_emotion_event("praise")
+	_sync_mental()
+	return {
+		"ok": true,
+		"mood": float(r.get("mood", 0.0)),
+		"stress": float(r.get("stress", 0.0)),
+		"before_stress": float(before.get("stress", 0.0)),
+	}
+
+## 强制发作指定精神疾病（供重大事件/疫情心理冲击/认知污染等跨域触发），并回写。
+func mental_onset(key: String) -> Dictionary:
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	var r: Dictionary = mental.onset(key, attrs.get("personality", {}), float(psych.get("stress", 40.0)), now_minutes())
+	_sync_mental()
+	_persist_mental()
+	return r
+
+## 精神疾病治疗：method 为治疗键；key 为空时取最严重活跃病种。会推进治疗时长并结算费用。
+func mental_treat(method: String, key: String = "") -> Dictionary:
+	if not mental.TREATMENTS.has(method):
+		return {"ok": false, "reason": "unknown_treatment"}
+	if String(key).is_empty():
+		key = mental.most_severe_active_key()
+	if String(key).is_empty() or not mental.DISORDERS.has(key):
+		return {"ok": false, "reason": "no_active_disorder"}
+	var r: Dictionary = mental.treat(key, method, rng, true)
+	if not bool(r.get("ok", false)):
+		return r
+	var t: Dictionary = mental.TREATMENTS[method]
+	var cost := int(t.get("cost", 0))
+	if cost > 0:
+		if economy.cash(account_id()) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "mental:%s" % method)
+		sync_finances()
+	var minutes := int(t.get("minutes", 0))
+	if minutes > 0:
+		advance(minutes, {"asleep": method == "hospitalization"})
+	_sync_mental()
+	r["key_name"] = mental.disorder_name(String(key))
+	r["method_name"] = String(t.get("name", method))
+	return r
+
+## 精神健康面板数据（情绪/人格/幸福 + 病程列表）。
+func mental_panel_data() -> Dictionary:
+	var psych: Dictionary = player().get("attrs", {}).get("psychological", {})
+	var p: Dictionary = player().get("attrs", {}).get("personality", {})
+	var dims: Array = []
+	var names: Dictionary = personality.DIM_NAMES
+	for dim in personality.BIG_FIVE:
+		dims.append({"label": String(names.get(dim, dim)), "value": str(snappedf(float(p.get(dim, 50.0)), 0.1))})
+	var tags: Array = []
+	for t in personality_tags():
+		tags.append(_tag_name(String(t)))
+	var cases: Array = []
+	for c in mental.all_cases():
+		if not (c is Dictionary):
+			continue
+		var key := String(c.get("key", ""))
+		var active := bool(c.get("active", false))
+		var phase := "发作期" if active else ("缓解期" if str(c.get("phase", "")) == "remission" else "慢性期")
+		cases.append({
+			"label": mental.disorder_name(key),
+			"value": "%s · 强度%.0f · 间隔%.0f天 · 单次%.0f天 · 发作%d次%s" % [
+				phase, float(c.get("intensity", 0.0)),
+				float(c.get("frequency_days", 0.0)),
+				float(c.get("duration_minutes", 0.0)) / 1440.0,
+				int(c.get("episodes", 0)),
+				" · 治疗中" if bool(c.get("in_treatment", false)) else "",
+			],
+		})
+	return {
+		"emotion": mental.EMOTION_NAMES.get(emotion_state(), "平静"),
+		"mood": float(psych.get("mood", 50.0)),
+		"stress": float(psych.get("stress", 40.0)),
+		"happiness": float(psych.get("happiness", 50.0)),
+		"meaning": float(psych.get("meaning", 50.0)),
+		"dims": dims,
+		"tags": tags,
+		"cases": cases,
+	}
+
+## 性格标签中文名。
+func _tag_name(tag: String) -> String:
+	const TAG_NAMES: Dictionary = {
+		"perfectionist": "完美主义", "social_butterfly": "社交达人", "lone_wolf": "独行",
+		"anxious_type": "敏感焦虑", "open_minded": "开放探索", "agreeable": "温和亲和",
+		"risk_taker": "冒险", "resilient": "坚韧稳定", "achiever": "自律成就",
+		"dramatic": "情绪外显", "traditional": "传统守成", "solitary_cold": "孤僻冷淡",
+	}
+	return String(TAG_NAMES.get(tag, tag))
 
 # --- 宠物 ---
 
@@ -1073,6 +1277,9 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append_array(_check_child_mortality(minutes))
 		# 宠物随日推进（饥饿/健康/走失/寿终）。
 		events.append_array(_advance_pets(minutes))
+		# 精神健康：三维病程推进、压力触发、幸福与意义结算。
+		events.append_array(_refresh_mental(minutes))
+	_persist_mental()
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),

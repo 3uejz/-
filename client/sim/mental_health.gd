@@ -137,13 +137,13 @@ func susceptibility(key: String, p: Dictionary, childhood_trauma: float = 0.0, f
 	return clampf(base, 0.0, 1.0)
 
 
-## 触发概率：基础发生率 × 易感 × 压力 × 触发匹配加成，返回 0..1（R44.5）。
-func trigger_probability(key: String, susc: float, stress: float, trigger: String = "") -> float:
+## 触发概率：基础发生率 × 易感 × 压力 × 触发匹配加成 × mult（幸福长期低值等），返回 0..1（R44.5）。
+func trigger_probability(key: String, susc: float, stress: float, trigger: String = "", mult: float = 1.0) -> float:
 	var d: Dictionary = DISORDERS.get(key, {})
 	if d.is_empty():
 		return 0.0
 	var rate: float = float(d.get("base_rate", 0.02))
-	var p: float = rate * (0.5 + susc) * stress_risk_multiplier(stress)
+	var p: float = rate * (0.5 + susc) * stress_risk_multiplier(stress) * maxf(0.0, mult)
 	var triggers: Array = d.get("triggers", [])
 	if trigger != "" and triggers.has(trigger):
 		p *= 2.0
@@ -151,11 +151,11 @@ func trigger_probability(key: String, susc: float, stress: float, trigger: Strin
 
 
 ## 按概率注入触发，成功则创建病程（新发或复发）。
-func maybe_trigger(key: String, p: Dictionary, stress: float, trigger: String, now_minute: int, rng, childhood_trauma: float = 0.0, family_history: bool = false) -> Dictionary:
+func maybe_trigger(key: String, p: Dictionary, stress: float, trigger: String, now_minute: int, rng, childhood_trauma: float = 0.0, family_history: bool = false, mult: float = 1.0) -> Dictionary:
 	if not DISORDERS.has(key):
 		return {"triggered": false, "reason": "unknown_disorder"}
 	var susc: float = susceptibility(key, p, childhood_trauma, family_history)
-	var prob: float = trigger_probability(key, susc, stress, trigger)
+	var prob: float = trigger_probability(key, susc, stress, trigger, mult)
 	var roll: float = rng.next_float() if rng != null else 0.0
 	if roll >= prob:
 		return {"triggered": false, "probability": prob}
@@ -168,9 +168,44 @@ func maybe_trigger(key: String, p: Dictionary, stress: float, trigger: String, n
 		"duration_minutes": _duration_from(intensity),
 		"remaining_minutes": _duration_from(intensity),
 		"episodes": prior + 1, "started_minute": now_minute,
+		"in_treatment": false,
 	}
 	_cases[key] = new_case
 	return {"triggered": true, "case": new_case, "probability": prob}
+
+
+## 依压力与长期低值乘子对全部病种掷骰（键排序保证确定性），返回新发作列表（R44.5）。
+func roll_triggers(p: Dictionary, stress: float, now_minute: int, rng, trigger: String = "stress", mult: float = 1.0) -> Array:
+	var out: Array = []
+	if rng == null:
+		return out
+	var keys: Array = DISORDERS.keys()
+	keys.sort()
+	for k in keys:
+		var key := String(k)
+		var r: Dictionary = maybe_trigger(key, p, stress, trigger, now_minute, rng, 0.0, false, mult)
+		if bool(r.get("triggered", false)):
+			out.append({"key": key, "name": disorder_name(key), "case": r.get("case", {})})
+	return out
+
+
+## 无条件创建/复发病程（供强制触发：重大事件、疫情心理冲击、认知污染）。
+func onset(key: String, p: Dictionary, stress: float, now_minute: int) -> Dictionary:
+	if not DISORDERS.has(key):
+		return {"ok": false, "reason": "unknown_disorder"}
+	var susc: float = susceptibility(key, p)
+	var intensity: float = clampf(30.0 + susc * 50.0 + stress * 0.2, 0.0, 100.0)
+	var prior: int = int((_cases.get(key, {}) as Dictionary).get("episodes", 0))
+	var new_case: Dictionary = {
+		"key": key, "phase": "episode", "active": true,
+		"intensity": intensity, "frequency_days": _frequency_from(susc),
+		"duration_minutes": _duration_from(intensity),
+		"remaining_minutes": _duration_from(intensity),
+		"episodes": prior + 1, "started_minute": now_minute,
+		"in_treatment": false,
+	}
+	_cases[key] = new_case
+	return {"ok": true, "key": key, "name": disorder_name(key), "case": new_case}
 
 
 func _frequency_from(susc: float) -> float:
@@ -243,13 +278,16 @@ func treat(key: String, method: String, rng = null, diagnosed: bool = true) -> D
 	var r3: float = rng.next_float() if rng != null else 0.0
 	if r3 < float(t.get("side_effect", 0.0)):
 		side_effect = true
-	var case: Dictionary = _cases.get(key, {})
 	if outcome == "cured":
 		if _cases.has(key):
 			_cases.erase(key)
 	elif outcome == "remitted" and _cases.has(key):
 		_cases[key]["active"] = false
 		_cases[key]["phase"] = "remission"
+		_cases[key]["in_treatment"] = true
+	elif _cases.has(key):
+		# 无效：仍在治疗中，标记以便面板呈现。
+		_cases[key]["in_treatment"] = true
 	return {
 		"ok": true, "key": key, "method": method, "outcome": outcome,
 		"misdiagnosed": misdiagnosed, "side_effect": side_effect,
@@ -271,3 +309,100 @@ func active_cases() -> Array:
 
 func has_active() -> bool:
 	return not active_cases().is_empty()
+
+
+## 全部病程（含已缓解/慢性），按键排序保证确定性（供面板展示）。
+func all_cases() -> Array:
+	var out: Array = []
+	var keys: Array = _cases.keys()
+	keys.sort()
+	for k in keys:
+		out.append(_cases[k])
+	return out
+
+
+## 疾病中文名。
+func disorder_name(key: String) -> String:
+	return String((DISORDERS.get(key, {}) as Dictionary).get("name", key))
+
+
+## 疾病目录（供解析器链接「心理咨询 <病种>」）。
+func disorders_catalog() -> Array:
+	var out: Array = []
+	var keys: Array = DISORDERS.keys()
+	keys.sort()
+	for k in keys:
+		out.append({"id": String(k), "name": disorder_name(String(k))})
+	return out
+
+
+## 治疗方式目录（供解析器与面板）。
+func treatments_catalog() -> Array:
+	var out: Array = []
+	var keys: Array = TREATMENTS.keys()
+	keys.sort()
+	for k in keys:
+		out.append({"id": String(k), "name": String((TREATMENTS[k] as Dictionary).get("name", k))})
+	return out
+
+
+## 活跃病程中最严重（强度最高）的键；无则空串。
+func most_severe_active_key() -> String:
+	var best := ""
+	var best_i: float = -1.0
+	var keys: Array = _cases.keys()
+	keys.sort()
+	for k in keys:
+		var c: Dictionary = _cases[k]
+		if not bool(c.get("active", false)):
+			continue
+		var it: float = float(c.get("intensity", 0.0))
+		if it > best_i:
+			best_i = it
+			best = String(k)
+	return best
+
+
+## 导出为 player.health.mental 数组（仅 schema 白名单字段，三维病程详见运行时字典）。
+func mental_entries(now_minute: int) -> Array:
+	var out: Array = []
+	var keys: Array = _cases.keys()
+	keys.sort()
+	for k in keys:
+		var key := String(k)
+		var c: Dictionary = _cases[key]
+		var active := bool(c.get("active", false))
+		var phase := "remission"
+		if active:
+			phase = "chronic" if str(c.get("phase", "")) == "chronic" else "acute"
+		elif str(c.get("phase", "")) == "chronic":
+			phase = "chronic"
+		out.append({
+			"content_key": "disease.%s" % key,
+			"severity": float(c.get("intensity", 0.0)) if active else 0.0,
+			"phase": phase,
+			"relapse_risk": float((DISORDERS.get(key, {}) as Dictionary).get("relapse", 0.4)),
+			"diagnosed_minutes": int(c.get("started_minute", now_minute)),
+			"in_treatment": bool(c.get("in_treatment", false)),
+		})
+	return out
+
+
+## 序列化病程运行时（供 state.sim_runtime.mental 持久化）。
+func to_dict() -> Dictionary:
+	var cases: Dictionary = {}
+	for k in _cases.keys():
+		cases[String(k)] = (_cases[k] as Dictionary).duplicate(true)
+	return {"cases": cases, "cumulative_stress": _cumulative_stress}
+
+
+func from_dict(d: Dictionary) -> void:
+	_cases.clear()
+	_cumulative_stress = float(d.get("cumulative_stress", 0.0))
+	var cs: Variant = d.get("cases", {})
+	if cs is Dictionary:
+		for k in (cs as Dictionary).keys():
+			var c: Variant = (cs as Dictionary)[k]
+			if c is Dictionary:
+				_cases[String(k)] = (c as Dictionary).duplicate(true)
+

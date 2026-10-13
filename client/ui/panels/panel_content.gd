@@ -110,6 +110,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = metaphysics(player, context, name_resolver)
 		"medical":
 			data = medical(player, name_resolver)
+		"mental":
+			data = mental(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -684,6 +686,39 @@ static func medical(player: Dictionary, name_resolver: Callable = Callable()) ->
 		sections.append(_section("就诊记录", _rows_from(records, ["type", "status", "cost"], name_resolver)))
 	if sections.is_empty():
 		return _empty("医疗", "无病历；建议定期体检并保持良好作息")
+	return _ok(sections)
+
+static func mental(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("精神健康", "尚未生成角色数据")
+	var d: Dictionary = context.get("mental", {}) if context.get("mental") is Dictionary else {}
+	if d.is_empty():
+		return _empty("精神健康", "暂无心理状态；随生活起伏情绪与病程会在此呈现")
+	var sections: Array = []
+	sections.append({
+		"title": "情绪与幸福",
+		"rows": [
+			{"label": "情绪", "value": String(d.get("emotion", "平静"))},
+			{"label": "心情", "value": _num(d.get("mood", 0.0))},
+			{"label": "压力", "value": _num(d.get("stress", 0.0))},
+			{"label": "幸福", "value": _num(d.get("happiness", 0.0))},
+			{"label": "意义感", "value": _num(d.get("meaning", 0.0))},
+		],
+	})
+	var dims: Array = d.get("dims", [])
+	if not dims.is_empty():
+		sections.append(_section("大五人格", dims))
+	var tags: Array = d.get("tags", [])
+	if not tags.is_empty():
+		var rows: Array = []
+		for t in tags:
+			rows.append({"label": "标签", "value": String(t)})
+		sections.append({"title": "性格标签", "rows": rows})
+	var cases: Array = d.get("cases", [])
+	if not cases.is_empty():
+		sections.append(_section("精神疾病病程", cases))
+	else:
+		sections.append({"title": "精神疾病病程", "rows": [{"label": "状态", "value": "暂无记录"}]})
 	return _ok(sections)
 
 static func content_industry(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:

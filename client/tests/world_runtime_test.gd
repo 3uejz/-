@@ -36,6 +36,7 @@ func run_tests() -> void:
 	_test_survival_runtime_persistence()
 	_test_adoption_and_guardianship()
 	_test_child_growth_and_mortality()
+	_test_mental_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -354,4 +355,38 @@ func _test_child_growth_and_mortality() -> void:
 	check_eq(String(child.get("stage", "")), "adult", "成年阶段")
 	# 早夭检查不改变在世成年子女状态。
 	check(host._check_child_mortality(1440).is_empty(), "成年子女不计入早夭")
+
+func _test_mental_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(99)
+	var host = SimHostScript.new(state, 99)
+	# 默认情绪平静、人格标签由阈值派生。
+	check_eq(host.emotion_state(), "calm", "默认情绪平静")
+	check(host.personality_tags() is Array, "人格标签为数组")
+	check(host.mental.disorders_count() >= 20, "精神疾病库覆盖 20+ 病种")
+	# 强制发作：写入活跃病程并同步到 player.health.mental。
+	var r: Dictionary = host.mental_onset("depression")
+	check(bool(r.get("ok", false)), "强制发作精神疾病")
+	check(host.mental.has_active(), "存在活跃病程")
+	var mental_arr: Array = state.player.get("health", {}).get("mental", [])
+	check_eq(mental_arr.size(), 1, "病程回写 health.mental")
+	check_eq(String((mental_arr[0] as Dictionary).get("phase", "")), "acute", "发作期映射为 acute")
+	check(float((mental_arr[0] as Dictionary).get("severity", 0.0)) > 0.0, "严重度非零")
+	# 治疗：扣费并给出三态结果。
+	var money_before: float = float(state.player.get("finances", {}).get("cash", 0.0))
+	var tr: Dictionary = host.mental_treat("psychotherapy")
+	check(bool(tr.get("ok", false)), "心理咨询执行成功")
+	check(["cured", "remitted", "ineffective"].has(String(tr.get("outcome", ""))), "结果三态之一")
+	check(float(state.player.get("finances", {}).get("cash", 0.0)) <= money_before, "治疗扣费")
+	# 放松缓解压力。
+	state.player["attrs"]["psychological"]["stress"] = 80.0
+	host.relax()
+	check(float(state.player["attrs"]["psychological"]["stress"]) < 80.0, "放松降低压力")
+	# 持久化与读档恢复。
+	host.mental_onset("anxiety")
+	host._persist_mental()
+	check(state.sim_runtime.get("mental", {}) is Dictionary, "精神运行时写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 99)
+	check(reloaded.mental.has_active(), "读档恢复活跃病程")
+	check_eq(reloaded.mental.all_cases().size(), host.mental.all_cases().size(), "病程数量一致")
 

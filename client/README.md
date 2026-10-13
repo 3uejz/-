@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 38 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 39 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -81,10 +81,11 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 继承与人生结算（`sim/inheritance.gd` `InheritanceSystem`）：`立遗嘱` 写入 `player.will`；死亡时 `advance()` 触发 `settle_inheritance()`，按遗嘱或法定顺序（配偶→子女→父母→兄弟姐妹）分配遗产净额，并记入 `legacy.history`；`death_summary()` 输出姓名/年龄/最终称号与遗产估算。
 - 存档与运行态：`GameState.sim_runtime.survival` 持久化生存运行时（`SurvivalSystem.to_dict()`：成瘾复发/营养过量天数/死亡标志/遗嘱），读档经 `_persist_survival()`/`from_dict()` 还原。
 - 人生结算面板：死亡时主壳在消息流输出结算并打开「人生结算」面板（`ending`，条件可见），由 `panel_content.ending()` 渲染生平/终号/遗嘱/遗产/法定继承人/人生大事记。
+- 人格与精神健康（`sim/personality.gd` `PersonalitySystem`、`sim/mental_health.gd` `MentalHealthSystem`、`sim/happiness.gd` `HappinessSystem`）：大五人格与阈值派生标签（`personality_tags()`）驱动对话风格/职业适配/关系速度；22 病种三维病程（频率/强度/时长）经 `advance()` 推进并在压力超阈或幸福长期低值时掷骰新发（`roll_triggers()`），`mental_onset()` 供重大事件强制触发；`心理咨询`/`心理治疗`/`精神科用药`/`重症干预`/`放松` 指令经 `SimHost.mental_treat()`/`relax()` 结算疗效三态（根治/缓解/无效，含误诊与副作用）并扣费；`player.health.mental` 回写病程，运行时经 `GameState.sim_runtime.mental` 持久化（`to_dict()`/`from_dict()`）；`_update_happiness()` 按关系/事业/健康/信仰/意义感结算幸福。「精神健康」面板渲染情绪/幸福/大五人格/标签/病程。
 
 ## 面板与表现层
 
-- **38 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+- **39 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
   按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入

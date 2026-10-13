@@ -87,6 +87,7 @@ const VERB_PANELS: Dictionary = {
 	"看殡葬": "funeral", "丧葬": "funeral",
 	"看玄学": "metaphysics", "命理": "metaphysics",
 	"看医疗": "medical", "病历": "medical",
+	"看心理": "mental", "精神健康": "mental", "心理": "mental",
 	"看文娱": "content_industry", "版权": "content_industry",
 	"看工程": "engineering", "在建": "engineering",
 	"看服务": "services", "生活服务": "services",
@@ -391,6 +392,7 @@ func _catalogs() -> Dictionary:
 		"person": _person_entries(_sim),
 		"property": _sim.property_catalog(),
 		"pet_species": _sim.pet_species_catalog(),
+		"mental_disorder": _sim.mental_disorders_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -679,6 +681,9 @@ func _panel_context() -> Dictionary:
 		var w: Dictionary = _sim.weather_panel_data()
 		if not w.is_empty():
 			context["weather"] = w
+		var m: Dictionary = _sim.mental_panel_data()
+		if not m.is_empty():
+			context["mental"] = m
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

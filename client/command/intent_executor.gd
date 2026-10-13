@@ -122,6 +122,17 @@ func _dispatch(intent) -> Dictionary:
 			return _adopt_child(intent)
 		"指定监护人":
 			return _assign_guardian(intent)
+		# 心理与精神健康
+		"心理咨询":
+			return _mental_treat(intent, "psychotherapy")
+		"心理治疗":
+			return _mental_treat(intent, "cbt")
+		"精神科用药":
+			return _mental_treat(intent, "medication")
+		"重症干预":
+			return _mental_treat(intent, "crisis_intervention")
+		"放松":
+			return _relax(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -145,7 +156,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看行情 / 看天气 …（全部 38 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看行情 / 看天气 …（全部 39 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
@@ -473,6 +484,49 @@ func _assign_guardian(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("未找到此人，无法指定为监护人。")
 	return _ok(["你指定 %s 为子女的监护人。" % _person_name(target)], 0, "")
+
+func _mental_treat(intent, method: String) -> Dictionary:
+	var key := _object_id(intent, "mental_disorder")
+	var r: Dictionary = host.mental_treat(method, key)
+	if not bool(r.get("ok", false)):
+		match String(r.get("reason", "")):
+			"no_active_disorder":
+				return _fail("你目前没有需要治疗的精神疾病。")
+			"insufficient_funds":
+				return _fail("资金不足，无法支付治疗费用。")
+			"unknown_treatment":
+				return _fail("暂不支持该治疗方式。")
+			_:
+				return _fail("治疗未能进行。")
+	var outcome := String(r.get("outcome", "ineffective"))
+	var outcome_cn: String = String({"cured": "根治", "remitted": "缓解", "ineffective": "无效"}.get(outcome, outcome))
+	var lines: Array = ["接受了「%s」，对 %s 的结果：%s。" % [
+		String(r.get("method_name", method)), String(r.get("key_name", "")), outcome_cn]]
+	if bool(r.get("misdiagnosed", false)):
+		lines.append("存在误诊，疗效打折。")
+	if bool(r.get("side_effect", false)):
+		lines.append("出现药物副作用。")
+	return _ok(lines, 0, "")
+
+func _relax(intent) -> Dictionary:
+	var minutes := _duration_minutes(intent, HOUR)
+	host.apply_emotion_event("praise")
+	var adv: Dictionary = _advance_time(minutes, {}, "rest")
+	var lines: Array = adv["narration"]
+	var et: String = host.emotion_state()
+	lines.append("你静心放松，情绪趋于%s。" % _emotion_cn(et))
+	return _ok(lines, minutes, "")
+
+func _emotion_cn(state: String) -> String:
+	match state:
+		"anxious":
+			return "焦虑"
+		"depressed":
+			return "低落"
+		"manic":
+			return "亢奋"
+		_:
+			return "平静"
 
 func _reason_cn(reason: String) -> String:
 	match reason:

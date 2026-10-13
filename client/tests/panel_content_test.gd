@@ -10,7 +10,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
-	"weather", "anomaly", "goldfinger",
+	"weather", "anomaly", "goldfinger", "mental",
 ]
 
 func _suite_name() -> String:
@@ -33,6 +33,7 @@ func run_tests() -> void:
 	_test_domain_panels_render()
 	_test_domain_panels_content()
 	_test_ending_panel()
+	_test_mental_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -119,12 +120,26 @@ func _test_ending_panel() -> void:
 	check_eq(_row_value(_find_section(data, "法定继承人"), "子女"), "2 位", "继承人子女数")
 	check_eq(_row_value(_find_section(data, "遗产"), "净额"), "1.2 万元", "遗产净额")
 
+func _test_mental_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("mental", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无心理上下文为空态")
+	var ctx: Dictionary = {"mental": {
+		"emotion": "焦虑", "mood": 40.0, "stress": 75.0, "happiness": 45.0, "meaning": 55.0,
+		"dims": [{"label": "神经质", "value": "70"}],
+		"tags": ["敏感焦虑"],
+		"cases": [{"label": "焦虑症", "value": "发作期 · 强度60 · 间隔30天 · 单次10天 · 发作2次"}],
+	}}
+	var d2: Dictionary = PanelContentScript.build("mental", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有心理上下文非空")
+	check_eq(_row_value(_find_section(d2, "情绪与幸福"), "情绪"), "焦虑", "情绪")
+	check_eq(_row_value(_find_section(d2, "大五人格"), "神经质"), "70", "人格维度")
+	check_eq(_row_value(_find_section(d2, "精神疾病病程"), "焦虑症"), "发作期 · 强度60 · 间隔30天 · 单次10天 · 发作2次", "病程行")
+
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):
 		if String(s.get("title", "")) == title:
 			return s
 	return {}
-
 func _row_value(section: Dictionary, label: String) -> String:
 	for r in section.get("rows", []):
 		if String(r.get("label", "")) == label:
