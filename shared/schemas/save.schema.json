@@ -21,7 +21,9 @@
       "description": "本地模拟运行时状态：不入确定性世界，仅用于续存成瘾复发/营养过量天数/死亡标志/遗嘱等运行态。",
       "additionalProperties": false,
       "properties": {
-        "survival": { "type": "object", "additionalProperties": true }
+        "survival": { "type": "object", "additionalProperties": true },
+        "mental": { "type": "object", "additionalProperties": true },
+        "spirituality": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

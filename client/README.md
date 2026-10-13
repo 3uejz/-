@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 39 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 40 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -82,10 +82,11 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 存档与运行态：`GameState.sim_runtime.survival` 持久化生存运行时（`SurvivalSystem.to_dict()`：成瘾复发/营养过量天数/死亡标志/遗嘱），读档经 `_persist_survival()`/`from_dict()` 还原。
 - 人生结算面板：死亡时主壳在消息流输出结算并打开「人生结算」面板（`ending`，条件可见），由 `panel_content.ending()` 渲染生平/终号/遗嘱/遗产/法定继承人/人生大事记。
 - 人格与精神健康（`sim/personality.gd` `PersonalitySystem`、`sim/mental_health.gd` `MentalHealthSystem`、`sim/happiness.gd` `HappinessSystem`）：大五人格与阈值派生标签（`personality_tags()`）驱动对话风格/职业适配/关系速度；22 病种三维病程（频率/强度/时长）经 `advance()` 推进并在压力超阈或幸福长期低值时掷骰新发（`roll_triggers()`），`mental_onset()` 供重大事件强制触发；`心理咨询`/`心理治疗`/`精神科用药`/`重症干预`/`放松` 指令经 `SimHost.mental_treat()`/`relax()` 结算疗效三态（根治/缓解/无效，含误诊与副作用）并扣费；`player.health.mental` 回写病程，运行时经 `GameState.sim_runtime.mental` 持久化（`to_dict()`/`from_dict()`）；`_update_happiness()` 按关系/事业/健康/信仰/意义感结算幸福。「精神健康」面板渲染情绪/幸福/大五人格/标签/病程。
+- 精神追求与信仰（`sim/spirituality.gd` `SpiritualitySystem`）：价值观三轴（利己-利他/保守-开放/物质-精神）随选择微调、七类精神追求（冥想/修行/哲学阅读/写作/自省/志愿服务/艺术创作）按小时降压力并漂移人格与价值观、十派信仰/哲学与修持境界、四类精神危机及出口化解、邪教卷入风险；`修持 <法门>`/`皈依 <信仰>`/`深化信仰`/`化解危机 <出口>` 指令经 `SimHost.pursue_spirit()`/`convert_faith()`/`deepen_faith()`/`resolve_spirit_crisis()` 结算；运行时经 `GameState.sim_runtime.spirituality` 持久化（`to_dict()`/`from_dict()`）；皈依后信仰境界抬升幸福/意义分量。「精神追求」面板渲染价值观/信仰境界/追求深度/精神危机。
 
 ## 面板与表现层
 
-- **39 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+- **40 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
   按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入

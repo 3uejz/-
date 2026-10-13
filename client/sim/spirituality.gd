@@ -68,6 +68,78 @@ func new_state() -> Dictionary:
 	return {"depth": {}, "faith": "", "faith_depth": 0.0, "crisis": "", "cult": false}
 
 
+## 持久化状态（浅拷贝内部字典，避免外部别名）。
+func to_dict(state: Dictionary) -> Dictionary:
+	var out: Dictionary = state.duplicate(true)
+	if not (out.get("depth", {}) is Dictionary):
+		out["depth"] = {}
+	return out
+
+
+## 从存档恢复状态；缺字段回退默认，非法信仰清空（R55.4）。
+func from_dict(data) -> Dictionary:
+	var state: Dictionary = new_state()
+	if data is Dictionary:
+		var d: Variant = (data as Dictionary).get("depth", {})
+		if d is Dictionary:
+			state["depth"] = (d as Dictionary).duplicate(true)
+		var faith: String = String((data as Dictionary).get("faith", ""))
+		if FAITHS.has(faith):
+			state["faith"] = faith
+		state["faith_depth"] = maxf(0.0, float((data as Dictionary).get("faith_depth", 0.0)))
+		state["crisis"] = String((data as Dictionary).get("crisis", ""))
+		state["cult"] = bool((data as Dictionary).get("cult", false))
+		var pd: Variant = (data as Dictionary).get("persona_drift", {})
+		if pd is Dictionary:
+			state["persona_drift"] = (pd as Dictionary).duplicate(true)
+	return state
+
+
+## 精神追求目录（供解析器链接「修持 <法门>」）。
+func pursuits_catalog() -> Array:
+	var out: Array = []
+	for key in PURSUITS.keys():
+		out.append({"id": String(key), "name": String((PURSUITS[key] as Dictionary).get("name", key))})
+	return out
+
+
+## 信仰/哲学流派目录（供解析器链接「皈依 <信仰>」）。
+func faiths_catalog() -> Array:
+	var out: Array = []
+	for key in FAITHS.keys():
+		out.append({"id": String(key), "name": String((FAITHS[key] as Dictionary).get("name", key))})
+	return out
+
+
+## 精神危机出口目录（供解析器链接「化解危机 <出口>」）。
+func crisis_exits_catalog() -> Array:
+	const NAMES: Dictionary = {
+		"religion": "宗教熏修", "philosophy": "哲学省思", "psychology": "心理疏导", "volunteering": "志愿服务",
+	}
+	var seen: Dictionary = {}
+	var out: Array = []
+	for crisis in CRISIS_EXITS.keys():
+		for exit_kind in CRISIS_EXITS[crisis]:
+			var k := String(exit_kind)
+			if seen.has(k):
+				continue
+			seen[k] = true
+			out.append({"id": k, "name": String(NAMES.get(k, k))})
+	return out
+
+
+func pursuit_name(kind: String) -> String:
+	return String((PURSUITS.get(kind, {}) as Dictionary).get("name", kind))
+
+
+func faith_name(key: String) -> String:
+	return String((FAITHS.get(key, {}) as Dictionary).get("name", key))
+
+
+func realm_name(index: int) -> String:
+	return String(REALM_NAMES[clampi(index, 0, REALM_NAMES.size() - 1)])
+
+
 ## 价值观随重大选择微调（R55.1、R55.2）。axis 名，delta 期望变化；返回实际变化。
 func adjust_values(values: Dictionary, axis: String, delta: float) -> float:
 	if not VALUES.has(axis):

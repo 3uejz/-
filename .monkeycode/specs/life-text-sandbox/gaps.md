@@ -12,7 +12,7 @@
 1. **数值基线覆盖仍不全（已收敛，低）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分，现 **76 域**），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济；task 48.3 补 SEIR/碳排环保/工程/医疗/体育/医美；task 48.4 补心理/残障养老/数字/消费者保护/民间借贷/应急；task 48.5 补婚育/育儿/职场/房产/农业/宠物；task 48.6 批量迁移剩余全部系数型标量域，并令 `worldsim.macro`、`sim.gregorian` 改为引用生成基线单一真源；对齐测试数据驱动化，遍历 `BASELINE_DOMAINS`/`BaselineDomains` 逐值比对，新增域无需改测试代码）。仅剩纯实现类常量（哈希盐/枚举序号/LOD/存档 schema 版本）不纳入基线，因为它们不构成跨端数值契约。
 2. **存档/领域 schema 未扩展（高）**：`player` 缺 family/memory/pet/军籍/残障/土地/数字资产/案件/病症三维；`finances/legal/health` 过粗；`world_delta` 多为 `additionalProperties` 空壳；缺 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema。
 3. **内容目录与 R56 硬指标脱节（已收敛，低）**：新增 `tools/contentgen/generate.py` 按 R56 下限确定性补齐全部内容类别（地点 1000、场所类型 124、职业 200、技能 140、物品 1000、疾病 80 含精神 20/成瘾 5、证书 30、娱乐 100、事件 300、成就 300、图鉴 500、交通 12、金融标的 56、制造贸易 50、奖项 40、组织 30、异常实体 2000、大型活动 20、第一产业 35、语言 10、节日 10）；`tools/contentbuilder coverage` 对 R56 硬阻断并并入 `scripts/test.sh`；content-catalog §23 记录规模对齐表与 era 门闩。D35–D43、D45–D50 专属节见 content-catalog §22。
-4. **UI 入口（已收敛，低）**：`ui.md` 面板清单已由 12 扩至 39，覆盖经营、组织、案件、救援、环保、市政、债务、维权、福利、殡葬、玄学、医疗、精神健康、文娱、工程、专业/生活服务、交通基建、家庭宠物、体育、活动、奖项、数字、疫情、战争、宏观行情、天气预报、人生结算（条件可见）等域；`panel_registry.gd` 同步注册（条件可见新增 `COND_DEAD`），主壳 `VERB_PANELS` 动词映射补全；39 个面板均已接入内容装配（`panel_content.gd`），无数据时以「引导性空态」呈现，不阻塞入口（各域模拟填充数据后自动显示）。
+4. **UI 入口（已收敛，低）**：`ui.md` 面板清单已由 12 扩至 40，覆盖经营、组织、案件、救援、环保、市政、债务、维权、福利、殡葬、玄学、医疗、精神健康、精神追求、文娱、工程、专业/生活服务、交通基建、家庭宠物、体育、活动、奖项、数字、疫情、战争、宏观行情、天气预报、人生结算（条件可见）等域；`panel_registry.gd` 同步注册（条件可见新增 `COND_DEAD`），主壳 `VERB_PANELS` 动词映射补全；40 个面板均已接入内容装配（`panel_content.gd`），无数据时以「引导性空态」呈现，不阻塞入口（各域模拟填充数据后自动显示）。
 5. **动词表（已收敛，低）**：`verb-registry.md` 新增「政务、服务与组织」节（缴费/办证/落户/土地流转/IP 授权/进出口/办案/救灾/审计/招投标/搬家/算命/移植/接种/参战/转会/参展/申报奖项/实名认证等）与全量面板查询动词，所有域均有入口动词。
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
@@ -68,7 +68,7 @@
 - 娱乐内容不足（约 31/100）且无费用/耗时/效果/衰减/上瘾参数；旅行预订与行程无 schema；兴趣圈层/副业接口未定义；无娱乐活动面板。
 
 ### D15 世界观与精神追求
-- 精神追求幅度/概率缺失；信仰/哲学流派内容缺失；精神危机触发模型缺失；价值观漂移数值缺失；无专项 UI/测试。
+- **已接线**：`SpiritualitySystem`（`spirituality.gd`）提供价值观三轴（利己-利他/保守-开放/物质-精神，`VALUES`）随重大选择微调（`adjust_values()`）与选择一致性评分（`value_consistency()`）；七类精神追求（冥想/修行/哲学阅读/写作/自省/志愿服务/艺术创作，`PURSUITS`）按投入小时降低压力、提升意义/幸福并驱动人格（`drift()`）与价值观漂移（`pursue()`）；信仰/哲学十派（佛教/道家/基督教/伊斯兰教/斯多葛/存在主义/人道主义/儒家/虚无主义/功利主义，`FAITHS`）与修持境界（`REALM_THRESHOLDS`/`REALM_NAMES`，`convert()`/`deepen_faith()`）；四类精神危机（中年/意义丧失/信仰动摇/存在焦虑，`CRISES`+`CRISIS_EXITS`）由意义/幸福/中年窗口与信仰动摇判定（`check_crisis()`）并以宗教/哲学/心理/志愿出口化解（`resolve_crisis()`）；邪教/极端组织卷入风险（`cult_risk()`/`maybe_join_cult()`）。运行时经 `GameState.sim_runtime.spirituality` 持久化（`to_dict()`/`from_dict()`，含人格累计漂移）；皈依后信仰境界抬升幸福/意义分量（`_update_happiness()`）。UI：新增「精神追求」面板（`spirit`，第 40 面板）渲染价值观三轴/信仰修持境界/追求深度/精神危机；指令 `修持 <法门>`/`皈依 <信仰>`/`深化信仰`/`化解危机 <出口>` 与「看精神」面板入口。
 
 ### D16 战争与征兵
 - 国际关系状态机无数值；war/conscription/casualty 无结构；前线伤亡/军功/被俘无概率且 D96 战斗接口未定；战争经济与占领无数值；无内容/UI。

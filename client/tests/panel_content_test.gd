@@ -10,7 +10,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
-	"weather", "anomaly", "goldfinger", "mental",
+	"weather", "anomaly", "goldfinger", "mental", "spirit",
 ]
 
 func _suite_name() -> String:
@@ -34,6 +34,7 @@ func run_tests() -> void:
 	_test_domain_panels_content()
 	_test_ending_panel()
 	_test_mental_panel()
+	_test_spirit_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -134,6 +135,23 @@ func _test_mental_panel() -> void:
 	check_eq(_row_value(_find_section(d2, "情绪与幸福"), "情绪"), "焦虑", "情绪")
 	check_eq(_row_value(_find_section(d2, "大五人格"), "神经质"), "70", "人格维度")
 	check_eq(_row_value(_find_section(d2, "精神疾病病程"), "焦虑症"), "发作期 · 强度60 · 间隔30天 · 单次10天 · 发作2次", "病程行")
+
+func _test_spirit_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("spirit", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无精神上下文为空态")
+	var ctx: Dictionary = {"spirit": {
+		"axes": [{"label": "利己-利他", "value": "40"}],
+		"faith": "佛教", "has_faith": true, "faith_realm": "小成", "faith_depth": 80.0,
+		"pursuits": [{"label": "冥想", "value": "小成 · 累计60.0小时"}],
+		"crisis": "meaning_loss",
+		"crisis_exits": [{"id": "philosophy", "name": "哲学省思"}],
+	}}
+	var d2: Dictionary = PanelContentScript.build("spirit", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有精神上下文非空")
+	check_eq(_row_value(_find_section(d2, "价值观三轴"), "利己-利他"), "40", "价值观轴")
+	check_eq(_row_value(_find_section(d2, "信仰与修持"), "信仰"), "佛教", "信仰")
+	check_eq(_row_value(_find_section(d2, "精神追求"), "冥想"), "小成 · 累计60.0小时", "追求深度")
+	check_eq(_row_value(_find_section(d2, "精神危机"), "当前危机"), "意义丧失", "危机名称")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

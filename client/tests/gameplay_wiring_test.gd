@@ -58,6 +58,7 @@ func run_tests() -> void:
 	_test_pet_commands()
 	_test_adoption_commands()
 	_test_mental_commands()
+	_test_spirit_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -159,6 +160,25 @@ func _test_mental_commands() -> void:
 	_game.player["attrs"]["psychological"]["stress"] = 80.0
 	_main.submit("放松")
 	check(float(_game.player["attrs"]["psychological"]["stress"]) < 80.0, "「放松」缓解压力")
+
+func _test_spirit_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看精神")
+	check(_main.has_panel("spirit"), "「看精神」打开精神追求面板")
+	# 修持：投入冥想 1 小时后追求深度增加。
+	_main.submit("修持 冥想 1 小时")
+	var depths: Dictionary = sim.spirit_state().get("depth", {})
+	check(float(depths.get("meditation", 0.0)) > 0.0, "「修持 冥想」累计追求深度")
+	# 皈依：写入信仰。
+	_main.submit("皈依 佛教")
+	check_eq(String(sim.spirit_state().get("faith", "")), "buddhism", "「皈依 佛教」写入信仰")
+	# 深化信仰：境界随修持累积。
+	_main.submit("深化信仰 1 小时")
+	check(float(sim.spirit_state().get("faith_depth", 0.0)) > 0.0, "「深化信仰」累计信仰深度")
+	# 化解危机：强制设置危机后经出口化解。
+	sim.spirit_state()["crisis"] = "meaning_loss"
+	_main.submit("化解危机 哲学省思")
+	check_eq(String(sim.spirit_state().get("crisis", "")), "", "「化解危机」清空危机")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

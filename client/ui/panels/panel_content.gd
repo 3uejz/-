@@ -112,6 +112,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = medical(player, name_resolver)
 		"mental":
 			data = mental(player, context, name_resolver)
+		"spirit":
+			data = spirit(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -720,6 +722,50 @@ static func mental(player: Dictionary, context: Dictionary, name_resolver: Calla
 	else:
 		sections.append({"title": "精神疾病病程", "rows": [{"label": "状态", "value": "暂无记录"}]})
 	return _ok(sections)
+
+static func spirit(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("精神追求", "尚未生成角色数据")
+	var d: Dictionary = context.get("spirit", {}) if context.get("spirit") is Dictionary else {}
+	if d.is_empty():
+		return _empty("精神追求", "暂无精神追求记录；可通过修持、皈依与省思塑造内心世界")
+	var sections: Array = []
+	var axes: Array = d.get("axes", [])
+	if not axes.is_empty():
+		sections.append(_section("价值观三轴", axes))
+	var faith_rows: Array = []
+	if bool(d.get("has_faith", false)):
+		faith_rows.append({"label": "信仰", "value": String(d.get("faith", ""))})
+		faith_rows.append({"label": "修持境界", "value": "%s · 累计%.1f小时" % [
+			String(d.get("faith_realm", "")), float(d.get("faith_depth", 0.0))]})
+	else:
+		faith_rows.append({"label": "信仰", "value": "未皈依"})
+	sections.append({"title": "信仰与修持", "rows": faith_rows})
+	var pursuits: Array = d.get("pursuits", [])
+	if not pursuits.is_empty():
+		sections.append(_section("精神追求", pursuits))
+	else:
+		sections.append({"title": "精神追求", "rows": [{"label": "状态", "value": "尚未开始任何修持"}]})
+	var crisis := String(d.get("crisis", ""))
+	if not crisis.is_empty():
+		var exits: Array = d.get("crisis_exits", [])
+		var names: Array = []
+		for e in exits:
+			names.append(String((e as Dictionary).get("name", "")))
+		sections.append({"title": "精神危机", "rows": [
+			{"label": "当前危机", "value": _crisis_name(crisis)},
+			{"label": "可选出口", "value": "、".join(names) if not names.is_empty() else "—"},
+		]})
+	else:
+		sections.append({"title": "精神危机", "rows": [{"label": "状态", "value": "心境安稳"}]})
+	return _ok(sections)
+
+static func _crisis_name(key: String) -> String:
+	const NAMES: Dictionary = {
+		"midlife_crisis": "中年危机", "meaning_loss": "意义丧失",
+		"faith_crisis": "信仰动摇", "existential_anxiety": "存在焦虑",
+	}
+	return String(NAMES.get(key, key))
 
 static func content_industry(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

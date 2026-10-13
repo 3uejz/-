@@ -32,6 +32,7 @@ const PetScript = preload("res://sim/pet.gd")
 const ParentingScript = preload("res://sim/parenting.gd")
 const MentalHealthScript = preload("res://sim/mental_health.gd")
 const PersonalityScript = preload("res://sim/personality.gd")
+const SpiritualityScript = preload("res://sim/spirituality.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -84,6 +85,8 @@ var pet                         ## 宠物（PetSystem）
 var parenting                   ## 育儿与成长（ParentingSystem）
 var mental                      ## 精神疾病与情绪（MentalHealthSystem）
 var personality                 ## 大五人格与标签（PersonalitySystem）
+var spirituality                ## 价值观三轴/精神追求/信仰（SpiritualitySystem）
+var _spirit: Dictionary = {}    ## 精神追求运行时（深度/信仰/危机），入档 sim_runtime.spirituality
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -118,6 +121,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	parenting = ParentingScript.new()
 	mental = MentalHealthScript.new()
 	personality = PersonalityScript.new()
+	spirituality = SpiritualityScript.new()
+	_spirit = spirituality.new_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -170,6 +175,10 @@ func _ensure_world_geo() -> void:
 		var mr: Variant = (state.sim_runtime as Dictionary).get("mental", {})
 		if mr is Dictionary and not (mr as Dictionary).is_empty():
 			mental.from_dict(mr)
+		# 恢复精神追求运行时（追求深度/信仰/危机）。
+		var spr: Variant = (state.sim_runtime as Dictionary).get("spirituality", {})
+		if spr is Dictionary and not (spr as Dictionary).is_empty():
+			_spirit = spirituality.from_dict(spr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -644,8 +653,12 @@ func _update_happiness() -> void:
 		career_score = clampf(float(job.get("performance", 60.0)), 0.0, 100.0)
 	# 信仰：物质—精神轴偏向精神即高。
 	var faith_score: float = clampf(float(values.get("material_spiritual", 50.0)), 0.0, 100.0)
-	# 意义感分量：追求（精神轴）、家庭（有配偶/子女）、成就（数量）、价值观一致性。
-	var pursuit: float = faith_score
+	# 皈依后信仰分量随境界抬升（R55.4）。
+	var faith_realm: int = spirituality.faith_realm_index(_spirit)
+	if String(_spirit.get("faith", "")) != "":
+		faith_score = clampf(maxf(faith_score, 60.0 + float(faith_realm) * 8.0), 0.0, 100.0)
+	# 意义感分量：追求（精神轴 + 信仰境界）、家庭（有配偶/子女）、成就（数量）、价值观一致性。
+	var pursuit: float = clampf(faith_score + float(faith_realm) * 4.0, 0.0, 100.0)
 	var family_c: float = 30.0
 	if String(fam.get("spouse_id", "")) != "":
 		family_c += 35.0
@@ -775,6 +788,158 @@ func _tag_name(tag: String) -> String:
 		"dramatic": "情绪外显", "traditional": "传统守成", "solitary_cold": "孤僻冷淡",
 	}
 	return String(TAG_NAMES.get(tag, tag))
+
+# --- 精神追求与信仰（D15） ---
+
+## 精神追求目录（冥想/修行/哲学阅读/写作/自省/志愿服务/艺术创作）。
+func pursuits_catalog() -> Array:
+	return spirituality.pursuits_catalog()
+
+## 信仰/哲学流派目录（R55.4）。
+func faiths_catalog() -> Array:
+	return spirituality.faiths_catalog()
+
+## 精神危机出口目录（宗教/哲学/心理/志愿）。
+func crisis_exits_catalog() -> Array:
+	return spirituality.crisis_exits_catalog()
+
+## 执行一次精神追求（R55.3、R55.5）：按投入时长降低压力、提升意义/幸福，并可能漂移人格与价值观。
+func pursue_spirit(kind: String, minutes: int) -> Dictionary:
+	if not spirituality.PURSUITS.has(kind):
+		return {"ok": false, "reason": "unknown_pursuit"}
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	var values: Dictionary = attrs.get("values", {})
+	var persona: Dictionary = attrs.get("personality", {})
+	var hours: float = maxf(0.0, float(minutes)) / 60.0
+	var cum: Dictionary = _spirit.get("persona_drift", {})
+	var r: Dictionary = spirituality.pursue(_spirit, kind, float(minutes), rng, persona, cum)
+	_spirit["persona_drift"] = cum
+	psych["stress"] = clampf(float(psych.get("stress", 40.0)) + float(r.get("stress", 0.0)), 0.0, 100.0)
+	psych["mood"] = clampf(float(psych.get("mood", 50.0)) - float(r.get("stress", 0.0)), 0.0, 100.0)
+	attrs["psychological"] = psych
+	var vdrift: Dictionary = r.get("value_drift", {}) if r.get("value_drift") is Dictionary else {}
+	for axis in vdrift.keys():
+		spirituality.adjust_values(values, String(axis), hours * float(vdrift[axis]))
+	attrs["personality"] = persona
+	attrs["values"] = values
+	player()["attrs"] = attrs
+	_update_happiness()
+	_sync_mental()
+	_persist_spirituality()
+	return {
+		"ok": true, "kind": kind, "name": spirituality.pursuit_name(kind),
+		"realm": spirituality.realm_name(int(r.get("realm_index", 0))),
+		"realm_unlocked": bool(r.get("realm_unlocked", false)),
+		"stress": float(r.get("stress", 0.0)), "hours": hours,
+		"personality_drifted": bool(r.get("personality_drifted", false)),
+	}
+
+## 皈依/加入信仰或哲学流派（R55.4）。
+func convert_faith(faith: String) -> Dictionary:
+	var r: Dictionary = spirituality.convert(_spirit, faith)
+	if bool(r.get("ok", false)):
+		_update_happiness()
+		_persist_spirituality()
+	return r
+
+## 深化信仰：按小时累计深度并解锁境界（R55.4）。
+func deepen_faith(minutes: int) -> Dictionary:
+	var r: Dictionary = spirituality.deepen_faith(_spirit, float(minutes), rng)
+	if not bool(r.get("ok", false)):
+		return r
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	psych["stress"] = clampf(float(psych.get("stress", 40.0)) + float(r.get("stress", 0.0)), 0.0, 100.0)
+	attrs["psychological"] = psych
+	player()["attrs"] = attrs
+	_update_happiness()
+	_sync_mental()
+	_persist_spirituality()
+	r["faith_name"] = spirituality.faith_name(String(_spirit.get("faith", "")))
+	r["realm"] = spirituality.realm_name(int(r.get("realm_index", 0)))
+	return r
+
+## 当前精神危机（无则返回空事件）。依意义/幸福/中年窗口与信仰动摇判定（R55.6）。
+func spirit_crisis() -> Dictionary:
+	var psych: Dictionary = player().get("attrs", {}).get("psychological", {})
+	var birth: int = int(player().get("birth_minutes", 0))
+	var age: float = maxf(0.0, float(now_minutes() - birth) / MINUTES_PER_YEAR)
+	var happy: float = float(psych.get("happiness", 50.0))
+	var meaning: float = float(psych.get("meaning", 50.0))
+	var midlife: float = happiness.midlife_crisis_weight(age, happy, meaning)
+	var r: Dictionary = spirituality.check_crisis(_spirit, happy, meaning, midlife, rng)
+	if String(r.get("event", "")) != "":
+		_spirit["crisis"] = String(r["event"])
+		_persist_spirituality()
+	return r
+
+## 通过出口化解当前精神危机（宗教/哲学/心理/志愿），提升意义、降低压力（R55.6）。
+func resolve_spirit_crisis(exit_kind: String) -> Dictionary:
+	var crisis := String(_spirit.get("crisis", ""))
+	if crisis.is_empty():
+		return {"ok": false, "reason": "no_crisis"}
+	var r: Dictionary = spirituality.resolve_crisis(_spirit, crisis, exit_kind)
+	if not bool(r.get("ok", false)):
+		return r
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	psych["stress"] = clampf(float(psych.get("stress", 40.0)) + float(r.get("stress", 0.0)), 0.0, 100.0)
+	psych["mood"] = clampf(float(psych.get("mood", 50.0)) - float(r.get("stress", 0.0)), 0.0, 100.0)
+	attrs["psychological"] = psych
+	player()["attrs"] = attrs
+	_update_happiness()
+	_sync_mental()
+	_persist_spirituality()
+	r["crisis"] = crisis
+	return r
+
+## 精神追求面板数据（价值观三轴/信仰境界/追求深度/危机）。
+func spirit_panel_data() -> Dictionary:
+	var values: Dictionary = player().get("attrs", {}).get("values", {})
+	var axes: Array = []
+	for axis in spirituality.VALUES:
+		axes.append({"label": String(spirituality.VALUE_NAMES.get(axis, axis)), "value": str(snappedf(float(values.get(axis, 50.0)), 0.1))})
+	var pursuits: Array = []
+	var depths: Dictionary = _spirit.get("depth", {})
+	for kind in spirituality.PURSUITS.keys():
+		var hours: float = float(depths.get(kind, 0.0))
+		if hours <= 0.0:
+			continue
+		pursuits.append({"label": spirituality.pursuit_name(String(kind)), "value": "%s · 累计%.1f小时" % [
+			spirituality.realm_name(spirituality.realm_index(_spirit, String(kind))), hours]})
+	var faith_key := String(_spirit.get("faith", ""))
+	var crisis := String(_spirit.get("crisis", ""))
+	return {
+		"axes": axes,
+		"faith": spirituality.faith_name(faith_key),
+		"has_faith": faith_key != "",
+		"faith_realm": spirituality.realm_name(spirituality.faith_realm_index(_spirit)),
+		"faith_depth": float(_spirit.get("faith_depth", 0.0)),
+		"pursuits": pursuits,
+		"crisis": crisis,
+		"crisis_exits": spirituality.crisis_exits_catalog() if crisis != "" else [],
+	}
+
+## 精神追求运行时状态（供测试与叙述层读取）。
+func spirit_state() -> Dictionary:
+	return _spirit
+
+## 随游戏内时钟检查精神危机（R55.6），返回事件列表。
+func _refresh_spirit() -> Array:
+	var events: Array = []
+	if is_dead():
+		return events
+	var ev := String(spirit_crisis().get("event", ""))
+	if ev != "":
+		events.append({"type": "spirit_crisis", "name": ev})
+	return events
+
+## 持久化精神追求运行时到 state.sim_runtime。
+func _persist_spirituality() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["spirituality"] = spirituality.to_dict(_spirit)
 
 # --- 宠物 ---
 
@@ -1279,7 +1444,10 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append_array(_advance_pets(minutes))
 		# 精神健康：三维病程推进、压力触发、幸福与意义结算。
 		events.append_array(_refresh_mental(minutes))
+		# 精神追求：检查精神危机触发（R55.6）。
+		events.append_array(_refresh_spirit())
 	_persist_mental()
+	_persist_spirituality()
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),

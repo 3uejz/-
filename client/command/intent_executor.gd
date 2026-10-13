@@ -133,6 +133,15 @@ func _dispatch(intent) -> Dictionary:
 			return _mental_treat(intent, "crisis_intervention")
 		"放松":
 			return _relax(intent)
+		# 精神追求与信仰（D15）
+		"修持":
+			return _pursue_spirit(intent)
+		"皈依":
+			return _convert_faith(intent)
+		"深化信仰":
+			return _deepen_faith(intent)
+		"化解危机":
+			return _resolve_crisis(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -156,7 +165,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看行情 / 看天气 …（全部 39 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看行情 / 看天气 …（全部 40 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
@@ -527,6 +536,64 @@ func _emotion_cn(state: String) -> String:
 			return "亢奋"
 		_:
 			return "平静"
+
+# --- 精神追求与信仰（D15） ---
+
+func _pursue_spirit(intent) -> Dictionary:
+	var kind := _object_id(intent, "pursuit")
+	if kind.is_empty():
+		return _fail("未指定修持法门；可修持冥想、修行、哲学阅读、写作、自省、志愿服务或艺术创作。")
+	if not host.spirituality.PURSUITS.has(kind):
+		return _fail("未知的修持法门。")
+	var minutes := _duration_minutes(intent, HOUR)
+	var adv: Dictionary = _advance_time(minutes, {}, "rest")
+	var lines: Array = adv["narration"]
+	var r: Dictionary = host.pursue_spirit(kind, minutes)
+	if not bool(r.get("ok", false)):
+		return _fail("此次修持未能进行。")
+	lines.append("你投入「%s」%d 分钟，心境%s。" % [String(r.get("name", kind)), minutes, ("更进一层（%s）" % String(r.get("realm", ""))) if bool(r.get("realm_unlocked", false)) else "渐趋平和"])
+	return _ok(lines, minutes, "")
+
+func _convert_faith(intent) -> Dictionary:
+	var faith := _object_id(intent, "faith")
+	if faith.is_empty():
+		return _fail("未指定信仰；可皈依佛教、道家、基督教、伊斯兰教或斯多葛、存在主义等流派。")
+	var r: Dictionary = host.convert_faith(faith)
+	if not bool(r.get("ok", false)):
+		return _fail("无法皈依该信仰。")
+	return _ok(["你皈依了「%s」（%s），从此有了精神寄托。" % [String(r.get("name", faith)), "宗教" if String(r.get("type", "")) == "religion" else "哲学"]], 0, "")
+
+func _deepen_faith(intent) -> Dictionary:
+	var minutes := _duration_minutes(intent, HOUR)
+	var adv: Dictionary = _advance_time(minutes, {}, "rest")
+	var lines: Array = adv["narration"]
+	var r: Dictionary = host.deepen_faith(minutes)
+	if not bool(r.get("ok", false)):
+		return _fail("你尚未皈依任何信仰，无从深化。")
+	lines.append("你潜心修持「%s」%d 分钟，境界%s。" % [String(r.get("faith_name", "")), minutes, String(r.get("realm", ""))])
+	return _ok(lines, minutes, "")
+
+func _resolve_crisis(intent) -> Dictionary:
+	var exit_kind := _object_id(intent, "crisis_exit")
+	if exit_kind.is_empty():
+		return _fail("请指定化解出口：宗教熏修、哲学省思、心理疏导或志愿服务。")
+	var r: Dictionary = host.resolve_spirit_crisis(exit_kind)
+	if not bool(r.get("ok", false)):
+		return _fail("当前没有需要化解的精神危机。" if String(r.get("reason", "")) == "no_crisis" else "该出口不适用于当前危机。")
+	return _ok(["你以「%s」化解了精神危机，内心重归澄明。" % _exit_cn(String(r.get("via", exit_kind)))], 0, "")
+
+func _exit_cn(kind: String) -> String:
+	match kind:
+		"religion":
+			return "宗教熏修"
+		"philosophy":
+			return "哲学省思"
+		"psychology":
+			return "心理疏导"
+		"volunteering":
+			return "志愿服务"
+		_:
+			return kind
 
 func _reason_cn(reason: String) -> String:
 	match reason:

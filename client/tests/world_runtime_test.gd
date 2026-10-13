@@ -37,6 +37,7 @@ func run_tests() -> void:
 	_test_adoption_and_guardianship()
 	_test_child_growth_and_mortality()
 	_test_mental_runtime()
+	_test_spirit_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -389,4 +390,34 @@ func _test_mental_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 99)
 	check(reloaded.mental.has_active(), "读档恢复活跃病程")
 	check_eq(reloaded.mental.all_cases().size(), host.mental.all_cases().size(), "病程数量一致")
+
+func _test_spirit_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(77)
+	var host = SimHostScript.new(state, 77)
+	# 默认无信仰、无追求深度。
+	check_eq(String(host.spirit_state().get("faith", "")), "", "默认无信仰")
+	# 修持：投入冥想，压力下降且追求深度累计。
+	state.player["attrs"]["psychological"]["stress"] = 70.0
+	var r: Dictionary = host.pursue_spirit("meditation", 120)
+	check(bool(r.get("ok", false)), "执行精神追求成功")
+	check(float(host.spirit_state()["depth"]["meditation"]) > 0.0, "追求深度累计")
+	check(float(state.player["attrs"]["psychological"]["stress"]) < 70.0, "修持降低压力")
+	# 皈依与深化信仰。
+	check(bool(host.convert_faith("buddhism").get("ok", false)), "皈依佛教成功")
+	check_eq(String(host.spirit_state().get("faith", "")), "buddhism", "信仰写入运行时")
+	check(bool(host.deepen_faith(120).get("ok", false)), "深化信仰成功")
+	check(float(host.spirit_state().get("faith_depth", 0.0)) > 0.0, "信仰深度累计")
+	# 精神危机与出口化解。
+	host.spirit_state()["crisis"] = "meaning_loss"
+	var res: Dictionary = host.resolve_spirit_crisis("philosophy")
+	check(bool(res.get("ok", false)), "出口化解危机成功")
+	check_eq(String(host.spirit_state().get("crisis", "")), "", "危机已清空")
+	# 持久化与读档恢复。
+	host.pursue_spirit("writing", 60)
+	host._persist_spirituality()
+	check(state.sim_runtime.get("spirituality", {}) is Dictionary, "精神追求运行时写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 77)
+	check_eq(String(reloaded.spirit_state().get("faith", "")), "buddhism", "读档恢复信仰")
+	check(float(reloaded.spirit_state()["depth"].get("meditation", 0.0)) > 0.0, "读档恢复追求深度")
 
