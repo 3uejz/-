@@ -28,6 +28,7 @@ const NpcScript = preload("res://sim/npc.gd")
 const FamilyScript = preload("res://sim/family.gd")
 const PropertyScript = preload("res://sim/property.gd")
 const InheritanceScript = preload("res://sim/inheritance.gd")
+const PetScript = preload("res://sim/pet.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -67,6 +68,7 @@ var npcs                        ## NPC 个体生成（NpcSystem）
 var family                      ## 恋爱/婚姻/繁衍（FamilySystem）
 var property                    ## 房产（PropertySystem）
 var inheritance                 ## 继承（InheritanceSystem）
+var pet                         ## 宠物（PetSystem）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -96,6 +98,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	family = FamilyScript.new(seed)
 	property = PropertyScript.new()
 	inheritance = InheritanceScript.new()
+	pet = PetScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -139,6 +142,11 @@ func _ensure_world() -> void:
 func _ensure_world_geo() -> void:
 	if state == null:
 		return
+	# 恢复生存运行时（成瘾复发/营养过量天数/死亡标志/遗嘱）。
+	if state.sim_runtime is Dictionary:
+		var sr: Variant = (state.sim_runtime as Dictionary).get("survival", {})
+		if sr is Dictionary and not (sr as Dictionary).is_empty():
+			survival.from_dict(sr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -540,6 +548,88 @@ func _final_title() -> String:
 	var title := String(job.get("title", "")) if job is Dictionary else ""
 	return title if title != "" else "凡人"
 
+## 持久化生存运行时（成瘾复发/营养过量天数/死亡标志/遗嘱）到 state.sim_runtime。
+func _persist_survival() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["survival"] = survival.to_dict()
+
+# --- 宠物 ---
+
+## 可领养物种目录（供解析「领养 <宠物>」）。
+func pet_species_catalog() -> Array:
+	var out: Array = []
+	for key in pet.SPECIES.keys():
+		out.append({"id": String(key), "name": String((pet.SPECIES[key] as Dictionary).get("name", key))})
+	return out
+
+func pets() -> Array:
+	return player().get("pets", [])
+
+func find_pet(pet_id: String) -> Dictionary:
+	for p in pets():
+		if typeof(p) == TYPE_DICTIONARY and String(p.get("id", "")) == pet_id:
+			return p
+	return {}
+
+## 领养宠物：扣款并写入 player.pets（schema 对齐，含 id/content_key）。
+func adopt_pet(species: String, pet_name: String = "") -> Dictionary:
+	var r: Dictionary = pet.acquire(species, pet_name if pet_name != "" else species)
+	if not bool(r.get("ok", false)):
+		return r
+	var rec: Dictionary = (r["pet"] as Dictionary).duplicate(true)
+	rec["id"] = _make_uuid()
+	rec["content_key"] = "pet.%s" % species
+	rec["adopted_minutes"] = now_minutes()
+	var cost := int(rec.get("cost", 0))
+	if cost > 0:
+		if economy.cash(account_id()) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "pet:buy")
+		sync_finances()
+	var arr: Array = player().get("pets", [])
+	arr.append(rec)
+	player()["pets"] = arr
+	return {"ok": true, "pet": rec, "cost": cost}
+
+## 喂养全部宠物，返回被喂养的名字。
+func feed_pets(amount: float = 30.0) -> Array:
+	var done: Array = []
+	for p in pets():
+		if p is Dictionary and bool(pet.feed(p, amount).get("ok", false)):
+			done.append(String(p.get("name", "")))
+	return done
+
+## 训练全部宠物，返回被训练的名字。
+func train_pets(hours: float = 1.0) -> Array:
+	var done: Array = []
+	for p in pets():
+		if p is Dictionary and bool(pet.train(p, hours, rng).get("ok", false)):
+			done.append(String(p.get("name", "")))
+	return done
+
+## 随游戏内时钟推进宠物生命周期；返回宠物死亡事件。
+func _advance_pets(minutes: int) -> Array:
+	var events: Array = []
+	for p in pets():
+		if not (p is Dictionary) or not bool(p.get("alive", true)):
+			continue
+		var ev: Dictionary = pet.advance(p, float(minutes) / float(MINUTES_PER_DAY), rng)
+		if String(ev.get("event", "")) == "pet_death":
+			events.append({"type": "pet_death", "name": String(p.get("name", ""))})
+	return events
+
+## 生成确定性 UUID（与 NpcSystem 同格式）。
+func _make_uuid() -> String:
+	const DIGITS: String = "0123456789abcdef"
+	var hex := ""
+	for _i in 32:
+		hex += DIGITS[int(rng.next_float() * 16.0) % 16]
+	return "%s-%s-%s-%s-%s" % [
+		hex.substr(0, 8), hex.substr(8, 4), hex.substr(12, 4),
+		hex.substr(16, 4), hex.substr(20, 12),
+	]
+
 ## 妊娠到期则分娩；返回新生儿档案（无变化返回空）。
 func _check_delivery() -> Dictionary:
 	if is_dead():
@@ -558,7 +648,8 @@ func deliver_child() -> Dictionary:
 	var spouse := find_person(partner_id)
 	var gender := "male" if rng.next_float() < 0.5 else "female"
 	_child_seq += 1
-	var child: Dictionary = npcs.generate(_child_seq, {
+	# 子女 NPC 使用独立序号段，避免与熟人（1..N）等个体 id 冲突。
+	var child: Dictionary = npcs.generate(_child_seq + 100000, {
 		"world_seed": _seed, "region_id": _home_region_id,
 		"now_minute": now_minutes(), "individualized": true, "lod_tier": 0,
 		"age": 0, "gender": gender,
@@ -572,12 +663,12 @@ func deliver_child() -> Dictionary:
 	if partner_id != "":
 		parents.append(partner_id)
 	child["family"] = {"parent_ids": parents}
-	_register_child(child)
+	_register_child(child, partner_id)
 	fam.erase("pregnancy")
 	player()["family"] = fam
 	return child
 
-func _register_child(child: Dictionary) -> void:
+func _register_child(child: Dictionary, partner_id: String = "") -> void:
 	var cid := String(child.get("id", ""))
 	var npcs_arr: Array = state.world_delta.get("npcs", [])
 	npcs_arr.append(child)
@@ -589,6 +680,8 @@ func _register_child(child: Dictionary) -> void:
 	fam["children_ids"] = kids
 	player()["family"] = fam
 	relations.ensure_relation(player(), cid)
+	_link_siblings(child)
+	_link_partner_child(child, partner_id)
 	var lin: Array = state.legacy.get("lineage", [])
 	lin.append({
 		"name": String(child.get("name", "")),
@@ -604,6 +697,41 @@ func _register_child(child: Dictionary) -> void:
 		"parent_ids": (child.get("family", {}) as Dictionary).get("parent_ids", []),
 	})
 	state.legacy["history"] = hist
+
+## 族谱反查：把新生儿与其兄弟姐妹互链（双向 sibling_ids）。
+func _link_siblings(child: Dictionary) -> void:
+	var cid := String(child.get("id", ""))
+	for other in children():
+		var oid := String(other.get("id", ""))
+		if oid == "" or oid == cid:
+			continue
+		var cf: Dictionary = child.get("family", {})
+		var cs: Array = cf.get("sibling_ids", [])
+		if not cs.has(oid):
+			cs.append(oid)
+		cf["sibling_ids"] = cs
+		child["family"] = cf
+		var of: Dictionary = other.get("family", {})
+		var os: Array = of.get("sibling_ids", [])
+		if not os.has(cid):
+			os.append(cid)
+		of["sibling_ids"] = os
+		other["family"] = of
+
+## 族谱反查：把新生儿挂到配偶名下（NPC.family.children_ids）。
+func _link_partner_child(child: Dictionary, partner_id: String) -> void:
+	if partner_id == "":
+		return
+	var partner := find_person(partner_id)
+	if partner.is_empty():
+		return
+	var cid := String(child.get("id", ""))
+	var pf: Dictionary = partner.get("family", {})
+	var pkids: Array = pf.get("children_ids", [])
+	if not pkids.has(cid):
+		pkids.append(cid)
+	pf["children_ids"] = pkids
+	partner["family"] = pf
 
 ## 跨月则结算名下房产（贷款本息/物业/租金/折旧/断供法拍）并回写财务镜像。
 func _maybe_settle_property(prev_minutes: int, cur_minutes: int) -> Dictionary:
@@ -732,6 +860,7 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进。
 	domain_wake.advance_to(int(clock["absolute_minutes"]))
 	_persist_regions()
+	_persist_survival()
 	if bool(r.get("dead", false)) and not _inheritance_settled:
 		settle_inheritance()
 	if bool(r.get("dead", false)):
@@ -745,6 +874,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 			events.append({"type": "birth", "name": String(born.get("name", ""))})
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
+		# 宠物随日推进（饥饿/健康/走失/寿终）。
+		events.append_array(_advance_pets(minutes))
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),

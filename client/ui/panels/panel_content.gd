@@ -140,6 +140,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = anomaly(player, context, name_resolver)
 		"goldfinger":
 			data = goldfinger(player, name_resolver)
+		"ending":
+			data = ending(context)
 		_:
 			data = _empty(title, "该面板尚在建设中")
 	data["title"] = title
@@ -170,6 +172,41 @@ static func character(player: Dictionary) -> Dictionary:
 			var key: String = String(field[0])
 			rows.append({"label": String(field[1]), "value": _num(group.get(key, 0.0))})
 		sections.append({"title": String(spec[1]), "rows": rows})
+	return {"empty": false, "empty_hint": "", "sections": sections}
+
+# --- 人生结算 ---
+
+## 死亡结算面板：读取 SimHost.death_summary()（经 context["death"] 注入）。
+static func ending(context: Dictionary) -> Dictionary:
+	var s: Dictionary = context.get("death", {}) if context.get("death") is Dictionary else {}
+	if s.is_empty():
+		return _empty("人生结算", "尚未结算")
+	var sections: Array = []
+	sections.append({
+		"title": "生平",
+		"rows": [
+			{"label": "姓名", "value": String(s.get("name", "无名"))},
+			{"label": "性别", "value": String(GENDER_LABELS.get(String(s.get("gender", "unknown")), "未知"))},
+			{"label": "享年", "value": "%d 岁" % int(s.get("age_years", 0.0))},
+			{"label": "终号", "value": String(s.get("final_title", "凡人"))},
+			{"label": "遗嘱", "value": "有" if bool(s.get("has_will", false)) else "无"},
+		],
+	})
+	var heirs: Dictionary = s.get("heirs", {}) if s.get("heirs") is Dictionary else {}
+	var heir_labels: Dictionary = {"spouse": "配偶", "children": "子女", "parents": "父母", "siblings": "兄弟姐妹"}
+	var heir_rows: Array = []
+	for key in ["spouse", "children", "parents", "siblings"]:
+		var arr: Array = heirs.get(key, []) if heirs.get(key, []) is Array else []
+		heir_rows.append({"label": String(heir_labels.get(key, key)), "value": "%d 位" % arr.size()})
+	sections.append({"title": "遗产", "rows": [
+		{"label": "净额", "value": "%.1f 万元" % (float(s.get("estate_minor", 0.0)) / 1000000.0)},
+	]})
+	sections.append({"title": "法定继承人", "rows": heir_rows})
+	if s.get("timeline") is Array and not (s["timeline"] as Array).is_empty():
+		var tl_rows: Array = []
+		for item in (s["timeline"] as Array):
+			tl_rows.append({"label": "·", "value": String(item)})
+		sections.append({"title": "人生大事记", "rows": tl_rows})
 	return {"empty": false, "empty_hint": "", "sections": sections}
 
 # --- 背包与装备 ---
@@ -694,7 +731,22 @@ static func household(player: Dictionary, name_resolver: Callable = Callable()) 
 		]
 		sections.append(_section("家庭成员", rows))
 	if not pets.is_empty():
-		sections.append(_section("宠物", _rows_from(pets, ["type", "status", "level"], name_resolver)))
+		var prow_rows: Array = []
+		for p in pets:
+			if not (p is Dictionary):
+				continue
+			var pname: String = String(p.get("name", ""))
+			if pname == "":
+				pname = String(p.get("species", p.get("content_key", "宠物")))
+			var status: String = "已离世" if not bool(p.get("alive", true)) else ("走失" if bool(p.get("lost", false)) else "在世")
+			prow_rows.append({
+				"label": pname,
+				"value": "%s · %d 岁 · 健康 %s · 心情 %s · 亲近 %s" % [
+					status, int(p.get("age", 0)), _num(p.get("health", 0.0)),
+					_num(p.get("mood", 0.0)), _num(p.get("bond", 0.0)),
+				],
+			})
+		sections.append(_section("宠物", prow_rows))
 	if sections.is_empty():
 		return _empty("家庭与宠物", "尚无家庭或宠物；可建立关系、领养并照护")
 	return _ok(sections)

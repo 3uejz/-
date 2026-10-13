@@ -12,7 +12,7 @@
 1. **数值基线覆盖仍不全（已收敛，低）**：单一真源已迁至 `shared/consistency/baseline/*.json`（按域拆分，现 **76 域**），由 `tools/genbaseline` 生成两端常量并由 CI/`scripts/test.sh` 校验（task 46 覆盖核心/生存/区域/地理交通/气候天气/时代/经济；task 48.3 补 SEIR/碳排环保/工程/医疗/体育/医美；task 48.4 补心理/残障养老/数字/消费者保护/民间借贷/应急；task 48.5 补婚育/育儿/职场/房产/农业/宠物；task 48.6 批量迁移剩余全部系数型标量域，并令 `worldsim.macro`、`sim.gregorian` 改为引用生成基线单一真源；对齐测试数据驱动化，遍历 `BASELINE_DOMAINS`/`BaselineDomains` 逐值比对，新增域无需改测试代码）。仅剩纯实现类常量（哈希盐/枚举序号/LOD/存档 schema 版本）不纳入基线，因为它们不构成跨端数值契约。
 2. **存档/领域 schema 未扩展（高）**：`player` 缺 family/memory/pet/军籍/残障/土地/数字资产/案件/病症三维；`finances/legal/health` 过粗；`world_delta` 多为 `additionalProperties` 空壳；缺 case/disaster/anomaly/factory/IP/sports/org/land/digital/order/itinerary/medical/project/event/awards 等 schema。
 3. **内容目录与 R56 硬指标脱节（已收敛，低）**：新增 `tools/contentgen/generate.py` 按 R56 下限确定性补齐全部内容类别（地点 1000、场所类型 124、职业 200、技能 140、物品 1000、疾病 80 含精神 20/成瘾 5、证书 30、娱乐 100、事件 300、成就 300、图鉴 500、交通 12、金融标的 56、制造贸易 50、奖项 40、组织 30、异常实体 2000、大型活动 20、第一产业 35、语言 10、节日 10）；`tools/contentbuilder coverage` 对 R56 硬阻断并并入 `scripts/test.sh`；content-catalog §23 记录规模对齐表与 era 门闩。D35–D43、D45–D50 专属节见 content-catalog §22。
-4. **UI 入口（已收敛，低）**：`ui.md` 面板清单已由 12 扩至 37，覆盖经营、组织、案件、救援、环保、市政、债务、维权、福利、殡葬、玄学、医疗、文娱、工程、专业/生活服务、交通基建、家庭宠物、体育、活动、奖项、数字、疫情、战争、宏观行情、天气预报等域；`panel_registry.gd` 同步注册，主壳 `VERB_PANELS` 动词映射补全；37 个面板均已接入内容装配（`panel_content.gd`），无数据时以「引导性空态」呈现，不阻塞入口（各域模拟填充数据后自动显示）。
+4. **UI 入口（已收敛，低）**：`ui.md` 面板清单已由 12 扩至 38，覆盖经营、组织、案件、救援、环保、市政、债务、维权、福利、殡葬、玄学、医疗、文娱、工程、专业/生活服务、交通基建、家庭宠物、体育、活动、奖项、数字、疫情、战争、宏观行情、天气预报、人生结算（条件可见）等域；`panel_registry.gd` 同步注册（条件可见新增 `COND_DEAD`），主壳 `VERB_PANELS` 动词映射补全；38 个面板均已接入内容装配（`panel_content.gd`），无数据时以「引导性空态」呈现，不阻塞入口（各域模拟填充数据后自动显示）。
 5. **动词表（已收敛，低）**：`verb-registry.md` 新增「政务、服务与组织」节（缴费/办证/落户/土地流转/IP 授权/进出口/办案/救灾/审计/招投标/搬家/算命/移植/接种/参战/转会/参展/申报奖项/实名认证等）与全量面板查询动词，所有域均有入口动词。
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
@@ -32,7 +32,7 @@
 - 12 种交通方式与枢纽边的速度/票价/班次/首末班缺失；出行公式（拥堵/等待/换乘）系数缺失；场所 Resource 字段契约与数值源缺失；枢纽网络与时刻表内容缺失；`region_delta` 字段不足；跨境海关接口未定义。
 
 ### D3 营养、成瘾、临终与遗嘱
-- **部分接线**：`立遗嘱` 动词写入 `player.will`（`written_minutes`/`beneficiaries`），死亡触发 `settle_inheritance()` 并输出 `death_summary()` 人生结算；**尚余**运行态入 schema（死亡标志/成瘾复发与治疗/营养过量天数）；成瘾五类参数缺失；过量致病阈值/权重/概率缺失。
+- **部分接线**：`立遗嘱` 动词写入 `player.will`（`written_minutes`/`beneficiaries`），死亡触发 `settle_inheritance()` 并输出 `death_summary()` 人生结算，死亡时主壳打开「人生结算」面板（`ending`）；生存运行时（死亡标志/成瘾复发/营养过量天数/遗嘱）已由 `GameState.sim_runtime.survival` 持久化（`SurvivalSystem.to_dict()`/`from_dict()`，`SimHost._persist_survival()`）；**尚余**成瘾五类参数与过量致病阈值/权重/概率。
 
 ### D4 人格、精神疾病与幸福
 - 「20+ 病种完整表」不存在（仅约 14 名称）；三维病程（频率/强度/时长）无字段；人格噪声 σ 与漂移上限无数值；触发/误诊/复发概率缺失；精神健康 UI 缺失。
@@ -50,13 +50,13 @@
 - `worldsim` 指标不完整（缺基准利率/汇率/股指/房价/PMI）；个人金融缺贷款摊还/信用卡/保险/衍生品/信用分/税务；税率表缺失；宏观-微观插值对齐未定义；金融标的不足（仅类别/40）；宏观行情无 UI。
 
 ### D9 物品、房产与网络消费
-- 物品内容字段与 1000 目标脱节；房产**已接线**看房/买房/卖房/出租（`SimHost.property_*()`，房源按（种子, 区域）确定性生成、名下房产随 `player.assets` 持久化），**尚余**贷款余额/利率/租约/租客/产权年限/装修入面板与持有按月结算；订单→物流无 schema；消费心理无数值；无订单/物流入口。
+- 物品内容字段与 1000 目标脱节；房产**已接线**看房/买房/卖房/出租（`SimHost.property_*()`，房源按（种子, 区域）确定性生成、名下房产随 `player.assets` 持久化），持有按月结算（`advance()` 跨月触发 `property.monthly_settle()` 还贷/物业/租金/折旧/断供法拍），**尚余**贷款余额/利率/租约/租客/产权年限/装修入面板；订单→物流无 schema；消费心理无数值；无订单/物流入口。
 
 ### D10 网络社交、NPC 记忆与区域全人口
 - `npc.memory` 缺失；`npc.relations` 类型错误；非个体化人口快照结构不足；社交平台扩散系数与 post/message 结构缺失；动态/私信/直播无 UI。
 
 ### D11 育儿、继承与宠物
-- `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，`death_summary()` 输出人生结算。**尚余**`parent_ids/sibling_ids/guardian_ids/adopted_ids` 的运行时产生（族谱反查）、宠物独立 schema 与面板、成长照护换算与早夭概率。
+- `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`parent_ids`（子女反查父母）、`sibling_ids`（分娩时子女间互链）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，`death_summary()` 输出人生结算。宠物**已接线** `领养`/`喂养`/`训练宠物`（`player.pets` 运行时字段 + 「家庭与宠物」面板 + 随日推进）。**尚余** `guardian_ids/adopted_ids`、成长照护换算与早夭概率。
 
 ### D12 民事、监狱与诉讼
 - 案件/证据/判决无 schema；证据-量刑与律师修正无模型；各国法律差异内容缺失；无案件/监狱面板。

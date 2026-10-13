@@ -32,6 +32,7 @@ func run_tests() -> void:
 	_test_placeholder()
 	_test_domain_panels_render()
 	_test_domain_panels_content()
+	_test_ending_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -102,6 +103,21 @@ func _test_domain_panels_content() -> void:
 	var fc_section: Dictionary = _find_section(weather_fc, "未来 7 日")
 	check(not fc_section.is_empty(), "预报分区存在")
 	check_eq(_row_value(fc_section, "今日"), "晴 12~22°C 降水0.0mm", "预报行")
+
+func _test_ending_panel() -> void:
+	check(bool(PanelContentScript.build("ending", GameStateScript.default_player(), Callable(), {}).get("empty", true)), "无结算数据为空态")
+	var data: Dictionary = PanelContentScript.build("ending", GameStateScript.default_player(), Callable(), {
+		"death": {
+			"name": "张三", "gender": "male", "age_years": 80.0, "final_title": "教师",
+			"has_will": true, "estate_minor": 1200000.0,
+			"heirs": {"spouse": ["a"], "children": ["b", "c"], "parents": [], "siblings": []},
+			"timeline": ["出生于某年"],
+		},
+	})
+	check(not bool(data.get("empty", true)), "有结算数据非空")
+	check_eq(_row_value(_find_section(data, "生平"), "姓名"), "张三", "生平姓名")
+	check_eq(_row_value(_find_section(data, "法定继承人"), "子女"), "2 位", "继承人子女数")
+	check_eq(_row_value(_find_section(data, "遗产"), "净额"), "1.2 万元", "遗产净额")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

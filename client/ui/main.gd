@@ -213,9 +213,12 @@ func _handle_time_events(result: Dictionary, speed) -> void:
 				append_message("你走到了生命的尽头。", "danger")
 				_log_death_summary()
 				speed.set_speed(0)
+				open_panel("ending")
 			"dying":
 				append_message("你已油尽灯枯，随时可能离世。", "warning")
 				speed.set_speed(0)
+			"pet_death":
+				append_message("你的宠物「%s」去世了。" % String((e as Dictionary).get("name", "")), "warning")
 
 ## 死亡时在消息流输出人生结算（姓名/年龄/称号 + 遗产与继承人数）。
 func _log_death_summary() -> void:
@@ -387,6 +390,7 @@ func _catalogs() -> Dictionary:
 		"skill": _catalog_entries(_sim.skills),
 		"person": _person_entries(_sim),
 		"property": _sim.property_catalog(),
+		"pet_species": _sim.pet_species_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -423,7 +427,9 @@ func _build_actions() -> void:
 
 ## 面板条件可见：目前仅常驻面板；异常/金手指面板待对应状态接入后开放。
 func _panel_conditions() -> Dictionary:
-	return {}
+	return {
+		"dead": _sim != null and _sim.is_dead(),
+	}
 
 func _ensure_drawer_row() -> void:
 	if is_instance_valid(_drawer_row):
@@ -673,6 +679,8 @@ func _panel_context() -> Dictionary:
 		var w: Dictionary = _sim.weather_panel_data()
 		if not w.is_empty():
 			context["weather"] = w
+		if _sim.is_dead():
+			context["death"] = _sim.death_summary()
 	return context
 
 func _settings_summary() -> Dictionary:

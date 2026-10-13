@@ -112,6 +112,12 @@ func _dispatch(intent) -> Dictionary:
 			return _sell_home(intent)
 		"出租":
 			return _rent_home(intent)
+		"领养":
+			return _adopt_pet(intent)
+		"喂养":
+			return _feed_pets(intent)
+		"训练宠物":
+			return _train_pets(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -418,6 +424,35 @@ func _rent_home(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("出租失败：%s。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["已出租，月租 %.0f 元。" % (float(r.get("monthly_rent", 0)) / 100.0)], 0, "")
+
+func _adopt_pet(intent) -> Dictionary:
+	var species := _object_id(intent, "pet_species")
+	if species.is_empty():
+		return _fail("请指定要领养的宠物种类。")
+	var r: Dictionary = host.adopt_pet(species)
+	if not bool(r.get("ok", false)):
+		match String(r.get("reason", "")):
+			"insufficient_funds":
+				return _fail("资金不足，无法领养。")
+			"unknown_species":
+				return _fail("没有这种宠物。")
+			_:
+				return _fail("暂时无法领养。")
+	var pet_rec: Dictionary = r.get("pet", {})
+	return _ok(["你领养了一只「%s」（%s）。" % [
+		String(pet_rec.get("name", species)), String(pet_rec.get("species", species))]], 0, "")
+
+func _feed_pets(_intent) -> Dictionary:
+	var done: Array = host.feed_pets()
+	if done.is_empty():
+		return _fail("你没有需要喂养的宠物。")
+	return _ok(["你喂饱了：%s。" % ", ".join(done)], 0, "")
+
+func _train_pets(_intent) -> Dictionary:
+	var done: Array = host.train_pets()
+	if done.is_empty():
+		return _fail("你没有可以训练的宠物。")
+	return _ok(["你训练了：%s。" % ", ".join(done)], 0, "")
 
 func _reason_cn(reason: String) -> String:
 	match reason:

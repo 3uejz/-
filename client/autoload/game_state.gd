@@ -11,6 +11,7 @@ var clock: Dictionary = {}
 var player: Dictionary = {}
 var world_delta: Dictionary = {}
 var rng: Dictionary = {}
+var sim_runtime: Dictionary = {}
 var legacy: Dictionary = {}
 
 func new_game(seed: int, playthrough_id: String = "") -> void:
@@ -47,6 +48,7 @@ func new_game(seed: int, playthrough_id: String = "") -> void:
 		"awards": [],
 	}
 	rng = {"streams": {}}
+	sim_runtime = {"survival": {}}
 	legacy = {"generation": 0, "talents": [], "unlocks": [], "lineage": [], "history": []}
 
 func get_state() -> Dictionary:
@@ -59,6 +61,7 @@ func to_dict() -> Dictionary:
 		"player": player,
 		"world_delta": world_delta,
 		"rng": rng,
+		"sim_runtime": sim_runtime,
 		"legacy": legacy,
 	}
 
@@ -68,6 +71,7 @@ func from_dict(doc: Dictionary) -> void:
 	player = doc.get("player", {})
 	world_delta = doc.get("world_delta", {})
 	rng = doc.get("rng", {"streams": {}})
+	sim_runtime = doc.get("sim_runtime", {"survival": {}})
 	legacy = doc.get("legacy", {})
 
 ## 默认玩家（结构与 player.schema.json 对齐）。

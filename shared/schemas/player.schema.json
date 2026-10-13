@@ -543,13 +543,19 @@
       "properties": {
         "id": { "$ref": "common.schema.json#/$defs/uuid" },
         "content_key": { "$ref": "common.schema.json#/$defs/content_key" },
+        "species": { "$ref": "common.schema.json#/$defs/content_key" },
         "name": { "type": "string" },
-        "species_key": { "$ref": "common.schema.json#/$defs/content_key" },
-        "age_days": { "type": "integer", "minimum": 0 },
-        "bond": { "type": "number", "minimum": 0, "maximum": 100 },
+        "gender": { "type": "string", "enum": ["male", "female", "nonbinary", "other"] },
+        "age": { "type": "number", "minimum": 0, "description": "年龄（年）。" },
+        "hunger": { "type": "number", "minimum": 0, "maximum": 100 },
+        "mood": { "type": "number", "minimum": 0, "maximum": 100 },
         "health": { "type": "number", "minimum": 0, "maximum": 100 },
-        "adopted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
-        "alive": { "type": "boolean" }
+        "training": { "type": "number", "minimum": 0, "maximum": 100 },
+        "bond": { "type": "number", "minimum": 0, "maximum": 100 },
+        "lost": { "type": "boolean" },
+        "alive": { "type": "boolean" },
+        "cost": { "type": "integer", "minimum": 0 },
+        "adopted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
       }
     },
     "military": {

@@ -1,11 +1,12 @@
 class_name PanelRegistry
 extends RefCounted
 ## 侧边抽屉面板注册与开合（R57；任务 47.2）。
-## 37 个面板可多开并排；异常图鉴/金手指为条件可见（全量面板清单见 `ui.md` §4）。纯逻辑，headless 可测。
+## 38 个面板可多开并排；异常图鉴/金手指/人生结算为条件可见（全量面板清单见 `ui.md` §4）。纯逻辑，headless 可测。
 
 const COND_ALWAYS: String = "always"
 const COND_ABNORMAL: String = "abnormal"
 const COND_GOLDFINGER: String = "goldfinger"
+const COND_DEAD: String = "dead"
 
 const PANELS: Dictionary = {
 	"character": {"title": "角色与属性", "condition": COND_ALWAYS},
@@ -44,6 +45,7 @@ const PANELS: Dictionary = {
 	"weather": {"title": "天气预报", "condition": COND_ALWAYS},
 	"anomaly": {"title": "异常图鉴", "condition": COND_ABNORMAL},
 	"goldfinger": {"title": "金手指", "condition": COND_GOLDFINGER},
+	"ending": {"title": "人生结算", "condition": COND_DEAD},
 	"settings": {"title": "设置", "condition": COND_ALWAYS},
 }
 
@@ -76,6 +78,8 @@ func _visible(id: String, conditions: Dictionary) -> bool:
 			return bool(conditions.get("revealed_abnormal", false))
 		COND_GOLDFINGER:
 			return bool(conditions.get("goldfinger_enabled", false))
+		COND_DEAD:
+			return bool(conditions.get("dead", false))
 		_:
 			return true
 

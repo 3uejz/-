@@ -31,6 +31,9 @@ func run_tests() -> void:
 	_test_childbirth()
 	_test_property_monthly_settlement()
 	_test_death_summary()
+	_test_sibling_linking()
+	_test_pet_adoption_and_care()
+	_test_survival_runtime_persistence()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -250,4 +253,56 @@ func _test_death_summary() -> void:
 	check(String(s.get("name", "")) != "", "人生结算含姓名")
 	check(float(s.get("estate_minor", 0.0)) >= 0.0, "人生结算含遗产估算")
 	check(not (s.get("heirs", {}) as Dictionary).is_empty(), "人生结算含继承人")
+
+func _test_sibling_linking() -> void:
+	var state = GameStateScript.new()
+	state.new_game(91)
+	var host = SimHostScript.new(state, 91)
+	var npc: Dictionary = host.acquaintances()[0]
+	var partner_id := String(npc.get("id", ""))
+	host.marry_with(partner_id)
+	check(bool(host.try_conceive().get("ok", false)), "第一次受孕")
+	_advance_alive(host, 281)
+	check(bool(host.try_conceive().get("ok", false)), "第二次受孕")
+	_advance_alive(host, 281)
+	var kids: Array = host.children()
+	check_eq(kids.size(), 2, "得到两名子女")
+	var a: Dictionary = kids[0]
+	var b: Dictionary = kids[1]
+	check((a.get("family", {}).get("sibling_ids", []) as Array).has(String(b.get("id", ""))), "长子反查到幼弟")
+	check((b.get("family", {}).get("sibling_ids", []) as Array).has(String(a.get("id", ""))), "幼弟反查到长子")
+	# 配偶名下也应挂到子女。
+	var partner: Dictionary = host.find_person(partner_id)
+	var pkids: Array = partner.get("family", {}).get("children_ids", [])
+	check(pkids.has(String(a.get("id", ""))) and pkids.has(String(b.get("id", ""))), "配偶名下登记两名子女")
+
+func _test_pet_adoption_and_care() -> void:
+	var state = GameStateScript.new()
+	state.new_game(93)
+	var host = SimHostScript.new(state, 93)
+	check(host.pet_species_catalog().size() >= 5, "宠物物种目录非空")
+	host.economy.add_money(host.account_id(), 100000000, "test")
+	check(bool(host.adopt_pet("dog", "旺财").get("ok", false)), "领养狗成功")
+	check_eq(host.pets().size(), 1, "宠物写入 player.pets")
+	var rec: Dictionary = host.pets()[0]
+	check(not String(rec.get("id", "")).is_empty(), "宠物含 id")
+	check_eq(String(rec.get("content_key", "")), "pet.dog", "宠物 content_key 对齐")
+	check_eq(String(rec.get("species", "")), "dog", "宠物 species 对齐")
+	check(bool(rec.get("alive", false)), "新宠物在世")
+	check_eq(host.feed_pets().size(), 1, "喂养成功")
+	var reloaded = SimHostScript.new(state, 93)
+	check_eq(reloaded.pets().size(), 1, "读档恢复宠物")
+
+func _test_survival_runtime_persistence() -> void:
+	var state = GameStateScript.new()
+	state.new_game(95)
+	var host = SimHostScript.new(state, 95)
+	host.advance(120)
+	check(state.sim_runtime.get("survival", {}) is Dictionary, "生存运行时写入 sim_runtime")
+	var saved: Dictionary = (state.sim_runtime["survival"] as Dictionary)
+	check(saved.has("now_minute") and saved.has("excess_days"), "生存运行时含时刻与过量天数")
+	check_eq(int(saved.get("now_minute", -1)), host.now_minutes(), "生存时钟与主机一致")
+	# 读档恢复：新主机从 sim_runtime 还原生存时钟。
+	var reloaded = SimHostScript.new(state, 95)
+	check_eq(reloaded.survival._now_minute, host.now_minutes(), "读档恢复生存时钟")
 

@@ -55,6 +55,7 @@ func run_tests() -> void:
 	_test_marry_command()
 	_test_property_commands()
 	_test_family_commands()
+	_test_pet_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -123,6 +124,17 @@ func _test_family_commands() -> void:
 	check(sim.is_pregnant(), "「怀孕」进入妊娠状态")
 	_main.submit("立遗嘱")
 	check(not (_game.player.get("will", {}) as Dictionary).is_empty(), "「立遗嘱」写入遗嘱")
+
+func _test_pet_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 100000000, "test")
+	_main.submit("领养 狗")
+	check_eq(sim.pets().size(), 1, "「领养 <宠物>」经解析器链接并入档")
+	if sim.pets().is_empty():
+		return
+	sim.pets()[0]["hunger"] = 10.0
+	_main.submit("喂养")
+	check(float(sim.pets()[0].get("hunger", 0.0)) > 10.0, "「喂养」回复宠物饥饿")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
