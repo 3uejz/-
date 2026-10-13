@@ -372,6 +372,8 @@ static func family(player: Dictionary, name_resolver: Callable = Callable()) -> 
 	rows.append({"label": "父母", "value": str((fam.get("parent_ids", []) as Array).size())})
 	rows.append({"label": "兄弟姐妹", "value": str((fam.get("sibling_ids", []) as Array).size())})
 	rows.append({"label": "养子女", "value": str((fam.get("adopted_ids", []) as Array).size())})
+	if not (fam.get("guardian_ids", []) as Array).is_empty():
+		rows.append({"label": "指定监护人", "value": str((fam.get("guardian_ids", []) as Array).size())})
 	var pregnancy: Dictionary = fam.get("pregnancy", {})
 	if not pregnancy.is_empty() and pregnancy.has("due_minutes"):
 		rows.append({"label": "预产", "value": "第 %d 分钟" % int(pregnancy.get("due_minutes", 0))})
@@ -729,6 +731,8 @@ static func household(player: Dictionary, name_resolver: Callable = Callable()) 
 			{"label": "兄弟姐妹", "value": str(_items_of(fam.get("sibling_ids", [])).size())},
 			{"label": "养子女", "value": str(_items_of(fam.get("adopted_ids", [])).size())},
 		]
+		if not (fam.get("guardian_ids", []) as Array).is_empty():
+			rows.append({"label": "指定监护人", "value": str((fam.get("guardian_ids", []) as Array).size())})
 		sections.append(_section("家庭成员", rows))
 	if not pets.is_empty():
 		var prow_rows: Array = []

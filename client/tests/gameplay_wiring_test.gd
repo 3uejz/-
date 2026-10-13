@@ -56,6 +56,7 @@ func run_tests() -> void:
 	_test_property_commands()
 	_test_family_commands()
 	_test_pet_commands()
+	_test_adoption_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -135,6 +136,14 @@ func _test_pet_commands() -> void:
 	sim.pets()[0]["hunger"] = 10.0
 	_main.submit("喂养")
 	check(float(sim.pets()[0].get("hunger", 0.0)) > 10.0, "「喂养」回复宠物饥饿")
+
+func _test_adoption_commands() -> void:
+	var sim = _main._sim
+	_main.submit("收养")
+	check_eq(sim.adopted_children().size(), 1, "「收养」收养一名子女")
+	var npc: Dictionary = sim.acquaintances()[0]
+	_main.submit("指定监护人 " + String(npc.get("name", "")))
+	check_eq(sim.guardians().size(), 1, "「指定监护人 <人物>」写入监护人")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

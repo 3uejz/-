@@ -17,6 +17,7 @@ func run_tests() -> void:
 	_test_nutrition_decay_and_bounds()
 	_test_eat_nutrition_first()
 	_test_nutrition_imbalance_and_excess()
+	_test_excess_disease()
 	_test_addiction_craving_and_stages()
 	_test_addiction_withdrawal()
 	_test_addiction_treatment_and_relapse()
@@ -173,6 +174,34 @@ func _test_nutrition_imbalance_and_excess() -> void:
 	var risks: Dictionary = s.excess_risks()
 	check(risks.has("protein"), "长期过量蛋白质计入风险")
 	check_eq(int(risks.size()), 5, "五项营养均计入过量风险")
+	BaselineScript.clear_overrides()
+
+
+# --- 6b. 长期过量致病 ---
+
+func _test_excess_disease() -> void:
+	BaselineScript.apply_remote_config({
+		"nutrition_decay_per_day": {"protein": 0.0, "carbs": 0.0, "fat": 0.0, "vitamins": 0.0, "minerals": 0.0},
+	})
+	var s = SurvivalScript.new(6)
+	var player := _new_player()
+	for key in SurvivalScript.NUTRIENTS:
+		player["attrs"]["nutrition"][key] = 90.0
+	s.update_nutrition(player, BaselineScript.NUTRITION_EXCESS_DAYS_REQUIRED, {"age_years": 20.0})
+	var added: Array = s.apply_excess_diseases(player)
+	check_eq(added.size(), 5, "五项过量各致病一次")
+	var diseases: Array = player["health"]["diseases"]
+	check_eq(diseases.size(), 5, "疾病写入 player.health.diseases")
+	var keys: Array = []
+	for d in diseases:
+		keys.append(String(d.get("content_key", "")))
+	check(keys.has("disease.gout"), "过量蛋白质 → 痛风")
+	check(keys.has("disease.diabetes"), "过量碳水 → 糖尿病")
+	check_eq(s.nutrition_excess_days(), int(BaselineScript.NUTRITION_EXCESS_DAYS_REQUIRED), "过量天数同步")
+	# 去重：再次应用不新增条目，但严重度上调。
+	var again: Array = s.apply_excess_diseases(player)
+	check_eq(again.size(), 0, "重复过量不重复致病")
+	check_eq((player["health"]["diseases"] as Array).size(), 5, "疾病条目保持去重")
 	BaselineScript.clear_overrides()
 
 

@@ -118,6 +118,10 @@ func _dispatch(intent) -> Dictionary:
 			return _feed_pets(intent)
 		"训练宠物":
 			return _train_pets(intent)
+		"收养":
+			return _adopt_child(intent)
+		"指定监护人":
+			return _assign_guardian(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -141,7 +145,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看行情 / 看天气 …（全部 37 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看行情 / 看天气 …（全部 38 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
@@ -453,6 +457,22 @@ func _train_pets(_intent) -> Dictionary:
 	if done.is_empty():
 		return _fail("你没有可以训练的宠物。")
 	return _ok(["你训练了：%s。" % ", ".join(done)], 0, "")
+
+func _adopt_child(_intent) -> Dictionary:
+	var r: Dictionary = host.adopt_child()
+	if not bool(r.get("ok", false)):
+		return _fail("暂时无法收养子女。")
+	var child: Dictionary = r.get("child", {})
+	return _ok(["你收养了 %s，从此担起养育之责。" % String(child.get("name", "一名子女"))], 0, "")
+
+func _assign_guardian(intent) -> Dictionary:
+	var target := _object_id(intent, "person")
+	if target.is_empty():
+		return _fail("请指定要托付的人。")
+	var r: Dictionary = host.assign_guardian(target)
+	if not bool(r.get("ok", false)):
+		return _fail("未找到此人，无法指定为监护人。")
+	return _ok(["你指定 %s 为子女的监护人。" % _person_name(target)], 0, "")
 
 func _reason_cn(reason: String) -> String:
 	match reason:

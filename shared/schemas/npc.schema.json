@@ -61,6 +61,30 @@
       "minimum": 0,
       "maximum": 2,
       "description": "0 活动区精细、1 邻近按日聚合、2 远方队列统计。"
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["infant", "toddler", "child", "teen", "adult"],
+      "description": "子女成长阶段（R51）。"
+    },
+    "adopted": {
+      "type": "boolean",
+      "description": "是否为收养子女。"
+    },
+    "grown_age": {
+      "type": "integer",
+      "minimum": -1,
+      "description": "已完成年度成长结算的年龄（R51.3）。"
+    },
+    "care_quality": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "最近一次照护投入评分（R51.2）。"
+    },
+    "independent": {
+      "type": "boolean",
+      "description": "成年后是否已独立（R51.4）。"
     }
   }
 }

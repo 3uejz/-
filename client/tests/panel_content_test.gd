@@ -226,6 +226,10 @@ func _test_family() -> void:
 	var sec: Dictionary = _find_section(PanelContentScript.family(player), "家庭")
 	check_eq(_row_value(sec, "子女"), "2", "子女数")
 	check_eq(_row_value(sec, "父母"), "1", "父母数")
+	# 指定监护人：非空时展示。
+	player["family"]["guardian_ids"] = ["g"]
+	var sec2: Dictionary = _find_section(PanelContentScript.family(player), "家庭")
+	check_eq(_row_value(sec2, "指定监护人"), "1", "监护人显示")
 
 func _test_placeholder() -> void:
 	var data: Dictionary = PanelContentScript.build("finance", GameStateScript.default_player())

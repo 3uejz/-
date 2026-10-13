@@ -260,6 +260,8 @@ const (
 	BaselineNutritionAgeBaseYears                 = 20.0
 	BaselineNutritionAgeScalePerYear              = 0.01
 	BaselineNutritionExcessDaysRequired           = 30.0
+	BaselineNutritionExcessSeverityMax            = 8.0
+	BaselineNutritionExcessSeverityPerDay         = 0.2
 	BaselineNutritionExcessThreshold              = 85.0
 	BaselineNutritionLaborScale                   = 0.3
 	BaselineNutritionLightThreshold               = 30.0
@@ -787,8 +789,9 @@ var (
 		"medication":          map[string]any{"adherence": 0.65, "cost": 20000, "cure": 0.15, "minutes": 30, "name": "药物治疗", "remit": 0.6, "side_effect": 0.35},
 		"psychotherapy":       map[string]any{"adherence": 0.8, "cost": 30000, "cure": 0.25, "minutes": 90, "name": "心理咨询", "remit": 0.5, "side_effect": 0.02},
 	}
-	BaselineNutritionDecayPerDay map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
-	BaselineParentDailyCost      map[string]any = map[string]any{
+	BaselineNutritionDecayPerDay   map[string]any = map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0}
+	BaselineNutritionExcessDisease map[string]any = map[string]any{"carbs": "disease.diabetes", "fat": "disease.hyperlipidemia", "minerals": "disease.mineral_overload", "protein": "disease.gout", "vitamins": "disease.hypervitaminosis"}
+	BaselineParentDailyCost        map[string]any = map[string]any{
 		"child":   map[string]any{"minutes": 180, "money": 10000},
 		"infant":  map[string]any{"minutes": 300, "money": 15000},
 		"teen":    map[string]any{"minutes": 120, "money": 12000},
@@ -2755,6 +2758,9 @@ var (
 			"NUTRITION_AGE_SCALE_PER_YEAR":             0.01,
 			"NUTRITION_DECAY_PER_DAY":                  map[string]any{"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0},
 			"NUTRITION_EXCESS_DAYS_REQUIRED":           30.0,
+			"NUTRITION_EXCESS_DISEASE":                 map[string]any{"carbs": "disease.diabetes", "fat": "disease.hyperlipidemia", "minerals": "disease.mineral_overload", "protein": "disease.gout", "vitamins": "disease.hypervitaminosis"},
+			"NUTRITION_EXCESS_SEVERITY_MAX":            8.0,
+			"NUTRITION_EXCESS_SEVERITY_PER_DAY":        0.2,
 			"NUTRITION_EXCESS_THRESHOLD":               85.0,
 			"NUTRITION_LABOR_SCALE":                    0.3,
 			"NUTRITION_LIGHT_THRESHOLD":                30.0,

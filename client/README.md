@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 37 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 38 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -73,6 +73,9 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - `sim/npc.gd`（`NpcSystem`）+ `sim/relations.gd`（`RelationsSystem`）：绑定时按（种子, 区域, 序号）确定性生成所在城市熟人名册（`_ensure_acquaintances()`），建立初始五维关系；`acquaintances()`/`find_person()` 供解析目录与社交链接。
 - 婚恋（`sim/family.gd` `FamilySystem`）：`表白`/`求婚` 经解析器链接熟人，`affection` 达标时 `SimHost.marry_with()` 写入 `player.family.spouse_id` 并纳入家庭圈层；`离婚` 经 `divorce()` 清档。婚姻状态随存档恢复（`_ensure_acquaintances()` 依据 `spouse_id` 重建）。
 - 生育与族谱：`怀孕` 经 `try_conceive()` 写入 `player.family.pregnancy`（`due_minutes = now + 280 天`）；`advance()` 到期触发 `deliver_child()`，生成子女 NPC（继承父母能力/人格）落档到 `world_delta.npcs` 与 `player.family.children_ids`，并记入 `legacy.lineage`/`history`；`children()` 读取名下子女；分娩后反向补齐族谱（`_link_siblings()` 子女间互填 `sibling_ids`、`_link_partner_child()` 把子女挂到配偶 `family.children_ids`）。
+- 收养与监护：`收养` 经 `SimHost.adopt_child()` 生成收养子女 NPC（独立 id 序号段 `ADOPT_SEQ_BASE`），计入 `player.family.children_ids` 与 `adopted_ids`，并记 `legacy.history` 收养条目；`指定监护人 <人物>` 经 `assign_guardian()` 写入 `player.family.guardian_ids`；`legal_guardian()` 在死亡结算时解析未成年子女监护归属（指定监护人 > 父母 > 配偶 > 成年子女 > 兄弟姐妹 > 熟人）。
+- 子女成长与早夭（`sim/parenting.gd` `ParentingSystem`）：`advance()` 经 `_grow_children()` 做年度成长结算（属性 = 基因×0.5 + 照护×0.2 + 教育×0.2 + 随机×0.1，更新阶段/成年独立），`_check_child_mortality()` 按 `PARENT_EARLY_DEATH_RATE` 年化折算做早夭判定并记 `legacy.history`。
+
 - 房产（`sim/property.gd` `PropertySystem`）：`看房`/`买房`/`卖房`/`出租` 经 `SimHost.property_*()` 交易；房源按（种子, 区域）确定性生成、不入档，已购房源从挂牌移除；名下房产随 `player.assets` 持久化；`advance()` 跨月触发 `property.monthly_settle()` 结算贷款本息/物业/租金/折旧/断供法拍并回写财务镜像。
 - 宠物（`sim/pet.gd` `PetSystem`）：`领养`/`喂养`/`训练宠物` 经 `SimHost.adopt_pet()`/`feed_pets()`/`train_pets()` 落档到 `player.pets`（`id`/`content_key`/`species`/`name`/`age`/`hunger`/`mood`/`health`/`training`/`bond`/`alive`/`lost`）；`advance()` 按日推进饥饿/衰老/走失/寿终并回报 `pet_death` 事件；「家庭与宠物」面板渲染宠物近况。
 - 继承与人生结算（`sim/inheritance.gd` `InheritanceSystem`）：`立遗嘱` 写入 `player.will`；死亡时 `advance()` 触发 `settle_inheritance()`，按遗嘱或法定顺序（配偶→子女→父母→兄弟姐妹）分配遗产净额，并记入 `legacy.history`；`death_summary()` 输出姓名/年龄/最终称号与遗产估算。

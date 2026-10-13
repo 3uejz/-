@@ -29,6 +29,15 @@
   "NUTRITION_SEVERE_THRESHOLD": 15.0,
   "NUTRITION_EXCESS_THRESHOLD": 85.0,
   "NUTRITION_EXCESS_DAYS_REQUIRED": 30.0,
+  "NUTRITION_EXCESS_SEVERITY_PER_DAY": 0.2,
+  "NUTRITION_EXCESS_SEVERITY_MAX": 8.0,
+  "NUTRITION_EXCESS_DISEASE": {
+    "protein": "disease.gout",
+    "carbs": "disease.diabetes",
+    "fat": "disease.hyperlipidemia",
+    "vitamins": "disease.hypervitaminosis",
+    "minerals": "disease.mineral_overload"
+  },
   "ADDICTION_SPECIES": {
     "tobacco": {
       "dose_gain": 3.0,

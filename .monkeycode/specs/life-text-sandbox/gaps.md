@@ -32,7 +32,7 @@
 - 12 种交通方式与枢纽边的速度/票价/班次/首末班缺失；出行公式（拥堵/等待/换乘）系数缺失；场所 Resource 字段契约与数值源缺失；枢纽网络与时刻表内容缺失；`region_delta` 字段不足；跨境海关接口未定义。
 
 ### D3 营养、成瘾、临终与遗嘱
-- **部分接线**：`立遗嘱` 动词写入 `player.will`（`written_minutes`/`beneficiaries`），死亡触发 `settle_inheritance()` 并输出 `death_summary()` 人生结算，死亡时主壳打开「人生结算」面板（`ending`）；生存运行时（死亡标志/成瘾复发/营养过量天数/遗嘱）已由 `GameState.sim_runtime.survival` 持久化（`SurvivalSystem.to_dict()`/`from_dict()`，`SimHost._persist_survival()`）；**尚余**成瘾五类参数与过量致病阈值/权重/概率。
+- **已接线**：`立遗嘱` 动词写入 `player.will`（`written_minutes`/`beneficiaries`），死亡触发 `settle_inheritance()` 并输出 `death_summary()` 人生结算，死亡时主壳打开「人生结算」面板（`ending`）；生存运行时（死亡标志/成瘾复发/营养过量天数/遗嘱）已由 `GameState.sim_runtime.survival` 持久化（`SurvivalSystem.to_dict()`/`from_dict()`，`SimHost._persist_survival()`）；营养失衡分级（轻度 <30 / 重度 <15）与长期过量风险（连续超阈 30 日）按 `NUTRITION_*` 阈值判定；**长期过量致病已接线**：`SurvivalSystem.apply_excess_diseases()` 按超出天数换算严重度（`NUTRITION_EXCESS_SEVERITY_PER_DAY/MAX`）写入 `player.health.diseases`（蛋白→痛风、碳水→糖尿病、脂肪→高脂血症、维生素→维生素过多症、矿物质→矿物质过量症，去重且严重度只上调），并把参考过量天数同步到 `player.health.nutrition_excess_days`；成瘾五类参数（`ADDICTION_SPECIES` 的 dose_gain/tolerance_growth/withdrawal_intensity/relapse_rate/treatment_days/withdrawal_days/physiological）与戒断/治疗系数均来自单一真源。
 
 ### D4 人格、精神疾病与幸福
 - 「20+ 病种完整表」不存在（仅约 14 名称）；三维病程（频率/强度/时长）无字段；人格噪声 σ 与漂移上限无数值；触发/误诊/复发概率缺失；精神健康 UI 缺失。
@@ -56,7 +56,7 @@
 - `npc.memory` 缺失；`npc.relations` 类型错误；非个体化人口快照结构不足；社交平台扩散系数与 post/message 结构缺失；动态/私信/直播无 UI。
 
 ### D11 育儿、继承与宠物
-- `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`parent_ids`（子女反查父母）、`sibling_ids`（分娩时子女间互链）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，`death_summary()` 输出人生结算。宠物**已接线** `领养`/`喂养`/`训练宠物`（`player.pets` 运行时字段 + 「家庭与宠物」面板 + 随日推进）。**尚余** `guardian_ids/adopted_ids`、成长照护换算与早夭概率。
+- `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`parent_ids`（子女反查父母）、`sibling_ids`（分娩时子女间互链）、`guardian_ids`（`指定监护人 <人物>` 写入单值监护人）、`adopted_ids`（`收养` 动词生成收养子女 NPC，落独立 id 序号段 `ADOPT_SEQ_BASE` 并计入法定子女，记 `legacy.history` 收养条目）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，并解析未成年子女监护归属（`legal_guardian()`：指定监护人 95 > 父母 88 > 配偶 85 > 成年子女 75 > 兄弟姐妹 65 > 熟人 45）写入结算；`death_summary()` 输出人生结算。子女成长**已接线**：`advance()` 调用 `_grow_children()` 做年度成长结算（`ParentingSystem.raise_child()`，属性 = 基因×0.5 + 照护×0.2 + 教育×0.2 + 随机×0.1）并更新阶段/成年独立，`_check_child_mortality()` 按 `PARENT_EARLY_DEATH_RATE` 年化折算做早夭判定。宠物**已接线** `领养`/`喂养`/`训练宠物`（`player.pets` 运行时字段 + 「家庭与宠物」面板 + 随日推进）、「家族史与传承」与「家庭与宠物」面板展示养子女/监护人。
 
 ### D12 民事、监狱与诉讼
 - 案件/证据/判决无 schema；证据-量刑与律师修正无模型；各国法律差异内容缺失；无案件/监狱面板。

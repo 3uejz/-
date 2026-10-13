@@ -34,6 +34,8 @@ func run_tests() -> void:
 	_test_sibling_linking()
 	_test_pet_adoption_and_care()
 	_test_survival_runtime_persistence()
+	_test_adoption_and_guardianship()
+	_test_child_growth_and_mortality()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -305,4 +307,51 @@ func _test_survival_runtime_persistence() -> void:
 	# 读档恢复：新主机从 sim_runtime 还原生存时钟。
 	var reloaded = SimHostScript.new(state, 95)
 	check_eq(reloaded.survival._now_minute, host.now_minutes(), "读档恢复生存时钟")
+
+func _test_adoption_and_guardianship() -> void:
+	var state = GameStateScript.new()
+	state.new_game(97)
+	var host = SimHostScript.new(state, 97)
+	var r: Dictionary = host.adopt_child("养子小明", 4)
+	check(bool(r.get("ok", false)), "收养子女成功")
+	var child: Dictionary = r.get("child", {})
+	var cid := String(child.get("id", ""))
+	check((state.player.get("family", {}).get("children_ids", []) as Array).has(cid), "养子女计入法定子女")
+	check((state.player.get("family", {}).get("adopted_ids", []) as Array).has(cid), "养子女计入养子女")
+	check_eq(String(child.get("stage", "")), "toddler", "4 岁为幼儿阶段")
+	check(bool(child.get("adopted", false)), "标记为收养")
+	check_eq(host.adopted_children().size(), 1, "养子女档案可反查")
+	# 指定监护人。
+	var npc: Dictionary = host.acquaintances()[0]
+	var gid := String(npc.get("id", ""))
+	check(bool(host.assign_guardian(gid).get("ok", false)), "指定监护人成功")
+	check_eq(host.guardians().size(), 1, "监护人可反查")
+	# 法定监护归属：已指定者优先级最高。
+	var lg: Dictionary = host.legal_guardian()
+	check(bool(lg.get("ok", false)), "存在可托付的监护人")
+	check_eq(String((lg.get("guardian", {}) as Dictionary).get("id", "")), gid, "优先已指定的监护人")
+	check((lg.get("minors", []) as Array).has(cid), "未成年子女纳入监护范围")
+
+func _test_child_growth_and_mortality() -> void:
+	var state = GameStateScript.new()
+	state.new_game(98)
+	var host = SimHostScript.new(state, 98)
+	var r: Dictionary = host.adopt_child("养女小华", 5)
+	var child: Dictionary = r.get("child", {})
+	var mpy: float = host.MINUTES_PER_YEAR
+	# 回拨出生时刻到 6 岁，推进一日触发年度成长结算。
+	child["birth_minutes"] = -int(6.0 * mpy)
+	_advance_alive(host, 1)
+	check_eq(String(child.get("stage", "")), "child", "6 岁进入儿童阶段")
+	check(int(child.get("grown_age", -1)) >= 6, "成长结算推进年龄")
+	check(float(child.get("care_quality", -1.0)) >= 0.0, "成长写入照护评分")
+	check(not child.has("ability"), "成长不产生非 schema 的顶层 ability")
+	check(child.get("attributes", {}).has("ability"), "成长回写 attributes.ability")
+	# 回拨到 18 岁，推进一日触发成年独立。
+	child["birth_minutes"] = -int(18.0 * mpy)
+	_advance_alive(host, 1)
+	check(bool(child.get("independent", false)), "成年后独立")
+	check_eq(String(child.get("stage", "")), "adult", "成年阶段")
+	# 早夭检查不改变在世成年子女状态。
+	check(host._check_child_mortality(1440).is_empty(), "成年子女不计入早夭")
 

@@ -878,6 +878,12 @@ const NUTRITION_DECAY_PER_DAY: Dictionary = {"carbs": 6.0, "fat": 3.0, "minerals
 
 const NUTRITION_EXCESS_DAYS_REQUIRED: float = 30.0
 
+const NUTRITION_EXCESS_DISEASE: Dictionary = {"carbs": "disease.diabetes", "fat": "disease.hyperlipidemia", "minerals": "disease.mineral_overload", "protein": "disease.gout", "vitamins": "disease.hypervitaminosis"}
+
+const NUTRITION_EXCESS_SEVERITY_MAX: float = 8.0
+
+const NUTRITION_EXCESS_SEVERITY_PER_DAY: float = 0.2
+
 const NUTRITION_EXCESS_THRESHOLD: float = 85.0
 
 const NUTRITION_LABOR_SCALE: float = 0.3
@@ -2952,6 +2958,9 @@ const BASELINE_DOMAINS: Dictionary = {
 		"NUTRITION_AGE_SCALE_PER_YEAR": 0.01,
 		"NUTRITION_DECAY_PER_DAY": {"carbs": 6.0, "fat": 3.0, "minerals": 4.0, "protein": 4.0, "vitamins": 5.0},
 		"NUTRITION_EXCESS_DAYS_REQUIRED": 30.0,
+		"NUTRITION_EXCESS_DISEASE": {"carbs": "disease.diabetes", "fat": "disease.hyperlipidemia", "minerals": "disease.mineral_overload", "protein": "disease.gout", "vitamins": "disease.hypervitaminosis"},
+		"NUTRITION_EXCESS_SEVERITY_MAX": 8.0,
+		"NUTRITION_EXCESS_SEVERITY_PER_DAY": 0.2,
 		"NUTRITION_EXCESS_THRESHOLD": 85.0,
 		"NUTRITION_LABOR_SCALE": 0.3,
 		"NUTRITION_LIGHT_THRESHOLD": 30.0,

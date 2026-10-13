@@ -2,6 +2,13 @@
   "category": "diseases",
   "entries": [
     {
+      "content_key": "disease.anemia",
+      "name": "贫血",
+      "category": "hematologic",
+      "severity": 4,
+      "source": "authored"
+    },
+    {
       "content_key": "disease.anxiety",
       "name": "焦虑症",
       "category": "mental",
@@ -79,6 +86,13 @@
       "source": "generated"
     },
     {
+      "content_key": "disease.gout",
+      "name": "痛风",
+      "category": "metabolic",
+      "severity": 5,
+      "source": "authored"
+    },
+    {
       "content_key": "disease.heart_disease",
       "name": "冠心病",
       "category": "cardiovascular",
@@ -86,11 +100,39 @@
       "source": "generated"
     },
     {
+      "content_key": "disease.hormone_imbalance",
+      "name": "激素失衡",
+      "category": "endocrine",
+      "severity": 4,
+      "source": "authored"
+    },
+    {
+      "content_key": "disease.hyperlipidemia",
+      "name": "高脂血症",
+      "category": "metabolic",
+      "severity": 5,
+      "source": "authored"
+    },
+    {
       "content_key": "disease.hypertension",
       "name": "高血压",
       "category": "cardiovascular",
       "severity": 6,
       "source": "generated"
+    },
+    {
+      "content_key": "disease.hypervitaminosis",
+      "name": "维生素过多症",
+      "category": "nutritional",
+      "severity": 5,
+      "source": "authored"
+    },
+    {
+      "content_key": "disease.hypoglycemia",
+      "name": "低血糖",
+      "category": "metabolic",
+      "severity": 4,
+      "source": "authored"
     },
     {
       "content_key": "disease.influenza",
@@ -105,6 +147,13 @@
       "category": "mental",
       "severity": 3,
       "source": "generated"
+    },
+    {
+      "content_key": "disease.mineral_overload",
+      "name": "矿物质过量症",
+      "category": "nutritional",
+      "severity": 5,
+      "source": "authored"
     },
     {
       "content_key": "disease.myopia",
@@ -553,6 +602,20 @@
       "category": "respiratory",
       "severity": 6,
       "source": "generated"
+    },
+    {
+      "content_key": "disease.protein_deficiency",
+      "name": "蛋白质缺乏症",
+      "category": "nutritional",
+      "severity": 5,
+      "source": "authored"
+    },
+    {
+      "content_key": "disease.scurvy",
+      "name": "坏血病",
+      "category": "nutritional",
+      "severity": 6,
+      "source": "authored"
     },
     {
       "content_key": "disease.ulcer",

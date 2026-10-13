@@ -239,6 +239,54 @@ func excess_risks() -> Dictionary:
 	return out
 
 
+## 参考营养过量累计天数（供 player.health.nutrition_excess_days 同步）。
+func nutrition_excess_days() -> int:
+	var peak: float = 0.0
+	for key in NUTRIENTS:
+		peak = maxf(peak, float(_excess_days.get(key, 0.0)))
+	return int(peak)
+
+
+## 长期过量致病（R43.2）：某营养项超阈累计达阈值后按超出天数换算严重度，写入对应疾病。
+## 疾病去重：同一 content_key 已存在则只上调严重度（上限 NUTRITION_EXCESS_SEVERITY_MAX）。
+func apply_excess_diseases(player: Dictionary) -> Array:
+	var added: Array = []
+	if _dead:
+		return added
+	var risks: Dictionary = excess_risks()
+	if risks.is_empty():
+		return added
+	var health: Dictionary = player["health"]
+	if not (health.get("diseases") is Array):
+		health["diseases"] = []
+	var diseases: Array = health["diseases"]
+	var table: Dictionary = BaselineScript.NUTRITION_EXCESS_DISEASE
+	for key in risks.keys():
+		var disease_key: String = str(table.get(key, ""))
+		if disease_key == "":
+			continue
+		var over_days: float = float(risks[key]) - BaselineScript.NUTRITION_EXCESS_DAYS_REQUIRED
+		var severity: float = minf(
+			BaselineScript.NUTRITION_EXCESS_SEVERITY_MAX,
+			maxf(1.0, over_days * BaselineScript.NUTRITION_EXCESS_SEVERITY_PER_DAY))
+		var found: Dictionary = {}
+		for entry in diseases:
+			if entry is Dictionary and str(entry.get("content_key", "")) == disease_key:
+				found = entry
+				break
+		if found.is_empty():
+			diseases.append({
+				"content_key": disease_key,
+				"severity": severity,
+				"phase": "chronic",
+				"contagious": false,
+			})
+			added.append(disease_key)
+		elif severity > float(found.get("severity", 0.0)):
+			found["severity"] = severity
+	return added
+
+
 # --- 成瘾五类 ---
 
 func addiction_key(kind: String) -> String:
@@ -456,12 +504,16 @@ func advance(player: Dictionary, minutes: int, opts: Dictionary = {}) -> Diction
 	_now_minute += minutes
 	decay_physiological(player, minutes, opts)
 	update_nutrition(player, float(minutes) / 1440.0, opts)
+	if player["health"] is Dictionary:
+		player["health"]["nutrition_excess_days"] = nutrition_excess_days()
+	var excess_diseases: Array = apply_excess_diseases(player)
 	update_addictions(player, minutes, opts)
 	var ev: Dictionary = evaluate(player, opts)
 	return {
 		"advanced_minutes": minutes, "frozen": false,
 		"dead": ev["dead"], "dying": ev["dying"],
 		"excess_risks": excess_risks(),
+		"excess_diseases": excess_diseases,
 	}
 
 

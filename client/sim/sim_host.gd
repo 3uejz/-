@@ -29,6 +29,7 @@ const FamilyScript = preload("res://sim/family.gd")
 const PropertyScript = preload("res://sim/property.gd")
 const InheritanceScript = preload("res://sim/inheritance.gd")
 const PetScript = preload("res://sim/pet.gd")
+const ParentingScript = preload("res://sim/parenting.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -39,6 +40,15 @@ const PROPERTY_LISTING_COUNT: int = 5
 const GESTATION_DAYS: int = 280
 ## 持有房产按月结算的间隔（天）。
 const SETTLE_INTERVAL_DAYS: int = 30
+
+## 每游戏年分钟数（用于子女成长/早夭按年结算）。
+const MINUTES_PER_YEAR: float = 365.25 * 1440.0
+
+## 子女成年年龄（R51.4）。
+const ADULT_AGE: int = 18
+
+## 收养子女 NPC 的独立序号段基址，避免与熟人（1..N）及亲生子女（100000 段）id 冲突。
+const ADOPT_SEQ_BASE: int = 200000
 ## 首发默认国家（无有效 nation 时降级，见 design「首发单城」）。
 const DEFAULT_COUNTRY: String = "CN"
 ## 地理气候带（GeoData）→ 天气气候带（baseline CLIMATE_ZONES）的确定性映射。
@@ -67,8 +77,9 @@ var domain_wake                 ## 领域状态休眠补算（DomainWake）
 var npcs                        ## NPC 个体生成（NpcSystem）
 var family                      ## 恋爱/婚姻/繁衍（FamilySystem）
 var property                    ## 房产（PropertySystem）
-var inheritance                 ## 继承（InheritanceSystem）
+var inheritance                ## 继承（InheritanceSystem）
 var pet                         ## 宠物（PetSystem）
+var parenting                   ## 育儿与成长（ParentingSystem）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -77,6 +88,7 @@ var _acquaintances: Array = []  ## 所在城市熟人（确定性生成，供社
 var _listings: Array = []       ## 所在城市在售房源（确定性生成，不入档）
 var _inheritance_settled: bool = false
 var _child_seq: int = 0
+var _adopt_seq: int = 0
 
 func _init(state_obj = null, seed: int = 0) -> void:
 	_seed = seed
@@ -99,6 +111,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	property = PropertyScript.new()
 	inheritance = InheritanceScript.new()
 	pet = PetScript.new()
+	parenting = ParentingScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -512,6 +525,9 @@ func _string_ids(raw) -> Array:
 func settle_inheritance() -> Dictionary:
 	var estate: float = player_estate_minor()
 	var r: Dictionary = inheritance.settle(estate, player().get("will", {}), legal_heirs())
+	# 未成年子女监护归属（R51.5）：优先遗嘱/指定监护人，其次法定顺位。
+	var guard: Dictionary = legal_guardian()
+	r["guardianship"] = guard
 	var hist: Array = state.legacy.get("history", [])
 	hist.append({
 		"kind": "death",
@@ -522,6 +538,8 @@ func settle_inheritance() -> Dictionary:
 		"net": float(r.get("net", 0.0)),
 		"escheat": bool(r.get("escheat", false)),
 		"allocations": r.get("allocations", []),
+		"guardian": String((guard.get("guardian", {}) as Dictionary).get("id", "")),
+		"minors": guard.get("minors", []),
 	})
 	state.legacy["history"] = hist
 	_inheritance_settled = true
@@ -733,6 +751,182 @@ func _link_partner_child(child: Dictionary, partner_id: String) -> void:
 	pf["children_ids"] = pkids
 	partner["family"] = pf
 
+# --- 收养与监护（R51 / D11）---
+
+## 养子女（player.family.adopted_ids）。
+func adopted_children() -> Array:
+	var out: Array = []
+	for cid in player().get("family", {}).get("adopted_ids", []):
+		var c := find_person(String(cid))
+		if not c.is_empty():
+			out.append(c)
+	return out
+
+## 收养一名子女：生成 NPC（独立序号段），登记为法定子女与养子女，记入家族史。
+## 收养不写妊娠/出生记录，仅在 lineage/history 记「收养」条目。
+func adopt_child(child_name: String = "", age: int = 3) -> Dictionary:
+	_adopt_seq += 1
+	var gender := "male" if rng.next_float() < 0.5 else "female"
+	var child: Dictionary = npcs.generate(_adopt_seq + ADOPT_SEQ_BASE, {
+		"world_seed": _seed, "region_id": _home_region_id,
+		"now_minute": now_minutes(), "individualized": true, "lod_tier": 0,
+		"age": maxi(0, age), "gender": gender,
+	})
+	if child_name != "":
+		child["name"] = child_name
+	child["stage"] = parenting.stage_of(maxi(0, age))
+	child["adopted"] = true
+	child["family"] = {"parent_ids": [String(player().get("id", ""))]}
+	var cid := String(child.get("id", ""))
+	var npcs_arr: Array = state.world_delta.get("npcs", [])
+	npcs_arr.append(child)
+	state.world_delta["npcs"] = npcs_arr
+	var fam: Dictionary = player().get("family", {})
+	var kids: Array = fam.get("children_ids", [])
+	if not kids.has(cid):
+		kids.append(cid)
+	fam["children_ids"] = kids
+	var adopted: Array = fam.get("adopted_ids", [])
+	if not adopted.has(cid):
+		adopted.append(cid)
+	fam["adopted_ids"] = adopted
+	player()["family"] = fam
+	relations.ensure_relation(player(), cid)
+	_link_siblings(child)
+	var lin: Array = state.legacy.get("lineage", [])
+	lin.append({
+		"name": String(child.get("name", "")),
+		"birth_minutes": int(child.get("birth_minutes", 0)),
+		"summary": "收养于 %s" % _home_region_id,
+	})
+	state.legacy["lineage"] = lin
+	var hist: Array = state.legacy.get("history", [])
+	hist.append({
+		"kind": "adopt",
+		"name": String(child.get("name", "")),
+		"adopt_minutes": now_minutes(),
+		"parent_ids": [String(player().get("id", ""))],
+	})
+	state.legacy["history"] = hist
+	return {"ok": true, "child": child}
+
+## 指定监护人（player.family.guardian_ids，单值）。指定的对象须存在于世界。
+func assign_guardian(person_id: String) -> Dictionary:
+	if person_id == "" or find_person(person_id).is_empty():
+		return {"ok": false, "reason": "person_not_found"}
+	var fam: Dictionary = player().get("family", {})
+	fam["guardian_ids"] = [person_id]
+	player()["family"] = fam
+	return {"ok": true, "guardian_ids": fam["guardian_ids"]}
+
+## 已指定的监护人档案。
+func guardians() -> Array:
+	var out: Array = []
+	for gid in player().get("family", {}).get("guardian_ids", []):
+		var g := find_person(String(gid))
+		if not g.is_empty():
+			out.append(g)
+	return out
+
+## 未成年子女（年龄 < ADULT_AGE 且在世）。
+func minor_children() -> Array:
+	var out: Array = []
+	var now := now_minutes()
+	for c in children():
+		if not bool(c.get("alive", true)):
+			continue
+		if _child_age(c, now) < ADULT_AGE:
+			out.append(c)
+	return out
+
+func _child_age(child: Dictionary, now: int) -> int:
+	var birth := int(child.get("birth_minutes", 0))
+	return maxi(0, int(float(now - birth) / MINUTES_PER_YEAR))
+
+## 未成年子女的法定监护人（R51.5）：优先已指定监护人，其次在世配偶/父母/成年子女/兄弟姐妹/熟人。
+func legal_guardian() -> Dictionary:
+	var minors: Array = []
+	for c in minor_children():
+		minors.append(String(c.get("id", "")))
+	if minors.is_empty():
+		return {"guardian": {}, "minors": [], "ok": false}
+	var candidates: Array = []
+	for g in guardians():
+		candidates.append({"id": String(g.get("id", "")), "name": String(g.get("name", "")), "suitability": 95.0})
+	var sid := String(player().get("family", {}).get("spouse_id", ""))
+	if sid != "":
+		candidates.append({"id": sid, "name": String(spouse().get("name", "")), "suitability": 85.0})
+	for pid in player().get("family", {}).get("parent_ids", []):
+		var p := find_person(String(pid))
+		if not p.is_empty():
+			candidates.append({"id": String(pid), "name": String(p.get("name", "")), "suitability": 88.0})
+	for c in children():
+		if bool(c.get("alive", true)) and _child_age(c, now_minutes()) >= ADULT_AGE:
+			candidates.append({"id": String(c.get("id", "")), "name": String(c.get("name", "")), "suitability": 75.0})
+	for sib in player().get("family", {}).get("sibling_ids", []):
+		var s := find_person(String(sib))
+		if not s.is_empty():
+			candidates.append({"id": String(sib), "name": String(s.get("name", "")), "suitability": 65.0})
+	for a in _acquaintances:
+		candidates.append({"id": String(a.get("id", "")), "name": String(a.get("name", "")), "suitability": 45.0})
+	return inheritance.guardianship(minors, candidates)
+
+# --- 子女成长与早夭（R51.3/R51.4/R51.8）---
+
+## 按游戏内时钟推进子女成长：整数年龄增长时做年度成长结算，成年后独立。
+func _grow_children() -> Array:
+	var events: Array = []
+	var now := now_minutes()
+	for c in children():
+		if not bool(c.get("alive", true)):
+			continue
+		var age := _child_age(c, now)
+		if age >= ADULT_AGE:
+			if not bool(c.get("independent", false)):
+				parenting.reach_adulthood(c)
+				events.append({"type": "child_adult", "name": String(c.get("name", ""))})
+			continue
+		var grown := int(c.get("grown_age", -1))
+		if age > grown:
+			var care := float(c.get("care_quality", 60.0))
+			for _y in range(grown + 1, age + 1):
+				_grow_one_year(c, care)
+			c["grown_age"] = age
+			c["stage"] = parenting.stage_of(age)
+	return events
+
+## 单年成长：把 NPC 的 attributes.ability 作为基因写入 ParentingSystem 结算，再回写 properties。
+func _grow_one_year(child: Dictionary, care: float) -> void:
+	var attrs: Dictionary = child.get("attributes", {})
+	child["ability"] = attrs.get("ability", {})
+	parenting.raise_child(child, care, 60.0, null)
+	attrs["ability"] = child.get("ability", {})
+	child["attributes"] = attrs
+	child.erase("ability")
+
+## 未成年子女早夭（R51.8）：按推进时长折算年化概率，命中则标记死亡并记入家族史。
+func _check_child_mortality(minutes: int) -> Array:
+	var events: Array = []
+	var minors := minor_children()
+	if minors.is_empty():
+		return events
+	var years: float = float(minutes) / MINUTES_PER_YEAR
+	var rate: float = clampf(ParentingScript.EARLY_DEATH_RATE * years, 0.0, ParentingScript.EARLY_DEATH_RATE)
+	for c in minors:
+		if rng.next_float() >= rate:
+			continue
+		c["alive"] = false
+		c["death_minutes"] = now_minutes()
+		events.append({"type": "child_death", "name": String(c.get("name", ""))})
+		var hist: Array = state.legacy.get("history", [])
+		hist.append({
+			"kind": "child_death",
+			"name": String(c.get("name", "")),
+			"death_minutes": now_minutes(),
+		})
+		state.legacy["history"] = hist
+	return events
+
 ## 跨月则结算名下房产（贷款本息/物业/租金/折旧/断供法拍）并回写财务镜像。
 func _maybe_settle_property(prev_minutes: int, cur_minutes: int) -> Dictionary:
 	if property.owned_properties(player()).is_empty():
@@ -874,6 +1068,9 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 			events.append({"type": "birth", "name": String(born.get("name", ""))})
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
+		# 子女成长（年度属性结算/成年独立）与早夭。
+		events.append_array(_grow_children())
+		events.append_array(_check_child_mortality(minutes))
 		# 宠物随日推进（饥饿/健康/走失/寿终）。
 		events.append_array(_advance_pets(minutes))
 	return {
