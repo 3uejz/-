@@ -370,7 +370,17 @@ func _catalogs() -> Dictionary:
 	return {
 		"item": _catalog_entries(_sim.items),
 		"skill": _catalog_entries(_sim.skills),
+		"person": _person_entries(_sim),
+		"property": _sim.property_catalog(),
 	}
+
+## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
+func _person_entries(sim) -> Array:
+	var out: Array = []
+	for npc in sim.acquaintances():
+		if npc is Dictionary:
+			out.append({"id": String((npc as Dictionary).get("id", "")), "name": String((npc as Dictionary).get("name", ""))})
+	return out
 
 func _catalog_entries(system) -> Array:
 	var out: Array = []

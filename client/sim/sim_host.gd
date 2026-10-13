@@ -24,8 +24,16 @@ const GeoScript = preload("res://sim/geo.gd")
 const RegionManagerScript = preload("res://sim/region_manager.gd")
 const DomainWakeScript = preload("res://sim/domain_wake.gd")
 const GregorianScript = preload("res://sim/gregorian.gd")
+const NpcScript = preload("res://sim/npc.gd")
+const FamilyScript = preload("res://sim/family.gd")
+const PropertyScript = preload("res://sim/property.gd")
+const InheritanceScript = preload("res://sim/inheritance.gd")
 
 const MINUTES_PER_DAY: int = 1440
+## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
+const ACQUAINTANCE_COUNT: int = 8
+## 所在城市在售房源数量（确定性生成，供看房/买房）。
+const PROPERTY_LISTING_COUNT: int = 5
 ## 首发默认国家（无有效 nation 时降级，见 design「首发单城」）。
 const DEFAULT_COUNTRY: String = "CN"
 ## 地理气候带（GeoData）→ 天气气候带（baseline CLIMATE_ZONES）的确定性映射。
@@ -51,10 +59,17 @@ var bank
 var geo                         ## 六级地理（种子确定性生成，不入档）
 var regions                     ## 分区休眠/唤醒与全人口（RegionManager）
 var domain_wake                 ## 领域状态休眠补算（DomainWake）
+var npcs                        ## NPC 个体生成（NpcSystem）
+var family                      ## 恋爱/婚姻/繁衍（FamilySystem）
+var property                    ## 房产（PropertySystem）
+var inheritance                 ## 继承（InheritanceSystem）
 
 var _seeded: bool = false
 var _seed: int = 0
 var _home_region_id: String = ""
+var _acquaintances: Array = []  ## 所在城市熟人（确定性生成，供社交/婚恋链接）
+var _listings: Array = []       ## 所在城市在售房源（确定性生成，不入档）
+var _inheritance_settled: bool = false
 
 func _init(state_obj = null, seed: int = 0) -> void:
 	_seed = seed
@@ -72,6 +87,10 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	regions = RegionManagerScript.new(null, seed)
 	domain_wake = DomainWakeScript.new()
 	regions.domain_wake = domain_wake
+	npcs = NpcScript.new()
+	family = FamilyScript.new(seed)
+	property = PropertyScript.new()
+	inheritance = InheritanceScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -135,6 +154,36 @@ func _ensure_world_geo() -> void:
 			region.climate = _climate_for_region(String(rid))
 		if not weather.has_region(String(rid)):
 			weather.register_region(String(rid), _zone_for_region(String(rid)))
+	_ensure_acquaintances()
+	_ensure_property_market()
+
+## 生成所在城市的熟人名册（确定性），建立初始关系并恢复婚姻状态。
+## 名册由（种子, 区域, 序号）确定，不入档；关系随 player.relations 持久化。
+func _ensure_acquaintances() -> void:
+	if not _acquaintances.is_empty() or _home_region_id == "":
+		return
+	for i in ACQUAINTANCE_COUNT:
+		var npc: Dictionary = npcs.generate(i, {
+			"world_seed": _seed, "region_id": _home_region_id,
+			"now_minute": now_minutes(), "individualized": true, "lod_tier": 0,
+		})
+		_acquaintances.append(npc)
+		relations.ensure_relation(player(), String(npc.get("id", "")))
+	var sid := String(player().get("family", {}).get("spouse_id", ""))
+	if sid != "":
+		var spouse := find_person(sid)
+		if not spouse.is_empty():
+			family.marry(spouse)
+
+## 所在城市熟人名册（供解析目录与社交/婚恋链接）。
+func acquaintances() -> Array:
+	return _acquaintances
+
+func find_person(person_id: String) -> Dictionary:
+	for a in _acquaintances:
+		if String((a as Dictionary).get("id", "")) == person_id:
+			return a
+	return {}
 
 func _write_player_region(region_id: String) -> void:
 	if state == null or not (state.player is Dictionary):
@@ -238,6 +287,202 @@ func region_price_index() -> float:
 func domain_register(entry_id: String, kind: String, opts: Dictionary = {}) -> Dictionary:
 	return domain_wake.register(entry_id, kind, opts)
 
+## 与指定熟人结婚：纳入家庭并持久化到 player.family.spouse_id。
+func marry_with(person_id: String) -> Dictionary:
+	var npc := find_person(person_id)
+	if npc.is_empty():
+		return {"ok": false, "reason": "unknown_person"}
+	family.marry(npc)
+	var p: Dictionary = player()
+	var fam: Dictionary = p.get("family", {})
+	fam["spouse_id"] = String(npc.get("id", ""))
+	p["family"] = fam
+	var rel: Dictionary = relations.ensure_relation(p, person_id)
+	rel["romance"] = true
+	relations.set_circle(rel, "family")
+	return {"ok": true, "spouse": npc}
+
+## 离婚：结算家庭状态并清除存档婚姻字段。
+func divorce() -> Dictionary:
+	var r: Dictionary = family.divorce(rng)
+	if not bool(r.get("ok", false)):
+		return r
+	var p: Dictionary = player()
+	var fam: Dictionary = p.get("family", {})
+	fam.erase("spouse_id")
+	p["family"] = fam
+	return r
+
+## 当前配偶档案（无则空）。
+func spouse() -> Dictionary:
+	var sid := String(player().get("family", {}).get("spouse_id", ""))
+	return find_person(sid) if sid != "" else {}
+
+## 生成所在城市在售房源（确定性，不入档）；已购入的房源不再挂牌。
+func _ensure_property_market() -> void:
+	if not _listings.is_empty() or _home_region_id == "":
+		return
+	var rid := _home_region_id
+	var city := rid
+	var node = geo.get_node(rid)
+	if node != null:
+		city = String(node.name)
+	var r = RngScript.new(_seed * 1000003 + rid.hash())
+	var mult := region_price_index()
+	var districts := ["城区", "城郊", "老城", "新区", "湖畔"]
+	var layouts := ["1室1厅", "2室1厅", "3室2厅", "4室2厅"]
+	for i in PROPERTY_LISTING_COUNT:
+		var area := 40 + _rand_int(r, 13) * 10
+		var layout: String = layouts[_rand_int(r, layouts.size())]
+		var base := int(round(float(area) * (80000.0 + float(_rand_int(r, 60)) * 1000.0) * mult))
+		var p: Dictionary = property.make_property({
+			"id": "prop:%s:%d" % [rid, i],
+			"name": "%s%s房" % [city, districts[i % districts.size()]],
+			"city": city,
+			"district": districts[i % districts.size()],
+			"area_sqm": area,
+			"layout": layout,
+			"base_price": base,
+			"property_fee_month": int(round(float(area) * 2.0)),
+			"monthly_rent": int(round(float(base) * 0.0025)),
+		})
+		if p.is_empty() or not find_owned(String(p.get("id", ""))).is_empty():
+			continue
+		_listings.append(p)
+
+func _rand_int(r, bound: int) -> int:
+	if bound <= 0:
+		return 0
+	return mini(bound - 1, int(r.next_float() * float(bound)))
+
+## 在售房源视图（含市场估值报价）。
+func property_listings() -> Array:
+	var out: Array = []
+	for p in _listings:
+		var v: Dictionary = property.view(p)
+		v["price"] = property.market_value(p, {"rate": PropertyScript.MORTGAGE_RATE_ANNUAL})
+		v["monthly_payment"] = property.mortgage_payment(
+			int(round(float(v["price"]) * (1.0 - PropertyScript.DOWN_PAYMENT_RATIO))))
+		out.append(v)
+	return out
+
+## 名下房产视图。
+func property_owned() -> Array:
+	var out: Array = []
+	for p in property.owned_properties(player()):
+		var v: Dictionary = property.view(p)
+		v["price"] = property.market_value(p)
+		v["rented"] = bool(p.get("rented", false))
+		v["has_mortgage"] = not (p.get("mortgage", {}) as Dictionary).is_empty()
+		out.append(v)
+	return out
+
+## 解析目录用房源清单（在售 + 名下），供「买房/卖房/出租 <房源>」链接。
+func property_catalog() -> Array:
+	var out: Array = []
+	for p in _listings:
+		out.append({"id": String(p.get("id", "")), "name": String(p.get("name", "")), "owned": false})
+	for p in property.owned_properties(player()):
+		out.append({"id": String(p.get("id", "")), "name": String(p.get("name", "")), "owned": true})
+	return out
+
+func find_listing(prop_id: String) -> Dictionary:
+	for p in _listings:
+		if String((p as Dictionary).get("id", "")) == prop_id:
+			return p
+	return {}
+
+func find_owned(prop_id: String) -> Dictionary:
+	for p in property.owned_properties(player()):
+		if String((p as Dictionary).get("id", "")) == prop_id:
+			return p
+	return {}
+
+## 购买房源：扣首付/契税、形成房贷并计入名下资产，从挂牌移除。
+func property_purchase(prop_id: String, opts: Dictionary = {}) -> Dictionary:
+	var prop := find_listing(prop_id)
+	if prop.is_empty():
+		return {"ok": false, "reason": "not_listed"}
+	var r: Dictionary = property.purchase(player(), economy, account_id(), prop, day_index(), opts)
+	if bool(r.get("ok", false)):
+		_listings.erase(prop)
+		sync_finances()
+	return r
+
+## 出售名下房产。
+func property_sell(prop_id: String, opts: Dictionary = {}) -> Dictionary:
+	var prop := find_owned(prop_id)
+	if prop.is_empty():
+		return {"ok": false, "reason": "not_owned"}
+	var r: Dictionary = property.sell(player(), economy, account_id(), prop, opts)
+	if bool(r.get("ok", false)):
+		sync_finances()
+	return r
+
+## 出租名下房产（设定月租并按月收租）。
+func property_rent(prop_id: String, monthly_rent: int = -1) -> Dictionary:
+	var prop := find_owned(prop_id)
+	if prop.is_empty():
+		return {"ok": false, "reason": "not_owned"}
+	var rent: int = monthly_rent if monthly_rent >= 0 else int(property.estimated_monthly_rent(prop))
+	property.set_rent(prop, rent, true)
+	return {"ok": true, "monthly_rent": rent}
+
+## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
+func player_estate_minor() -> float:
+	var acct := account_id()
+	var total: float = float(economy.cash(acct)) + float(economy.bank(acct)) - float(economy.debt(acct))
+	for p in property.owned_properties(player()):
+		total += float(property.market_value(p))
+		var m: Dictionary = p.get("mortgage", {})
+		if not m.is_empty():
+			total -= float(m.get("remaining", 0))
+	return maxf(0.0, total)
+
+## 法定继承人（按 player.family）：配偶/子女/父母/兄弟姐妹。
+func legal_heirs() -> Dictionary:
+	var fam: Dictionary = player().get("family", {})
+	var spouse: Array = []
+	var sid := String(fam.get("spouse_id", ""))
+	if sid != "":
+		spouse.append(sid)
+	return {
+		"spouse": spouse,
+		"children": _string_ids(fam.get("children_ids", [])),
+		"parents": _string_ids(fam.get("parent_ids", [])),
+		"siblings": _string_ids(fam.get("sibling_ids", [])),
+	}
+
+func _string_ids(raw) -> Array:
+	var out: Array = []
+	if raw is Array:
+		for x in raw:
+			out.append(String(x))
+	return out
+
+## 死亡结算：按遗嘱或法定继承分配遗产，并把本次死亡记入家族史（legacy.history）。
+func settle_inheritance() -> Dictionary:
+	var estate: float = player_estate_minor()
+	var r: Dictionary = inheritance.settle(estate, player().get("will", {}), legal_heirs())
+	var hist: Array = state.legacy.get("history", [])
+	hist.append({
+		"kind": "death",
+		"name": String(player().get("name", "")),
+		"death_minutes": now_minutes(),
+		"estate": float(r.get("estate", 0.0)),
+		"tax": float(r.get("tax", 0.0)),
+		"net": float(r.get("net", 0.0)),
+		"escheat": bool(r.get("escheat", false)),
+		"allocations": r.get("allocations", []),
+	})
+	state.legacy["history"] = hist
+	_inheritance_settled = true
+	return r
+
+## 是否已完成死亡结算。
+func inheritance_settled() -> bool:
+	return _inheritance_settled
+
 ## 指定所在区域：登记为活动区并绑定气候带（供旅行/搬迁接线）。
 func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	if geo != null and geo.count() > 0 and not geo.has_node(region_id):
@@ -250,6 +495,8 @@ func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	if not weather.has_region(region_id):
 		weather.register_region(region_id, _zone_for_region(region_id))
 	_write_player_region(region_id)
+	_listings.clear()
+	_ensure_property_market()
 	return true
 
 ## 区域视图（供地图/面板展示）：仅暴露非敏感展示字段。
@@ -352,6 +599,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进。
 	domain_wake.advance_to(int(clock["absolute_minutes"]))
 	_persist_regions()
+	if bool(r.get("dead", false)) and not _inheritance_settled:
+		settle_inheritance()
 	if bool(r.get("dead", false)):
 		events.append({"type": "death"})
 	elif bool(r.get("dying", false)):

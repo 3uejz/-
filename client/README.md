@@ -66,6 +66,15 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 所在区域持久化：`player.region_id`（可选，见 `player.schema.json`）记录当前区域；`set_home_region()` 写入、读档时优先按它解析，缺省回落按 `player.nation` 推导。地理与气候不入档。
 - 领域实体离线补算：`SimHost.advance()` 调 `domain_wake.advance_to(clock)` 随游戏内时钟推进已注册的案件/工程/灾害/催收/异常/手术（`SimHost.domain_register()` 注册，规则见 `sim/domain_wake.gd`）。
 
+## 核心人生闭环
+
+`SimHost` 把恋爱/婚姻、房产与继承接入指令层，构成可玩的人生闭环：
+
+- `sim/npc.gd`（`NpcSystem`）+ `sim/relations.gd`（`RelationsSystem`）：绑定时按（种子, 区域, 序号）确定性生成所在城市熟人名册（`_ensure_acquaintances()`），建立初始五维关系；`acquaintances()`/`find_person()` 供解析目录与社交链接。
+- 婚恋（`sim/family.gd` `FamilySystem`）：`表白`/`求婚` 经解析器链接熟人，`affection` 达标时 `SimHost.marry_with()` 写入 `player.family.spouse_id` 并纳入家庭圈层；`离婚` 经 `divorce()` 清档。婚姻状态随存档恢复（`_ensure_acquaintances()` 依据 `spouse_id` 重建）。
+- 房产（`sim/property.gd` `PropertySystem`）：`看房`/`买房`/`卖房`/`出租` 经 `SimHost.property_*()` 交易；房源按（种子, 区域）确定性生成、不入档，已购房源从挂牌移除；名下房产随 `player.assets` 持久化。
+- 继承（`sim/inheritance.gd` `InheritanceSystem`）：死亡时 `advance()` 触发 `settle_inheritance()`，按 `player.will`（遗嘱）或法定顺序（配偶→子女→父母→兄弟姐妹）分配遗产净额，并记入 `legacy.history` 家族史。
+
 ## 面板与表现层
 
 - **37 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；

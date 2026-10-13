@@ -25,6 +25,9 @@ func run_tests() -> void:
 	_test_persist_and_reload()
 	_test_travel_persists()
 	_test_domain_wake_advances()
+	_test_acquaintances_and_marriage()
+	_test_property_market_and_purchase()
+	_test_inheritance_settles()
 
 func _test_home_region_registered() -> void:
 	var host = _setup()
@@ -140,4 +143,53 @@ func _test_domain_wake_advances() -> void:
 	check(host.domain_wake.is_resolved("proj:1"), "游戏内时钟推进后在建工程补算至完成")
 	host.advance(60)
 	check(host.domain_wake.is_resolved("proj:1"), "已完成条目再次推进保持完成（幂等）")
+
+func _test_acquaintances_and_marriage() -> void:
+	var state = GameStateScript.new()
+	state.new_game(13)
+	var host = SimHostScript.new(state, 13)
+	check_eq(host.acquaintances().size(), 8, "生成 8 名熟人")
+	var npc: Dictionary = host.acquaintances()[0]
+	var pid := String(npc.get("id", ""))
+	check(not pid.is_empty(), "熟人含 id")
+	check(not String(npc.get("name", "")).is_empty(), "熟人含姓名")
+	check(not host.find_person(pid).is_empty(), "可按 id 找到熟人")
+	check(not host.relations.get_relation(state.player, pid).is_empty(), "熟人已建立关系条目")
+	check(bool(host.marry_with(pid).get("ok", false)), "结婚成功")
+	check_eq(String(state.player.get("family", {}).get("spouse_id", "")), pid, "配偶写入存档字段")
+	var reloaded = SimHostScript.new(state, 13)
+	check_eq(String(reloaded.spouse().get("id", "")), pid, "读档恢复配偶档案")
+	check(bool(reloaded.divorce().get("ok", false)), "离婚成功")
+	check_eq(String(state.player.get("family", {}).get("spouse_id", "")), "", "离婚清除配偶字段")
+
+func _test_property_market_and_purchase() -> void:
+	var state = GameStateScript.new()
+	state.new_game(21)
+	var host = SimHostScript.new(state, 21)
+	check(not host.property_listings().is_empty(), "所在城市有在售房源")
+	host.economy.add_money(host.account_id(), 1000000000, "test")
+	var lid := String(host.property_listings()[0].get("id", ""))
+	check(bool(host.property_purchase(lid).get("ok", false)), "购房成功")
+	check(not host.find_owned(lid).is_empty(), "购房后计入名下资产")
+	var reloaded = SimHostScript.new(state, 21)
+	check(not reloaded.find_owned(lid).is_empty(), "读档恢复名下房产")
+	var still_listed := false
+	for l in reloaded.property_listings():
+		if String(l.get("id", "")) == lid:
+			still_listed = true
+	check(not still_listed, "已售房源不再挂牌")
+
+func _test_inheritance_settles() -> void:
+	var state = GameStateScript.new()
+	state.new_game(34)
+	var host = SimHostScript.new(state, 34)
+	var npc: Dictionary = host.acquaintances()[0]
+	host.marry_with(String(npc.get("id", "")))
+	host.economy.add_money(host.account_id(), 500000, "test")
+	var r = host.settle_inheritance()
+	check(host.inheritance_settled(), "死亡结算已完成")
+	check(float(r.get("net", 0.0)) >= 0.0, "遗产净额非负")
+	check(not (r.get("allocations", []) as Array).is_empty(), "有配偶时按法定继承分配")
+	var hist: Array = state.legacy.get("history", [])
+	check(hist.size() >= 1 and String(hist[hist.size() - 1].get("kind", "")) == "death", "家族史记入死亡条目")
 

@@ -94,6 +94,20 @@ func _dispatch(intent) -> Dictionary:
 			return _interact(intent, "gift")
 		"约会":
 			return _interact(intent, "dine")
+		"表白":
+			return _confess(intent)
+		"求婚":
+			return _propose(intent)
+		"离婚":
+			return _divorce(intent)
+		"看房":
+			return _list_homes(intent)
+		"买房":
+			return _buy_home(intent)
+		"卖房":
+			return _sell_home(intent)
+		"出租":
+			return _rent_home(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -286,6 +300,105 @@ func _interact(intent, type: String) -> Dictionary:
 		return _fail("互动失败：%s" % String(r.get("reason", "")))
 	return _ok([FlavorScript.time_line("interact", host.now_minutes()),
 		"你与 %s 互动（%s）。" % [target, String(r.get("level", ""))]], 0, "")
+
+func _confess(intent) -> Dictionary:
+	var target := _object_id(intent, "person")
+	if target.is_empty():
+		return _fail("请指定人物。")
+	if host.find_person(target).is_empty():
+		return _fail("你与对方还不熟。")
+	var p: Dictionary = host.player()
+	var rel: Dictionary = host.relations.ensure_relation(p, target)
+	var charm := _attr(p, "ability", "charm", 50.0)
+	var mood := _attr(p, "psychological", "mood", 50.0)
+	var r: Dictionary = host.family.confess(float(rel.get("favor", 0.0)), charm, mood, 50.0, host.rng)
+	if bool(r.get("success", false)):
+		host.relations.apply_interaction(p, target, "dine", {"minute": host.now_minutes(), "romance": true})
+		return _ok(["你向 %s 表白，对方答应了。" % _person_name(target)], 0, "")
+	return _ok(["你向 %s 表白，对方婉拒了。" % _person_name(target)], 0, "")
+
+func _propose(intent) -> Dictionary:
+	var target := _object_id(intent, "person")
+	if target.is_empty():
+		return _fail("请指定人物。")
+	var rel: Dictionary = host.relations.get_relation(host.player(), target)
+	if rel.is_empty():
+		return _fail("你与 %s 还不熟。" % _person_name(target))
+	var charm := _attr(host.player(), "ability", "charm", 50.0)
+	var r: Dictionary = host.family.propose(float(rel.get("favor", 0.0)), float(rel.get("intimacy", 0.0)), charm, host.rng)
+	if not bool(r.get("ok", false)):
+		return _fail("还不到求婚的时候，需要更高的好感与亲密度。")
+	if bool(r.get("success", false)):
+		host.marry_with(target)
+		return _ok(["你向 %s 求婚成功，你们结婚了。" % _person_name(target)], 0, "")
+	return _ok(["你向 %s 求婚，对方暂时没有答应。" % _person_name(target)], 0, "")
+
+func _divorce(_intent) -> Dictionary:
+	var r: Dictionary = host.divorce()
+	if not bool(r.get("ok", false)):
+		return _fail("你目前没有配偶。")
+	return _ok(["你结束了这段婚姻。"], 0, "")
+
+func _person_name(person_id: String) -> String:
+	var npc: Dictionary = host.find_person(person_id)
+	return String(npc.get("name", person_id))
+
+func _list_homes(_intent) -> Dictionary:
+	var rows: Array = []
+	for p in host.property_listings():
+		rows.append("%s（%s %.0f㎡）约 %.1f 万元，月供约 %.0f 元" % [
+			String(p.get("name", "")), String(p.get("layout", "")), float(p.get("area_sqm", 0.0)),
+			float(p.get("price", 0)) / 10000.0, float(p.get("monthly_payment", 0)) / 100.0])
+	for p in host.property_owned():
+		rows.append("【自有】%s（%s %.0f㎡）估值约 %.1f 万元%s" % [
+			String(p.get("name", "")), String(p.get("layout", "")), float(p.get("area_sqm", 0.0)),
+			float(p.get("price", 0)) / 10000.0, "，已出租" if bool(p.get("rented", false)) else ""])
+	if rows.is_empty():
+		return _ok(["当前没有可看的房源。"], 0, "")
+	return _ok(["房源信息："] + rows, 0, "")
+
+func _buy_home(intent) -> Dictionary:
+	var prop_id := _object_id(intent, "property")
+	if prop_id.is_empty():
+		return _fail("请指定房源。")
+	var r: Dictionary = host.property_purchase(prop_id)
+	if not bool(r.get("ok", false)):
+		return _fail("购买失败：%s。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你买下了这套房，首付 %.1f 万元，月供 %.0f 元。" % [
+		float(r.get("down", 0)) / 10000.0, float(r.get("monthly_payment", 0)) / 100.0]], 0, "")
+
+func _sell_home(intent) -> Dictionary:
+	var prop_id := _object_id(intent, "property")
+	if prop_id.is_empty():
+		return _fail("请指定房产。")
+	var r: Dictionary = host.property_sell(prop_id)
+	if not bool(r.get("ok", false)):
+		return _fail("出售失败：%s。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你卖掉了这套房，净得 %.1f 万元。" % (float(r.get("net", 0)) / 10000.0)], 0, "")
+
+func _rent_home(intent) -> Dictionary:
+	var prop_id := _object_id(intent, "property")
+	if prop_id.is_empty():
+		return _fail("请指定房产。")
+	var r: Dictionary = host.property_rent(prop_id)
+	if not bool(r.get("ok", false)):
+		return _fail("出租失败：%s。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已出租，月租 %.0f 元。" % (float(r.get("monthly_rent", 0)) / 100.0)], 0, "")
+
+func _reason_cn(reason: String) -> String:
+	match reason:
+		"not_listed", "unavailable":
+			return "此房源不可交易"
+		"not_owned":
+			return "你并不拥有这套房产"
+		"purchase_restricted":
+			return "受限购政策限制"
+		"insufficient_funds":
+			return "资金不足"
+		"no_economy":
+			return "经济系统未就绪"
+		_:
+			return reason if reason != "" else "未知原因"
 
 # --- 通用推进与叙事 ---
 

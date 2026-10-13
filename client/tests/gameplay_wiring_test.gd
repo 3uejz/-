@@ -52,6 +52,8 @@ func run_tests() -> void:
 	_test_map_panel_mounts_view()
 	_test_buy_changes_inventory()
 	_test_statusbar_weather()
+	_test_marry_command()
+	_test_property_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -83,6 +85,34 @@ func _test_statusbar_weather() -> void:
 	check(label != null, "状态栏含天气标签")
 	if label != null:
 		check(label.text.begins_with("天气：") and label.text != "天气：--", "状态栏天气已由世界运行时填充")
+
+func _test_marry_command() -> void:
+	var sim = _main._sim
+	var npc: Dictionary = sim.acquaintances()[0]
+	var pid := String(npc.get("id", ""))
+	var name := String(npc.get("name", ""))
+	var rel: Dictionary = sim.relations.ensure_relation(_game.player, pid)
+	rel["favor"] = 90.0
+	rel["intimacy"] = 80.0
+	_main.submit("求婚 " + name)
+	check_eq(String(_game.player.get("family", {}).get("spouse_id", "")), pid, "「求婚 <人名>」经解析器链接并写入配偶")
+
+func _test_property_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 1000000000, "test")
+	_main.submit("看房")
+	var listings: Array = sim.property_listings()
+	check(not listings.is_empty(), "存在在售房源")
+	if listings.is_empty():
+		return
+	var pid := String(listings[0].get("id", ""))
+	var name := String(listings[0].get("name", ""))
+	_main.submit("买房 " + name)
+	var owned := false
+	for p in sim.property_owned():
+		if String(p.get("id", "")) == pid:
+			owned = true
+	check(owned, "「买房 <房源>」经解析器链接并计入名下资产")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
