@@ -4,6 +4,7 @@ extends "res://tests/test_base.gd"
 
 const GameStateScript = preload("res://autoload/game_state.gd")
 const SimHostScript = preload("res://sim/sim_host.gd")
+const GeoDataScript = preload("res://sim/geo.gd")
 
 func _suite_name() -> String:
 	return "world_runtime"
@@ -22,6 +23,7 @@ func run_tests() -> void:
 	_test_set_home_region()
 	_test_weather_forecast()
 	_test_persist_and_reload()
+	_test_travel_persists()
 
 func _test_home_region_registered() -> void:
 	var host = _setup()
@@ -107,4 +109,23 @@ func _test_persist_and_reload() -> void:
 		check_eq(r2.last_simulated_minute, last_before, "读档保留模拟时刻")
 		check_eq(r2.population, pop_before, "读档保留人口")
 	check(reloaded.weather.has_region("cn.beijing"), "读档后重新绑定气候带")
+
+func _test_travel_persists() -> void:
+	var state = GameStateScript.new()
+	state.new_game(13)
+	var host = SimHostScript.new(state, 13)
+	var cities: Array = host.geo.nodes_at_level(GeoDataScript.GeographicLevel.CITY)
+	var target: String = ""
+	for c in cities:
+		if String(c) != host.current_region_id():
+			target = String(c)
+			break
+	check(target != "", "存在可搬迁的其它城市")
+	if target == "":
+		return
+	check(host.set_home_region(target), "搬迁成功")
+	check_eq(String(state.player.get("region_id", "")), target, "所在区域写入玩家存档字段")
+	var reloaded = SimHostScript.new(state, 13)
+	check_eq(reloaded.current_region_id(), target, "读档保留搬迁后的所在区域")
+	check(reloaded.regions.has_region(target), "读档后目的是地区域已登记")
 

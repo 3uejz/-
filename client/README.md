@@ -63,6 +63,7 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 地图面板（`看地图`）内嵌 `ui/map/map_view.tscn` 绘制可缩放的 2D 混合地图，并注入 `SimHost.geo`。
 - 地理由种子确定性生成、不入档（design：存档只记变化量）；区域增量在 `advance()` 后写入 `world_delta.regions`（符合 `region_delta` 契约，经济/气候等收进 `snapshot`），读档时经 `load_deltas()` 恢复并按地理重建气候。
 - 宏观→微观：买卖经 `SimHost.region_price_index()` 把所在区域物价指数传入 `items.buy/sell`（`region_mult`，缺省 1.0），物价随区域与年份通胀而变。
+- 所在区域持久化：`player.region_id`（可选，见 `player.schema.json`）记录当前区域；`set_home_region()` 写入、读档时优先按它解析，缺省回落按 `player.nation` 推导。地理与气候不入档。
 
 ## 面板与表现层
 

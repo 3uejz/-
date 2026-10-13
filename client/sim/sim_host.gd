@@ -127,6 +127,7 @@ func _ensure_world_geo() -> void:
 		regions.register_region(_home_region_id, _geo_region_opts(_home_region_id))
 	if _home_region_id != "":
 		regions.enter(_home_region_id, now_minutes())
+		_write_player_region(_home_region_id)
 	# 补齐气候（存档不持久化气候，按地理重建）并为每个区域绑定天气气候带。
 	for rid in regions.region_ids():
 		var region = regions.get_region(rid)
@@ -134,6 +135,11 @@ func _ensure_world_geo() -> void:
 			region.climate = _climate_for_region(String(rid))
 		if not weather.has_region(String(rid)):
 			weather.register_region(String(rid), _zone_for_region(String(rid)))
+
+func _write_player_region(region_id: String) -> void:
+	if state == null or not (state.player is Dictionary):
+		return
+	(state.player as Dictionary)["region_id"] = region_id
 
 func _saved_regions() -> Array:
 	if state == null or not (state.world_delta is Dictionary):
@@ -186,8 +192,12 @@ func _geo_region_opts(region_id: String) -> Dictionary:
 		opts["climate"] = String(node.attributes.get("climate", ""))
 	return opts
 
-## 玩家所在区域：由 player.nation 解析国家，取其首个核心城市；无效时降级首发默认国家。
+## 玩家所在区域：优先取存档中的 player.region_id（旅行/搬迁写入），其次由 player.nation 解析
+## 国家取其首个核心城市；均无效时降级默认国家。
 func _resolve_home_region_id() -> String:
+	var saved: String = String(player().get("region_id", ""))
+	if saved != "" and geo.has_node(saved):
+		return saved
 	var code: String = _nation_country_code()
 	var profile = geo.country_profile(code)
 	if profile == null or profile.city_ids.is_empty():
@@ -235,6 +245,7 @@ func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	regions.enter(region_id, now_minutes())
 	if not weather.has_region(region_id):
 		weather.register_region(region_id, _zone_for_region(region_id))
+	_write_player_region(region_id)
 	return true
 
 ## 区域视图（供地图/面板展示）：仅暴露非敏感展示字段。

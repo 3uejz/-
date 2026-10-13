@@ -13,6 +13,7 @@
     "sexuality": { "type": "string", "description": "性向设定，见开档向导。" },
     "birth_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
     "nation": { "$ref": "common.schema.json#/$defs/content_key" },
+    "region_id": { "$ref": "common.schema.json#/$defs/content_key", "description": "当前所在区域（content_key）；旅行/搬迁写入，缺省按 nation 解析。" },
     "mother_tongue": { "$ref": "common.schema.json#/$defs/content_key" },
     "appearance": { "$ref": "#/$defs/appearance" },
     "attrs": { "$ref": "#/$defs/attributes" },
