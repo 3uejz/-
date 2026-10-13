@@ -24,6 +24,7 @@ func run_tests() -> void:
 	_test_weather_forecast()
 	_test_persist_and_reload()
 	_test_travel_persists()
+	_test_domain_wake_advances()
 
 func _test_home_region_registered() -> void:
 	var host = _setup()
@@ -128,4 +129,15 @@ func _test_travel_persists() -> void:
 	var reloaded = SimHostScript.new(state, 13)
 	check_eq(reloaded.current_region_id(), target, "读档保留搬迁后的所在区域")
 	check(reloaded.regions.has_region(target), "读档后目的是地区域已登记")
+
+func _test_domain_wake_advances() -> void:
+	var state = GameStateScript.new()
+	state.new_game(13)
+	var host = SimHostScript.new(state, 13)
+	host.domain_register("proj:1", "project", {"region_id": "cn.beijing", "rate": 1.0, "total": 60.0})
+	check_eq(host.domain_wake.entry_count(), 1, "领域实体已注册")
+	host.advance(60)
+	check(host.domain_wake.is_resolved("proj:1"), "游戏内时钟推进后在建工程补算至完成")
+	host.advance(60)
+	check(host.domain_wake.is_resolved("proj:1"), "已完成条目再次推进保持完成（幂等）")
 

@@ -234,6 +234,10 @@ func region_price_index() -> float:
 	var idx: float = float(regions.get_region(rid).price_index)
 	return idx if idx > 0.0 else 1.0
 
+## 注册领域实体（案件/工程/灾害/催收/异常/手术）以供离线补算；见 DomainWake。
+func domain_register(entry_id: String, kind: String, opts: Dictionary = {}) -> Dictionary:
+	return domain_wake.register(entry_id, kind, opts)
+
 ## 指定所在区域：登记为活动区并绑定气候带（供旅行/搬迁接线）。
 func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	if geo != null and geo.count() > 0 and not geo.has_node(region_id):
@@ -345,6 +349,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	clock["absolute_minutes"] = int(clock.get("absolute_minutes", 0)) + minutes
 	# 活动区域随分钟推进（人口/经济日级结算）并写回存档增量；天气按当前时刻查询式演化，无需 tick。
 	regions.tick_minute(int(clock["absolute_minutes"]))
+	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进。
+	domain_wake.advance_to(int(clock["absolute_minutes"]))
 	_persist_regions()
 	if bool(r.get("dead", false)):
 		events.append({"type": "death"})
