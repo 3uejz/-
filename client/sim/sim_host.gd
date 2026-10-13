@@ -34,6 +34,10 @@ const MINUTES_PER_DAY: int = 1440
 const ACQUAINTANCE_COUNT: int = 8
 ## 所在城市在售房源数量（确定性生成，供看房/买房）。
 const PROPERTY_LISTING_COUNT: int = 5
+## 妊娠天数（自受孕至分娩）。
+const GESTATION_DAYS: int = 280
+## 持有房产按月结算的间隔（天）。
+const SETTLE_INTERVAL_DAYS: int = 30
 ## 首发默认国家（无有效 nation 时降级，见 design「首发单城」）。
 const DEFAULT_COUNTRY: String = "CN"
 ## 地理气候带（GeoData）→ 天气气候带（baseline CLIMATE_ZONES）的确定性映射。
@@ -70,6 +74,7 @@ var _home_region_id: String = ""
 var _acquaintances: Array = []  ## 所在城市熟人（确定性生成，供社交/婚恋链接）
 var _listings: Array = []       ## 所在城市在售房源（确定性生成，不入档）
 var _inheritance_settled: bool = false
+var _child_seq: int = 0
 
 func _init(state_obj = null, seed: int = 0) -> void:
 	_seed = seed
@@ -183,7 +188,42 @@ func find_person(person_id: String) -> Dictionary:
 	for a in _acquaintances:
 		if String((a as Dictionary).get("id", "")) == person_id:
 			return a
+	if state != null and state.world_delta is Dictionary:
+		for n in (state.world_delta as Dictionary).get("npcs", []):
+			if typeof(n) == TYPE_DICTIONARY and String(n.get("id", "")) == person_id:
+				return n
 	return {}
+
+## 名下子女（存档于 world_delta.npcs，按 player.family.children_ids 引用）。
+func children() -> Array:
+	var out: Array = []
+	var fam: Dictionary = player().get("family", {})
+	for cid in fam.get("children_ids", []):
+		var c := find_person(String(cid))
+		if not c.is_empty():
+			out.append(c)
+	return out
+
+## 是否处于妊娠中。
+func is_pregnant() -> bool:
+	return not (player().get("family", {}).get("pregnancy", {}) as Dictionary).is_empty()
+
+## 尝试受孕：需已婚且无进行中的妊娠，写入 family.pregnancy（schema 字段）。
+func try_conceive() -> Dictionary:
+	var fam: Dictionary = player().get("family", {})
+	var sid := String(fam.get("spouse_id", ""))
+	if sid == "":
+		return {"ok": false, "reason": "not_married"}
+	if is_pregnant():
+		return {"ok": false, "reason": "already_pregnant"}
+	var preg: Dictionary = {
+		"partner_id": sid,
+		"conceived_minutes": now_minutes(),
+		"due_minutes": now_minutes() + GESTATION_DAYS * MINUTES_PER_DAY,
+	}
+	fam["pregnancy"] = preg
+	player()["family"] = fam
+	return {"ok": true, "pregnancy": preg}
 
 func _write_player_region(region_id: String) -> void:
 	if state == null or not (state.player is Dictionary):
@@ -483,6 +523,98 @@ func settle_inheritance() -> Dictionary:
 func inheritance_settled() -> bool:
 	return _inheritance_settled
 
+## 人生结算（R12.5）：姓名/年龄/最终称号/大事记时间线 + 遗产估算与继承人。
+func death_summary() -> Dictionary:
+	var timeline: Array = state.legacy.get("history", []) if state != null else []
+	var s: Dictionary = survival.life_summary(player(), {
+		"death_minutes": now_minutes(),
+		"timeline": timeline,
+		"final_title": _final_title(),
+	})
+	s["estate_minor"] = player_estate_minor()
+	s["heirs"] = legal_heirs()
+	return s
+
+func _final_title() -> String:
+	var job: Dictionary = player().get("job", {})
+	var title := String(job.get("title", "")) if job is Dictionary else ""
+	return title if title != "" else "凡人"
+
+## 妊娠到期则分娩；返回新生儿档案（无变化返回空）。
+func _check_delivery() -> Dictionary:
+	if is_dead():
+		return {}
+	var preg: Dictionary = player().get("family", {}).get("pregnancy", {})
+	if preg.is_empty() or now_minutes() < int(preg.get("due_minutes", 0)):
+		return {}
+	return deliver_child()
+
+## 分娩：生成子女 NPC（继承父母能力/人格），落档到 world_delta.npcs 与
+## player.family.children_ids，并记入家族史（legacy.lineage/history）。
+func deliver_child() -> Dictionary:
+	var fam: Dictionary = player().get("family", {})
+	var preg: Dictionary = fam.get("pregnancy", {})
+	var partner_id := String(preg.get("partner_id", fam.get("spouse_id", "")))
+	var spouse := find_person(partner_id)
+	var gender := "male" if rng.next_float() < 0.5 else "female"
+	_child_seq += 1
+	var child: Dictionary = npcs.generate(_child_seq, {
+		"world_seed": _seed, "region_id": _home_region_id,
+		"now_minute": now_minutes(), "individualized": true, "lod_tier": 0,
+		"age": 0, "gender": gender,
+	})
+	var inherited: Dictionary = family.give_birth(player(), spouse, String(child.get("name", "")), gender)
+	var attrs: Dictionary = child.get("attributes", {})
+	attrs["ability"] = inherited.get("ability", {})
+	attrs["personality"] = inherited.get("personality", {})
+	child["attributes"] = attrs
+	var parents: Array = [String(player().get("id", ""))]
+	if partner_id != "":
+		parents.append(partner_id)
+	child["family"] = {"parent_ids": parents}
+	_register_child(child)
+	fam.erase("pregnancy")
+	player()["family"] = fam
+	return child
+
+func _register_child(child: Dictionary) -> void:
+	var cid := String(child.get("id", ""))
+	var npcs_arr: Array = state.world_delta.get("npcs", [])
+	npcs_arr.append(child)
+	state.world_delta["npcs"] = npcs_arr
+	var fam: Dictionary = player().get("family", {})
+	var kids: Array = fam.get("children_ids", [])
+	if not kids.has(cid):
+		kids.append(cid)
+	fam["children_ids"] = kids
+	player()["family"] = fam
+	relations.ensure_relation(player(), cid)
+	var lin: Array = state.legacy.get("lineage", [])
+	lin.append({
+		"name": String(child.get("name", "")),
+		"birth_minutes": int(child.get("birth_minutes", 0)),
+		"summary": "出生于 %s" % _home_region_id,
+	})
+	state.legacy["lineage"] = lin
+	var hist: Array = state.legacy.get("history", [])
+	hist.append({
+		"kind": "birth",
+		"name": String(child.get("name", "")),
+		"birth_minutes": int(child.get("birth_minutes", 0)),
+		"parent_ids": (child.get("family", {}) as Dictionary).get("parent_ids", []),
+	})
+	state.legacy["history"] = hist
+
+## 跨月则结算名下房产（贷款本息/物业/租金/折旧/断供法拍）并回写财务镜像。
+func _maybe_settle_property(prev_minutes: int, cur_minutes: int) -> Dictionary:
+	if property.owned_properties(player()).is_empty():
+		return {}
+	if cur_minutes / (SETTLE_INTERVAL_DAYS * MINUTES_PER_DAY) <= prev_minutes / (SETTLE_INTERVAL_DAYS * MINUTES_PER_DAY):
+		return {}
+	var r: Dictionary = property.monthly_settle(player(), economy, account_id())
+	sync_finances()
+	return r
+
 ## 指定所在区域：登记为活动区并绑定气候带（供旅行/搬迁接线）。
 func set_home_region(region_id: String, opts: Dictionary = {}) -> bool:
 	if geo != null and geo.count() > 0 and not geo.has_node(region_id):
@@ -591,6 +723,7 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	if minutes <= 0:
 		return {"minutes": 0, "dead": survival.is_dead(), "dying": survival.is_dying(), "events": events}
 	var r: Dictionary = survival.advance(player(), minutes, opts)
+	var before_minutes: int = now_minutes()
 	# 游戏内时钟（存档字段）随模拟推进；UI 日历由 main 镜像到 WorldClock。
 	var clock: Dictionary = state.clock
 	clock["absolute_minutes"] = int(clock.get("absolute_minutes", 0)) + minutes
@@ -605,6 +738,13 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append({"type": "death"})
 	elif bool(r.get("dying", false)):
 		events.append({"type": "dying"})
+	else:
+		# 生存：妊娠到期分娩。
+		var born: Dictionary = _check_delivery()
+		if not born.is_empty():
+			events.append({"type": "birth", "name": String(born.get("name", ""))})
+		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
+		_maybe_settle_property(before_minutes, now_minutes())
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),

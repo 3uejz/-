@@ -54,6 +54,7 @@ func run_tests() -> void:
 	_test_statusbar_weather()
 	_test_marry_command()
 	_test_property_commands()
+	_test_family_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -113,6 +114,15 @@ func _test_property_commands() -> void:
 		if String(p.get("id", "")) == pid:
 			owned = true
 	check(owned, "「买房 <房源>」经解析器链接并计入名下资产")
+
+func _test_family_commands() -> void:
+	var sim = _main._sim
+	var npc: Dictionary = sim.acquaintances()[0]
+	sim.marry_with(String(npc.get("id", "")))
+	_main.submit("怀孕")
+	check(sim.is_pregnant(), "「怀孕」进入妊娠状态")
+	_main.submit("立遗嘱")
+	check(not (_game.player.get("will", {}) as Dictionary).is_empty(), "「立遗嘱」写入遗嘱")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

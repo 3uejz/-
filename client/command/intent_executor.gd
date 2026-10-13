@@ -100,6 +100,10 @@ func _dispatch(intent) -> Dictionary:
 			return _propose(intent)
 		"离婚":
 			return _divorce(intent)
+		"怀孕":
+			return _conceive(intent)
+		"立遗嘱":
+			return _write_will(intent)
 		"看房":
 			return _list_homes(intent)
 		"买房":
@@ -342,6 +346,36 @@ func _divorce(_intent) -> Dictionary:
 func _person_name(person_id: String) -> String:
 	var npc: Dictionary = host.find_person(person_id)
 	return String(npc.get("name", person_id))
+
+func _conceive(_intent) -> Dictionary:
+	var r: Dictionary = host.try_conceive()
+	if not bool(r.get("ok", false)):
+		match String(r.get("reason", "")):
+			"not_married":
+				return _fail("你还没有结婚。")
+			"already_pregnant":
+				return _fail("你们已经有孩子在孕育中了。")
+			_:
+				return _fail("暂时不能受孕。")
+	var due := int((r.get("pregnancy", {}) as Dictionary).get("due_minutes", 0))
+	return _ok(["你们开始迎接新生命，预计在游戏第 %d 天前后分娩。" % (due / 1440 + 1)], 0, "")
+
+func _write_will(_intent) -> Dictionary:
+	var p: Dictionary = host.player()
+	var fam: Dictionary = p.get("family", {})
+	var bens: Array = []
+	var sid := String(fam.get("spouse_id", ""))
+	if sid != "":
+		bens.append({"id": sid, "share": 1.0})
+	else:
+		var kids: Array = fam.get("children_ids", [])
+		if kids.is_empty():
+			return _fail("你还没有配偶或子女，暂时无人可继承。")
+		var share := 1.0 / float(kids.size())
+		for cid in kids:
+			bens.append({"id": String(cid), "share": share})
+	p["will"] = {"written_minutes": host.now_minutes(), "beneficiaries": bens}
+	return _ok(["你立下遗嘱，指定了 %d 位继承人。" % bens.size()], 0, "")
 
 func _list_homes(_intent) -> Dictionary:
 	var rows: Array = []

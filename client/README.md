@@ -72,8 +72,9 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 
 - `sim/npc.gd`（`NpcSystem`）+ `sim/relations.gd`（`RelationsSystem`）：绑定时按（种子, 区域, 序号）确定性生成所在城市熟人名册（`_ensure_acquaintances()`），建立初始五维关系；`acquaintances()`/`find_person()` 供解析目录与社交链接。
 - 婚恋（`sim/family.gd` `FamilySystem`）：`表白`/`求婚` 经解析器链接熟人，`affection` 达标时 `SimHost.marry_with()` 写入 `player.family.spouse_id` 并纳入家庭圈层；`离婚` 经 `divorce()` 清档。婚姻状态随存档恢复（`_ensure_acquaintances()` 依据 `spouse_id` 重建）。
-- 房产（`sim/property.gd` `PropertySystem`）：`看房`/`买房`/`卖房`/`出租` 经 `SimHost.property_*()` 交易；房源按（种子, 区域）确定性生成、不入档，已购房源从挂牌移除；名下房产随 `player.assets` 持久化。
-- 继承（`sim/inheritance.gd` `InheritanceSystem`）：死亡时 `advance()` 触发 `settle_inheritance()`，按 `player.will`（遗嘱）或法定顺序（配偶→子女→父母→兄弟姐妹）分配遗产净额，并记入 `legacy.history` 家族史。
+- 生育与族谱：`怀孕` 经 `try_conceive()` 写入 `player.family.pregnancy`（`due_minutes = now + 280 天`）；`advance()` 到期触发 `deliver_child()`，生成子女 NPC（继承父母能力/人格）落档到 `world_delta.npcs` 与 `player.family.children_ids`，并记入 `legacy.lineage`/`history`；`children()` 读取名下子女。
+- 房产（`sim/property.gd` `PropertySystem`）：`看房`/`买房`/`卖房`/`出租` 经 `SimHost.property_*()` 交易；房源按（种子, 区域）确定性生成、不入档，已购房源从挂牌移除；名下房产随 `player.assets` 持久化；`advance()` 跨月触发 `property.monthly_settle()` 结算贷款本息/物业/租金/折旧/断供法拍并回写财务镜像。
+- 继承与人生结算（`sim/inheritance.gd` `InheritanceSystem`）：`立遗嘱` 写入 `player.will`；死亡时 `advance()` 触发 `settle_inheritance()`，按遗嘱或法定顺序（配偶→子女→父母→兄弟姐妹）分配遗产净额，并记入 `legacy.history`；`death_summary()` 输出姓名/年龄/最终称号与遗产估算，实时推进死亡时主壳 `_log_death_summary()` 打印到消息流。
 
 ## 面板与表现层
 

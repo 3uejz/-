@@ -32,7 +32,7 @@
 - 12 种交通方式与枢纽边的速度/票价/班次/首末班缺失；出行公式（拥堵/等待/换乘）系数缺失；场所 Resource 字段契约与数值源缺失；枢纽网络与时刻表内容缺失；`region_delta` 字段不足；跨境海关接口未定义。
 
 ### D3 营养、成瘾、临终与遗嘱
-- 运行态未入 schema（遗嘱/死亡标志/成瘾复发与治疗/营养过量天数）；成瘾五类参数缺失；过量致病阈值/权重/概率缺失；生前立遗嘱入口缺失。
+- **部分接线**：`立遗嘱` 动词写入 `player.will`（`written_minutes`/`beneficiaries`），死亡触发 `settle_inheritance()` 并输出 `death_summary()` 人生结算；**尚余**运行态入 schema（死亡标志/成瘾复发与治疗/营养过量天数）；成瘾五类参数缺失；过量致病阈值/权重/概率缺失。
 
 ### D4 人格、精神疾病与幸福
 - 「20+ 病种完整表」不存在（仅约 14 名称）；三维病程（频率/强度/时长）无字段；人格噪声 σ 与漂移上限无数值；触发/误诊/复发概率缺失；精神健康 UI 缺失。
@@ -56,7 +56,7 @@
 - `npc.memory` 缺失；`npc.relations` 类型错误；非个体化人口快照结构不足；社交平台扩散系数与 post/message 结构缺失；动态/私信/直播无 UI。
 
 ### D11 育儿、继承与宠物
-- `player.family.spouse_id` 与 `player.will` **已接线**：恋爱/表白/求婚/离婚经 `SimHost` 落 `spouse_id` 并纳入家庭圈层；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配遗产并记入 `legacy.history`。**尚余**`children_ids/parent_ids/sibling_ids` 的运行时产生（生育/族谱）、宠物 schema 与面板、成长照护换算与早夭概率。
+- `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，`death_summary()` 输出人生结算。**尚余**`parent_ids/sibling_ids/guardian_ids/adopted_ids` 的运行时产生（族谱反查）、宠物独立 schema 与面板、成长照护换算与早夭概率。
 
 ### D12 民事、监狱与诉讼
 - 案件/证据/判决无 schema；证据-量刑与律师修正无模型；各国法律差异内容缺失；无案件/监狱面板。

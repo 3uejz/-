@@ -28,6 +28,20 @@ func run_tests() -> void:
 	_test_acquaintances_and_marriage()
 	_test_property_market_and_purchase()
 	_test_inheritance_settles()
+	_test_childbirth()
+	_test_property_monthly_settlement()
+	_test_death_summary()
+
+## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
+func _advance_alive(host, days: int) -> void:
+	var chunk := 180
+	var steps := (days * 1440) / chunk
+	for _i in steps:
+		var ph: Dictionary = host.player()["attrs"]["physiological"]
+		ph["hunger"] = 100.0
+		ph["thirst"] = 100.0
+		ph["health"] = 100.0
+		host.advance(chunk)
 
 func _test_home_region_registered() -> void:
 	var host = _setup()
@@ -192,4 +206,48 @@ func _test_inheritance_settles() -> void:
 	check(not (r.get("allocations", []) as Array).is_empty(), "有配偶时按法定继承分配")
 	var hist: Array = state.legacy.get("history", [])
 	check(hist.size() >= 1 and String(hist[hist.size() - 1].get("kind", "")) == "death", "家族史记入死亡条目")
+
+func _test_childbirth() -> void:
+	var state = GameStateScript.new()
+	state.new_game(55)
+	var host = SimHostScript.new(state, 55)
+	var npc: Dictionary = host.acquaintances()[0]
+	host.marry_with(String(npc.get("id", "")))
+	check(bool(host.try_conceive().get("ok", false)), "已婚可受孕")
+	check(host.is_pregnant(), "进入妊娠状态")
+	check(not bool(host.try_conceive().get("ok", true)), "妊娠中不可重复受孕")
+	_advance_alive(host, 281)
+	check(not host.is_pregnant(), "到期分娩后清除妊娠")
+	check_eq(host.children().size(), 1, "分娩得到一名子女")
+	check_eq((state.player.get("family", {}).get("children_ids", []) as Array).size(), 1, "子女 id 落档")
+	check((state.world_delta.get("npcs", []) as Array).size() >= 1, "子女进入世界人口")
+	check((state.legacy.get("lineage", []) as Array).size() >= 1, "族谱记入出生")
+
+func _test_property_monthly_settlement() -> void:
+	var state = GameStateScript.new()
+	state.new_game(66)
+	var host = SimHostScript.new(state, 66)
+	host.economy.add_money(host.account_id(), 1000000000, "test")
+	var lid := String(host.property_listings()[0].get("id", ""))
+	check(bool(host.property_purchase(lid).get("ok", false)), "购房成功")
+	var prop: Dictionary = host.find_owned(lid)
+	check(not (prop.get("mortgage", {}) as Dictionary).is_empty(), "首套房形成房贷")
+	var before := int((prop.get("mortgage", {}) as Dictionary).get("months_paid", 0))
+	_advance_alive(host, 31)
+	var after := int((prop.get("mortgage", {}) as Dictionary).get("months_paid", 0))
+	check(after > before, "跨月结算推进房贷还款")
+
+func _test_death_summary() -> void:
+	var state = GameStateScript.new()
+	state.new_game(77)
+	var host = SimHostScript.new(state, 77)
+	var npc: Dictionary = host.acquaintances()[0]
+	host.marry_with(String(npc.get("id", "")))
+	host.advance(1, {"fatal": true})
+	check(host.is_dead(), "致命事件导致死亡")
+	check(host.inheritance_settled(), "死亡触发继承结算")
+	var s: Dictionary = host.death_summary()
+	check(String(s.get("name", "")) != "", "人生结算含姓名")
+	check(float(s.get("estate_minor", 0.0)) >= 0.0, "人生结算含遗产估算")
+	check(not (s.get("heirs", {}) as Dictionary).is_empty(), "人生结算含继承人")
 

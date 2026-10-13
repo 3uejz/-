@@ -211,10 +211,25 @@ func _handle_time_events(result: Dictionary, speed) -> void:
 		match String((e as Dictionary).get("type", "")):
 			"death":
 				append_message("你走到了生命的尽头。", "danger")
+				_log_death_summary()
 				speed.set_speed(0)
 			"dying":
 				append_message("你已油尽灯枯，随时可能离世。", "warning")
 				speed.set_speed(0)
+
+## 死亡时在消息流输出人生结算（姓名/年龄/称号 + 遗产与继承人数）。
+func _log_death_summary() -> void:
+	if _sim == null:
+		return
+	var s: Dictionary = _sim.death_summary()
+	append_message("【人生结算】%s，享年 %d 岁，终为「%s」。" % [
+		String(s.get("name", "无名")), int(s.get("age_years", 0.0)), String(s.get("final_title", "凡人"))], "info")
+	var heirs: int = 0
+	for v in (s.get("heirs", {}) as Dictionary).values():
+		if v is Array:
+			heirs += (v as Array).size()
+	append_message("遗产净额约 %.1f 万元，法定继承人 %d 位。" % [
+		float(s.get("estate_minor", 0.0)) / 1000000.0, heirs], "info")
 
 ## 指令意图执行：落到模拟系统，回显叙事、推进时钟、打开面板、处理元动作。
 func _on_intent(intent) -> void:
