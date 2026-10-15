@@ -406,6 +406,9 @@ func _catalogs() -> Dictionary:
 		"care_mode": _sim.care_modes_catalog(),
 		"crop": _sim.agri_crops_catalog(),
 		"livestock": _sim.agri_livestock_catalog(),
+		"platform": _sim.digital_platforms_catalog(),
+		"hack_target": _sim.digital_hack_targets_catalog(),
+		"security_job": _sim.digital_security_jobs_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -712,6 +715,9 @@ func _panel_context() -> Dictionary:
 		var farm: Dictionary = _sim.farm_panel_data()
 		if not farm.is_empty():
 			context["agriculture"] = farm
+		var dig: Dictionary = _sim.digital_panel_data()
+		if not dig.is_empty():
+			context["digital"] = dig
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

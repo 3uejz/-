@@ -38,6 +38,7 @@ func run_tests() -> void:
 	_test_language_panel()
 	_test_disability_panel()
 	_test_agriculture_panel()
+	_test_digital_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -225,6 +226,28 @@ func _test_agriculture_panel() -> void:
 	check(_find_section(d2, "在田作物").get("rows", []).size() >= 1, "在田作物分区有行")
 	check(_find_section(d2, "养殖").get("rows", []).size() >= 1, "养殖分区有行")
 	check(_find_section(d2, "经营概况").get("rows", []).size() >= 1, "经营概况分区有行")
+
+func _test_digital_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("digital", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无数字上下文为空态")
+	var ctx: Dictionary = {"digital": {
+		"real_name_verified": true,
+		"privacy": 0.4,
+		"exposure_heat": 20.0,
+		"addiction": 0.1,
+		"accounts": [{"platform": "短视频", "real_name": true, "privacy": 0.4}],
+		"assets": [{"type": "wallet", "value": 100000, "stolen": false}],
+		"data_total": 2,
+		"data_leaked": 1,
+		"creator": {"platform": "短视频", "fans": 1200, "tips_total": 3000, "delivery_gmv": 0},
+		"esports": {},
+	}}
+	var d2: Dictionary = PanelContentScript.build("digital", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有数字上下文非空")
+	check(_find_section(d2, "数字身份").get("rows", []).size() >= 1, "数字身份分区有行")
+	check(_find_section(d2, "平台账号").get("rows", []).size() >= 1, "平台账号分区有行")
+	check(_find_section(d2, "数字资产").get("rows", []).size() >= 1, "数字资产分区有行")
+	check(_find_section(d2, "内容创作").get("rows", []).size() >= 1, "内容创作分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

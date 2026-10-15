@@ -196,6 +196,17 @@ func _dispatch(intent) -> Dictionary:
 			return _sell_produce(intent)
 		"农业补贴":
 			return _farm_subsidy(intent)
+		# 数字生活与黑客（D23）
+		"开账号":
+			return _open_account(intent)
+		"实名认证":
+			return _verify_identity(intent)
+		"网络兼职":
+			return _security_work(intent)
+		"发布内容":
+			return _publish_content(intent)
+		"黑客攻击":
+			return _hack_target(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -227,6 +238,7 @@ func _help() -> Dictionary:
 		"· 语言：学语言 <语言> [时长] / 沉浸 <语言> [天数] / 语言考试 <语言> / 适应文化 <文化>",
 		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
 		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
+		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
 	]
 	return _ok(lines, 0, "")
 
@@ -941,9 +953,65 @@ func _farm_subsidy(intent) -> Dictionary:
 		return _fail("申领补贴失败。")
 	return _ok(["你申领到农业补贴 %d。" % int(r.get("granted", 0))], 0, "")
 
+func _open_account(intent) -> Dictionary:
+	var platform := _object_id(intent, "platform")
+	if platform.is_empty():
+		platform = String(intent.params.get("method", "")).strip_edges()
+	if platform.is_empty():
+		return _fail("未指定平台；可选直播或短视频。")
+	var r: Dictionary = host.open_digital_account(platform)
+	if not bool(r.get("ok", false)):
+		return _fail("开通账号失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你开通了「%s」账号。" % _platform_name(platform)], 0, "")
+
+func _verify_identity(intent) -> Dictionary:
+	var r: Dictionary = host.verify_digital_identity()
+	return _ok(["数字身份已实名认证，隐私级别降至 %.0f%%。" % (float(r.get("privacy", 0.0)) * 100.0)], 0, "")
+
+func _security_work(intent) -> Dictionary:
+	var kind := _object_id(intent, "security_job")
+	if kind.is_empty():
+		return _fail("未指定工作类型；可选渗透测试、安全防护、应急响应或数据泄露处置。")
+	var r: Dictionary = host.digital_security_work(kind)
+	if not bool(r.get("ok", false)):
+		return _fail("无法从事该网络安全工作（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("success", false)):
+		return _ok(["本次%s任务未通过，暂无收入。" % _security_job_name(kind)], 0, "")
+	return _ok(["你完成了%s任务，收入 %d。" % [_security_job_name(kind), int(r.get("income", 0))]], 0, "")
+
+func _publish_content(intent) -> Dictionary:
+	var platform := _object_id(intent, "platform")
+	if platform.is_empty():
+		platform = "short_video"
+	var r: Dictionary = host.publish_digital_content(platform)
+	if not bool(r.get("ok", false)):
+		return _fail("发布失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你在「%s」发布内容，播放 %d，涨粉 %d，收入 %d。" % [_platform_name(platform), int(r.get("views", 0)), int(r.get("fans_delta", 0)), int(r.get("income", 0))]], 0, "")
+
+func _hack_target(intent) -> Dictionary:
+	var target := _object_id(intent, "hack_target")
+	if target.is_empty():
+		return _fail("未指定目标；可选个人、企业、政府或黑产。")
+	var r: Dictionary = host.digital_hack(target)
+	if not bool(r.get("ok", false)):
+		return _fail("无法实施入侵（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["你侵入了%s，获取 %d，但行动暴露并留下案底。" % [_hack_target_name(target), int(r.get("gain", 0))]], 0, "")
+	if not bool(r.get("success", false)):
+		return _ok(["你尝试侵入%s，但未能得手。" % _hack_target_name(target)], 0, "")
+	return _ok(["你侵入了%s，获取 %d，未被察觉。" % [_hack_target_name(target), int(r.get("gain", 0))]], 0, "")
+
+func _platform_name(platform: String) -> String:
+	return String(host.digital.CONTENT_PLATFORMS.get(platform, {}).get("name", platform))
+
+func _security_job_name(kind: String) -> String:
+	return String(host.digital.SECURITY_JOBS.get(kind, {}).get("name", kind))
+
+func _hack_target_name(target: String) -> String:
+	return String(host.digital.HACK_TARGETS.get(target, {}).get("name", target))
+
 func _crop_name(crop: String) -> String:
 	return String(host.agriculture.crop_def(crop).get("name", crop))
-
 func _livestock_name(animal: String) -> String:
 	return String(host.agriculture.livestock_def(animal).get("name", animal))
 
@@ -983,6 +1051,14 @@ func _reason_cn(reason: String) -> String:
 			return "库存不足"
 		"no_order":
 			return "订单不存在"
+		"unknown_platform":
+			return "未知平台"
+		"unknown_job":
+			return "未知网络安全工作"
+		"unknown_target":
+			return "未知目标"
+		"banned":
+			return "账号已被封禁"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1098,6 +1174,12 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_crop_by_name(text)
 		"livestock":
 			return _find_livestock_by_name(text)
+		"platform":
+			return _find_platform_by_name(text)
+		"hack_target":
+			return _find_hack_target_by_name(text)
+		"security_job":
+			return _find_security_job_by_name(text)
 		_:
 			return ""
 
@@ -1176,6 +1258,45 @@ func _find_livestock_by_name(text: String) -> String:
 			return String(key)
 	for key in host.agriculture.LIVESTOCK.keys():
 		if String((host.agriculture.LIVESTOCK[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 平台名回退：按平台 id 或显示名匹配。
+func _find_platform_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.digital.CONTENT_PLATFORMS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.digital.CONTENT_PLATFORMS.keys():
+		if String((host.digital.CONTENT_PLATFORMS[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 黑客目标名回退：按目标 id 或显示名匹配。
+func _find_hack_target_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.digital.HACK_TARGETS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.digital.HACK_TARGETS.keys():
+		if String((host.digital.HACK_TARGETS[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 网络安全职业名回退：按 id 或显示名匹配。
+func _find_security_job_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.digital.SECURITY_JOBS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.digital.SECURITY_JOBS.keys():
+		if String((host.digital.SECURITY_JOBS[key] as Dictionary).get("name", "")).find(needle) >= 0:
 			return String(key)
 	return ""
 

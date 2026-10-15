@@ -91,6 +91,8 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 
 - 农业与乡土（`sim/agriculture.gd` `AgricultureSystem`）：六种作物（粮/经济/蔬/药四类用途，各有生长天数/产量/水需/地力消耗/保鲜率）与五种牲畜（畜牧/家禽/水产，含日粮/繁殖率/疫病风险），四种土地取得方式（承包/购买/流转/租赁）与地力/轮作/估值；`承包土地 [面积]`/`播种 <作物>`/`收割`/`养畜 <牲畜>`/`卖粮 <作物>`/`农业补贴` 指令经 `SimHost.acquire_farm_land()`/`plant_crop()`/`harvest_crop()`/`add_farm_livestock()`/`sell_produce()`/`apply_farm_subsidy()` 结算，收成受土壤/气候/灾害/技能/技术/田间管理影响；`advance()` 按日推进作物生长与仓储损耗；运行态随 `GameState.sim_runtime.farm` 持久化；「农业与乡土」面板渲染土地/在田作物/养殖/仓储/经营概况。
 
+- 数字生活与平台（`sim/digital.gd` `DigitalSystem`）：数字身份（平台账号/实名/隐私/数据条目与数据泄露牵连）与数字资产（账号/虚拟物品/加密钱包被盗与追回）；网络安全职业（渗透测试/安全防护/应急响应/数据泄露处置，合法无法律风险）；黑客（游戏内虚构抽象判定，四类目标，按 hacking 技能判定成败并结算收益/暴露概率/法律后果，不建模任何现实手法）；电子竞技（训练/战队/赛事/转会/伤病）；内容平台（直播/短视频，播放/涨粉/打赏/分成/带货与翻车封号、算法茧房、网络成瘾）；`开账号 <平台>`/`实名认证`/`网络兼职 <类型>`/`发布内容 [平台]`/`黑客攻击 <目标>` 指令经 `SimHost.open_digital_account()`/`verify_digital_identity()`/`digital_security_work()`/`publish_digital_content()`/`digital_hack()` 结算；运行时随 `GameState.sim_runtime.digital` 持久化；「数字与平台」面板渲染数字身份/平台账号/数字资产/内容创作/电竞生涯。
+
 ## 面板与表现层
 
 - **42 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；

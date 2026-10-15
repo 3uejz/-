@@ -137,7 +137,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"awards":
 			data = awards(player, context, name_resolver)
 		"digital":
-			data = digital(player, name_resolver)
+			data = digital(player, context, name_resolver)
 		"epidemic":
 			data = epidemic(player, context, name_resolver)
 		"war":
@@ -1032,13 +1032,54 @@ static func awards(player: Dictionary, context: Dictionary, name_resolver: Calla
 		return _empty("奖项与荣誉", "尚无奖项；可申报奖项、拉票并展示荣誉墙")
 	return _ok([_section("奖项与荣誉", _rows_from(items, ["title", "year", "grade"], name_resolver))])
 
-static func digital(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func digital(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("数字与平台", "尚未生成角色数据")
-	var items: Array = _items_of(player.get("digital_assets", []))
-	if items.is_empty():
-		return _empty("数字与平台", "未开通数字资产；可注册平台、开播、上架与提现")
-	return _ok([_section("数字资产", _rows_from(items, ["type", "platform", "balance", "followers"], name_resolver))])
+	var d: Dictionary = context.get("digital", {}) if context.get("digital") is Dictionary else {}
+	var sections: Array = []
+	if not d.is_empty():
+		var irows: Array = []
+		irows.append({"label": "实名认证", "value": "已认证" if bool(d.get("real_name_verified", false)) else "未认证"})
+		irows.append({"label": "隐私级别", "value": "%.0f%%" % (float(d.get("privacy", 0.0)) * 100.0)})
+		irows.append({"label": "暴露热度", "value": "%.1f" % float(d.get("exposure_heat", 0.0))})
+		irows.append({"label": "网络成瘾", "value": "%.0f%%" % (float(d.get("addiction", 0.0)) * 100.0)})
+		irows.append({"label": "数据条目", "value": "%d（泄露 %d）" % [int(d.get("data_total", 0)), int(d.get("data_leaked", 0))]})
+		sections.append(_section("数字身份", irows))
+		var arows: Array = []
+		for a in (d.get("accounts", []) as Array):
+			if a is Dictionary:
+				var ad: Dictionary = a
+				arows.append({"label": String(ad.get("platform", "")), "value": "实名" if bool(ad.get("real_name", false)) else "匿名"})
+		if not arows.is_empty():
+			sections.append(_section("平台账号", arows))
+		var vrows: Array = []
+		for a in (d.get("assets", []) as Array):
+			if a is Dictionary:
+				var ad2: Dictionary = a
+				vrows.append({"label": String(ad2.get("type", "")), "value": "%d%s" % [int(ad2.get("value", 0)), "（被盗）" if bool(ad2.get("stolen", false)) else ""]})
+		if not vrows.is_empty():
+			sections.append(_section("数字资产", vrows))
+		var creator: Dictionary = d.get("creator", {}) if d.get("creator") is Dictionary else {}
+		if not creator.is_empty():
+			sections.append(_section("内容创作", [
+				{"label": "平台", "value": String(creator.get("platform", ""))},
+				{"label": "粉丝", "value": str(int(creator.get("fans", 0)))},
+				{"label": "打赏累计", "value": str(int(creator.get("tips_total", 0)))},
+				{"label": "带货 GMV", "value": str(int(creator.get("delivery_gmv", 0)))},
+			]))
+		var esp: Dictionary = d.get("esports", {}) if d.get("esports") is Dictionary else {}
+		if not esp.is_empty():
+			sections.append(_section("电竞生涯", [
+				{"label": "战队", "value": String(esp.get("team", ""))},
+				{"label": "技能", "value": "%.0f" % float(esp.get("skill", 0.0))},
+				{"label": "奖金累计", "value": str(int(esp.get("prize_total", 0)))},
+			]))
+	if sections.is_empty():
+		var items: Array = _items_of(player.get("digital_assets", []))
+		if items.is_empty():
+			return _empty("数字与平台", "未开通数字资产；可开账号、发布内容或从事网络安全工作")
+		sections.append(_section("数字资产", _rows_from(items, ["type", "platform", "balance", "followers"], name_resolver)))
+	return _ok(sections)
 
 static func epidemic(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

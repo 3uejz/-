@@ -42,6 +42,7 @@ func run_tests() -> void:
 	_test_language_runtime()
 	_test_disability_runtime()
 	_test_agriculture_runtime()
+	_test_digital_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -557,4 +558,38 @@ func _test_agriculture_runtime() -> void:
 	reloaded.bind(state)
 	check((reloaded.farm_state().get("land", []) as Array).size() >= 1, "读档恢复土地")
 	check((reloaded.farm_state().get("livestock", []) as Array).size() >= 1, "读档恢复牲畜")
+
+
+func _test_digital_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	# 开账号与实名认证。
+	var acct: Dictionary = host.open_digital_account("short_video")
+	check(bool(acct.get("ok", false)), "开通短视频账号成功")
+	var vr: Dictionary = host.verify_digital_identity()
+	check(bool(vr.get("real_name_verified", false)), "实名认证成功")
+	# 数字资产。
+	host.add_digital_asset("wallet", 100000)
+	check((host.digital_state().get("assets", []) as Array).size() >= 1, "新增数字资产")
+	# 网络安全工作（合法，确定性成功）。
+	var money_before: int = host.economy.cash(host.account_id())
+	var job: Dictionary = host.digital_security_work("pentest")
+	check(bool(job.get("ok", false)) and bool(job.get("success", false)), "网络安全工作成功")
+	check(host.economy.cash(host.account_id()) > money_before, "网络安全工作带来收入")
+	# 黑客（抽象判定）。
+	var hack: Dictionary = host.digital_hack("personal")
+	check(bool(hack.get("ok", false)), "黑客判定返回")
+	# 发布内容。
+	var pub: Dictionary = host.publish_digital_content("short_video")
+	check(bool(pub.get("ok", false)), "发布内容成功")
+	check(not host.digital_panel_data().get("creator", {}).is_empty(), "创作者数据非空")
+	# 持久化并读档恢复。
+	host._persist_digital()
+	check(state.sim_runtime.get("digital", null) is Dictionary, "数字运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check(bool(reloaded.digital_state().get("real_name_verified", false)), "读档恢复实名状态")
+	check((reloaded.digital_state().get("accounts", {}) as Dictionary).has("short_video"), "读档恢复平台账号")
 

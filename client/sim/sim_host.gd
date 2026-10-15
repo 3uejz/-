@@ -37,6 +37,7 @@ const OrganizationScript = preload("res://sim/organizations.gd")
 const LanguageScript = preload("res://sim/language.gd")
 const DisabilityElderlyScript = preload("res://sim/disability_elderly.gd")
 const AgricultureScript = preload("res://sim/agriculture.gd")
+const DigitalScript = preload("res://sim/digital.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -103,6 +104,10 @@ var _disability: Dictionary = {}     ## 残障/养老运行时（残障/辅具/�
 var _care_incident: Dictionary = {}  ## 最近一次护工事件（供追责）
 var agriculture                 ## 农业与乡土（AgricultureSystem）
 var _farm: Dictionary = {}           ## 农场运行时（土地/地块/牲畜/仓储/订单），入档 sim_runtime.farm
+var digital                     ## 数字生活与黑客（DigitalSystem）
+var _identity: Dictionary = {}       ## 数字身份运行时（账号/隐私/数据/数字资产），入档 sim_runtime.digital
+var _creator: Dictionary = {}        ## 内容创作者运行时（粉丝/打赏/带货），入档 sim_runtime.digital
+var _esports: Dictionary = {}        ## 电竞生涯运行时（战队/技能/伤病），入档 sim_runtime.digital
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -147,6 +152,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_disability = disability.new_state()
 	agriculture = AgricultureScript.new()
 	_farm = agriculture.new_farm()
+	digital = DigitalScript.new()
+	_identity = digital.new_identity("player")
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -218,6 +225,16 @@ func _ensure_world_geo() -> void:
 		var fr: Variant = (state.sim_runtime as Dictionary).get("farm", {})
 		if fr is Dictionary and not (fr as Dictionary).is_empty():
 			_farm = agriculture.from_dict(fr)
+		# 恢复数字身份/创作者/电竞运行时。
+		var dig: Variant = (state.sim_runtime as Dictionary).get("digital", {})
+		if dig is Dictionary and not (dig as Dictionary).is_empty():
+			var dd: Dictionary = dig
+			if dd.get("identity", null) is Dictionary:
+				_identity = digital.from_dict(dd["identity"])
+			if dd.get("creator", null) is Dictionary:
+				_creator = (dd["creator"] as Dictionary).duplicate(true)
+			if dd.get("esports", null) is Dictionary:
+				_esports = (dd["esports"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1156,6 +1173,137 @@ func _persist_farm() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["farm"] = agriculture.to_dict(_farm)
+
+
+# --- 数字生活与黑客（D23） ---
+
+## 玩家技能等级（按技能 id），用于数字/黑客判定。
+func _skill_level(id: String) -> int:
+	return skills.level_of(player().get("skills", []), id)
+
+func digital_state() -> Dictionary:
+	return _identity
+
+## 内容平台目录（供解析器链接「发布内容 <平台>」）。
+func digital_platforms_catalog() -> Array:
+	var out: Array = []
+	for key in digital.CONTENT_PLATFORMS.keys():
+		var d: Dictionary = digital.CONTENT_PLATFORMS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 黑客目标目录（供解析器链接「黑客攻击 <目标>」）。
+func digital_hack_targets_catalog() -> Array:
+	var out: Array = []
+	for key in digital.HACK_TARGETS.keys():
+		var d: Dictionary = digital.HACK_TARGETS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 网络安全职业目录（合法方向）。
+func digital_security_jobs_catalog() -> Array:
+	var out: Array = []
+	for key in digital.SECURITY_JOBS.keys():
+		var d: Dictionary = digital.SECURITY_JOBS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 开通平台账号。
+func open_digital_account(platform: String) -> Dictionary:
+	if platform.strip_edges().is_empty():
+		return {"ok": false, "reason": "unknown_platform"}
+	var r: Dictionary = digital.create_account(_identity, platform, {"real_name": bool(_identity.get("real_name_verified", false))})
+	_persist_digital()
+	return r
+
+## 实名认证。
+func verify_digital_identity() -> Dictionary:
+	var r: Dictionary = digital.verify_real_name(_identity, true)
+	_persist_digital()
+	return r
+
+## 增加数字资产（账号/虚拟物品/加密钱包）。
+func add_digital_asset(asset_type: String, value: int) -> Dictionary:
+	var r: Dictionary = digital.add_asset(_identity, asset_type, value)
+	_persist_digital()
+	return r
+
+## 从事网络安全工作（合法方向，无法律风险）。
+func digital_security_work(kind: String) -> Dictionary:
+	var skill: float = float(_skill_level("hacking")) * 5.0
+	var r: Dictionary = digital.security_job(kind, skill)
+	if bool(r.get("ok", false)) and int(r.get("income", 0)) > 0:
+		economy.add_money(account_id(), int(r["income"]), "security_job")
+	_persist_digital()
+	return r
+
+## 实施未授权入侵（游戏内虚构抽象判定）。
+func digital_hack(target: String) -> Dictionary:
+	var skill: float = float(_skill_level("hacking")) * 5.0
+	var r: Dictionary = digital.hack(target, skill)
+	if bool(r.get("ok", false)) and int(r.get("gain", 0)) > 0:
+		economy.add_money(account_id(), int(r["gain"]), "hack")
+	_persist_digital()
+	return r
+
+## 发布内容（直播/短视频），首次自动开通创作者身份。
+func publish_digital_content(platform: String = "short_video") -> Dictionary:
+	if _creator.is_empty() or String(_creator.get("platform", "")) != platform:
+		_creator = digital.new_creator("player", platform)
+	var r: Dictionary = digital.publish_content(_creator)
+	if bool(r.get("ok", false)) and int(r.get("income", 0)) > 0:
+		economy.add_money(account_id(), int(r["income"]), "content_income")
+	_persist_digital()
+	return r
+
+## 上网时长结算网络成瘾。
+func digital_addiction(hours: float) -> Dictionary:
+	var r: Dictionary = digital.internet_addiction(hours)
+	_identity["addiction"] = float(r.get("addiction", 0.0))
+	_persist_digital()
+	return r
+
+## 数字与平台面板数据。
+func digital_panel_data() -> Dictionary:
+	var accounts: Array = []
+	var acct: Dictionary = _identity.get("accounts", {})
+	for key in acct.keys():
+		var a: Dictionary = acct[key]
+		accounts.append({"platform": String(key), "real_name": bool(a.get("real_name", false)), "privacy": snappedf(float(a.get("privacy", 0.0)), 0.01)})
+	var assets: Array = []
+	for a in (_identity.get("assets", []) as Array):
+		if a is Dictionary:
+			var ad: Dictionary = a
+			assets.append({"type": String(ad.get("type", "")), "value": int(ad.get("value", 0)), "stolen": bool(ad.get("stolen", false))})
+	var leaked := 0
+	var total := 0
+	for d in (_identity.get("data", []) as Array):
+		if d is Dictionary:
+			total += 1
+			if bool((d as Dictionary).get("leaked", false)):
+				leaked += 1
+	return {
+		"real_name_verified": bool(_identity.get("real_name_verified", false)),
+		"privacy": snappedf(float(_identity.get("privacy", 0.0)), 0.01),
+		"exposure_heat": snappedf(float(_identity.get("exposure_heat", 0.0)), 0.1),
+		"addiction": snappedf(float(_identity.get("addiction", 0.0)), 0.01),
+		"accounts": accounts,
+		"assets": assets,
+		"data_total": total,
+		"data_leaked": leaked,
+		"creator": _creator.duplicate(true),
+		"esports": _esports.duplicate(true),
+	}
+
+func _persist_digital() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["digital"] = {
+		"identity": digital.to_dict(_identity),
+		"creator": _creator.duplicate(true),
+		"esports": _esports.duplicate(true),
+	}
+
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:

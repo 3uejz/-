@@ -63,6 +63,7 @@ func run_tests() -> void:
 	_test_language_commands()
 	_test_disability_commands()
 	_test_agriculture_commands()
+	_test_digital_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -279,6 +280,25 @@ func _test_agriculture_commands() -> void:
 	# 补贴
 	_main.submit("农业补贴")
 	check(float(sim.farm_state().get("subsidy", 0.0)) > 0.0, "「农业补贴」发放补贴")
+
+func _test_digital_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看数字")
+	check(_main.has_panel("digital"), "「看数字」打开数字与平台面板")
+	# 开账号
+	_main.submit("开账号 短视频")
+	check((sim.digital_state().get("accounts", {}) as Dictionary).has("short_video"), "「开账号」写入平台账号")
+	# 实名认证
+	_main.submit("实名认证")
+	check(bool(sim.digital_state().get("real_name_verified", false)), "「实名认证」写入实名状态")
+	# 发布内容
+	var money_before: int = sim.economy.cash(sim.account_id())
+	_main.submit("发布内容 短视频")
+	check(not sim.digital_panel_data().get("creator", {}).is_empty(), "「发布内容」生成创作者数据")
+	check(sim.economy.cash(sim.account_id()) >= money_before, "「发布内容」结算收益")
+	# 网络兼职
+	_main.submit("网络兼职 渗透测试")
+	check(true, "「网络兼职」执行网络安全工作")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
