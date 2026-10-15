@@ -10,7 +10,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
-	"weather", "anomaly", "goldfinger", "mental", "spirit", "language",
+	"weather", "anomaly", "goldfinger", "mental", "spirit", "language", "disability",
 ]
 
 func _suite_name() -> String:
@@ -36,6 +36,7 @@ func run_tests() -> void:
 	_test_mental_panel()
 	_test_spirit_panel()
 	_test_language_panel()
+	_test_disability_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -177,6 +178,31 @@ func _test_language_panel() -> void:
 	check_eq(_row_value(_find_section(d2, "语言能力"), "英语（综合 72）"), "口语 70 · 听力 68 · 读写 78", "语言分项能力")
 	check_eq(_row_value(_find_section(d2, "文化适应"), "美国"), "适应度 60%", "文化适应度")
 	check_eq(_row_value(_find_section(d2, "节日民俗"), "今日节日"), "春节", "节日名称")
+
+func _test_disability_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("disability", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无残障上下文为空态")
+	var ctx: Dictionary = {"disability": {
+		"conditions": [{"type": "肢体", "severity": "重度", "source": "事故"}],
+		"mobility": 0.25,
+		"devices": [{"name": "轮椅"}],
+		"recovery": 0.3,
+		"accessible": true,
+		"retirement_years": 30.0,
+		"care_mode": "机构养老",
+		"care_quality": 0.8,
+		"cognitive": true,
+		"decision_capacity": false,
+		"will_valid": false,
+		"guardian": "child_1",
+		"hospice": false,
+	}}
+	var d2: Dictionary = PanelContentScript.build("disability", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有残障上下文非空")
+	check_eq(_row_value(_find_section(d2, "残障状态"), "移动能力"), "25%", "移动能力")
+	check_eq(_row_value(_find_section(d2, "辅具与康复"), "轮椅"), "已装配", "辅具")
+	check_eq(_row_value(_find_section(d2, "养老与社保"), "养老模式"), "机构养老", "养老模式")
+	check_eq(_row_value(_find_section(d2, "监护与决策"), "监护人"), "child_1", "监护人")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

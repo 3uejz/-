@@ -26,7 +26,8 @@
         "spirituality": { "type": "object", "additionalProperties": true },
         "organizations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
         "language": { "type": "object", "additionalProperties": true },
-        "culture": { "type": "object", "additionalProperties": true }
+        "culture": { "type": "object", "additionalProperties": true },
+        "disability": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

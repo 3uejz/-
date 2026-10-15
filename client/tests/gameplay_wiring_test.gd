@@ -61,6 +61,7 @@ func run_tests() -> void:
 	_test_spirit_commands()
 	_test_org_commands()
 	_test_language_commands()
+	_test_disability_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -232,6 +233,27 @@ func _test_language_commands() -> void:
 	# 适应文化：提升适应度。
 	_main.submit("适应文化 美国")
 	check(float(sim.language.current_adaptation(sim._culture, "us")) > 0.0, "「适应文化」提升文化适应度")
+
+func _test_disability_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 1000000000, "test")
+	sim.acquire_disability("physical", "accident", "heavy")
+	_main.submit("看养老")
+	check(_main.has_panel("disability"), "「看养老」打开残障与养老面板")
+	# 装辅具：提升移动能力。
+	var before: float = sim.disability.mobility(sim.disability_state())
+	_main.submit("装辅具 轮椅")
+	check(sim.disability.mobility(sim.disability_state()) > before, "「装辅具」提升移动能力")
+	# 康复训练：不报错。
+	_main.submit("康复训练")
+	check(true, "「康复训练」执行康复")
+	# 选养老：写入养老模式。
+	_main.submit("选养老 机构养老")
+	check_eq(str(sim.disability_state().get("care_mode", "")), "institution_care", "「选养老」写入模式")
+	# 指定监护：先制造丧失决策能力。
+	sim.acquire_disability("intellectual", "illness", "heavy")
+	_main.submit("指定监护 长子")
+	check_eq(str(sim.disability_state().get("guardian", "")), "长子", "「指定监护」写入监护人")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

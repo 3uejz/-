@@ -116,6 +116,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = spirit(player, context, name_resolver)
 		"language":
 			data = language(player, context, name_resolver)
+		"disability":
+			data = disability(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -835,6 +837,48 @@ static func language(player: Dictionary, context: Dictionary, name_resolver: Cal
 	else:
 		frows.append({"label": "今日", "value": "非节日"})
 	sections.append(_section("节日民俗", frows))
+	return _ok(sections)
+
+static func disability(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("残障与养老", "尚未生成角色数据")
+	var d: Dictionary = context.get("disability", {}) if context.get("disability") is Dictionary else {}
+	if d.is_empty():
+		return _empty("残障与养老", "暂无残障/养老记录；如遇伤病致残可申领辅具、康复训练与养老照护")
+	var sections: Array = []
+	var conds: Array = _items_of(d.get("conditions", []))
+	var crows: Array = []
+	for c in conds:
+		if not (c is Dictionary):
+			continue
+		var cd: Dictionary = c
+		crows.append({"label": "%s · %s" % [String(cd.get("type", "?")), String(cd.get("severity", ""))], "value": "来源%s" % String(cd.get("source", ""))})
+	if not crows.is_empty():
+		crows.append({"label": "移动能力", "value": "%.0f%%" % (float(d.get("mobility", 1.0)) * 100.0)})
+		sections.append(_section("残障状态", crows))
+	var devices: Array = _items_of(d.get("devices", []))
+	var drows: Array = []
+	for dev in devices:
+		if dev is Dictionary:
+			drows.append({"label": String((dev as Dictionary).get("name", "?")), "value": "已装配"})
+	drows.append({"label": "康复进度", "value": "%.0f%%" % (float(d.get("recovery", 0.0)) * 100.0)})
+	drows.append({"label": "无障碍改造", "value": "已改造" if bool(d.get("accessible", false)) else "未改造"})
+	sections.append(_section("辅具与康复", drows))
+	var erows: Array = []
+	erows.append({"label": "社保年限", "value": "%.1f 年" % float(d.get("retirement_years", 0.0))})
+	erows.append({"label": "养老模式", "value": String(d.get("care_mode", "")) if String(d.get("care_mode", "")) != "" else "未选择"})
+	if String(d.get("care_mode", "")) != "":
+		erows.append({"label": "照护质量", "value": "%.0f%%" % (float(d.get("care_quality", 0.0)) * 100.0)})
+	if bool(d.get("hospice", false)):
+		erows.append({"label": "临终关怀", "value": "已安排"})
+	sections.append(_section("养老与社保", erows))
+	var grows: Array = []
+	grows.append({"label": "认知障碍", "value": "有" if bool(d.get("cognitive", false)) else "无"})
+	grows.append({"label": "决策能力", "value": "具备" if bool(d.get("decision_capacity", true)) else "丧失"})
+	grows.append({"label": "遗嘱效力", "value": "有效" if bool(d.get("will_valid", true)) else "无效（需监护追认）"})
+	if String(d.get("guardian", "")) != "":
+		grows.append({"label": "监护人", "value": String(d.get("guardian", ""))})
+	sections.append(_section("监护与决策", grows))
 	return _ok(sections)
 
 static func _crisis_name(key: String) -> String:

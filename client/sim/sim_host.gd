@@ -35,6 +35,7 @@ const PersonalityScript = preload("res://sim/personality.gd")
 const SpiritualityScript = preload("res://sim/spirituality.gd")
 const OrganizationScript = preload("res://sim/organizations.gd")
 const LanguageScript = preload("res://sim/language.gd")
+const DisabilityElderlyScript = preload("res://sim/disability_elderly.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -96,6 +97,9 @@ var _orgs: Array = []           ## 所在城市可加入组织（确定性生成
 var language                    ## 语言与文化（LanguageSystem）
 var _lang_profile: Dictionary = {}   ## 语言档案（分项/证书/适应），入档 sim_runtime.language
 var _culture: Dictionary = {}        ## 文化适应状态（适应度/冲击），入档 sim_runtime.culture
+var disability                  ## 残障与养老（DisabilityElderlySystem）
+var _disability: Dictionary = {}     ## 残障/养老运行时（残障/辅具/养老/监护），入档 sim_runtime.disability
+var _care_incident: Dictionary = {}  ## 最近一次护工事件（供追责）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -136,6 +140,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	language = LanguageScript.new()
 	_lang_profile = language.new_profile()
 	_culture = language.new_cultural_state()
+	disability = DisabilityElderlyScript.new()
+	_disability = disability.new_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -199,6 +205,10 @@ func _ensure_world_geo() -> void:
 		var cr: Variant = (state.sim_runtime as Dictionary).get("culture", {})
 		if cr is Dictionary and not (cr as Dictionary).is_empty():
 			_culture = language.from_dict(cr)
+		# 恢复残障/养老运行时（残障/辅具/养老模式/监护）。
+		var dr: Variant = (state.sim_runtime as Dictionary).get("disability", {})
+		if dr is Dictionary and not (dr as Dictionary).is_empty():
+			_disability = disability.from_dict(dr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -836,6 +846,165 @@ func _persist_language() -> void:
 		return
 	(state.sim_runtime as Dictionary)["language"] = language.to_dict(_lang_profile)
 	(state.sim_runtime as Dictionary)["culture"] = language.to_dict(_culture)
+
+
+# --- 残障与养老（D21） ---
+
+func disability_state() -> Dictionary:
+	return _disability
+
+## 辅具目录（供解析器链接「装辅具 <辅具>」）。
+func disability_devices_catalog() -> Array:
+	var out: Array = []
+	for key in disability.DEVICES.keys():
+		var d: Dictionary = disability.DEVICES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key)), "cost": int(d.get("cost", 0))})
+	return out
+
+## 养老模式目录（供解析器链接「选养老 <模式>」）。
+func care_modes_catalog() -> Array:
+	var out: Array = []
+	for key in disability.CARE_MODES.keys():
+		var d: Dictionary = disability.CARE_MODES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key)), "cost_per_month": int(d.get("cost_per_month", 0))})
+	return out
+
+## 获得残障（事件/叙事驱动；运行时可调用）。
+func acquire_disability(d_type: String, source: String, severity: String) -> Dictionary:
+	var r: Dictionary = disability.acquire(_disability, d_type, source, severity)
+	if bool(r.get("ok", false)):
+		_persist_disability()
+	return r
+
+## 装配辅具：扣除花费并提升移动能力。
+func fit_disability_device(device_key: String) -> Dictionary:
+	var r: Dictionary = disability.fit_device(_disability, device_key)
+	if not bool(r.get("ok", false)):
+		return r
+	var cost := int(r.get("cost", 0))
+	if cost > 0:
+		if economy.cash(account_id()) < cost:
+			(_disability["devices"] as Array).erase(device_key)
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "disability_device:%s" % device_key)
+		sync_finances()
+	_persist_disability()
+	return r
+
+## 手术/康复训练：部分恢复能力（默认 0.3），扣康复花费。
+func disability_surgery(amount: float = 0.3) -> Dictionary:
+	var cost := 200000
+	if economy.cash(account_id()) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	economy.add_money(account_id(), -cost, "disability_surgery")
+	sync_finances()
+	var r: Dictionary = disability.surgery_recovery(_disability, amount)
+	_persist_disability()
+	return r
+
+## 无障碍改造（居所/常去场所）：减少移动惩罚并扣除改造费。
+func set_accessible_place(accessible: bool = true) -> Dictionary:
+	if accessible:
+		var cost := 150000
+		if economy.cash(account_id()) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "disability_accessible")
+		sync_finances()
+	var r: Dictionary = disability.set_accessible(_disability, accessible)
+	_persist_disability()
+	return r
+
+## 选择养老模式（居家/社区/机构）。
+func choose_care_mode(mode: String) -> Dictionary:
+	var r: Dictionary = disability.choose_care_mode(_disability, mode)
+	if bool(r.get("ok", false)):
+		_persist_disability()
+	return r
+
+## 结算 months 个月养老：扣除成本并返回心情/寿命修正。
+func settle_care(months: float) -> Dictionary:
+	var r: Dictionary = disability.care_outcome(_disability, months)
+	if not bool(r.get("ok", false)):
+		return r
+	var cost := int(r.get("cost", 0))
+	if cost > 0:
+		if economy.cash(account_id()) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "disability_care")
+		sync_finances()
+	_persist_disability()
+	return r
+
+## 临终关怀。
+func hospice_care(quality: float = 0.8) -> Dictionary:
+	var r: Dictionary = disability.hospice_care(_disability, quality)
+	_persist_disability()
+	return r
+
+## 抽取一次护工事件（按当前养老模式质量）。
+func roll_caregiver_event() -> Dictionary:
+	var mode := String(_disability.get("care_mode", ""))
+	var cm: Dictionary = disability.CARE_MODES.get(mode, {})
+	var quality := float(cm.get("quality", 0.5))
+	_care_incident = disability.caregiver_event(quality, {}, rng)
+	return _care_incident
+
+## 追责上次护工事件（赔偿 + 吊销资格/刑责）。
+func hold_caregiver_accountable() -> Dictionary:
+	var r: Dictionary = disability.hold_accountable(_care_incident)
+	if bool(r.get("ok", false)):
+		var comp := int(r.get("compensation", 0))
+		if comp > 0:
+			economy.add_money(account_id(), comp, "caregiver_compensation")
+			sync_finances()
+		_care_incident = {}
+	return r
+
+## 建立监护（仅在丧失决策能力时成立）。
+func establish_guardianship(guardian_id: String) -> Dictionary:
+	var r: Dictionary = disability.establish_guardianship(_disability, guardian_id)
+	if bool(r.get("ok", false)):
+		_persist_disability()
+	return r
+
+## 残障与养老面板数据。
+func disability_panel_data() -> Dictionary:
+	var conditions: Array = []
+	for c in (_disability.get("conditions", []) as Array):
+		if not (c is Dictionary):
+			continue
+		var cd: Dictionary = c
+		conditions.append({
+			"type": String(disability.TYPE_NAMES.get(String(cd.get("type", "")), cd.get("type", ""))),
+			"source": String(disability.SOURCE_NAMES.get(String(cd.get("source", "")), cd.get("source", ""))),
+			"severity": String(disability.SEVERITY_NAMES.get(String(cd.get("severity", "")), cd.get("severity", ""))),
+		})
+	var devices: Array = []
+	for key in (_disability.get("devices", []) as Array):
+		var dev: Dictionary = disability.DEVICES.get(str(key), {})
+		devices.append({"name": String(dev.get("name", key))})
+	var mode_key := String(_disability.get("care_mode", ""))
+	var mode_def: Dictionary = disability.CARE_MODES.get(mode_key, {})
+	return {
+		"conditions": conditions,
+		"mobility": snappedf(disability.mobility(_disability), 0.01),
+		"devices": devices,
+		"recovery": snappedf(float(_disability.get("recovery", 0.0)), 0.01),
+		"accessible": bool(_disability.get("accessible", false)),
+		"retirement_years": snappedf(float(_disability.get("retirement_years", 0.0)), 0.1),
+		"care_mode": String(mode_def.get("name", mode_key)),
+		"care_quality": snappedf(float(mode_def.get("quality", 0.0)), 0.01),
+		"cognitive": disability.has_cognitive_impairment(_disability),
+		"decision_capacity": disability.decision_capacity(_disability),
+		"will_valid": disability.is_will_valid(_disability),
+		"guardian": String(_disability.get("guardian", "")),
+		"hospice": bool(_disability.get("hospice", false)),
+	}
+
+func _persist_disability() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["disability"] = disability.to_dict(_disability)
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:

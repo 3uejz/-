@@ -40,6 +40,7 @@ func run_tests() -> void:
 	_test_spirit_runtime()
 	_test_org_runtime()
 	_test_language_runtime()
+	_test_disability_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -482,4 +483,38 @@ func _test_language_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 88)
 	reloaded.bind(state)
 	check(reloaded.language.overall(reloaded.language_state(), "en") >= expect - 0.01, "读档恢复语言等级")
+
+
+func _test_disability_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	host.economy.add_money(host.account_id(), 1000000000, "test")
+	# 获得残障降低移动能力。
+	var acq: Dictionary = host.acquire_disability("physical", "accident", "heavy")
+	check(bool(acq.get("ok", false)), "获得残障成功")
+	check(host.disability.mobility(host.disability_state()) < 1.0, "残障降低移动能力")
+	# 装配辅具提升移动能力。
+	var before: float = host.disability.mobility(host.disability_state())
+	var fit: Dictionary = host.fit_disability_device("wheelchair")
+	check(bool(fit.get("ok", false)), "装配轮椅成功")
+	check(host.disability.mobility(host.disability_state()) > before, "辅具提升移动能力")
+	# 选择养老模式并结算。
+	var cm: Dictionary = host.choose_care_mode("institution_care")
+	check(bool(cm.get("ok", false)), "选择机构养老")
+	var settle: Dictionary = host.settle_care(12.0)
+	check(bool(settle.get("ok", false)), "养老结算成功")
+	# 认知障碍与监护。
+	host.acquire_disability("intellectual", "illness", "heavy")
+	check(not host.disability.decision_capacity(host.disability_state()), "重度智力障碍丧失决策能力")
+	var guard: Dictionary = host.establish_guardianship("child_1")
+	check(bool(guard.get("ok", false)), "设立监护成功")
+	# 持久化并读档恢复。
+	host._persist_disability()
+	check(state.sim_runtime.get("disability", null) is Dictionary, "残障运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check(not (reloaded.disability_state().get("conditions", []) as Array).is_empty(), "读档恢复残障状态")
+	check_eq(str(reloaded.disability_state().get("guardian", "")), "child_1", "读档恢复监护人")
 

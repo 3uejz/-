@@ -90,6 +90,7 @@ const VERB_PANELS: Dictionary = {
 	"看心理": "mental", "精神健康": "mental", "心理": "mental",
 	"看精神": "spirit", "精神追求": "spirit", "信念": "spirit",
 	"看语言": "language", "语言": "language", "文化": "language",
+	"看养老": "disability", "养老": "disability", "残障": "disability",
 	"看文娱": "content_industry", "版权": "content_industry",
 	"看工程": "engineering", "在建": "engineering",
 	"看服务": "services", "生活服务": "services",
@@ -400,6 +401,8 @@ func _catalogs() -> Dictionary:
 		"crisis_exit": _sim.crisis_exits_catalog(),
 		"organization": _sim.organizations_catalog(),
 		"language": _sim.languages_catalog(),
+		"device": _sim.disability_devices_catalog(),
+		"care_mode": _sim.care_modes_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -700,6 +703,9 @@ func _panel_context() -> Dictionary:
 		var lang: Dictionary = _sim.language_panel_data()
 		if not lang.is_empty():
 			context["language"] = lang
+		var dis: Dictionary = _sim.disability_panel_data()
+		if not dis.is_empty():
+			context["disability"] = dis
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

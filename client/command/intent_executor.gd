@@ -170,6 +170,19 @@ func _dispatch(intent) -> Dictionary:
 			return _language_exam(intent)
 		"适应文化":
 			return _adapt_culture(intent)
+		# 残障与养老（D21）
+		"装辅具":
+			return _fit_device(intent)
+		"康复训练":
+			return _rehab(intent)
+		"无障碍改造":
+			return _accessible_retrofit(intent)
+		"选养老":
+			return _choose_care_mode(intent)
+		"临终关怀":
+			return _hospice(intent)
+		"指定监护":
+			return _guardianship(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -193,12 +206,13 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看行情 / 看天气 …（全部 41 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看养老 / 看行情 / 看天气 …（全部 42 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
 		"· 组织：加入组织 <组织> / 缴会费 / 组织任务 / 罢工 / 请愿 / 募捐 / 退出组织",
 		"· 语言：学语言 <语言> [时长] / 沉浸 <语言> [天数] / 语言考试 <语言> / 适应文化 <文化>",
+		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
 	]
 	return _ok(lines, 0, "")
 
@@ -786,6 +800,63 @@ func _adapt_culture(intent) -> Dictionary:
 		days, float(r.get("adaptation", 0.0)) * 100.0, float(r.get("shock", 0.0)) * 100.0])
 	return _ok(lines, minutes, "")
 
+
+# --- 残障与养老（D21） ---
+
+func _fit_device(intent) -> Dictionary:
+	var device := _object_id(intent, "device")
+	if device.is_empty():
+		return _fail("未指定辅具；可装备轮椅、助听器、义肢、导盲犬等。")
+	var dev: Dictionary = host.disability.DEVICES.get(device, {})
+	var r: Dictionary = host.fit_disability_device(device)
+	if not bool(r.get("ok", false)):
+		return _fail("无法装配该辅具（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你装配了「%s」，移动能力升至 %.0f%%。" % [String(dev.get("name", device)), float(r.get("mobility", 1.0)) * 100.0]], 0, "")
+
+func _rehab(intent) -> Dictionary:
+	var minutes := _duration_minutes(intent, 30 * DAY)
+	var adv: Dictionary = _advance_time(minutes, {}, "rest")
+	var lines: Array = adv["narration"]
+	var r: Dictionary = host.disability_surgery(0.3)
+	if not bool(r.get("ok", false)):
+		return _fail("无法进行康复训练（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	lines.append("你坚持康复训练 %.0f 天，移动能力恢复至 %.0f%%。" % [float(minutes) / float(DAY), float(r.get("mobility", 1.0)) * 100.0])
+	return _ok(lines, minutes, "")
+
+func _accessible_retrofit(intent) -> Dictionary:
+	var r: Dictionary = host.set_accessible_place(true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法进行无障碍改造（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你完成了无障碍改造，移动能力升至 %.0f%%。" % (float(r.get("mobility", 1.0)) * 100.0)], 0, "")
+
+func _choose_care_mode(intent) -> Dictionary:
+	var mode := _object_id(intent, "care_mode")
+	if mode.is_empty():
+		return _fail("未指定养老模式；可选居家护理、社区养老或机构养老。")
+	var r: Dictionary = host.choose_care_mode(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法选择该养老模式。")
+	var def: Dictionary = r.get("def", {})
+	return _ok(["你选择了「%s」养老，月成本约 %d，照护质量 %.0f%%。" % [
+		String(def.get("name", mode)), int(def.get("cost_per_month", 0)), float(def.get("quality", 0.0)) * 100.0]], 0, "")
+
+func _hospice(intent) -> Dictionary:
+	var r: Dictionary = host.hospice_care(0.8)
+	if not bool(r.get("ok", false)):
+		return _fail("无法安排临终关怀。")
+	return _ok(["你安排了临终关怀，舒适度与尊严得到保障（%.0f%%）。" % (float(r.get("comfort", 0.0)) * 100.0)], 0, "")
+
+func _guardianship(intent) -> Dictionary:
+	var guardian := _object_id(intent, "person")
+	if guardian.is_empty():
+		guardian = String(intent.params.get("method", "")).strip_edges()
+	if guardian.is_empty():
+		return _fail("未指定监护人。")
+	var r: Dictionary = host.establish_guardianship(guardian)
+	if not bool(r.get("ok", false)):
+		return _fail("无法设立监护：当事人仍具备决策能力。")
+	return _ok(["已为当事人设立监护人「%s」。" % guardian], 0, "")
+
 func _language_name(lang: String) -> String:
 	return String(host.language.language_def(lang).get("name", lang))
 
@@ -801,6 +872,14 @@ func _reason_cn(reason: String) -> String:
 			return "资金不足"
 		"no_economy":
 			return "经济系统未就绪"
+		"not_applicable":
+			return "该辅具不适用于现有残障类型"
+		"has_capacity":
+			return "当事人仍具备决策能力，无需监护"
+		"unknown_device":
+			return "未知辅具"
+		"unknown_mode":
+			return "未知养老模式"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -908,8 +987,38 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_language_by_name(text)
 		"culture":
 			return _find_culture_by_name(text)
+		"device":
+			return _find_device_by_name(text)
+		"care_mode":
+			return _find_care_mode_by_name(text)
 		_:
 			return ""
+
+## 辅具名回退：按辅具 id 或显示名匹配。
+func _find_device_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.disability.DEVICES.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.disability.DEVICES.keys():
+		if String((host.disability.DEVICES[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 养老模式名回退：按 id 或显示名匹配。
+func _find_care_mode_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.disability.CARE_MODES.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.disability.CARE_MODES.keys():
+		if String((host.disability.CARE_MODES[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
 
 ## 语言名回退：按语言 id 或显示名匹配。
 func _find_language_by_name(text: String) -> String:
