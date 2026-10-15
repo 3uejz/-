@@ -123,10 +123,12 @@
 - **待办**：食安事故的监管处罚与 D40 消费者保护联动、中央厨房与 D26 食品制造的产线打通、网红爆单对客流需求的实时反馈待补。
 
 ### D31 时尚、设计与奢侈品
-- 作品评分公式不完整；鉴定/仿品无概率；品牌溢价/老化/复兴无数值；缺鉴定/拍卖/联名动词与测试。
+- **已接线**：`FashionSystem`（`fashion.gd`）学科/定位/季节/潮流阶段/奢侈品类目/营销表；作品评分（`create_design()`，技能×0.45 + 灵感×0.20 + 潮流契合×0.35 − 抄袭惩罚，`grade_of()`）；潮流周期（`new_trend()`/`advance_trend()`/`leading_or_following()`）；时装周与联名（`fashion_week()`/`collab()`）；限量发售与经营（`limited_edition()`/`open_store()`/`run_marketing()`/`brand_aging()`/`renew_brand()`）；代言人（`endorse()`/`endorser_scandal()`）；奢侈品市场（`authenticate()`/`secondhand_price()`/`auction()`/`collectible_value()`/`counterfeit_hit()`）；抄袭指控（`plagiarism_accusation()`）。运行时经 `GameState.sim_runtime.fashion`（`brand`/`trend`）持久化。`SimHost` 接线 `fashion_state()`/`fashion_disciplines_catalog()`/`fashion_positionings_catalog()`/`fashion_luxury_catalog()`/`fashion_marketing_catalog()`/`fashion_seasons_catalog()`/`new_brand()`/`fashion_design()`/`fashion_week()`/`fashion_collab()`/`fashion_limited_edition()`/`fashion_open_store()`/`fashion_marketing()`/`fashion_renew()`/`fashion_authenticate()`/`fashion_panel_data()`。UI：复用「经营」面板（`business`）增补品牌概况/时尚潮流/作品/库存分区（`context["fashion"]`）；指令 `建品牌 <定位>`/`创作设计 <学科>`/`时装周 [季节]`/`联名 [合作热度]`/`限量发售 <品类> [数量]`/`设计师营销 <方式> [预算]`/`品牌复兴 [预算]`/`鉴定真伪 <品类>` 与「看品牌」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `fashion` 自有测试覆盖）。
+- **待办**：品牌老化按年 tick 的自动演化与传承（D17）联动、拍卖行与二手市场平台化、仿品对 D25 知识产权的侵权链待补。
 
 ### D32 体育产业与赛事
-- 无体育实体结构（生涯/俱乐部/联赛）；转会/薪酬/伤病/俱乐部盈亏无公式；联赛/球队/赛事内容缺失；无面板与动词。
+- **已接线**：`SportsIndustrySystem`（`sports_industry.gd`）运动员职业化（`new_pro()`/`youth_graduate()`/`sign_pro_contract()`/`transfer()`/`offer_contract()`/`retire()`/`market_value()`/`sponsorship()`）；赛事体系（联赛/杯赛/奥运/世界杯/全运，`new_league()`/`register_club()`/`schedule_season()`/`play_match()`/`standings()`/`apply_promotion_relegation()`/`national_callup()`/`international_tournament()`）；丑闻与合规（兴奋剂/假球/赌球/转会黑幕，`doping_test()`/`set_doping()`/`commit_scandal()`/`investigate()`）；伤病与康复（`injury_risk()`/`injure()`/`rehab()`）；俱乐部经营（`club_matchday_income()`/`club_season_income()`/`club_finance()`/`club_bankrupt()`）。运行时经 `GameState.sim_runtime.sports`（`player`/`club`/`rival`/`league`）持久化。`SimHost` 接线 `sports_state()`/`sports_injuries_catalog()`/`sports_scandals_catalog()`/`sports_competitions_catalog()`/`start_sports_career()`/`sports_play_match()`/`sports_transfer()`/`sports_sponsorship()`/`sports_injure()`/`sports_rehab()`/`sports_doping_test()`/`sports_retire()`/`sports_panel_data()`。UI：复用「经营」面板（`business`）增补球员生涯/所属球会/积分榜分区（`context["sports"]`）；指令 `开启球涯`/`比赛`/`转会 [转会费]`/`代言合同 [金额]`/`运动康复 [天数]`/`兴奋剂检测`/`退役` 与「看球队」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `sports_industry` 自有测试覆盖）。
+- **待办**：国际赛事赛制与国家队长期集训、球迷冲突/裁判争议事件、职业体育与学业冲突（D5）联动待补。
 
 ### D33 会展、演出与大型活动
 - 活动无状态机与账目结构；票务/容量/上座/超售/事故/赞助无数值；每类活动定义字段缺失；缺售票/审批/赞助动词与测试。

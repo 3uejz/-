@@ -314,6 +314,37 @@ func _dispatch(intent) -> Dictionary:
 			return _process_food(intent)
 		"分销食品":
 			return _distribute_food(intent)
+		# 时尚、设计与奢侈品（D31）
+		"建品牌":
+			return _new_brand(intent)
+		"创作设计":
+			return _fashion_design(intent)
+		"时装周":
+			return _fashion_week(intent)
+		"联名":
+			return _fashion_collab(intent)
+		"限量发售":
+			return _fashion_limited(intent)
+		"设计师营销":
+			return _fashion_marketing(intent)
+		"品牌复兴":
+			return _fashion_renew(intent)
+		"鉴定真伪":
+			return _fashion_authenticate(intent)
+		"开启球涯":
+			return _start_sports_career(intent)
+		"比赛":
+			return _sports_match(intent)
+		"转会":
+			return _sports_transfer(intent)
+		"代言合同":
+			return _sports_sponsorship(intent)
+		"运动康复":
+			return _sports_rehab(intent)
+		"兴奋剂检测":
+			return _sports_doping_test(intent)
+		"退役":
+			return _sports_retire(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1593,6 +1624,132 @@ func _recipe_name(recipe: String) -> String:
 func _staff_role_name(role: String) -> String:
 	return String((host.dining.STAFF_ROLES.get(role, {}) as Dictionary).get("name", role))
 
+# --- 时尚、设计与奢侈品（D31） ---
+
+func _new_brand(intent) -> Dictionary:
+	var positioning := _object_id(intent, "positioning")
+	var r: Dictionary = host.new_brand(positioning)
+	if not bool(r.get("ok", false)):
+		return _fail("无法创立品牌（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你创立了%s品牌。" % String(r.get("name", ""))], 0, "")
+
+func _fashion_design(intent) -> Dictionary:
+	var discipline := _object_id(intent, "fashion_discipline")
+	var r: Dictionary = host.fashion_design(discipline)
+	if not bool(r.get("ok", false)):
+		return _fail("无法创作（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["创作%s，评分 %.0f（%s）。" % [_discipline_name(discipline), float(r.get("score", 0.0)), String(r.get("grade", ""))]], 0, "")
+
+func _fashion_week(intent) -> Dictionary:
+	var season := _object_id(intent, "season")
+	if season == "":
+		season = "ss"
+	var r: Dictionary = host.fashion_week(season)
+	if not bool(r.get("ok", false)):
+		return _fail("无法举办时装周（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["时装周平均分 %.0f，订单额 %d。" % [float(r.get("avg_score", 0.0)), int(r.get("orders", 0))]], 0, "")
+
+func _fashion_collab(intent) -> Dictionary:
+	var fame: float = float(_param_number(intent, "number", 60))
+	var r: Dictionary = host.fashion_collab(fame)
+	if not bool(r.get("ok", false)):
+		return _fail("无法联名（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["联名热度 %.2f，收入 %d。" % [float(r.get("hype", 0.0)), int(r.get("revenue", 0))]], 0, "")
+
+func _fashion_limited(intent) -> Dictionary:
+	var item := _object_id(intent, "luxury_item")
+	var qty: int = int(_param_number(intent, "number", 100))
+	var r: Dictionary = host.fashion_limited_edition(item, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法限量发售（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["限量发售%s %d 件，单价 %d。" % [_luxury_name(item), int(r.get("qty", 0)), int(r.get("price", 0))]], 0, "")
+
+func _fashion_marketing(intent) -> Dictionary:
+	var kind := _object_id(intent, "fashion_marketing")
+	var cost: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.fashion_marketing(kind, cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法营销（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["品牌热度 %.1f。" % float(r.get("fame", 0.0))], 0, "")
+
+func _fashion_renew(intent) -> Dictionary:
+	var strategy := _object_id(intent, "renew_strategy")
+	var cost: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.fashion_renew(strategy, cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法复兴品牌（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["品牌相关度 %.1f。" % float(r.get("relevance", 0.0))], 0, "")
+
+func _fashion_authenticate(intent) -> Dictionary:
+	var item := _object_id(intent, "luxury_item")
+	var r: Dictionary = host.fashion_authenticate(item)
+	if not bool(r.get("ok", false)):
+		return _fail("无法鉴定（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["鉴定结果：%s（置信 %.2f）。" % [String(r.get("result", "")), float(r.get("confidence", 0.0))]], 0, "")
+
+func _discipline_name(discipline: String) -> String:
+	return String((host.fashion.DISCIPLINES.get(discipline, {}) as Dictionary).get("name", discipline))
+
+func _luxury_name(item: String) -> String:
+	return String((host.fashion.LUXURY_ITEMS.get(item, {}) as Dictionary).get("name", item))
+
+func _start_sports_career(intent) -> Dictionary:
+	var r: Dictionary = host.start_sports_career()
+	if not bool(r.get("ok", false)):
+		return _fail("无法开启运动生涯（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你加入了%s，签订职业合同，月薪 %d。" % [String(r.get("club", "")), int(r.get("wage", 0))]], 0, "")
+
+func _sports_match(intent) -> Dictionary:
+	var r: Dictionary = host.sports_play_match()
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "banned":
+			return _fail("你正处于禁赛期，无法出战。")
+		return _fail("无法出战（%s）。" % _reason_cn(reason))
+	return _ok(["比赛结束，%d:%d（%s）。" % [int(r.get("home_score", 0)), int(r.get("away_score", 0)), _sports_winner_text(String(r.get("winner", "")))]], 0, "")
+
+func _sports_winner_text(winner: String) -> String:
+	if winner == "draw":
+		return "平局"
+	return "胜者 %s" % winner
+
+func _sports_transfer(intent) -> Dictionary:
+	var fee: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.sports_transfer(fee)
+	if not bool(r.get("ok", false)):
+		return _fail("无法转会（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["转会完成，转会费 %d，经纪人佣金 %d。" % [int(r.get("fee", 0)), int(r.get("agent_fee", 0))]], 0, "")
+
+func _sports_sponsorship(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.sports_sponsorship("", amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法签约代言（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["签订代言合同，金额 %d。" % amount], 0, "")
+
+func _sports_rehab(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 30))
+	var r: Dictionary = host.sports_rehab(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法康复（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("recovered", false)):
+		return _ok(["伤病痊愈，状态恢复至 %.0f。" % float(r.get("form", 0.0))], 0, "")
+	return _ok(["康复中，仍需 %d 天。" % int(ceil(float(r.get("remaining_days", 0.0))))], 0, "")
+
+func _sports_doping_test(intent) -> Dictionary:
+	var r: Dictionary = host.sports_doping_test()
+	if not bool(r.get("ok", false)):
+		return _fail("无法检测（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("positive", false)):
+		return _ok(["药检阳性，禁赛 %d 天。" % int(r.get("ban_days", 0.0))], 0, "")
+	return _ok(["药检结果阴性。"], 0, "")
+
+func _sports_retire(intent) -> Dictionary:
+	var r: Dictionary = host.sports_retire()
+	if not bool(r.get("ok", false)):
+		return _fail("无法退役（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你宣布退役，退役金 %d。" % int(r.get("pension", 0))], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1755,6 +1912,30 @@ func _reason_cn(reason: String) -> String:
 			return "未知营销方式"
 		"channel_disabled":
 			return "该渠道未开通"
+		"no_brand":
+			return "尚未创立品牌"
+		"bad_discipline":
+			return "未知设计学科"
+		"no_design":
+			return "尚无作品，无法举办时装周"
+		"unknown_item":
+			return "未知奢侈品类目"
+		"no_endorser":
+			return "尚无代言人"
+		"no_career":
+			return "尚未开启运动生涯"
+		"already_career":
+			return "你已是一名职业运动员"
+		"injured":
+			return "伤病未愈，无法出战"
+		"disabled":
+			return "已因伤致残，无法出战"
+		"unknown_severity":
+			return "未知伤病等级"
+		"unknown_scandal":
+			return "未知违规类型"
+		"unknown_competition":
+			return "未知赛事"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1918,6 +2099,16 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.dining_certs_catalog(), text)
 		"marketing":
 			return _find_catalog_by_name(host.dining_marketing_catalog(), text)
+		"fashion_discipline":
+			return _find_catalog_by_name(host.fashion_disciplines_catalog(), text)
+		"positioning":
+			return _find_catalog_by_name(host.fashion_positionings_catalog(), text)
+		"luxury_item":
+			return _find_catalog_by_name(host.fashion_luxury_catalog(), text)
+		"fashion_marketing":
+			return _find_catalog_by_name(host.fashion_marketing_catalog(), text)
+		"season":
+			return _find_catalog_by_name(host.fashion_seasons_catalog(), text)
 		_:
 			return ""
 

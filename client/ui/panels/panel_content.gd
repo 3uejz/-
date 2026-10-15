@@ -568,9 +568,81 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 	var dng: Dictionary = context.get("dining", {}) if context.get("dining") is Dictionary else {}
 	if not dng.is_empty():
 		sections.append_array(_dining_sections(dng))
+	var fsh: Dictionary = context.get("fashion", {}) if context.get("fashion") is Dictionary else {}
+	if not fsh.is_empty():
+		sections.append_array(_fashion_sections(fsh))
+	var spo: Dictionary = context.get("sports", {}) if context.get("sports") is Dictionary else {}
+	if not spo.is_empty():
+		sections.append_array(_sports_sections(spo))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)
+
+## 时尚面板分区：品牌概况、潮流、作品、库存。
+static func _fashion_sections(fsh: Dictionary) -> Array:
+	var sections: Array = []
+	sections.append(_section("品牌概况", [
+		{"label": "名称", "value": String(fsh.get("name", ""))},
+		{"label": "定位", "value": String(fsh.get("positioning_name", ""))},
+		{"label": "资金", "value": str(int(fsh.get("money", 0)))},
+		{"label": "品牌价值", "value": str(int(fsh.get("brand_value", 0)))},
+		{"label": "溢价系数", "value": "%.2f" % float(fsh.get("premium", 1.0))},
+		{"label": "声誉", "value": "%.0f" % float(fsh.get("reputation", 0.0))},
+		{"label": "热度", "value": "%.0f" % float(fsh.get("fame", 0.0))},
+		{"label": "相关度", "value": "%.0f" % float(fsh.get("relevance", 0.0))},
+		{"label": "门店", "value": "%d 家" % int(fsh.get("stores", 0))},
+	]))
+	sections.append(_section("时尚潮流", [
+		{"label": "阶段", "value": String(fsh.get("trend_phase_name", ""))},
+		{"label": "热门学科", "value": String(fsh.get("trend_hot", ""))},
+	]))
+	var designs: Array = _items_of(fsh.get("designs", []))
+	if not designs.is_empty():
+		var rows: Array = []
+		for d in designs:
+			if d is Dictionary:
+				var dd: Dictionary = d
+				rows.append({"label": String(dd.get("discipline_name", "?")), "value": "评分 %.0f · %s" % [float(dd.get("score", 0.0)), String(dd.get("grade", ""))]})
+		sections.append(_section("作品", rows))
+	var inv: Array = _items_of(fsh.get("inventory", []))
+	if not inv.is_empty():
+		var irows: Array = []
+		for it in inv:
+			if it is Dictionary:
+				var id: Dictionary = it
+				irows.append({"label": String(id.get("key", "?")), "value": "%d 件 · 单价 %d" % [int(id.get("qty", 0)), int(id.get("price", 0))]})
+		sections.append(_section("库存", irows))
+	return sections
+
+## 体育面板分区：球员生涯、所属球会、积分榜。
+static func _sports_sections(spo: Dictionary) -> Array:
+	var sections: Array = []
+	sections.append(_section("球员生涯", [
+		{"label": "阶段", "value": String(spo.get("stage", ""))},
+		{"label": "年龄", "value": str(int(spo.get("age", 0)))},
+		{"label": "状态", "value": "%.0f" % float(spo.get("form", 0.0))},
+		{"label": "身价", "value": str(int(spo.get("market_value", 0)))},
+		{"label": "月薪", "value": str(int(spo.get("wage", 0)))},
+		{"label": "伤病", "value": "%d 天" % int(spo.get("injury_days", 0.0))},
+		{"label": "禁赛", "value": "%d 天" % int(spo.get("ban_days", 0.0))},
+		{"label": "出场", "value": str(int(spo.get("appearances", 0)))},
+		{"label": "进球", "value": str(int(spo.get("goals", 0)))},
+		{"label": "赞助", "value": "%d 家" % int(spo.get("sponsors", 0))},
+	]))
+	sections.append(_section("所属球会", [
+		{"label": "名称", "value": String(spo.get("club", ""))},
+		{"label": "级别", "value": String(spo.get("club_division", ""))},
+		{"label": "预算", "value": str(int(spo.get("budget", 0)))},
+	]))
+	var rows_list: Array = _items_of(spo.get("standings", []))
+	if not rows_list.is_empty():
+		var rows: Array = []
+		for row in rows_list:
+			if row is Dictionary:
+				var rd: Dictionary = row
+				rows.append({"label": String(rd.get("id", "?")), "value": "%d 场 · %d 分 · 净胜 %d" % [int(rd.get("played", 0)), int(rd.get("points", 0)), int(rd.get("goals_for", 0)) - int(rd.get("goals_against", 0))]})
+		sections.append(_section("积分榜", rows))
+	return sections
 
 ## 餐饮面板分区：门店概况、菜单、员工、产品、认证。
 static func _dining_sections(dng: Dictionary) -> Array:

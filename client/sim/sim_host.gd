@@ -45,6 +45,8 @@ const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
 const PrimaryScript = preload("res://sim/primary_industry.gd")
 const DiningScript = preload("res://sim/dining.gd")
+const FashionScript = preload("res://sim/fashion.gd")
+const SportsIndustryScript = preload("res://sim/sports_industry.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -134,6 +136,14 @@ var _hunter: Dictionary = {}         ## 狩猎运行时，入档 sim_runtime.pri
 var _ecology: Dictionary = {}        ## 生态可持续运行时，入档 sim_runtime.primary.ecology
 var dining                      ## 餐饮与食品工业（DiningSystem）
 var _restaurant: Dictionary = {}     ## 玩家餐厅运行时（门店为纯数据字典），入档 sim_runtime.dining
+var fashion                     ## 时尚、设计与奢侈品（FashionSystem）
+var _brand: Dictionary = {}          ## 时尚品牌运行时，入档 sim_runtime.fashion.brand
+var _trend: Dictionary = {}          ## 时尚潮流周期，入档 sim_runtime.fashion.trend
+var sports_industry             ## 体育产业与赛事（SportsIndustrySystem）
+var _pro_player: Dictionary = {}     ## 玩家职业运动员生涯，入档 sim_runtime.sports.player
+var _sports_club: Dictionary = {}    ## 玩家所属球会，入档 sim_runtime.sports.club
+var _sports_rival: Dictionary = {}   ## 联赛对手球会，入档 sim_runtime.sports.rival
+var _sports_league: Dictionary = {}  ## 地区联赛，入档 sim_runtime.sports.league
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -190,6 +200,9 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	primary_industry = PrimaryScript.new()
 	_ecology = primary_industry.new_ecology()
 	dining = DiningScript.new()
+	fashion = FashionScript.new()
+	_trend = fashion.new_trend()
+	sports_industry = SportsIndustryScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -314,6 +327,26 @@ func _ensure_world_geo() -> void:
 			var dnd: Dictionary = dn
 			if dnd.get("restaurant", null) is Dictionary and not (dnd["restaurant"] as Dictionary).is_empty():
 				_restaurant = dining.from_dict(dnd["restaurant"])
+		# 恢复时尚运行时（品牌/潮流）。
+		var fa: Variant = (state.sim_runtime as Dictionary).get("fashion", {})
+		if fa is Dictionary and not (fa as Dictionary).is_empty():
+			var fad: Dictionary = fa
+			if fad.get("brand", null) is Dictionary and not (fad["brand"] as Dictionary).is_empty():
+				_brand = fashion.from_dict(fad["brand"])
+			if fad.get("trend", null) is Dictionary and not (fad["trend"] as Dictionary).is_empty():
+				_trend = (fad["trend"] as Dictionary).duplicate(true)
+		# 恢复体育运行时（生涯/球会/联赛）。
+		var sp: Variant = (state.sim_runtime as Dictionary).get("sports", {})
+		if sp is Dictionary and not (sp as Dictionary).is_empty():
+			var spd: Dictionary = sp
+			if spd.get("player", null) is Dictionary and not (spd["player"] as Dictionary).is_empty():
+				_pro_player = (spd["player"] as Dictionary).duplicate(true)
+			if spd.get("club", null) is Dictionary and not (spd["club"] as Dictionary).is_empty():
+				_sports_club = (spd["club"] as Dictionary).duplicate(true)
+			if spd.get("rival", null) is Dictionary and not (spd["rival"] as Dictionary).is_empty():
+				_sports_rival = (spd["rival"] as Dictionary).duplicate(true)
+			if spd.get("league", null) is Dictionary and not (spd["league"] as Dictionary).is_empty():
+				_sports_league = (spd["league"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -2441,6 +2474,319 @@ func _persist_dining() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["dining"] = {"restaurant": dining.to_dict(_restaurant)}
+
+
+# --- D31 时尚、设计与奢侈品 ---
+
+func fashion_state() -> Dictionary:
+	return {"brand": _brand, "trend": _trend}
+
+func fashion_disciplines_catalog() -> Array:
+	var out: Array = []
+	for key in fashion.discipline_keys():
+		out.append({"id": String(key), "name": String((fashion.DISCIPLINES[key] as Dictionary).get("name", key))})
+	return out
+
+func fashion_positionings_catalog() -> Array:
+	var out: Array = []
+	for key in fashion.positioning_keys():
+		out.append({"id": String(key), "name": String((fashion.POSITIONING[key] as Dictionary).get("name", key))})
+	return out
+
+func fashion_luxury_catalog() -> Array:
+	var out: Array = []
+	for key in fashion.luxury_keys():
+		out.append({"id": String(key), "name": String((fashion.LUXURY_ITEMS[key] as Dictionary).get("name", key))})
+	return out
+
+func fashion_marketing_catalog() -> Array:
+	var out: Array = []
+	for key in fashion.MARKETING.keys():
+		out.append({"id": String(key), "name": String((fashion.MARKETING[key] as Dictionary).get("name", key))})
+	return out
+
+func fashion_seasons_catalog() -> Array:
+	var out: Array = []
+	for key in fashion.season_keys():
+		out.append({"id": String(key), "name": String((fashion.SEASONS[key] as Dictionary).get("name", key))})
+	return out
+
+func new_brand(positioning: String, money: int = 1000000) -> Dictionary:
+	if not _brand.is_empty():
+		return {"ok": false, "reason": "already_owns"}
+	if not fashion.POSITIONING.has(positioning):
+		positioning = "mass"
+	_brand = fashion.new_brand(money, {"positioning": positioning})
+	_trend = fashion.new_trend()
+	_persist_fashion()
+	return {"ok": true, "name": String(_brand.get("name", "")), "positioning": positioning}
+
+func fashion_design(discipline: String) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	if not fashion.DISCIPLINES.has(discipline):
+		return {"ok": false, "reason": "bad_discipline"}
+	var design: Dictionary = fashion.create_design(discipline, player().get("skills", []), _trend)
+	if not bool(design.get("ok", false)):
+		return design
+	(_brand["collections"] as Array).append(design)
+	_persist_fashion()
+	return design
+
+func fashion_week(season: String = "ss") -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var designs: Array = _brand.get("collections", [])
+	if designs.is_empty():
+		return {"ok": false, "reason": "no_design"}
+	var r: Dictionary = fashion.fashion_week(_brand, designs, {"season": season})
+	_persist_fashion()
+	return r
+
+func fashion_collab(partner_fame: float) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var r: Dictionary = fashion.collab(_brand, clampf(partner_fame, 0.0, 100.0))
+	_persist_fashion()
+	return r
+
+func fashion_limited_edition(item: String, qty: int) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	if not fashion.LUXURY_ITEMS.has(item):
+		return {"ok": false, "reason": "unknown_item"}
+	var r: Dictionary = fashion.limited_edition(_brand, item, maxi(1, qty))
+	_persist_fashion()
+	return r
+
+func fashion_open_store(cost: int) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var r: Dictionary = fashion.open_store(_brand, maxi(0, cost), current_region_id())
+	if bool(r.get("ok", false)):
+		_persist_fashion()
+	return r
+
+func fashion_marketing(kind: String, cost: int) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var r: Dictionary = fashion.run_marketing(_brand, kind, maxi(0, cost))
+	if bool(r.get("ok", false)):
+		_persist_fashion()
+	return r
+
+func fashion_renew(strategy: String, cost: int) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var r: Dictionary = fashion.renew_brand(_brand, strategy, maxi(0, cost))
+	if bool(r.get("ok", false)):
+		_persist_fashion()
+	return r
+
+func fashion_authenticate(item: String) -> Dictionary:
+	if not fashion.LUXURY_ITEMS.has(item):
+		return {"ok": false, "reason": "unknown_item"}
+	var entry: Dictionary = (_brand.get("inventory", {}) as Dictionary).get(item, {}) if not _brand.is_empty() else {}
+	var rec: Dictionary = {
+		"authentic": true,
+		"provenance": 0.8,
+		"value": int(entry.get("price", int((fashion.LUXURY_ITEMS[item] as Dictionary).get("base_value", 0)))),
+	}
+	return fashion.authenticate(rec)
+
+func fashion_panel_data() -> Dictionary:
+	if _brand.is_empty():
+		return {}
+	var out: Dictionary = {
+		"name": String(_brand.get("name", "")),
+		"positioning": String(_brand.get("positioning", "mass")),
+		"positioning_name": String((fashion.POSITIONING.get(String(_brand.get("positioning", "mass")), {}) as Dictionary).get("name", "")),
+		"money": int(_brand.get("money", 0)),
+		"reputation": float(_brand.get("reputation", 50.0)),
+		"fame": float(_brand.get("fame", 0.0)),
+		"relevance": float(_brand.get("relevance", 80.0)),
+		"brand_value": int(_brand.get("brand_value", 0)),
+		"premium": fashion.brand_premium(_brand),
+		"stores": (_brand.get("stores", []) as Array).size(),
+		"trend_phase": String(_trend.get("phase", "")),
+		"trend_phase_name": String(fashion.TREND_PHASE_NAMES.get(String(_trend.get("phase", "")), "")),
+		"trend_hot": String((fashion.DISCIPLINES.get(String(_trend.get("hot_discipline", "")), {}) as Dictionary).get("name", "")),
+	}
+	var design_rows: Array = []
+	for d in (_brand.get("collections", []) as Array):
+		design_rows.append({
+			"discipline": String(d.get("discipline", "")),
+			"discipline_name": String((fashion.DISCIPLINES.get(String(d.get("discipline", "")), {}) as Dictionary).get("name", "")),
+			"score": float(d.get("score", 0.0)), "grade": String(d.get("grade", "")),
+		})
+	out["designs"] = design_rows
+	var inv_rows: Array = []
+	for key in (_brand.get("inventory", {}) as Dictionary).keys():
+		var inv: Dictionary = (_brand["inventory"] as Dictionary)[key]
+		inv_rows.append({"key": String(key), "qty": int(inv.get("qty", 0)), "price": int(inv.get("price", 0))})
+	out["inventory"] = inv_rows
+	return out
+
+func _persist_fashion() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["fashion"] = {"brand": fashion.to_dict(_brand), "trend": _trend.duplicate(true)}
+
+
+func sports_state() -> Dictionary:
+	return {"player": _pro_player, "club": _sports_club, "rival": _sports_rival, "league": _sports_league}
+
+func sports_injuries_catalog() -> Array:
+	var out: Array = []
+	for key in sports_industry.INJURIES.keys():
+		out.append({"id": String(key), "name": String((sports_industry.INJURIES[key] as Dictionary).get("name", key))})
+	return out
+
+func sports_scandals_catalog() -> Array:
+	var out: Array = []
+	for key in sports_industry.SCANDALS.keys():
+		out.append({"id": String(key), "name": String((sports_industry.SCANDALS[key] as Dictionary).get("name", key))})
+	return out
+
+func sports_competitions_catalog() -> Array:
+	var out: Array = []
+	for key in sports_industry.COMPETITIONS.keys():
+		out.append({"id": String(key), "name": String((sports_industry.COMPETITIONS[key] as Dictionary).get("name", key))})
+	return out
+
+## 开启职业运动生涯：注册球会与地区联赛，签订首份职业合同。
+func start_sports_career() -> Dictionary:
+	if not _pro_player.is_empty():
+		return {"ok": false, "reason": "already_career"}
+	var pname := String(player().get("name", "我"))
+	_pro_player = sports_industry.new_pro("player", "home_club", {"name": pname, "age": int(player().get("age", 22))})
+	_sports_club = sports_industry.new_club("home_club", {"name": "本地球会"})
+	_sports_rival = sports_industry.new_club("rival_club", {"name": "同城劲敌"})
+	_sports_league = sports_industry.new_league("local_league", "top", {"name": "地区联赛"})
+	sports_industry.register_club(_sports_league, _sports_club)
+	sports_industry.register_club(_sports_league, _sports_rival)
+	sports_industry.schedule_season(_sports_league)
+	var wage: int = int(_pro_player.get("wage", 200000))
+	sports_industry.sign_pro_contract(_pro_player, _sports_club, wage, 3.0)
+	_sports_club["strength"] = sports_industry.club_strength(_sports_club)
+	_persist_sports()
+	return {"ok": true, "club": String(_sports_club.get("name", "")), "wage": wage}
+
+## 出战一场联赛：推演比分、计入积分榜并为球会结算门票收入。
+func sports_play_match() -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	if bool(_pro_player.get("disabled", false)):
+		return {"ok": false, "reason": "disabled"}
+	if float(_pro_player.get("injury_days", 0.0)) > 0.0:
+		return {"ok": false, "reason": "injured"}
+	if float(_pro_player.get("ban_days", 0.0)) > 0.0:
+		return {"ok": false, "reason": "banned"}
+	var r: Dictionary = sports_industry.play_match(_sports_league, _sports_club, _sports_rival)
+	_pro_player["appearances"] = int(_pro_player.get("appearances", 0)) + 1
+	if str(r.get("winner", "")) == String(_sports_club.get("id", "")):
+		_pro_player["goals"] = int(_pro_player.get("goals", 0)) + 1
+	_sports_club["budget"] = int(_sports_club.get("budget", 0)) + sports_industry.club_matchday_income(_sports_club)
+	sports_industry.market_value(_pro_player)
+	_persist_sports()
+	return r
+
+## 转会至对手球会：结算转会费与经纪人佣金，双方球会互换。
+func sports_transfer(fee: int) -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.transfer(_pro_player, _sports_rival, maxi(0, fee))
+	if bool(r.get("ok", false)):
+		var tmp: Dictionary = _sports_club
+		_sports_club = _sports_rival
+		_sports_rival = tmp
+		_sports_club["strength"] = sports_industry.club_strength(_sports_club)
+		_persist_sports()
+	return r
+
+## 签订代言合同：追加赞助商并抬升身价。
+func sports_sponsorship(brand: String, amount: int) -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var b := brand.strip_edges()
+	if b == "":
+		b = "赞助商"
+	var r: Dictionary = sports_industry.sponsorship(_pro_player, {"brand": b, "amount": maxi(0, amount)})
+	_persist_sports()
+	return r
+
+func sports_injure(severity: String) -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.injure(_pro_player, severity)
+	if bool(r.get("ok", false)):
+		_persist_sports()
+	return r
+
+## 运动康复：按天数恢复，清除伤病天数并部分恢复状态。
+func sports_rehab(days: float) -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.rehab(_pro_player, maxf(0.0, days))
+	_persist_sports()
+	return r
+
+## 兴奋剂检测：阳性则追加禁赛处罚。
+func sports_doping_test() -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.doping_test(_pro_player, 0.1)
+	if bool(r.get("positive", false)):
+		sports_industry.commit_scandal(_pro_player, "doping")
+	_persist_sports()
+	return r
+
+func sports_retire() -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.retire(_pro_player)
+	_persist_sports()
+	return r
+
+func sports_panel_data() -> Dictionary:
+	if _pro_player.is_empty():
+		return {}
+	var out: Dictionary = {
+		"stage": String(_pro_player.get("career_stage", "")),
+		"age": int(_pro_player.get("age", 0)),
+		"form": float(_pro_player.get("form", 0.0)),
+		"market_value": int(_pro_player.get("market_value", 0)),
+		"wage": int(_pro_player.get("wage", 0)),
+		"injury_days": float(_pro_player.get("injury_days", 0.0)),
+		"ban_days": float(_pro_player.get("ban_days", 0.0)),
+		"appearances": int(_pro_player.get("appearances", 0)),
+		"goals": int(_pro_player.get("goals", 0)),
+		"club": String(_sports_club.get("name", "")),
+		"club_division": String(_sports_club.get("division", "top")),
+		"budget": int(_sports_club.get("budget", 0)),
+		"sponsors": (_pro_player.get("sponsors", []) as Array).size(),
+	}
+	var rows: Array = []
+	for row in sports_industry.standings(_sports_league):
+		rows.append({
+			"id": String(row.get("id", "")),
+			"played": int(row.get("played", 0)),
+			"points": int(row.get("points", 0)),
+			"goals_for": int(row.get("goals_for", 0)),
+			"goals_against": int(row.get("goals_against", 0)),
+		})
+	out["standings"] = rows
+	return out
+
+func _persist_sports() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["sports"] = {
+		"player": _pro_player.duplicate(true),
+		"club": _sports_club.duplicate(true),
+		"rival": _sports_rival.duplicate(true),
+		"league": _sports_league.duplicate(true),
+	}
 
 
 

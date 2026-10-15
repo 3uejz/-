@@ -46,6 +46,8 @@ func run_tests() -> void:
 	_test_mining_panel()
 	_test_primary_panel()
 	_test_dining_panel()
+	_test_fashion_panel()
+	_test_sports_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -363,6 +365,39 @@ func _test_dining_panel() -> void:
 	check(_find_section(d, "员工").get("rows", []).size() >= 1, "员工分区有行")
 	check(_find_section(d, "预包装库存").get("rows", []).size() >= 1, "预包装库存分区有行")
 	check(_find_section(d, "食安认证").get("rows", []).size() >= 1, "食安认证分区有行")
+
+func _test_fashion_panel() -> void:
+	var ctx: Dictionary = {"fashion": {
+		"name": "无名品牌", "positioning": "luxury", "positioning_name": "奢侈",
+		"money": 1000000, "reputation": 50.0, "fame": 32.0, "relevance": 83.0,
+		"brand_value": 1500000, "premium": 3.0, "stores": 1,
+		"trend_phase": "emerging", "trend_phase_name": "新兴", "trend_hot": "服装设计",
+		"designs": [{"discipline": "apparel", "discipline_name": "服装设计", "score": 45.0, "grade": "mediocre"}],
+		"inventory": [{"key": "handbag", "qty": 10, "price": 60000}],
+	}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有时尚上下文非空")
+	check(_find_section(d, "品牌概况").get("rows", []).size() >= 1, "品牌概况分区有行")
+	check(_find_section(d, "时尚潮流").get("rows", []).size() >= 1, "时尚潮流分区有行")
+	check(_find_section(d, "作品").get("rows", []).size() >= 1, "作品分区有行")
+	check(_find_section(d, "库存").get("rows", []).size() >= 1, "库存分区有行")
+
+func _test_sports_panel() -> void:
+	var ctx: Dictionary = {"sports": {
+		"stage": "pro_contract", "age": 24, "form": 62.0, "market_value": 3000000,
+		"wage": 500000, "injury_days": 0.0, "ban_days": 0.0,
+		"appearances": 10, "goals": 4, "sponsors": 1,
+		"club": "本地球会", "club_division": "top", "budget": 12000000,
+		"standings": [
+			{"id": "home_club", "played": 10, "points": 21, "goals_for": 18, "goals_against": 10},
+			{"id": "rival_club", "played": 10, "points": 15, "goals_for": 12, "goals_against": 14},
+		],
+	}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有体育上下文非空")
+	check(_find_section(d, "球员生涯").get("rows", []).size() >= 1, "球员生涯分区有行")
+	check(_find_section(d, "所属球会").get("rows", []).size() >= 1, "所属球会分区有行")
+	check(_find_section(d, "积分榜").get("rows", []).size() >= 1, "积分榜分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

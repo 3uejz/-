@@ -110,6 +110,8 @@ const VERB_PANELS: Dictionary = {
 	"看渔场": "agriculture",
 	"看林场": "agriculture",
 	"看餐厅": "business",
+	"看品牌": "business",
+	"看球队": "business",
 	"看疫情": "epidemic", "公共卫生": "epidemic",
 	"看军旅": "war", "前线": "war",
 	"看行情": "market", "宏观": "market",
@@ -443,6 +445,11 @@ func _catalogs() -> Dictionary:
 		"dining_mode": _sim.dining_modes_catalog(),
 		"cert": _sim.dining_certs_catalog(),
 		"marketing": _sim.dining_marketing_catalog(),
+		"fashion_discipline": _sim.fashion_disciplines_catalog(),
+		"positioning": _sim.fashion_positionings_catalog(),
+		"luxury_item": _sim.fashion_luxury_catalog(),
+		"fashion_marketing": _sim.fashion_marketing_catalog(),
+		"season": _sim.fashion_seasons_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -773,6 +780,12 @@ func _panel_context() -> Dictionary:
 		var dng: Dictionary = _sim.dining_panel_data()
 		if not dng.is_empty():
 			context["dining"] = dng
+		var fsh: Dictionary = _sim.fashion_panel_data()
+		if not fsh.is_empty():
+			context["fashion"] = fsh
+		var spo: Dictionary = _sim.sports_panel_data()
+		if not spo.is_empty():
+			context["sports"] = spo
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

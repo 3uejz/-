@@ -71,6 +71,8 @@ func run_tests() -> void:
 	_test_mining_commands()
 	_test_primary_commands()
 	_test_dining_commands()
+	_test_fashion_commands()
+	_test_sports_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -437,6 +439,38 @@ func _test_dining_commands() -> void:
 	check(int(sim.dining_state().get("money", 0)) != money_before, "「营业」结算一日流水")
 	_main.submit("食品认证 卫生")
 	check((sim.dining_state().get("certifications", []) as Array).has("hygiene_a"), "「食品认证」取得认证")
+
+func _test_fashion_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看品牌")
+	check(_main.has_panel("business"), "「看品牌」打开经营面板")
+	_main.submit("建品牌 大众")
+	check(not (sim.fashion_state().get("brand", {}) as Dictionary).is_empty(), "「建品牌」创立品牌")
+	_main.submit("创作设计 服装设计")
+	check((sim.fashion_state().get("brand", {}) as Dictionary).get("collections", []).size() == 1, "「创作设计」产出作品")
+	_main.submit("时装周 秋冬季")
+	check(float((sim.fashion_state().get("brand", {}) as Dictionary).get("fame", 0.0)) > 30.0, "「时装周」提升热度")
+	_main.submit("限量发售 手袋 10")
+	check(not ((sim.fashion_state().get("brand", {}) as Dictionary).get("inventory", {}) as Dictionary).is_empty(), "「限量发售」入库")
+	_main.submit("联名 80")
+	check(int((sim.fashion_state().get("brand", {}) as Dictionary).get("money", 0)) > 1000000, "「联名」取得收入")
+
+func _test_sports_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看球队")
+	check(_main.has_panel("business"), "「看球队」打开经营面板")
+	_main.submit("开启球涯")
+	check(not (sim.sports_state().get("player", {}) as Dictionary).is_empty(), "「开启球涯」开启生涯")
+	_main.submit("比赛")
+	check(int((sim.sports_state().get("player", {}) as Dictionary).get("appearances", 0)) >= 1, "「比赛」记录出场")
+	_main.submit("转会 5000000")
+	check(String((sim.sports_state().get("player", {}) as Dictionary).get("club", "")) == "rival_club", "「转会」更换球会")
+	_main.submit("代言合同 800000")
+	check((sim.sports_state().get("player", {}) as Dictionary).get("sponsors", []).size() == 1, "「代言合同」增加赞助")
+	_main.submit("运动康复 30")
+	check(true, "「运动康复」可执行")
+	_main.submit("退役")
+	check(String((sim.sports_state().get("player", {}) as Dictionary).get("career_stage", "")) == "retire", "「退役」结束生涯")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
