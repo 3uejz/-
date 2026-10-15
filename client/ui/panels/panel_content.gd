@@ -1051,7 +1051,45 @@ static func agriculture(player: Dictionary, context: Dictionary, name_resolver: 
 	if String(d.get("coop", "")) != "":
 		mrows.append({"label": "合作社", "value": String(d.get("coop", ""))})
 	sections.append(_section("经营概况", mrows))
+	var prim: Dictionary = d.get("primary", {}) if d.get("primary") is Dictionary else {}
+	if not prim.is_empty():
+		sections.append_array(_primary_sections(prim))
 	return _ok(sections)
+
+## 农林牧渔分区：渔场、林场、狩猎、生态。
+static func _primary_sections(prim: Dictionary) -> Array:
+	var sections: Array = []
+	var fishery: Dictionary = prim.get("fishery", {}) if prim.get("fishery") is Dictionary else {}
+	if not fishery.is_empty():
+		sections.append(_section("渔场", [
+			{"label": "渔船", "value": "%d 艘" % int(fishery.get("boats", 0))},
+			{"label": "资源比例", "value": "%.2f" % float(fishery.get("resource_ratio", 1.0))},
+			{"label": "休渔", "value": ("进行中（余 %.0f 天）" % float(fishery.get("closed_days_left", 0.0))) if bool(fishery.get("closed_season", false)) else "未休渔"},
+		]))
+	var forest: Dictionary = prim.get("forest", {}) if prim.get("forest") is Dictionary else {}
+	if not forest.is_empty():
+		sections.append(_section("林场", [
+			{"label": "林分", "value": String(forest.get("forest_type_name", ""))},
+			{"label": "面积", "value": "%.0f 亩" % float(forest.get("area", 0.0))},
+			{"label": "林木", "value": "%.0f 株" % float(forest.get("trees", 0.0))},
+			{"label": "木材", "value": "%.1f" % float(forest.get("wood", 0.0))},
+			{"label": "火灾风险", "value": "%.2f" % float(forest.get("fire_risk", 0.0))},
+		]))
+	var hunter: Dictionary = prim.get("hunter", {}) if prim.get("hunter") is Dictionary else {}
+	if not hunter.is_empty():
+		sections.append(_section("狩猎", [
+			{"label": "狩猎许可", "value": ("已取得" if bool(hunter.get("license", false)) else "未取得")},
+			{"label": "通缉等级", "value": str(int(hunter.get("wanted_level", 0)))},
+			{"label": "资金", "value": str(int(hunter.get("money", 0)))},
+		]))
+	var ecology: Dictionary = prim.get("ecology", {}) if prim.get("ecology") is Dictionary else {}
+	if not ecology.is_empty():
+		sections.append(_section("生态", [
+			{"label": "资源比例", "value": "%.2f" % float(ecology.get("resource_ratio", 1.0))},
+			{"label": "土壤质量", "value": "%.2f" % float(ecology.get("soil_quality", 1.0))},
+			{"label": "水土流失", "value": "%.2f" % float(ecology.get("erosion", 0.0))},
+		]))
+	return sections
 
 static func late_tech(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

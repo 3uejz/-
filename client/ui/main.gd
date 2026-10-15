@@ -107,6 +107,8 @@ const VERB_PANELS: Dictionary = {
 	"看外贸": "business",
 	"看矿业": "business",
 	"看能源": "business",
+	"看渔场": "agriculture",
+	"看林场": "agriculture",
 	"看疫情": "epidemic", "公共卫生": "epidemic",
 	"看军旅": "war", "前线": "war",
 	"看行情": "market", "宏观": "market",
@@ -431,6 +433,9 @@ func _catalogs() -> Dictionary:
 		"mineral": _sim.mining_minerals_catalog(),
 		"energy_type": _sim.mining_energy_catalog(),
 		"energy_kind": _sim.mining_energy_kinds_catalog(),
+		"fish_species": _sim.fish_species_catalog(),
+		"game_species": _sim.game_species_catalog(),
+		"forest_type": _sim.forest_types_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -735,6 +740,9 @@ func _panel_context() -> Dictionary:
 		if not dis.is_empty():
 			context["disability"] = dis
 		var farm: Dictionary = _sim.farm_panel_data()
+		var prim: Dictionary = _sim.primary_panel_data()
+		if not prim.is_empty():
+			farm["primary"] = prim
 		if not farm.is_empty():
 			context["agriculture"] = farm
 		var dig: Dictionary = _sim.digital_panel_data()

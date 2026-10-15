@@ -69,6 +69,7 @@ func run_tests() -> void:
 	_test_manufacturing_commands()
 	_test_trade_commands()
 	_test_mining_commands()
+	_test_primary_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -394,6 +395,29 @@ func _test_mining_commands() -> void:
 	check(int((sim.mining_state().get("mine", {}) as Dictionary).get("revenue", 0)) > 0, "「卖矿」取得收入")
 	_main.submit("建能源项目 光伏")
 	check((sim.mining_panel_data().get("projects", []) as Array).size() >= 1, "「建能源项目」登记项目")
+
+func _test_primary_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看渔场")
+	check(_main.has_panel("agriculture"), "「看渔场」打开农业面板")
+	_main.submit("建渔场")
+	check(not (sim.primary_state().get("fishery", {}) as Dictionary).is_empty(), "「建渔场」建立渔场")
+	_main.submit("捕鱼 鳕鱼 100")
+	check(float((sim.primary_state().get("fishery", {}) as Dictionary).get("overfish", 0.0)) > 0.0, "「捕鱼」记录捕捞")
+	_main.submit("休渔")
+	check(bool((sim.primary_state().get("fishery", {}) as Dictionary).get("closed_season", false)), "「休渔」进入休渔期")
+	_main.submit("承包林场 用材林")
+	check(not (sim.primary_state().get("forest", {}) as Dictionary).is_empty(), "「承包林场」建立林场")
+	_main.submit("采伐 100")
+	check(float((sim.primary_state().get("forest", {}) as Dictionary).get("wood", 0.0)) > 0.0, "「采伐」入库木材")
+	var trees_before: float = float((sim.primary_state().get("forest", {}) as Dictionary).get("trees", 0.0))
+	_main.submit("造林 50")
+	var trees_after: float = float((sim.primary_state().get("forest", {}) as Dictionary).get("trees", 0.0))
+	check(trees_after > trees_before, "「造林」补植林木")
+	_main.submit("申请狩猎许可")
+	check(bool((sim.primary_state().get("hunter", {}) as Dictionary).get("license", false)), "「申请狩猎许可」取得许可")
+	_main.submit("狩猎 鹿 1")
+	check(int((sim.primary_state().get("hunter", {}) as Dictionary).get("money", 0)) > 0, "「狩猎」取得收益")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

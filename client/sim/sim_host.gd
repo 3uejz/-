@@ -43,6 +43,7 @@ const IpMediaScript = preload("res://sim/ip_media.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
+const PrimaryScript = preload("res://sim/primary_industry.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -125,6 +126,11 @@ var _shipments: Array = []           ## 外贸单据列表，入档 sim_runtime.
 var mining_energy                ## 矿业、能源与资源（MiningEnergySystem）
 var _mine: Dictionary = {}           ## 玩家矿场运行时，入档 sim_runtime.mining.mine
 var _energy: Dictionary = {}         ## 能源市场运行时（价格/期货/项目），入档 sim_runtime.mining.energy
+var primary_industry             ## 农林牧渔深化（PrimaryIndustrySystem）
+var _fishery: Dictionary = {}        ## 渔场运行时，入档 sim_runtime.primary.fishery
+var _forest: Dictionary = {}         ## 林场运行时，入档 sim_runtime.primary.forest
+var _hunter: Dictionary = {}         ## 狩猎运行时，入档 sim_runtime.primary.hunter
+var _ecology: Dictionary = {}        ## 生态可持续运行时，入档 sim_runtime.primary.ecology
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -178,6 +184,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	trade = TradeScript.new()
 	mining_energy = MiningScript.new()
 	_energy = mining_energy.new_energy_state()
+	primary_industry = PrimaryScript.new()
+	_ecology = primary_industry.new_ecology()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -284,6 +292,18 @@ func _ensure_world_geo() -> void:
 				_mine = (mnd["mine"] as Dictionary).duplicate(true)
 			if mnd.get("energy", null) is Dictionary and not (mnd["energy"] as Dictionary).is_empty():
 				_energy = (mnd["energy"] as Dictionary).duplicate(true)
+		# 恢复农林牧渔深化运行时（渔场/林场/狩猎/生态）。
+		var pr: Variant = (state.sim_runtime as Dictionary).get("primary", {})
+		if pr is Dictionary and not (pr as Dictionary).is_empty():
+			var prd: Dictionary = pr
+			if prd.get("fishery", null) is Dictionary and not (prd["fishery"] as Dictionary).is_empty():
+				_fishery = (prd["fishery"] as Dictionary).duplicate(true)
+			if prd.get("forest", null) is Dictionary and not (prd["forest"] as Dictionary).is_empty():
+				_forest = (prd["forest"] as Dictionary).duplicate(true)
+			if prd.get("hunter", null) is Dictionary and not (prd["hunter"] as Dictionary).is_empty():
+				_hunter = (prd["hunter"] as Dictionary).duplicate(true)
+			if prd.get("ecology", null) is Dictionary and not (prd["ecology"] as Dictionary).is_empty():
+				_ecology = (prd["ecology"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -2118,6 +2138,135 @@ func _persist_mining() -> void:
 	(state.sim_runtime as Dictionary)["mining"] = {"mine": _mine.duplicate(true), "energy": _energy.duplicate(true)}
 
 
+# --- D29 农林牧渔深化 ---
+
+func primary_state() -> Dictionary:
+	return {"fishery": _fishery, "forest": _forest, "hunter": _hunter, "ecology": _ecology}
+
+func fish_species_catalog() -> Array:
+	var out: Array = []
+	for key in primary_industry.FISH_SPECIES.keys():
+		out.append({"id": String(key), "name": String((primary_industry.FISH_SPECIES[key] as Dictionary).get("name", key))})
+	return out
+
+func game_species_catalog() -> Array:
+	var out: Array = []
+	for key in primary_industry.GAME_SPECIES.keys():
+		out.append({"id": String(key), "name": String((primary_industry.GAME_SPECIES[key] as Dictionary).get("name", key))})
+	return out
+
+func forest_types_catalog() -> Array:
+	var out: Array = []
+	for key in primary_industry.FOREST_TYPES.keys():
+		out.append({"id": String(key), "name": String((primary_industry.FOREST_TYPES[key] as Dictionary).get("name", key))})
+	return out
+
+func new_fishery() -> Dictionary:
+	if not _fishery.is_empty():
+		return {"ok": false, "reason": "already_owns"}
+	_fishery = primary_industry.new_fishery()
+	_persist_primary()
+	return {"ok": true, "boats": int(_fishery.get("boats", 0))}
+
+func fish_catch(species: String, amount: float) -> Dictionary:
+	if _fishery.is_empty():
+		return {"ok": false, "reason": "no_fishery"}
+	var r: Dictionary = primary_industry.catch_fish(_fishery, species, maxf(0.0, amount))
+	_persist_primary()
+	return r
+
+func start_closed_season() -> Dictionary:
+	if _fishery.is_empty():
+		return {"ok": false, "reason": "no_fishery"}
+	var r: Dictionary = primary_industry.start_closed_season(_fishery)
+	_persist_primary()
+	return r
+
+func new_forest(ftype: String = "timber") -> Dictionary:
+	if not _forest.is_empty():
+		return {"ok": false, "reason": "already_owns"}
+	if not primary_industry.FOREST_TYPES.has(ftype):
+		ftype = "timber"
+	_forest = primary_industry.new_forest(1000000, {"forest_type": ftype})
+	primary_industry.grant_forest_rights(_forest)
+	_persist_primary()
+	return {"ok": true, "forest_type": ftype, "name": String((primary_industry.FOREST_TYPES[ftype] as Dictionary).get("name", ftype))}
+
+func log_trees(amount: float) -> Dictionary:
+	if _forest.is_empty():
+		return {"ok": false, "reason": "no_forest"}
+	var r: Dictionary = primary_industry.log_trees(_forest, maxf(0.0, amount))
+	_persist_primary()
+	return r
+
+func reforest(amount: float) -> Dictionary:
+	if _forest.is_empty():
+		return {"ok": false, "reason": "no_forest"}
+	var r: Dictionary = primary_industry.reforest(_forest, maxf(0.0, amount))
+	_persist_primary()
+	return r
+
+func apply_hunting_license() -> Dictionary:
+	if _hunter.is_empty():
+		_hunter = primary_industry.new_hunter()
+	var r: Dictionary = primary_industry.hunting_license(_hunter)
+	_persist_primary()
+	return r
+
+func hunt(species: String, amount: float) -> Dictionary:
+	if _hunter.is_empty():
+		_hunter = primary_industry.new_hunter()
+	var r: Dictionary = primary_industry.hunt(_hunter, species, maxf(0.0, amount))
+	_persist_primary()
+	return r
+
+## 农林牧渔面板数据：渔场/林场/狩猎/生态。
+func primary_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _fishery.is_empty():
+		out["fishery"] = {
+			"boats": int(_fishery.get("boats", 0)),
+			"resource_ratio": float(_fishery.get("resource_ratio", 1.0)),
+			"closed_season": bool(_fishery.get("closed_season", false)),
+			"closed_days_left": float(_fishery.get("closed_days_left", 0.0)),
+			"overfish": float(_fishery.get("overfish", 0.0)),
+		}
+	if not _forest.is_empty():
+		var ftype: String = String(_forest.get("forest_type", "timber"))
+		out["forest"] = {
+			"forest_type": ftype,
+			"forest_type_name": String((primary_industry.FOREST_TYPES.get(ftype, {}) as Dictionary).get("name", ftype)),
+			"area": float(_forest.get("area", 0.0)),
+			"trees": float(_forest.get("trees", 0.0)),
+			"wood": float(_forest.get("wood", 0.0)),
+			"fire_risk": float(_forest.get("fire_risk", 0.0)),
+		}
+	if not _hunter.is_empty():
+		out["hunter"] = {"license": bool(_hunter.get("license", false)), "wanted_level": int(_hunter.get("wanted_level", 0)), "money": int(_hunter.get("money", 0))}
+	if not _ecology.is_empty():
+		out["ecology"] = {"resource_ratio": float(_ecology.get("resource_ratio", 1.0)), "soil_quality": float(_ecology.get("soil_quality", 1.0)), "erosion": float(_ecology.get("erosion", 0.0))}
+	return out
+
+func _primary_tick(before_minutes: int, after_minutes: int) -> void:
+	var days: float = float(maxi(0, after_minutes - before_minutes)) / 1440.0
+	if days <= 0.0:
+		return
+	if not _fishery.is_empty():
+		primary_industry.recover_resource(_fishery, days)
+	if not _forest.is_empty():
+		var growth: float = float((primary_industry.FOREST_TYPES.get(String(_forest.get("forest_type", "timber")), {}) as Dictionary).get("growth", 0.0))
+		_forest["trees"] = float(_forest.get("trees", 0.0)) + float(_forest.get("area", 0.0)) * growth * days
+	_persist_primary()
+
+func _persist_primary() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["primary"] = {
+		"fishery": _fishery.duplicate(true), "forest": _forest.duplicate(true),
+		"hunter": _hunter.duplicate(true), "ecology": _ecology.duplicate(true),
+	}
+
+
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:
 	var acct := account_id()
@@ -3062,6 +3211,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_advance_farm(before_minutes, now_minutes())
 	# 矿业/能源：能源价格按年周期演化（离线亦结算）。
 	_mining_tick(before_minutes, now_minutes())
+	# 农林牧渔：渔场资源恢复、林木按日生长。
+	_primary_tick(before_minutes, now_minutes())
 	_persist_mental()
 	_persist_spirituality()
 	_persist_language()

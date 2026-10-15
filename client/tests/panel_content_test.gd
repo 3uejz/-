@@ -44,6 +44,7 @@ func run_tests() -> void:
 	_test_manufacturing_panel()
 	_test_trade_panel()
 	_test_mining_panel()
+	_test_primary_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -329,6 +330,20 @@ func _test_mining_panel() -> void:
 	check(_find_section(d, "矿场概况").get("rows", []).size() >= 1, "矿场概况分区有行")
 	check(_find_section(d, "能源价格").get("rows", []).size() >= 1, "能源价格分区有行")
 	check(_find_section(d, "新能源项目").get("rows", []).size() >= 1, "新能源项目分区有行")
+
+func _test_primary_panel() -> void:
+	var ctx: Dictionary = {"agriculture": {"primary": {
+		"fishery": {"boats": 2, "resource_ratio": 0.8, "closed_season": false, "overfish": 200.0},
+		"forest": {"forest_type_name": "用材林", "area": 100.0, "trees": 9850.0, "wood": 100.0, "fire_risk": 0.05},
+		"hunter": {"license": true, "wanted_level": 0, "money": 105600},
+		"ecology": {"resource_ratio": 0.9, "soil_quality": 0.95, "erosion": 0.02},
+	}}}
+	var d: Dictionary = PanelContentScript.build("agriculture", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有农林牧渔上下文非空")
+	check(_find_section(d, "渔场").get("rows", []).size() >= 1, "渔场分区有行")
+	check(_find_section(d, "林场").get("rows", []).size() >= 1, "林场分区有行")
+	check(_find_section(d, "狩猎").get("rows", []).size() >= 1, "狩猎分区有行")
+	check(_find_section(d, "生态").get("rows", []).size() >= 1, "生态分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

@@ -276,6 +276,23 @@ func _dispatch(intent) -> Dictionary:
 			return _sell_metal(intent)
 		"建能源项目":
 			return _build_energy_project(intent)
+		# 农林牧渔深化（D29）
+		"建渔场":
+			return _new_fishery(intent)
+		"捕鱼":
+			return _fish_catch(intent)
+		"休渔":
+			return _start_closed_season(intent)
+		"承包林场":
+			return _new_forest(intent)
+		"采伐":
+			return _log_trees(intent)
+		"造林":
+			return _reforest(intent)
+		"申请狩猎许可":
+			return _apply_hunting_license(intent)
+		"狩猎":
+			return _hunt(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1400,6 +1417,71 @@ func _build_energy_project(intent) -> Dictionary:
 		return _fail("无法建设能源项目（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["建成%s，装机 %.1f。" % [String(r.get("name", kind)), float(r.get("capacity", 0.0))]], 0, "")
 
+# --- 农林牧渔深化（D29） ---
+
+func _new_fishery(intent) -> Dictionary:
+	var r: Dictionary = host.new_fishery()
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办渔场（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你开办了渔场，拥有 %d 艘渔船。" % int(r.get("boats", 0))], 0, "")
+
+func _fish_catch(intent) -> Dictionary:
+	var species := _object_id(intent, "fish_species")
+	var amount: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.fish_catch(species, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法捕鱼（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["捕捞%s %.1f，资源比例 %.2f。" % [_fish_species_name(species), float(r.get("caught", 0.0)), float(r.get("resource_ratio", 1.0))]], 0, "")
+
+func _start_closed_season(intent) -> Dictionary:
+	var r: Dictionary = host.start_closed_season()
+	if not bool(r.get("ok", false)):
+		return _fail("无法进入休渔（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["进入休渔期，持续 %.0f 天。" % float(r.get("closed_days_left", 0.0))], 0, "")
+
+func _new_forest(intent) -> Dictionary:
+	var ftype := _object_id(intent, "forest_type")
+	var r: Dictionary = host.new_forest(ftype)
+	if not bool(r.get("ok", false)):
+		return _fail("无法承包林场（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你承包了%s。" % String(r.get("name", ftype))], 0, "")
+
+func _log_trees(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.log_trees(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法采伐（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["采伐林木 %.0f，入库木材 %.1f。" % [float(r.get("logged", 0.0)), float(r.get("timber", 0.0))]], 0, "")
+
+func _reforest(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.reforest(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法造林（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["补植林木，现有 %.0f 株。" % float(r.get("trees", 0.0))], 0, "")
+
+func _apply_hunting_license(intent) -> Dictionary:
+	var r: Dictionary = host.apply_hunting_license()
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请狩猎许可（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你取得了狩猎许可，缴纳 %d。" % int(r.get("fee", 0))], 0, "")
+
+func _hunt(intent) -> Dictionary:
+	var species := _object_id(intent, "game_species")
+	var amount: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.hunt(species, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法狩猎（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("legal", true)):
+		return _ok(["无证狩猎，被查获，通缉等级升至 %d。" % int((r.get("violation", {}) as Dictionary).get("wanted_level", 0))], 0, "")
+	return _ok(["猎获%s %.1f，收入 %d。" % [_game_species_name(species), float(r.get("harvested", 0.0)), int(r.get("revenue", 0))]], 0, "")
+
+func _fish_species_name(species: String) -> String:
+	return String(host.primary_industry.FISH_SPECIES.get(species, {}).get("name", species))
+
+func _game_species_name(species: String) -> String:
+	return String(host.primary_industry.GAME_SPECIES.get(species, {}).get("name", species))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1530,6 +1612,22 @@ func _reason_cn(reason: String) -> String:
 			return "矿藏已枯竭"
 		"unknown_energy_kind":
 			return "未知新能源类型"
+		"already_owns":
+			return "你已拥有该项产业"
+		"no_fishery":
+			return "尚未开办渔场"
+		"no_forest":
+			return "尚未承包林场"
+		"no_rights":
+			return "尚未取得林权"
+		"gun_policy_forbids":
+			return "枪支政策不允许"
+		"unknown_species":
+			return "未知物种"
+		"closed_season":
+			return "正处于休渔期"
+		"protected_area":
+			return "在保护区内违法"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1675,6 +1773,12 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.mining_minerals_catalog(), text)
 		"energy_kind":
 			return _find_catalog_by_name(host.mining_energy_kinds_catalog(), text)
+		"fish_species":
+			return _find_catalog_by_name(host.fish_species_catalog(), text)
+		"game_species":
+			return _find_catalog_by_name(host.game_species_catalog(), text)
+		"forest_type":
+			return _find_catalog_by_name(host.forest_types_catalog(), text)
 		_:
 			return ""
 

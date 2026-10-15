@@ -48,6 +48,7 @@ func run_tests() -> void:
 	_test_manufacturing_runtime()
 	_test_trade_runtime()
 	_test_mining_runtime()
+	_test_primary_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -791,4 +792,36 @@ func _test_mining_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.mining_state().get("mine", {}) as Dictionary).is_empty(), "读档恢复矿场")
 	check(not reloaded.mining_panel_data().is_empty(), "矿业面板数据非空")
+
+
+func _test_primary_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(31)
+	var host = SimHostScript.new(state, 31)
+	host.bind(state)
+	check(host.fish_species_catalog().size() >= 3, "鱼种含鳕鱼/金枪鱼/虾")
+	check(host.game_species_catalog().size() >= 3, "猎物含鹿/野猪/野兔")
+	check(host.forest_types_catalog().size() >= 3, "林分含用材林/防护林/经济林")
+	# 渔场。
+	check(bool(host.new_fishery().get("ok", false)), "开办渔场成功")
+	var catch1: Dictionary = host.fish_catch("cod", 100.0)
+	check(bool(catch1.get("ok", false)) and float(catch1.get("caught", 0.0)) > 0.0, "捕捞产出渔获")
+	check(bool(host.start_closed_season().get("ok", false)), "进入休渔期")
+	check(not bool(host.fish_catch("cod", 10.0).get("ok", false)), "休渔期禁止捕捞")
+	# 林场。
+	check(bool(host.new_forest("timber").get("ok", false)), "承包林场成功")
+	var log_r: Dictionary = host.log_trees(100.0)
+	check(bool(log_r.get("ok", false)) and float(log_r.get("timber", 0.0)) > 0.0, "采伐产出木材")
+	check(bool(host.reforest(50.0).get("ok", false)), "造林成功")
+	# 狩猎。
+	check(bool(host.apply_hunting_license().get("ok", false)), "申请狩猎许可成功")
+	var hunt_r: Dictionary = host.hunt("deer", 1.0)
+	check(bool(hunt_r.get("ok", false)) and bool(hunt_r.get("legal", false)), "持证合法狩猎")
+	# 持久化与读档恢复。
+	host._persist_primary()
+	check(state.sim_runtime.get("primary", null) is Dictionary, "农林牧渔运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 31)
+	reloaded.bind(state)
+	check(not (reloaded.primary_state().get("fishery", {}) as Dictionary).is_empty(), "读档恢复渔场")
+	check(not reloaded.primary_panel_data().is_empty(), "农林牧渔面板数据非空")
 

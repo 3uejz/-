@@ -115,7 +115,8 @@
 - **待办**：矿难/职业病的健康与法律后果、资源城市衰退与战略管制的宏观联动、期货/长约的独立指令入口、能源价格作为宏观输入至 worldsim 的接线待补。
 
 ### D29 农林牧渔深化
-- 渔业资源恢复/休渔无数值；林权/碳汇无计价；枪支政策归属与狩猎许可接口未定义；缺休渔/护林/造林动词与测试。
+- **已接线**：`PrimaryIndustrySystem`（`primary_industry.gd`）鱼种表（鳕鱼/金枪鱼/虾，含价格/恢复率）；渔场与船队（`new_fishery()`/`add_boat()`）；休渔（`start_closed_season()`/`is_closed_season()`，违规捕捞追责 `closed_season_violation()`）；捕捞与资源恢复（`catch_fish()`/`recover_resource()`，按资源比例、过度捕捞使恢复变慢）；水产养殖（`harvest_aquaculture()`）；风暴（`storm_check()`）；林分表（用材林/防护林/经济林，含亩产/生长/碳汇）；林权（`new_forest()`/`grant_forest_rights()`）；采伐与造林（`log_trees()`/`reforest()`）；护林防火（`patrol_fire()`/`fire_check()`）；木材市场与碳汇（`timber_market()`/`carbon_sink()`）；狩猎（`new_hunter()`/`hunting_license()`/`hunt()`/`illegal_hunt()`/`legal_consequence()`，含罚款与通缉等级）；生态（`new_ecology()`/`over_develop()`）。运行时经 `GameState.sim_runtime.primary`（`fishery`/`forest`/`hunter`/`ecology`）持久化。`SimHost` 接线 `primary_state()`/`fish_species_catalog()`/`game_species_catalog()`/`forest_types_catalog()`/`new_fishery()`/`fish_catch()`/`start_closed_season()`/`new_forest()`/`log_trees()`/`reforest()`/`apply_hunting_license()`/`hunt()`/`primary_panel_data()`，并在 `advance()` 中按周期 tick。UI：复用「农业与乡土」面板（`agriculture`）增补渔场/林场/狩猎/生态分区（`context["agriculture"]["primary"]`）；指令 `建渔场`/`捕鱼 <鱼种> [数量]`/`休渔`/`承包林场 [林分]`/`采伐 [数量]`/`造林 [数量]`/`申请狩猎许可`/`狩猎 <猎物> [数量]` 与「看渔场/看林场」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `primary_industry` 自有测试覆盖）。
+- **待办**：枪支政策归属系统与狩猎许可的跨域联动、林权碳汇向宏观碳市场接线、生态退化对 D22 农业与 D41 环境的反馈待补。
 
 ### D30 餐饮与食品工业
 - 菜谱/成本毛利/定价/翻台率无公式；门店/连锁无状态；食安事故链无参数；依赖缺失的经营面板；无子测试。
