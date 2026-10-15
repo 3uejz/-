@@ -41,6 +41,7 @@ func run_tests() -> void:
 	_test_org_runtime()
 	_test_language_runtime()
 	_test_disability_runtime()
+	_test_agriculture_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -517,4 +518,43 @@ func _test_disability_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.disability_state().get("conditions", []) as Array).is_empty(), "读档恢复残障状态")
 	check_eq(str(reloaded.disability_state().get("guardian", "")), "child_1", "读档恢复监护人")
+
+
+func _test_agriculture_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	var crops: Array = host.agri_crops_catalog()
+	check(crops.size() >= 6, "作物目录含 6 种作物")
+	# 承包土地。
+	var land: Dictionary = host.acquire_farm_land(5.0, "grain", "contract", 100000)
+	check(bool(land.get("ok", false)), "承包土地成功")
+	# 播种并推进至成熟。
+	var sow: Dictionary = host.plant_crop(0, "rice")
+	check(bool(sow.get("ok", false)), "播种水稻成功")
+	host.grow_farm(130.0)
+	var stage: String = String((host.farm_state().get("plots", [])[0] as Dictionary).get("stage", ""))
+	check_eq(stage, "mature", "生长 130 天水稻成熟")
+	# 收割入仓。
+	var hv: Dictionary = host.harvest_crop(0)
+	check(bool(hv.get("ok", false)), "收割成功")
+	check(float(hv.get("yield", 0.0)) > 0.0, "收割产量为正")
+	# 售卖。
+	var money_before: int = int(host.farm_state().get("money", 0))
+	var sell: Dictionary = host.sell_produce("rice", 100.0, "market")
+	check(bool(sell.get("ok", false)), "售卖水稻成功")
+	check(int(host.farm_state().get("money", 0)) > money_before, "售卖后资金增加")
+	# 养殖与补贴。
+	var add: Dictionary = host.add_farm_livestock("pig", 10)
+	check(bool(add.get("ok", false)), "增加生猪存栏")
+	var sub: Dictionary = host.apply_farm_subsidy(50000)
+	check(bool(sub.get("ok", false)), "申领农业补贴成功")
+	# 持久化并读档恢复。
+	host._persist_farm()
+	check(state.sim_runtime.get("farm", null) is Dictionary, "农场运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check((reloaded.farm_state().get("land", []) as Array).size() >= 1, "读档恢复土地")
+	check((reloaded.farm_state().get("livestock", []) as Array).size() >= 1, "读档恢复牲畜")
 

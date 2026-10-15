@@ -118,6 +118,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = language(player, context, name_resolver)
 		"disability":
 			data = disability(player, context, name_resolver)
+		"agriculture":
+			data = agriculture(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -879,6 +881,55 @@ static func disability(player: Dictionary, context: Dictionary, name_resolver: C
 	if String(d.get("guardian", "")) != "":
 		grows.append({"label": "监护人", "value": String(d.get("guardian", ""))})
 	sections.append(_section("监护与决策", grows))
+	return _ok(sections)
+
+static func agriculture(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("农业与乡土", "尚未生成角色数据")
+	var d: Dictionary = context.get("agriculture", {}) if context.get("agriculture") is Dictionary else {}
+	if d.is_empty():
+		return _empty("农业与乡土", "暂无农事记录；可承包/购买土地、播种、养殖与售卖农产")
+	var sections: Array = []
+	var lands: Array = _items_of(d.get("lands", []))
+	var lrows: Array = []
+	for l in lands:
+		if l is Dictionary:
+			var ld: Dictionary = l
+			lrows.append({"label": "%s %.1f 亩（%s）" % [String(ld.get("use", "?")), float(ld.get("area", 0.0)), String(ld.get("id", ""))], "value": "地力 %.0f%% · 估值 %d" % [float(ld.get("fertility", 0.0)) * 100.0, int(ld.get("value", 0))]})
+	if not lrows.is_empty():
+		sections.append(_section("土地", lrows))
+	var plots: Array = _items_of(d.get("plots", []))
+	var prows: Array = []
+	for p in plots:
+		if p is Dictionary:
+			var pd: Dictionary = p
+			prows.append({"label": String(pd.get("name", "?")), "value": "%s · %.0f/%.0f 天" % [String(pd.get("stage", "")), float(pd.get("elapsed", 0.0)), float(pd.get("growth_days", 0.0))]})
+	if not prows.is_empty():
+		sections.append(_section("在田作物", prows))
+	var livestock: Array = _items_of(d.get("livestock", []))
+	var vrows: Array = []
+	for a in livestock:
+		if a is Dictionary:
+			var ad: Dictionary = a
+			vrows.append({"label": String(ad.get("name", "?")), "value": "%d 头/只" % int(ad.get("count", 0))})
+	if not vrows.is_empty():
+		sections.append(_section("养殖", vrows))
+	var inventory: Array = _items_of(d.get("inventory", []))
+	var irows: Array = []
+	for it in inventory:
+		if it is Dictionary:
+			var id: Dictionary = it
+			irows.append({"label": String(id.get("name", "?")), "value": "%.1f" % float(id.get("count", 0.0))})
+	if not irows.is_empty():
+		sections.append(_section("仓储", irows))
+	var mrows: Array = []
+	mrows.append({"label": "农场资金", "value": "%d" % int(d.get("money", 0))})
+	mrows.append({"label": "土地估值", "value": "%d" % int(d.get("land_value", 0))})
+	mrows.append({"label": "本年收入", "value": "%d" % int(d.get("year_income", 0))})
+	mrows.append({"label": "累计补贴", "value": "%.0f" % float(d.get("subsidy", 0.0))})
+	if String(d.get("coop", "")) != "":
+		mrows.append({"label": "合作社", "value": String(d.get("coop", ""))})
+	sections.append(_section("经营概况", mrows))
 	return _ok(sections)
 
 static func _crisis_name(key: String) -> String:

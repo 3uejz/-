@@ -1,6 +1,6 @@
 extends "res://tests/test_base.gd"
 ## 面板入口与动词注册完整性检查（任务 51.1）。
-## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；42 面板与 ui.md 一致。
+## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；43 面板与 ui.md 一致。
 
 const CoverageScript = preload("res://command/verb_coverage.gd")
 const RegistryScript = preload("res://command/verb_registry.gd")
@@ -34,7 +34,8 @@ func _test_verb_registry_integrity() -> void:
 	check(int(report["registered"]) > 0, "有核心动词已注册")
 	check((report["missing"] as Array).size() > 0, "完整基线尚未全部导入（核心种子为准）")
 	check(registry.has("帮助"), "核心动词「帮助」已注册")
-	check(not registry.has("播种"), "未导入动词「播种」暂缺")
+	check(registry.has("播种"), "核心动词「播种」已注册")
+	check(not registry.has("参军"), "未导入动词「参军」暂缺")
 	var issues: Array = CoverageScript.registry_issues(registry, _seed_keys())
 	check(issues.is_empty(), "注册表结构完整: %s" % str(issues))
 
@@ -50,6 +51,6 @@ func _test_panel_spec_matches() -> void:
 	var panel_registry = PanelRegistryScript.new()
 	var report: Dictionary = CoverageScript.panel_report(panel_registry)
 	var spec: Array = report["spec"]
-	check_eq(spec.size(), 42, "ui.md 面板清单 42 项")
+	check_eq(spec.size(), 43, "ui.md 面板清单 43 项")
 	check((report["missing"] as Array).is_empty(), "规格面板均已注册: %s" % str(report["missing"]))
 	check((report["extra"] as Array).is_empty(), "注册面板均在规格内: %s" % str(report["extra"]))

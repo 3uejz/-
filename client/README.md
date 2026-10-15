@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 42 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 43 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -88,6 +88,8 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 语言与文化（`sim/language.gd` `LanguageSystem`）：语言独立类型（0..100），五种语言分口语/听力/读写三项（权重 0.4/0.3/0.3），三种学习方法（课程/环境沉浸/自学）水平越高增益越小，长期不用按天遗忘（30 天宽限）；考试发证、专业术语门槛与移民/外交/翻译职业解锁、六大节日修正（商铺/交通/社交/消费/心情）、五种文化距离与适应/冲击曲线；`学语言 <语言> [时长]`/`沉浸 <语言> [天数]`/`语言考试 <语言>`/`适应文化 <文化>` 指令经 `SimHost.study_language()`/`immerse_language()`/`take_language_exam()`/`adapt_culture()` 结算；语言档案随 `GameState.sim_runtime.language`、文化适应随 `GameState.sim_runtime.culture` 持久化；`advance()` 按日衰减语言。「语言与文化」面板渲染语言能力/语言证书/文化适应/节日民俗。
 
 - 残障与养老（`sim/disability_elderly.gd` `DisabilityElderlySystem`）：残障四来源/四类型/轻中重三级以移动能力统一修正受限动词与就业/社交歧视；六类辅具与康复训练部分恢复；养老三模式（居家/社区/机构）含退休金/社保/临终关怀；认知障碍影响决策能力与遗嘱效力并引入监护制度；`装辅具 <辅具>`/`康复训练`/`无障碍改造`/`选养老 <模式>`/`临终关怀`/`指定监护 <监护人>` 指令经 `SimHost.fit_disability_device()`/`disability_surgery()`/`set_accessible_place()`/`choose_care_mode()`/`hospice_care()`/`establish_guardianship()` 结算；运行态随 `GameState.sim_runtime.disability` 持久化；「残障与养老」面板渲染残障状态/辅具与康复/养老与社保/监护与决策。
+
+- 农业与乡土（`sim/agriculture.gd` `AgricultureSystem`）：六种作物（粮/经济/蔬/药四类用途，各有生长天数/产量/水需/地力消耗/保鲜率）与五种牲畜（畜牧/家禽/水产，含日粮/繁殖率/疫病风险），四种土地取得方式（承包/购买/流转/租赁）与地力/轮作/估值；`承包土地 [面积]`/`播种 <作物>`/`收割`/`养畜 <牲畜>`/`卖粮 <作物>`/`农业补贴` 指令经 `SimHost.acquire_farm_land()`/`plant_crop()`/`harvest_crop()`/`add_farm_livestock()`/`sell_produce()`/`apply_farm_subsidy()` 结算，收成受土壤/气候/灾害/技能/技术/田间管理影响；`advance()` 按日推进作物生长与仓储损耗；运行态随 `GameState.sim_runtime.farm` 持久化；「农业与乡土」面板渲染土地/在田作物/养殖/仓储/经营概况。
 
 ## 面板与表现层
 

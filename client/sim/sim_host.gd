@@ -36,6 +36,7 @@ const SpiritualityScript = preload("res://sim/spirituality.gd")
 const OrganizationScript = preload("res://sim/organizations.gd")
 const LanguageScript = preload("res://sim/language.gd")
 const DisabilityElderlyScript = preload("res://sim/disability_elderly.gd")
+const AgricultureScript = preload("res://sim/agriculture.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -100,6 +101,8 @@ var _culture: Dictionary = {}        ## 文化适应状态（适应度/冲击）
 var disability                  ## 残障与养老（DisabilityElderlySystem）
 var _disability: Dictionary = {}     ## 残障/养老运行时（残障/辅具/养老/监护），入档 sim_runtime.disability
 var _care_incident: Dictionary = {}  ## 最近一次护工事件（供追责）
+var agriculture                 ## 农业与乡土（AgricultureSystem）
+var _farm: Dictionary = {}           ## 农场运行时（土地/地块/牲畜/仓储/订单），入档 sim_runtime.farm
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -142,6 +145,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_culture = language.new_cultural_state()
 	disability = DisabilityElderlyScript.new()
 	_disability = disability.new_state()
+	agriculture = AgricultureScript.new()
+	_farm = agriculture.new_farm()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -209,6 +214,10 @@ func _ensure_world_geo() -> void:
 		var dr: Variant = (state.sim_runtime as Dictionary).get("disability", {})
 		if dr is Dictionary and not (dr as Dictionary).is_empty():
 			_disability = disability.from_dict(dr)
+		# 恢复农场运行时（土地/地块/牲畜/仓储/订单）。
+		var fr: Variant = (state.sim_runtime as Dictionary).get("farm", {})
+		if fr is Dictionary and not (fr as Dictionary).is_empty():
+			_farm = agriculture.from_dict(fr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1005,6 +1014,148 @@ func _persist_disability() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["disability"] = disability.to_dict(_disability)
+
+
+# --- 农业与乡土（D22） ---
+
+func farm_state() -> Dictionary:
+	return _farm
+
+## 作物目录（供解析器链接「播种 <作物>」）。
+func agri_crops_catalog() -> Array:
+	var out: Array = []
+	for key in agriculture.CROPS.keys():
+		var d: Dictionary = agriculture.CROPS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 牲畜目录（供解析器链接「养畜 <牲畜>」）。
+func agri_livestock_catalog() -> Array:
+	var out: Array = []
+	for key in agriculture.LIVESTOCK.keys():
+		var d: Dictionary = agriculture.LIVESTOCK[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 取得土地（承包/购买/流转/租赁）。
+func acquire_farm_land(area: float, use: String, mode: String, price_per_area: int, opts: Dictionary = {}) -> Dictionary:
+	var r: Dictionary = agriculture.acquire_land(_farm, area, use, mode, price_per_area, opts)
+	if bool(r.get("ok", false)):
+		_persist_farm()
+	return r
+
+## 在指定地块播种。
+func plant_crop(land_index: int, crop_key: String, opts: Dictionary = {}) -> Dictionary:
+	var r: Dictionary = agriculture.plant(_farm, land_index, crop_key, opts)
+	if bool(r.get("ok", false)):
+		_persist_farm()
+	return r
+
+## 推进作物生长（按天）。
+func grow_farm(days: float) -> Dictionary:
+	var r: Dictionary = agriculture.grow(_farm, days)
+	return r
+
+## 收割指定地块。
+func harvest_crop(plot_index: int, opts: Dictionary = {}) -> Dictionary:
+	var r: Dictionary = agriculture.harvest(_farm, plot_index, opts)
+	if bool(r.get("ok", false)):
+		_persist_farm()
+	return r
+
+## 增加牲畜存栏。
+func add_farm_livestock(animal: String, count: int) -> Dictionary:
+	var r: Dictionary = agriculture.add_livestock(_farm, animal, count)
+	if bool(r.get("ok", false)):
+		_persist_farm()
+	return r
+
+## 喂养牲畜。
+func feed_farm_livestock(days: float, feed_available: float) -> Dictionary:
+	var r: Dictionary = agriculture.feed_livestock(_farm, days, feed_available)
+	_persist_farm()
+	return r
+
+## 售卖农产品/牲畜。
+func sell_produce(item: String, amount: float, channel: String = "market", opts: Dictionary = {}) -> Dictionary:
+	var r: Dictionary = agriculture.sell(_farm, item, amount, channel, opts)
+	if bool(r.get("ok", false)):
+		_persist_farm()
+	return r
+
+## 申领农业补贴。
+func apply_farm_subsidy(amount: int) -> Dictionary:
+	var r: Dictionary = agriculture.apply_subsidy(_farm, amount)
+	_persist_farm()
+	return r
+
+## 农业与乡土面板数据。
+func farm_panel_data() -> Dictionary:
+	var lands: Array = []
+	for l in (_farm.get("land", []) as Array):
+		if not (l is Dictionary):
+			continue
+		var ld: Dictionary = l
+		lands.append({
+			"id": String(ld.get("id", "")),
+			"area": snappedf(float(ld.get("area", 0.0)), 0.1),
+			"use": String(agriculture.LAND_MODE_NAMES.get(String(ld.get("mode", "")), ld.get("mode", ""))),
+			"fertility": snappedf(float(ld.get("fertility", 0.0)), 0.01),
+			"value": int(ld.get("asset_value", 0)),
+		})
+	var plots: Array = []
+	for p in (_farm.get("plots", []) as Array):
+		if not (p is Dictionary):
+			continue
+		var pd: Dictionary = p
+		var crop: Dictionary = agriculture.crop_def(String(pd.get("crop", "")))
+		plots.append({
+			"name": String(crop.get("name", pd.get("crop", ""))),
+			"stage": String(pd.get("stage", "")),
+			"elapsed": snappedf(float(pd.get("elapsed", 0.0)), 0.1),
+			"growth_days": snappedf(float(pd.get("growth_days", 0.0)), 0.1),
+		})
+	var livestock: Array = []
+	for a in (_farm.get("livestock", []) as Array):
+		if not (a is Dictionary):
+			continue
+		var ad: Dictionary = a
+		var def: Dictionary = agriculture.livestock_def(String(ad.get("animal", "")))
+		livestock.append({"name": String(def.get("name", ad.get("animal", ""))), "count": int(ad.get("count", 0))})
+	var storage: Dictionary = _farm.get("storage", {})
+	var inventory: Array = []
+	for item in storage.keys():
+		var qty := float(storage[item])
+		if qty <= 0.0:
+			continue
+		var cd: Dictionary = agriculture.crop_def(String(item))
+		inventory.append({"name": String(cd.get("name", item)), "count": snappedf(qty, 0.1)})
+	return {
+		"money": int(_farm.get("money", 0)),
+		"land_value": agriculture.land_asset_value(_farm),
+		"lands": lands,
+		"plots": plots,
+		"livestock": livestock,
+		"inventory": inventory,
+		"subsidy": snappedf(float(_farm.get("subsidy", 0.0)), 1.0),
+		"year_income": int(_farm.get("year_income", 0)),
+		"coop": String(_farm.get("coop", "")),
+	}
+
+## 农场按日推进：作物生长并仓储损耗。
+func _advance_farm(before_minutes: int, after_minutes: int) -> void:
+	var before_day: int = before_minutes / MINUTES_PER_DAY
+	var after_day: int = after_minutes / MINUTES_PER_DAY
+	if after_day <= before_day:
+		return
+	var days: float = float(after_day - before_day)
+	agriculture.grow(_farm, days)
+	agriculture.storage_spoil(_farm, days)
+
+func _persist_farm() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["farm"] = agriculture.to_dict(_farm)
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:
@@ -1946,9 +2097,12 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append_array(_refresh_spirit())
 		# 语言：长期未用按闲置天数衰减（R64）。
 		_decay_languages(before_minutes, now_minutes())
+		# 农业：作物按日生长、仓储按日损耗（R66）。
+		_advance_farm(before_minutes, now_minutes())
 	_persist_mental()
 	_persist_spirituality()
 	_persist_language()
+	_persist_farm()
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),

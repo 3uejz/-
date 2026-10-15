@@ -37,6 +37,7 @@ func run_tests() -> void:
 	_test_spirit_panel()
 	_test_language_panel()
 	_test_disability_panel()
+	_test_agriculture_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -203,6 +204,27 @@ func _test_disability_panel() -> void:
 	check_eq(_row_value(_find_section(d2, "辅具与康复"), "轮椅"), "已装配", "辅具")
 	check_eq(_row_value(_find_section(d2, "养老与社保"), "养老模式"), "机构养老", "养老模式")
 	check_eq(_row_value(_find_section(d2, "监护与决策"), "监护人"), "child_1", "监护人")
+
+func _test_agriculture_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("agriculture", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无农业上下文为空态")
+	var ctx: Dictionary = {"agriculture": {
+		"money": 500000,
+		"land_value": 300000,
+		"lands": [{"id": "land_0", "use": "承包", "area": 5.0, "fertility": 0.8, "value": 300000}],
+		"plots": [{"name": "水稻", "stage": "mature", "elapsed": 130.0, "growth_days": 120.0}],
+		"livestock": [{"name": "生猪", "count": 10}],
+		"inventory": [{"name": "水稻", "count": 500.0}],
+		"subsidy": 50000.0,
+		"year_income": 120000,
+		"coop": "",
+	}}
+	var d2: Dictionary = PanelContentScript.build("agriculture", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有农业上下文非空")
+	check(_find_section(d2, "土地").get("rows", []).size() >= 1, "土地分区有行")
+	check(_find_section(d2, "在田作物").get("rows", []).size() >= 1, "在田作物分区有行")
+	check(_find_section(d2, "养殖").get("rows", []).size() >= 1, "养殖分区有行")
+	check(_find_section(d2, "经营概况").get("rows", []).size() >= 1, "经营概况分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

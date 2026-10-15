@@ -183,6 +183,19 @@ func _dispatch(intent) -> Dictionary:
 			return _hospice(intent)
 		"指定监护":
 			return _guardianship(intent)
+		# 农业与乡土（D22）
+		"承包土地":
+			return _acquire_land(intent)
+		"播种":
+			return _sow(intent)
+		"收割":
+			return _harvest_crop(intent)
+		"养畜":
+			return _raise_livestock(intent)
+		"卖粮":
+			return _sell_produce(intent)
+		"农业补贴":
+			return _farm_subsidy(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -213,6 +226,7 @@ func _help() -> Dictionary:
 		"· 组织：加入组织 <组织> / 缴会费 / 组织任务 / 罢工 / 请愿 / 募捐 / 退出组织",
 		"· 语言：学语言 <语言> [时长] / 沉浸 <语言> [天数] / 语言考试 <语言> / 适应文化 <文化>",
 		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
+		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
 	]
 	return _ok(lines, 0, "")
 
@@ -860,6 +874,79 @@ func _guardianship(intent) -> Dictionary:
 func _language_name(lang: String) -> String:
 	return String(host.language.language_def(lang).get("name", lang))
 
+
+# --- 农业与乡土（D22） ---
+
+func _acquire_land(intent) -> Dictionary:
+	var area := float(intent.params.get("number", 0))
+	if area <= 0.0:
+		area = 5.0
+	var r: Dictionary = host.acquire_farm_land(area, "grain", "contract", 100000, {})
+	if not bool(r.get("ok", false)):
+		return _fail("无法取得土地（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你承包了 %.1f 亩农地，累计土地估值 %d。" % [area, int(r.get("asset_value", 0))]], 0, "")
+
+func _sow(intent) -> Dictionary:
+	var crop := _object_id(intent, "crop")
+	if crop.is_empty():
+		return _fail("未指定作物；可选水稻、小麦、棉花、油菜、蔬菜或药材。")
+	var r: Dictionary = host.plant_crop(0, crop, {})
+	if not bool(r.get("ok", false)):
+		return _fail("无法播种（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你在农地播下「%s」。" % _crop_name(crop)], 0, "")
+
+func _harvest_crop(intent) -> Dictionary:
+	var farm: Dictionary = host.farm_state()
+	var plots: Array = farm.get("plots", [])
+	var idx := -1
+	for i in range(plots.size()):
+		if String((plots[i] as Dictionary).get("stage", "")) == "mature":
+			idx = i
+			break
+	if idx < 0:
+		return _fail("没有成熟的作物可以收割。")
+	var r: Dictionary = host.harvest_crop(idx, {"skill": 0.5})
+	if not bool(r.get("ok", false)):
+		return _fail("收割失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你收割了「%s」，入仓 %.1f。" % [_crop_name(String(r.get("crop", ""))), float(r.get("yield", 0.0))]], 0, "")
+
+func _raise_livestock(intent) -> Dictionary:
+	var animal := _object_id(intent, "livestock")
+	if animal.is_empty():
+		return _fail("未指定牲畜；可选生猪、肉牛、肉鸡、鸭或鱼。")
+	var count := int(intent.params.get("number", 0))
+	if count <= 0:
+		count = 5
+	var r: Dictionary = host.add_farm_livestock(animal, count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法增加存栏（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你购入了 %d 头/只「%s」。" % [count, _livestock_name(animal)]], 0, "")
+
+func _sell_produce(intent) -> Dictionary:
+	var item := _object_id(intent, "crop")
+	if item.is_empty():
+		return _fail("未指定农产品；可用卖粮 <作物>。")
+	var storage: Dictionary = host.farm_state().get("storage", {})
+	var amount := float(storage.get(item, 0.0))
+	if amount <= 0.0:
+		return _fail("仓中并无该农产品。")
+	var r: Dictionary = host.sell_produce(item, amount, "market", {})
+	if not bool(r.get("ok", false)):
+		return _fail("售卖失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你售出「%s」%.1f，收入 %d。" % [_crop_name(item), amount, int(r.get("revenue", 0))]], 0, "")
+
+func _farm_subsidy(intent) -> Dictionary:
+	var r: Dictionary = host.apply_farm_subsidy(50000)
+	if not bool(r.get("ok", false)):
+		return _fail("申领补贴失败。")
+	return _ok(["你申领到农业补贴 %d。" % int(r.get("granted", 0))], 0, "")
+
+func _crop_name(crop: String) -> String:
+	return String(host.agriculture.crop_def(crop).get("name", crop))
+
+func _livestock_name(animal: String) -> String:
+	return String(host.agriculture.livestock_def(animal).get("name", animal))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -880,6 +967,22 @@ func _reason_cn(reason: String) -> String:
 			return "未知辅具"
 		"unknown_mode":
 			return "未知养老模式"
+		"unknown_crop":
+			return "未知作物"
+		"unknown_animal":
+			return "未知牲畜"
+		"unknown_use":
+			return "未知土地用途"
+		"unknown_channel":
+			return "未知销售渠道"
+		"no_land":
+			return "尚未取得土地"
+		"no_plot":
+			return "指定地块不存在"
+		"no_stock":
+			return "库存不足"
+		"no_order":
+			return "订单不存在"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -991,6 +1094,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_device_by_name(text)
 		"care_mode":
 			return _find_care_mode_by_name(text)
+		"crop":
+			return _find_crop_by_name(text)
+		"livestock":
+			return _find_livestock_by_name(text)
 		_:
 			return ""
 
@@ -1043,6 +1150,32 @@ func _find_culture_by_name(text: String) -> String:
 			return String(key)
 	for key in host.language.CULTURES.keys():
 		if String((host.language.CULTURES[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 作物名回退：按作物 id 或显示名匹配。
+func _find_crop_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.agriculture.CROPS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.agriculture.CROPS.keys():
+		if String((host.agriculture.CROPS[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 牲畜名回退：按牲畜 id 或显示名匹配。
+func _find_livestock_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.agriculture.LIVESTOCK.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.agriculture.LIVESTOCK.keys():
+		if String((host.agriculture.LIVESTOCK[key] as Dictionary).get("name", "")).find(needle) >= 0:
 			return String(key)
 	return ""
 

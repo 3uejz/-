@@ -62,6 +62,7 @@ func run_tests() -> void:
 	_test_org_commands()
 	_test_language_commands()
 	_test_disability_commands()
+	_test_agriculture_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -254,6 +255,30 @@ func _test_disability_commands() -> void:
 	sim.acquire_disability("intellectual", "illness", "heavy")
 	_main.submit("指定监护 长子")
 	check_eq(str(sim.disability_state().get("guardian", "")), "长子", "「指定监护」写入监护人")
+
+func _test_agriculture_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看农业")
+	check(_main.has_panel("agriculture"), "「看农业」打开农业与乡土面板")
+	# 承包土地
+	_main.submit("承包土地 5")
+	check((sim.farm_state().get("land", []) as Array).size() >= 1, "「承包土地」写入土地")
+	# 播种
+	_main.submit("播种 水稻")
+	check((sim.farm_state().get("plots", []) as Array).size() >= 1, "「播种」写入地块")
+	# 推进成熟后收割
+	sim.grow_farm(200.0)
+	_main.submit("收割")
+	check(float(sim.farm_state().get("storage", {}).get("rice", 0.0)) > 0.0, "「收割」入仓水稻")
+	# 养畜
+	_main.submit("养畜 生猪")
+	check((sim.farm_state().get("livestock", []) as Array).size() >= 1, "「养畜」写入牲畜")
+	# 卖粮
+	_main.submit("卖粮 水稻")
+	check(float(sim.farm_state().get("storage", {}).get("rice", 0.0)) <= 0.01, "「卖粮」清空水稻库存")
+	# 补贴
+	_main.submit("农业补贴")
+	check(float(sim.farm_state().get("subsidy", 0.0)) > 0.0, "「农业补贴」发放补贴")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
