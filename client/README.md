@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 43 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 44 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -92,10 +92,11 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 农业与乡土（`sim/agriculture.gd` `AgricultureSystem`）：六种作物（粮/经济/蔬/药四类用途，各有生长天数/产量/水需/地力消耗/保鲜率）与五种牲畜（畜牧/家禽/水产，含日粮/繁殖率/疫病风险），四种土地取得方式（承包/购买/流转/租赁）与地力/轮作/估值；`承包土地 [面积]`/`播种 <作物>`/`收割`/`养畜 <牲畜>`/`卖粮 <作物>`/`农业补贴` 指令经 `SimHost.acquire_farm_land()`/`plant_crop()`/`harvest_crop()`/`add_farm_livestock()`/`sell_produce()`/`apply_farm_subsidy()` 结算，收成受土壤/气候/灾害/技能/技术/田间管理影响；`advance()` 按日推进作物生长与仓储损耗；运行态随 `GameState.sim_runtime.farm` 持久化；「农业与乡土」面板渲染土地/在田作物/养殖/仓储/经营概况。
 
 - 数字生活与平台（`sim/digital.gd` `DigitalSystem`）：数字身份（平台账号/实名/隐私/数据条目与数据泄露牵连）与数字资产（账号/虚拟物品/加密钱包被盗与追回）；网络安全职业（渗透测试/安全防护/应急响应/数据泄露处置，合法无法律风险）；黑客（游戏内虚构抽象判定，四类目标，按 hacking 技能判定成败并结算收益/暴露概率/法律后果，不建模任何现实手法）；电子竞技（训练/战队/赛事/转会/伤病）；内容平台（直播/短视频，播放/涨粉/打赏/分成/带货与翻车封号、算法茧房、网络成瘾）；`开账号 <平台>`/`实名认证`/`网络兼职 <类型>`/`发布内容 [平台]`/`黑客攻击 <目标>` 指令经 `SimHost.open_digital_account()`/`verify_digital_identity()`/`digital_security_work()`/`publish_digital_content()`/`digital_hack()` 结算；运行时随 `GameState.sim_runtime.digital` 持久化；「数字与平台」面板渲染数字身份/平台账号/数字资产/内容创作/电竞生涯。
+- 后期科技（`sim/late_tech.gd` `LateTechSystem`）：科技阶段（信息→智能→星际，逐级严格解锁）；新兴职业（机器人运维/AI 训练师/航天工程师/宇航员/深海勘探/AI 伦理/生物科技/太空矿工/星球殖民者，含技能门槛与薪资）；高风险高回报任务（太空旅行/空间站工作/深海作业/星球殖民，事故与伤亡判定）；极端环境健康惩罚（失重/辐射/深海高压）；自动化冲击（失业率与社会保障议题）；生物科技延寿（联动寿命）；`解锁科技`/`应聘科技职业 <职业>`/`科技任务 <任务>`/`生物延寿 [投入]` 指令经 `SimHost.unlock_late_tech_stage()`/`apply_late_tech_career()`/`risk_late_tech_mission()`/`invest_biotech_lifespan()` 结算；运行时随 `GameState.sim_runtime.late_tech` 持久化；「后期科技」面板渲染科技阶段/科技职业/高风险任务。
 
 ## 面板与表现层
 
-- **42 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+- **44 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
   按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入

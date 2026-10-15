@@ -207,6 +207,15 @@ func _dispatch(intent) -> Dictionary:
 			return _publish_content(intent)
 		"黑客攻击":
 			return _hack_target(intent)
+		# 后期科技（D24）
+		"解锁科技":
+			return _unlock_tech(intent)
+		"应聘科技职业":
+			return _apply_tech_career(intent)
+		"科技任务":
+			return _tech_mission(intent)
+		"生物延寿":
+			return _biotech(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -230,7 +239,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看养老 / 看行情 / 看天气 …（全部 42 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看养老 / 看行情 / 看天气 …（全部 44 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
@@ -239,6 +248,7 @@ func _help() -> Dictionary:
 		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
 		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
 		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
+		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入]",
 	]
 	return _ok(lines, 0, "")
 
@@ -1015,6 +1025,55 @@ func _crop_name(crop: String) -> String:
 func _livestock_name(animal: String) -> String:
 	return String(host.agriculture.livestock_def(animal).get("name", animal))
 
+# --- 后期科技（D24） ---
+
+func _unlock_tech(intent) -> Dictionary:
+	var r: Dictionary = host.unlock_late_tech_stage()
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "max_stage":
+			return _ok(["科技已抵达最高阶段：%s。" % host.late_tech_panel_data().get("stage_name", "")], 0, "")
+		return _fail("无法推进科技（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var data: Dictionary = host.late_tech_panel_data()
+	return _ok(["科技迈入新阶段：%s。" % String(data.get("stage_name", ""))], 0, "")
+
+func _apply_tech_career(intent) -> Dictionary:
+	var career := _object_id(intent, "late_tech_career")
+	if career.is_empty():
+		return _fail("未指定科技职业；可先「看科技」查看可选职业。")
+	var r: Dictionary = host.apply_late_tech_career(career)
+	if not bool(r.get("ok", false)):
+		return _fail("无法应聘该科技职业（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你入职了%s，薪资 %d。" % [_tech_career_name(career), int(r.get("salary", 0))]], 0, "")
+
+func _tech_mission(intent) -> Dictionary:
+	var mission := _object_id(intent, "late_tech_mission")
+	if mission.is_empty():
+		return _fail("未指定任务；可先「看科技」查看高风险任务。")
+	var r: Dictionary = host.risk_late_tech_mission(mission)
+	if not bool(r.get("ok", false)):
+		return _fail("无法执行该任务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("casualty", false)):
+		return _ok(["在执行%s时发生重大事故，任务失败。" % _tech_mission_name(mission)], 0, "")
+	if bool(r.get("accident", false)):
+		return _ok(["执行%s时遭遇事故，仍获得报酬 %d。" % [_tech_mission_name(mission), int(r.get("reward", 0))]], 0, "")
+	return _ok(["完成%s，获得报酬 %d。" % [_tech_mission_name(mission), int(r.get("reward", 0))]], 0, "")
+
+func _biotech(intent) -> Dictionary:
+	var amount: float = 1000.0
+	var p: Variant = intent.params.get("number", null) if intent.params is Dictionary else null
+	if p != null:
+		amount = float(p)
+	var r: Dictionary = host.invest_biotech_lifespan(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法进行生物延寿投资（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你投入 %d 于生物科技，延寿 %+.1f 年（累计 %+.1f 年）。" % [int(amount), float(r.get("lifespan_gain", 0.0)), float(r.get("total_bonus", 0.0))]], 0, "")
+
+func _tech_career_name(career: String) -> String:
+	return String(host.late_tech.CAREERS.get(career, {}).get("name", career))
+
+func _tech_mission_name(mission: String) -> String:
+	return String(host.late_tech.MISSIONS.get(mission, {}).get("name", mission))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1059,6 +1118,24 @@ func _reason_cn(reason: String) -> String:
 			return "未知目标"
 		"banned":
 			return "账号已被封禁"
+		"unknown_career":
+			return "未知科技职业"
+		"unknown_mission":
+			return "未知科技任务"
+		"unknown_stage":
+			return "未知科技阶段"
+		"stage_locked":
+			return "该内容尚未解锁"
+		"skill_too_low":
+			return "技能等级不足"
+		"already_unlocked":
+			return "该阶段已解锁"
+		"locked":
+			return "需先解锁前置阶段"
+		"max_stage":
+			return "已达最高科技阶段"
+		"era_before_late_tech":
+			return "时代尚未进入后期科技"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1180,6 +1257,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_hack_target_by_name(text)
 		"security_job":
 			return _find_security_job_by_name(text)
+		"late_tech_career":
+			return _find_late_tech_career_by_name(text)
+		"late_tech_mission":
+			return _find_late_tech_mission_by_name(text)
 		_:
 			return ""
 
@@ -1297,6 +1378,32 @@ func _find_security_job_by_name(text: String) -> String:
 			return String(key)
 	for key in host.digital.SECURITY_JOBS.keys():
 		if String((host.digital.SECURITY_JOBS[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 科技职业名回退：按 id 或显示名匹配。
+func _find_late_tech_career_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.late_tech.CAREERS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.late_tech.CAREERS.keys():
+		if String((host.late_tech.CAREERS[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 科技任务名回退：按 id 或显示名匹配。
+func _find_late_tech_mission_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.late_tech.MISSIONS.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.late_tech.MISSIONS.keys():
+		if String((host.late_tech.MISSIONS[key] as Dictionary).get("name", "")).find(needle) >= 0:
 			return String(key)
 	return ""
 

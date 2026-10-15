@@ -120,6 +120,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = disability(player, context, name_resolver)
 		"agriculture":
 			data = agriculture(player, context, name_resolver)
+		"late_tech":
+			data = late_tech(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -931,6 +933,55 @@ static func agriculture(player: Dictionary, context: Dictionary, name_resolver: 
 		mrows.append({"label": "合作社", "value": String(d.get("coop", ""))})
 	sections.append(_section("经营概况", mrows))
 	return _ok(sections)
+
+static func late_tech(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("后期科技", "尚未生成角色数据")
+	var d: Dictionary = context.get("late_tech", {}) if context.get("late_tech") is Dictionary else {}
+	if d.is_empty():
+		return _empty("后期科技", "科技尚未演进；可解锁信息/智能/星际阶段并应聘新职业")
+	var sections: Array = []
+	var stage_name: String = String(d.get("stage_name", d.get("stage", "?")))
+	var orows: Array = [
+		{"label": "当前科技阶段", "value": stage_name},
+		{"label": "阶段序号", "value": str(int(d.get("stage_index", 0)) + 1)},
+		{"label": "失业率", "value": "%.1f%%" % (float(d.get("unemployment_rate", 0.0)) * 100.0)},
+		{"label": "延寿加成", "value": "%.1f 年" % float(d.get("lifespan_bonus", 0.0))},
+	]
+	var jobs: Array = _items_of(d.get("jobs", []))
+	if not jobs.is_empty():
+		orows.append({"label": "新兴岗位", "value": ", ".join(PackedStringArray(_to_strings(jobs)))})
+	var places: Array = _items_of(d.get("places", []))
+	if not places.is_empty():
+		orows.append({"label": "新场所", "value": ", ".join(PackedStringArray(_to_strings(places)))})
+	sections.append(_section("科技阶段", orows))
+	var careers: Array = _items_of(d.get("careers", []))
+	var crows: Array = []
+	for c in careers:
+		if c is Dictionary:
+			var cd: Dictionary = c
+			var state: String = "可应聘" if bool(cd.get("unlocked", false)) else "未解锁"
+			crows.append({"label": String(cd.get("name", "?")), "value": "%s · 门槛 %d · 薪资 %d" % [state, int(cd.get("min_level", 0)), int(cd.get("salary", 0))]})
+	if not crows.is_empty():
+		sections.append(_section("科技职业", crows))
+	var missions: Array = _items_of(d.get("missions", []))
+	var mrows: Array = []
+	for m in missions:
+		if m is Dictionary:
+			var md: Dictionary = m
+			mrows.append({"label": String(md.get("name", "?")), "value": "技能 %d · 报酬 %d" % [int(md.get("min_skill", 0)), int(md.get("reward", 0))]})
+	if not mrows.is_empty():
+		sections.append(_section("高风险任务", mrows))
+	return _ok(sections)
+
+static func _to_strings(items: Array) -> Array:
+	var out: Array = []
+	for it in items:
+		if it is Dictionary:
+			out.append(String((it as Dictionary).get("name", (it as Dictionary).get("id", "?"))))
+		else:
+			out.append(String(it))
+	return out
 
 static func _crisis_name(key: String) -> String:
 	const NAMES: Dictionary = {

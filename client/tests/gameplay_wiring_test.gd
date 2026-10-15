@@ -64,6 +64,7 @@ func run_tests() -> void:
 	_test_disability_commands()
 	_test_agriculture_commands()
 	_test_digital_commands()
+	_test_late_tech_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -299,6 +300,17 @@ func _test_digital_commands() -> void:
 	# 网络兼职
 	_main.submit("网络兼职 渗透测试")
 	check(true, "「网络兼职」执行网络安全工作")
+
+func _test_late_tech_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看科技")
+	check(_main.has_panel("late_tech"), "「看科技」打开后期科技面板")
+	# 解锁科技阶段
+	_main.submit("解锁科技")
+	check_eq(String(sim.late_tech_panel_data().get("stage", "")), "intelligent", "「解锁科技」推进阶段")
+	# 生物延寿（带金额参数）
+	_main.submit("生物延寿 1000000")
+	check(float(sim.late_tech_state().get("lifespan_bonus", 0.0)) > 0.0, "「生物延寿」写入延寿加成")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

@@ -39,6 +39,7 @@ func run_tests() -> void:
 	_test_disability_panel()
 	_test_agriculture_panel()
 	_test_digital_panel()
+	_test_late_tech_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -248,6 +249,26 @@ func _test_digital_panel() -> void:
 	check(_find_section(d2, "平台账号").get("rows", []).size() >= 1, "平台账号分区有行")
 	check(_find_section(d2, "数字资产").get("rows", []).size() >= 1, "数字资产分区有行")
 	check(_find_section(d2, "内容创作").get("rows", []).size() >= 1, "内容创作分区有行")
+
+func _test_late_tech_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("late_tech", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无后期科技上下文为空态")
+	var ctx: Dictionary = {"late_tech": {
+		"stage": "intelligent",
+		"stage_name": "智能",
+		"stage_index": 1,
+		"unemployment_rate": 0.08,
+		"lifespan_bonus": 2.0,
+		"jobs": [{"id": "aerospace_astronaut", "name": "宇航员"}],
+		"places": [{"id": "spaceport", "name": "太空港"}],
+		"careers": [{"id": "aerospace_astronaut", "name": "宇航员", "stage": "intelligent", "unlocked": true, "min_level": 14, "salary": 500000}],
+		"missions": [{"id": "space_travel", "name": "太空旅行", "stage": "intelligent", "min_skill": 8, "reward": 1000000}],
+	}}
+	var d2: Dictionary = PanelContentScript.build("late_tech", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有后期科技上下文非空")
+	check(_find_section(d2, "科技阶段").get("rows", []).size() >= 1, "科技阶段分区有行")
+	check(_find_section(d2, "科技职业").get("rows", []).size() >= 1, "科技职业分区有行")
+	check(_find_section(d2, "高风险任务").get("rows", []).size() >= 1, "高风险任务分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

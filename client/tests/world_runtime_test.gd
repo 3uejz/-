@@ -43,6 +43,7 @@ func run_tests() -> void:
 	_test_disability_runtime()
 	_test_agriculture_runtime()
 	_test_digital_runtime()
+	_test_late_tech_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -592,4 +593,43 @@ func _test_digital_runtime() -> void:
 	reloaded.bind(state)
 	check(bool(reloaded.digital_state().get("real_name_verified", false)), "读档恢复实名状态")
 	check((reloaded.digital_state().get("accounts", {}) as Dictionary).has("short_video"), "读档恢复平台账号")
+
+
+func _test_late_tech_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	# 目录与初始阶段。
+	check(host.late_tech_stages_catalog().size() >= 3, "科技阶段目录含信息/智能/星际")
+	check(not host.late_tech_careers_catalog().is_empty(), "科技职业目录非空")
+	check(not host.late_tech_missions_catalog().is_empty(), "科技任务目录非空")
+	check_eq(String(host.late_tech_panel_data().get("stage", "")), "information", "初始科技阶段为信息")
+	# 解锁智能化阶段。
+	var unlock: Dictionary = host.unlock_late_tech_stage()
+	check(bool(unlock.get("ok", false)), "解锁智能阶段成功")
+	check_eq(String(host.late_tech_panel_data().get("stage", "")), "intelligent", "阶段推进到智能")
+	# 高技能后应聘职业（机器人运维门槛 6）。
+	var entry: Dictionary = host.skills._ensure(host.player()["skills"], "skill.programming")
+	entry["level"] = 10
+	var career: Dictionary = host.apply_late_tech_career("robot_operator")
+	check(bool(career.get("ok", false)), "应聘机器人运维成功")
+	# 低技能被拒。
+	var reject: Dictionary = host.apply_late_tech_career("aerospace_astronaut")
+	check(not bool(reject.get("ok", false)), "技能不足时拒绝应聘")
+	# 生物延寿。
+	var before: float = float(host.late_tech_state().get("lifespan_bonus", 0.0))
+	var bio: Dictionary = host.invest_biotech_lifespan(1000000.0)
+	check(bool(bio.get("ok", false)), "生物延寿投资成功")
+	check(float(host.late_tech_state().get("lifespan_bonus", 0.0)) > before, "延寿加成累积")
+	# 高风险任务（技能 10 满足太空旅行门槛 8）。
+	var mission: Dictionary = host.risk_late_tech_mission("space_travel")
+	check(bool(mission.get("ok", false)), "执行太空旅行任务返回")
+	# 持久化并读档恢复。
+	host._persist_late_tech()
+	check(state.sim_runtime.get("late_tech", null) is Dictionary, "后期科技运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check_eq(String(reloaded.late_tech_panel_data().get("stage", "")), "intelligent", "读档恢复科技阶段")
+	check(float(reloaded.late_tech_state().get("lifespan_bonus", 0.0)) > 0.0, "读档恢复延寿加成")
 

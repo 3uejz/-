@@ -38,6 +38,7 @@ const LanguageScript = preload("res://sim/language.gd")
 const DisabilityElderlyScript = preload("res://sim/disability_elderly.gd")
 const AgricultureScript = preload("res://sim/agriculture.gd")
 const DigitalScript = preload("res://sim/digital.gd")
+const LateTechScript = preload("res://sim/late_tech.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -108,6 +109,8 @@ var digital                     ## 数字生活与黑客（DigitalSystem）
 var _identity: Dictionary = {}       ## 数字身份运行时（账号/隐私/数据/数字资产），入档 sim_runtime.digital
 var _creator: Dictionary = {}        ## 内容创作者运行时（粉丝/打赏/带货），入档 sim_runtime.digital
 var _esports: Dictionary = {}        ## 电竞生涯运行时（战队/技能/伤病），入档 sim_runtime.digital
+var late_tech                   ## 后期科技（LateTechSystem）
+var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/失业/延寿），入档 sim_runtime.late_tech
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -154,6 +157,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_farm = agriculture.new_farm()
 	digital = DigitalScript.new()
 	_identity = digital.new_identity("player")
+	late_tech = LateTechScript.new()
+	_late_tech = late_tech.new_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -235,6 +240,10 @@ func _ensure_world_geo() -> void:
 				_creator = (dd["creator"] as Dictionary).duplicate(true)
 			if dd.get("esports", null) is Dictionary:
 				_esports = (dd["esports"] as Dictionary).duplicate(true)
+		# 恢复后期科技运行时（阶段/解锁/延寿）。
+		var lt: Variant = (state.sim_runtime as Dictionary).get("late_tech", {})
+		if lt is Dictionary and not (lt as Dictionary).is_empty():
+			_late_tech = late_tech.from_dict(lt)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1303,6 +1312,123 @@ func _persist_digital() -> void:
 		"creator": _creator.duplicate(true),
 		"esports": _esports.duplicate(true),
 	}
+
+
+# --- 后期科技（D24） ---
+
+func late_tech_state() -> Dictionary:
+	return _late_tech
+
+## 科技阶段目录。
+func late_tech_stages_catalog() -> Array:
+	var out: Array = []
+	for key in late_tech.STAGES:
+		out.append({"id": String(key), "name": String(late_tech.stage_def(String(key)).get("name", key))})
+	return out
+
+## 科技职业目录（按阶段门控，含技能门槛与薪资）。
+func late_tech_careers_catalog() -> Array:
+	var out: Array = []
+	for key in late_tech.CAREERS.keys():
+		var d: Dictionary = late_tech.CAREERS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 高风险科技任务目录。
+func late_tech_missions_catalog() -> Array:
+	var out: Array = []
+	for key in late_tech.MISSIONS.keys():
+		var d: Dictionary = late_tech.MISSIONS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 解锁下一科技阶段（严格顺序）。
+func unlock_late_tech_stage() -> Dictionary:
+	var idx: int = int(_late_tech.get("stage_index", 0))
+	if idx + 1 >= late_tech.stage_count():
+		return {"ok": false, "reason": "max_stage"}
+	var r: Dictionary = late_tech.unlock_stage(_late_tech, idx + 1)
+	if bool(r.get("ok", false)):
+		_persist_late_tech()
+	return r
+
+## 应聘科技职业。技能等级取该职业所要求技能树的当前等级。
+func apply_late_tech_career(career_key: String) -> Dictionary:
+	if not late_tech.CAREERS.has(career_key):
+		return {"ok": false, "reason": "unknown_career"}
+	var def: Dictionary = late_tech.CAREERS[career_key]
+	var skill_level: int = _skill_level(String(def.get("skill", "")))
+	var r: Dictionary = late_tech.apply_for_career(_late_tech, career_key, skill_level)
+	_persist_late_tech()
+	return r
+
+## 执行高风险科技任务。技能等级取任务环境对应的技能树等级（用最高职业技能近似）。
+func risk_late_tech_mission(mission_key: String) -> Dictionary:
+	if not late_tech.MISSIONS.has(mission_key):
+		return {"ok": false, "reason": "unknown_mission"}
+	var skill_level: int = _late_tech_best_skill()
+	var r: Dictionary = late_tech.risk_mission(_late_tech, mission_key, skill_level)
+	if bool(r.get("ok", false)) and int(r.get("reward", 0)) > 0:
+		economy.add_money(account_id(), int(r["reward"]), "late_tech_mission")
+	_persist_late_tech()
+	return r
+
+## 生物科技延寿投资。
+func invest_biotech_lifespan(investment: float) -> Dictionary:
+	var r: Dictionary = late_tech.biotech_lifespan(_late_tech, investment)
+	_persist_late_tech()
+	return r
+
+## 取职业路径中的最高技能等级（近似玩家科技素养）。
+func _late_tech_best_skill() -> int:
+	var best: int = 0
+	for key in late_tech.CAREERS.keys():
+		var def: Dictionary = late_tech.CAREERS[key]
+		var lv: int = _skill_level(String(def.get("skill", "")))
+		best = maxi(best, lv)
+	return best
+
+## 后期科技面板数据。
+func late_tech_panel_data() -> Dictionary:
+	var stage_key: String = late_tech.current_stage(_late_tech)
+	var def: Dictionary = late_tech.stage_def(stage_key)
+	var careers: Array = []
+	for key in late_tech.CAREERS.keys():
+		var cd: Dictionary = late_tech.CAREERS[key]
+		careers.append({
+			"id": String(key), "name": String(cd.get("name", key)),
+			"stage": String(cd.get("stage", "")),
+			"unlocked": late_tech.career_unlocked(_late_tech, String(key)),
+			"min_level": int(cd.get("min_level", 0)),
+			"salary": int(cd.get("salary", 0)),
+		})
+	var missions: Array = []
+	for key in late_tech.MISSIONS.keys():
+		var md: Dictionary = late_tech.MISSIONS[key]
+		missions.append({
+			"id": String(key), "name": String(md.get("name", key)),
+			"stage": String(md.get("stage", "")),
+			"min_skill": int(md.get("min_skill", 0)),
+			"reward": int(md.get("reward", 0)),
+		})
+	return {
+		"stage": stage_key,
+		"stage_name": String(def.get("name", stage_key)),
+		"stage_index": int(_late_tech.get("stage_index", 0)),
+		"unlocked_stages": (_late_tech.get("unlocked_stages", []) as Array).duplicate(),
+		"jobs": (def.get("jobs", []) as Array).duplicate(),
+		"equipment": (def.get("equipment", []) as Array).duplicate(),
+		"places": (def.get("places", []) as Array).duplicate(),
+		"lifespan_bonus": snappedf(float(_late_tech.get("lifespan_bonus", 0.0)), 0.1),
+		"unemployment_rate": snappedf(float(_late_tech.get("unemployment_rate", 0.0)), 0.001),
+		"careers": careers,
+		"missions": missions,
+	}
+
+func _persist_late_tech() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["late_tech"] = late_tech.to_dict(_late_tech)
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

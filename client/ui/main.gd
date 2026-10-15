@@ -101,6 +101,7 @@ const VERB_PANELS: Dictionary = {
 	"看活动": "events", "展会": "events",
 	"看奖项": "awards", "荣誉": "awards",
 	"看数字": "digital", "平台": "digital",
+	"看科技": "late_tech", "后期科技": "late_tech", "前沿科技": "late_tech",
 	"看疫情": "epidemic", "公共卫生": "epidemic",
 	"看军旅": "war", "前线": "war",
 	"看行情": "market", "宏观": "market",
@@ -409,6 +410,8 @@ func _catalogs() -> Dictionary:
 		"platform": _sim.digital_platforms_catalog(),
 		"hack_target": _sim.digital_hack_targets_catalog(),
 		"security_job": _sim.digital_security_jobs_catalog(),
+		"late_tech_career": _sim.late_tech_careers_catalog(),
+		"late_tech_mission": _sim.late_tech_missions_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -718,6 +721,9 @@ func _panel_context() -> Dictionary:
 		var dig: Dictionary = _sim.digital_panel_data()
 		if not dig.is_empty():
 			context["digital"] = dig
+		var lt: Dictionary = _sim.late_tech_panel_data()
+		if not lt.is_empty():
+			context["late_tech"] = lt
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context
