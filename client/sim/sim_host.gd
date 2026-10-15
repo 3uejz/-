@@ -47,6 +47,7 @@ const PrimaryScript = preload("res://sim/primary_industry.gd")
 const DiningScript = preload("res://sim/dining.gd")
 const FashionScript = preload("res://sim/fashion.gd")
 const SportsIndustryScript = preload("res://sim/sports_industry.gd")
+const EventsExpoScript = preload("res://sim/events_expo.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -144,6 +145,9 @@ var _pro_player: Dictionary = {}     ## 玩家职业运动员生涯，入档 sim
 var _sports_club: Dictionary = {}    ## 玩家所属球会，入档 sim_runtime.sports.club
 var _sports_rival: Dictionary = {}   ## 联赛对手球会，入档 sim_runtime.sports.rival
 var _sports_league: Dictionary = {}  ## 地区联赛，入档 sim_runtime.sports.league
+var events_expo                 ## 会展、演出与大型活动（EventsExpoSystem）
+var _event: Dictionary = {}          ## 当前筹办中的活动，入档 sim_runtime.events.event
+var _planner: Dictionary = {}        ## 活动策划职业，入档 sim_runtime.events.planner
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -203,6 +207,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	fashion = FashionScript.new()
 	_trend = fashion.new_trend()
 	sports_industry = SportsIndustryScript.new()
+	events_expo = EventsExpoScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -347,6 +352,14 @@ func _ensure_world_geo() -> void:
 				_sports_rival = (spd["rival"] as Dictionary).duplicate(true)
 			if spd.get("league", null) is Dictionary and not (spd["league"] as Dictionary).is_empty():
 				_sports_league = (spd["league"] as Dictionary).duplicate(true)
+		# 恢复会展运行时（活动/策划）。
+		var ev: Variant = (state.sim_runtime as Dictionary).get("events", {})
+		if ev is Dictionary and not (ev as Dictionary).is_empty():
+			var evd: Dictionary = ev
+			if evd.get("event", null) is Dictionary and not (evd["event"] as Dictionary).is_empty():
+				_event = events_expo.from_dict(evd["event"])
+			if evd.get("planner", null) is Dictionary and not (evd["planner"] as Dictionary).is_empty():
+				_planner = (evd["planner"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -2786,6 +2799,153 @@ func _persist_sports() -> void:
 		"club": _sports_club.duplicate(true),
 		"rival": _sports_rival.duplicate(true),
 		"league": _sports_league.duplicate(true),
+	}
+
+
+func events_state() -> Dictionary:
+	return {"event": _event, "planner": _planner}
+
+func events_types_catalog() -> Array:
+	var out: Array = []
+	for key in events_expo.event_type_keys():
+		out.append({"id": String(key), "name": String((events_expo.EVENT_TYPES[key] as Dictionary).get("name", key))})
+	return out
+
+func events_stages_catalog() -> Array:
+	var out: Array = []
+	var names: Dictionary = events_expo.stage_names()
+	for key in events_expo.STAGES:
+		out.append({"id": String(key), "name": String(names.get(String(key), key))})
+	return out
+
+func events_sponsor_tiers_catalog() -> Array:
+	var out: Array = []
+	for key in events_expo.sponsor_tier_keys():
+		out.append({"id": String(key), "name": String((events_expo.SPONSOR_TIERS[key] as Dictionary).get("name", key))})
+	return out
+
+func events_roles_catalog() -> Array:
+	var out: Array = []
+	for key in events_expo.career_role_keys():
+		out.append({"id": String(key), "name": String((events_expo.CAREER_ROLES[key] as Dictionary).get("name", key))})
+	return out
+
+## 开启活动策划职业路径。
+func start_event_career(role: String = "planner") -> Dictionary:
+	if not _planner.is_empty():
+		return {"ok": false, "reason": "already_planner"}
+	_planner = events_expo.new_planner(role)
+	_persist_events()
+	return {"ok": true, "role": String(_planner.get("role", role)), "level": int(_planner.get("level", 1))}
+
+## 筹办一场新活动（覆盖上一场已复盘的活动）。
+func events_new(event_type: String) -> Dictionary:
+	if not _event.is_empty() and str(_event.get("stage", "")) != "review":
+		return {"ok": false, "reason": "in_progress"}
+	if not events_expo.EVENT_TYPES.has(event_type):
+		return {"ok": false, "reason": "unknown_type"}
+	_event = events_expo.new_event(event_type)
+	_persist_events()
+	return {"ok": true, "type": event_type, "name": String(_event.get("name", ""))}
+
+func events_rent_venue(cost: int) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var capacity: int = int((events_expo.EVENT_TYPES.get(String(_event.get("type", "")), {}) as Dictionary).get("base_capacity", 10000))
+	var venue: Dictionary = {"name": "会展中心", "capacity": capacity, "cost": maxi(0, cost)}
+	var r: Dictionary = events_expo.rent_venue(_event, venue)
+	if bool(r.get("ok", false)):
+		_persist_events()
+	return r
+
+func events_approval() -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.apply_approval(_event, true)
+	_persist_events()
+	return r
+
+func events_sponsor(tier: String) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.add_sponsor(_event, tier)
+	if bool(r.get("ok", false)):
+		_persist_events()
+	return r
+
+func events_sell_tickets(qty: int) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.sell_tickets(_event, maxi(0, qty))
+	_persist_events()
+	return r
+
+func events_set_security(level: float) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.set_security(_event, level)
+	if bool(r.get("ok", false)):
+		_persist_events()
+	return r
+
+## 举办活动：确定性推演现场（roll 固定），结算门票/周边/直播与风险。
+func events_hold() -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	if str(_event.get("stage", "")) == "review":
+		return {"ok": false, "reason": "already_held"}
+	if not bool(_event.get("approved", false)):
+		return {"ok": false, "reason": "not_approved"}
+	var r: Dictionary = events_expo.hold_event(_event, 0.1)
+	_persist_events()
+	return r
+
+## 复盘：结算净利润，若已从业则累计经验并可能升级。
+func events_review() -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.after_action_review(_event)
+	if not _planner.is_empty():
+		var cp: Dictionary = events_expo.career_progress(_planner, r)
+		r["planner"] = cp
+	_persist_events()
+	return r
+
+func events_panel_data() -> Dictionary:
+	if _event.is_empty() and _planner.is_empty():
+		return {}
+	var out: Dictionary = {}
+	if not _event.is_empty():
+		var def: Dictionary = events_expo.EVENT_TYPES.get(String(_event.get("type", "")), {})
+		out = {
+			"type": String(_event.get("type", "")),
+			"type_name": String(def.get("name", "")),
+			"name": String(_event.get("name", "")),
+			"stage": String(_event.get("stage", "")),
+			"stage_name": String(events_expo.STAGE_NAMES.get(String(_event.get("stage", "")), "")),
+			"capacity": int(_event.get("capacity", 0)),
+			"sold": int(_event.get("sold", 0)),
+			"ticket_price": int(_event.get("ticket_price", 0)),
+			"budget": int(_event.get("budget", 0)),
+			"revenue": int(_event.get("revenue", 0)),
+			"cost": int(_event.get("cost", 0)),
+			"reputation": float(_event.get("reputation", 0.0)),
+			"attendance": int(_event.get("attendance", 0)),
+			"sponsors": (_event.get("sponsors", []) as Array).size(),
+			"incidents": (_event.get("incidents", []) as Array).size(),
+		}
+	if not _planner.is_empty():
+		out["planner_level"] = int(_planner.get("level", 1))
+		out["planner_exp"] = int(_planner.get("exp", 0))
+		out["planner_events"] = int(_planner.get("events_done", 0))
+	return out
+
+func _persist_events() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["events"] = {
+		"event": events_expo.to_dict(_event),
+		"planner": _planner.duplicate(true),
 	}
 
 

@@ -52,6 +52,7 @@ func run_tests() -> void:
 	_test_dining_runtime()
 	_test_fashion_runtime()
 	_test_sports_runtime()
+	_test_events_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -911,4 +912,30 @@ func _test_sports_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.sports_state().get("player", {}) as Dictionary).is_empty(), "读档恢复生涯")
 	check(not reloaded.sports_panel_data().is_empty(), "体育面板数据非空")
+
+func _test_events_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(71)
+	var host = SimHostScript.new(state, 71)
+	host.bind(state)
+	check(host.events_types_catalog().size() >= 7, "活动类型表含演唱会/漫展等")
+	check(bool(host.start_event_career("planner").get("ok", false)), "开启活动策划职业成功")
+	check(bool(host.events_new("concert").get("ok", false)), "筹办演唱会成功")
+	check(bool(host.events_rent_venue(2000000).get("ok", false)), "租赁场地成功")
+	check(bool(host.events_approval().get("ok", false)), "报批通过")
+	check(bool(host.events_sponsor("title").get("ok", false)), "招商成功")
+	check(int(host.events_sell_tickets(5000).get("revenue", 0)) > 0, "售票取得收入")
+	check(bool(host.events_set_security(0.8).get("ok", false)), "配置安保成功")
+	var hold: Dictionary = host.events_hold()
+	check(bool(hold.get("ok", false)) and int(hold.get("attendance", 0)) == 5000, "举办活动到场 5000")
+	var rv: Dictionary = host.events_review()
+	check(bool(rv.get("ok", false)), "活动复盘成功")
+	check(bool((rv.get("planner", {}) as Dictionary).get("ok", false)), "策划职业累计经验")
+	# 持久化与读档恢复。
+	host._persist_events()
+	check(state.sim_runtime.get("events", null) is Dictionary, "会展运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 71)
+	reloaded.bind(state)
+	check(not (reloaded.events_state().get("event", {}) as Dictionary).is_empty(), "读档恢复活动")
+	check(not reloaded.events_panel_data().is_empty(), "会展面板数据非空")
 

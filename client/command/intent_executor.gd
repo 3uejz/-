@@ -345,6 +345,24 @@ func _dispatch(intent) -> Dictionary:
 			return _sports_doping_test(intent)
 		"退役":
 			return _sports_retire(intent)
+		"活动策划":
+			return _start_event_career(intent)
+		"办活动":
+			return _events_new(intent)
+		"租场地":
+			return _events_rent_venue(intent)
+		"报批":
+			return _events_approval(intent)
+		"拉赞助":
+			return _events_sponsor(intent)
+		"售票":
+			return _events_sell(intent)
+		"布置安保":
+			return _events_security(intent)
+		"举办活动":
+			return _events_hold(intent)
+		"活动复盘":
+			return _events_review(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1750,6 +1768,69 @@ func _sports_retire(intent) -> Dictionary:
 		return _fail("无法退役（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你宣布退役，退役金 %d。" % int(r.get("pension", 0))], 0, "")
 
+func _start_event_career(intent) -> Dictionary:
+	var role := _object_id(intent, "event_role")
+	var r: Dictionary = host.start_event_career(role)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开启活动策划生涯（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你成为%s（%d 级）。" % [String(r.get("role", "")), int(r.get("level", 1))]], 0, "")
+
+func _events_new(intent) -> Dictionary:
+	var event_type := _object_id(intent, "event_type")
+	var r: Dictionary = host.events_new(event_type)
+	if not bool(r.get("ok", false)):
+		return _fail("无法筹办活动（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["开始筹办%s。" % String(r.get("name", ""))], 0, "")
+
+func _events_rent_venue(intent) -> Dictionary:
+	var cost: int = int(_param_number(intent, "number", 2000000))
+	var r: Dictionary = host.events_rent_venue(cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法租赁场地（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["场地已租，容量 %d，费用 %d。" % [int(r.get("capacity", 0)), int(r.get("cost", 0))]], 0, "")
+
+func _events_approval(intent) -> Dictionary:
+	var r: Dictionary = host.events_approval()
+	if not bool(r.get("ok", false)):
+		return _fail("无法报批（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["报批通过，进入招商。"], 0, "")
+
+func _events_sponsor(intent) -> Dictionary:
+	var tier := _object_id(intent, "sponsor_tier")
+	var r: Dictionary = host.events_sponsor(tier)
+	if not bool(r.get("ok", false)):
+		return _fail("无法招商（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["签下%s，入账 %d。" % [String(r.get("tier", "")), int(r.get("amount", 0))]], 0, "")
+
+func _events_sell(intent) -> Dictionary:
+	var qty: int = int(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.events_sell_tickets(qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法售票（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["售出 %d 张，票务收入 %d。" % [int(r.get("sold", 0)), int(r.get("revenue", 0))]], 0, "")
+
+func _events_security(intent) -> Dictionary:
+	var level: float = float(_param_number(intent, "number", 60)) / 100.0
+	var r: Dictionary = host.events_set_security(level)
+	if not bool(r.get("ok", false)):
+		return _fail("无法配置安保（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["安保等级 %.0f%%，费用 %d。" % [float(r.get("security_level", 0.0)) * 100.0, int(r.get("cost", 0))]], 0, "")
+
+func _events_hold(intent) -> Dictionary:
+	var r: Dictionary = host.events_hold()
+	if not bool(r.get("ok", false)):
+		return _fail("无法举办（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["活动举办，到场 %d 人，周边收入 %d，事故 %d 起。" % [int(r.get("attendance", 0)), int(r.get("merchandise", 0)), (r.get("incidents", []) as Array).size()]], 0, "")
+
+func _events_review(intent) -> Dictionary:
+	var r: Dictionary = host.events_review()
+	if not bool(r.get("ok", false)):
+		return _fail("无法复盘（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "复盘：净利润 %d，上座率 %.0f%%，评级 %.0f。" % [int(r.get("profit", 0)), float(r.get("fill_rate", 0.0)) * 100.0, float(r.get("rating", 0.0))]
+	if r.get("planner", null) is Dictionary and bool((r["planner"] as Dictionary).get("leveled", false)):
+		line += " 策划等级提升至 %d。" % int((r["planner"] as Dictionary).get("level", 1))
+	return _ok([line], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1936,6 +2017,20 @@ func _reason_cn(reason: String) -> String:
 			return "未知违规类型"
 		"unknown_competition":
 			return "未知赛事"
+		"already_planner":
+			return "你已是活动策划从业者"
+		"unknown_type":
+			return "未知活动类型"
+		"no_event":
+			return "尚未筹办活动"
+		"in_progress":
+			return "上一场活动尚未复盘"
+		"already_held":
+			return "该活动已举办并复盘"
+		"not_approved":
+			return "活动尚未报批通过"
+		"unknown_tier":
+			return "未知赞助层级"
 		_:
 			return reason if reason != "" else "未知原因"
 

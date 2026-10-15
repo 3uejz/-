@@ -48,6 +48,7 @@ func run_tests() -> void:
 	_test_dining_panel()
 	_test_fashion_panel()
 	_test_sports_panel()
+	_test_events_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -393,11 +394,24 @@ func _test_sports_panel() -> void:
 			{"id": "rival_club", "played": 10, "points": 15, "goals_for": 12, "goals_against": 14},
 		],
 	}}
-	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	var d: Dictionary = PanelContentScript.build("sports", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有体育上下文非空")
 	check(_find_section(d, "球员生涯").get("rows", []).size() >= 1, "球员生涯分区有行")
 	check(_find_section(d, "所属球会").get("rows", []).size() >= 1, "所属球会分区有行")
 	check(_find_section(d, "积分榜").get("rows", []).size() >= 1, "积分榜分区有行")
+
+func _test_events_panel() -> void:
+	var ctx: Dictionary = {"events": {
+		"type": "concert", "type_name": "演唱会", "name": "演唱会",
+		"stage": "live", "stage_name": "现场", "capacity": 20000, "sold": 5000,
+		"ticket_price": 6800, "budget": 5000000, "revenue": 34000000, "cost": 2000000,
+		"reputation": 55.0, "attendance": 5000, "sponsors": 1, "incidents": 0,
+		"planner_level": 2, "planner_exp": 250, "planner_events": 1,
+	}}
+	var d: Dictionary = PanelContentScript.build("events", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有会展上下文非空")
+	check(_find_section(d, "我的活动").get("rows", []).size() >= 1, "我的活动分区有行")
+	check(_find_section(d, "策划职业").get("rows", []).size() >= 1, "策划职业分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

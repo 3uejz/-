@@ -571,9 +571,6 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 	var fsh: Dictionary = context.get("fashion", {}) if context.get("fashion") is Dictionary else {}
 	if not fsh.is_empty():
 		sections.append_array(_fashion_sections(fsh))
-	var spo: Dictionary = context.get("sports", {}) if context.get("sports") is Dictionary else {}
-	if not spo.is_empty():
-		sections.append_array(_sports_sections(spo))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)
@@ -1364,18 +1361,55 @@ static func household(player: Dictionary, name_resolver: Callable = Callable()) 
 static func sports(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("体育", "尚未生成角色数据")
+	var sections: Array = []
 	var items: Array = _items_of(_world(context).get("sports", []))
-	if items.is_empty():
-		return _empty("体育", "未涉猎体育；可查看赛事日历并报名训练")
-	return _ok([_section("赛事与球队", _rows_from(items, ["type", "teams", "status", "score"], name_resolver))])
+	if not items.is_empty():
+		sections.append(_section("赛事与球队", _rows_from(items, ["type", "teams", "status", "score"], name_resolver)))
+	var my: Dictionary = context.get("sports", {}) if context.get("sports") is Dictionary else {}
+	if not my.is_empty():
+		sections.append_array(_sports_sections(my))
+	if sections.is_empty():
+		return _empty("体育", "未涉猎体育；可用「开启球涯」成为职业运动员")
+	return _ok(sections)
 
 static func events_panel(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("活动与展会", "尚未生成角色数据")
+	var sections: Array = []
 	var items: Array = _items_of(_world(context).get("world_events", []))
-	if items.is_empty():
-		return _empty("活动与展会", "暂无活动；可查看预告并报名参展")
-	return _ok([_section("活动与展会", _rows_from(items, ["type", "status", "start_minutes", "venue"], name_resolver))])
+	if not items.is_empty():
+		sections.append(_section("活动与展会", _rows_from(items, ["type", "status", "start_minutes", "venue"], name_resolver)))
+	var my: Dictionary = context.get("events", {}) if context.get("events") is Dictionary else {}
+	if not my.is_empty():
+		sections.append_array(_events_sections(my))
+	if sections.is_empty():
+		return _empty("活动与展会", "暂无活动；可用「办活动 <类型>」策划并举办")
+	return _ok(sections)
+
+## 我的活动分区：活动概况、策划职业。
+static func _events_sections(ev: Dictionary) -> Array:
+	var sections: Array = []
+	if String(ev.get("type", "")) != "":
+		sections.append(_section("我的活动", [
+			{"label": "名称", "value": String(ev.get("name", ""))},
+			{"label": "类型", "value": String(ev.get("type_name", ""))},
+			{"label": "阶段", "value": String(ev.get("stage_name", ""))},
+			{"label": "容量", "value": str(int(ev.get("capacity", 0)))},
+			{"label": "售出", "value": str(int(ev.get("sold", 0)))},
+			{"label": "预算", "value": str(int(ev.get("budget", 0)))},
+			{"label": "收入", "value": str(int(ev.get("revenue", 0)))},
+			{"label": "成本", "value": str(int(ev.get("cost", 0)))},
+			{"label": "口碑", "value": "%.0f" % float(ev.get("reputation", 0.0))},
+			{"label": "赞助", "value": "%d 家" % int(ev.get("sponsors", 0))},
+			{"label": "事故", "value": "%d 起" % int(ev.get("incidents", 0))},
+		]))
+	if ev.has("planner_level"):
+		sections.append(_section("策划职业", [
+			{"label": "等级", "value": str(int(ev.get("planner_level", 1)))},
+			{"label": "经验", "value": str(int(ev.get("planner_exp", 0)))},
+			{"label": "完场", "value": "%d 场" % int(ev.get("planner_events", 0))},
+		]))
+	return sections
 
 static func awards(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

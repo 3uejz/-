@@ -73,6 +73,7 @@ func run_tests() -> void:
 	_test_dining_commands()
 	_test_fashion_commands()
 	_test_sports_commands()
+	_test_events_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -458,7 +459,7 @@ func _test_fashion_commands() -> void:
 func _test_sports_commands() -> void:
 	var sim = _main._sim
 	_main.submit("看球队")
-	check(_main.has_panel("business"), "「看球队」打开经营面板")
+	check(_main.has_panel("sports"), "「看球队」打开体育面板")
 	_main.submit("开启球涯")
 	check(not (sim.sports_state().get("player", {}) as Dictionary).is_empty(), "「开启球涯」开启生涯")
 	_main.submit("比赛")
@@ -471,6 +472,29 @@ func _test_sports_commands() -> void:
 	check(true, "「运动康复」可执行")
 	_main.submit("退役")
 	check(String((sim.sports_state().get("player", {}) as Dictionary).get("career_stage", "")) == "retire", "「退役」结束生涯")
+
+func _test_events_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看活动")
+	check(_main.has_panel("events"), "「看活动」打开活动面板")
+	_main.submit("活动策划")
+	check(not (sim.events_state().get("planner", {}) as Dictionary).is_empty(), "「活动策划」开启职业")
+	_main.submit("办活动 演唱会")
+	check(String((sim.events_state().get("event", {}) as Dictionary).get("type", "")) == "concert", "「办活动」创建活动")
+	_main.submit("租场地 2000000")
+	check(int((sim.events_state().get("event", {}) as Dictionary).get("capacity", 0)) > 0, "「租场地」设定容量")
+	_main.submit("报批")
+	check(bool((sim.events_state().get("event", {}) as Dictionary).get("approved", false)), "「报批」通过")
+	_main.submit("拉赞助 冠名赞助")
+	check((sim.events_state().get("event", {}) as Dictionary).get("sponsors", []).size() == 1, "「拉赞助」入账")
+	_main.submit("售票 5000")
+	check(int((sim.events_state().get("event", {}) as Dictionary).get("sold", 0)) == 5000, "「售票」记录")
+	_main.submit("布置安保 80")
+	check(float((sim.events_state().get("event", {}) as Dictionary).get("security_level", 0.0)) > 0.0, "「布置安保」配置")
+	_main.submit("举办活动")
+	check(String((sim.events_state().get("event", {}) as Dictionary).get("stage", "")) == "live", "「举办活动」进入现场")
+	_main.submit("活动复盘")
+	check(String((sim.events_state().get("event", {}) as Dictionary).get("stage", "")) == "review", "「活动复盘」进入复盘")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
