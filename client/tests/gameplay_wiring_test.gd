@@ -66,6 +66,7 @@ func run_tests() -> void:
 	_test_digital_commands()
 	_test_late_tech_commands()
 	_test_ip_media_commands()
+	_test_manufacturing_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -330,6 +331,29 @@ func _test_ip_media_commands() -> void:
 	var money_before: int = sim.economy.cash(sim.account_id())
 	_main.submit("发行作品 试作")
 	check(sim.economy.cash(sim.account_id()) >= money_before, "「发行作品」结算营收")
+
+func _test_manufacturing_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看工厂")
+	check(_main.has_panel("business"), "「看工厂」打开经营面板")
+	# 开办工厂
+	_main.submit("开办工厂")
+	check(not sim.manufacturing_state().is_empty(), "「开办工厂」建立工厂")
+	# 招工
+	_main.submit("招工 普工 10")
+	check_eq(int(sim.manufacturing.headcount(sim.manufacturing_state())), 10, "「招工」写入产线人员")
+	# 采购原料
+	_main.submit("采购原料 钢 100")
+	var steel: float = sim.manufacturing.material_qty(sim.manufacturing_state(), "steel")
+	check(steel > 0.0, "「采购原料」入库存")
+	# 生产
+	_main.submit("生产 钢制零件 20")
+	check(sim.manufacturing.product_qty(sim.manufacturing_state(), "steel_part") > 0.0, "「生产」产出成品")
+	# 接单与交付
+	_main.submit("接单 钢制零件 10")
+	_main.submit("交付订单")
+	var orders: Array = sim.manufacturing_state().get("orders", [])
+	check(orders.size() >= 1 and float((orders[0] as Dictionary).get("delivered", 0.0)) > 0.0, "「交付订单」结算交付")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

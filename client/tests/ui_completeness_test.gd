@@ -1,6 +1,6 @@
 extends "res://tests/test_base.gd"
 ## 面板入口与动词注册完整性检查（任务 51.1）。
-## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；44 面板与 ui.md 一致。
+## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；45 面板与 ui.md 一致。
 
 const CoverageScript = preload("res://command/verb_coverage.gd")
 const RegistryScript = preload("res://command/verb_registry.gd")

@@ -231,6 +231,21 @@ func _dispatch(intent) -> Dictionary:
 			return _open_media(intent)
 		"发行作品":
 			return _release_work(intent)
+		# 制造业与供应链（D26）
+		"开办工厂":
+			return _found_factory(intent)
+		"招工":
+			return _mfg_hire(intent)
+		"采购原料":
+			return _mfg_purchase(intent)
+		"生产":
+			return _mfg_produce(intent)
+		"接单":
+			return _mfg_order(intent)
+		"交付订单":
+			return _mfg_deliver(intent)
+		"改进经营模式":
+			return _mfg_mode(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -265,6 +280,7 @@ func _help() -> Dictionary:
 		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
 		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入]",
 		"· 知识产权与媒体：登记知识产权 <类型> / 知识产权授权 <IP> [规模] / 知识产权转让 <IP> [价格] / 知识产权质押 <IP> [金额] / 知识产权维权 <IP> / 开办媒体 <类型> / 发行作品 <标题>",
+		"· 制造业与供应链：开办工厂 [模式] / 招工 <岗位> [人数] / 采购原料 <原料> [数量] / 生产 <配方> [批次] / 接单 <配方> [数量] / 交付订单 [序号] / 改进经营模式 <模式>",
 	]
 	return _ok(lines, 0, "")
 
@@ -1178,6 +1194,77 @@ func _ip_type_name(ip_type: String) -> String:
 func _media_type_name(media_type: String) -> String:
 	return String(host.ip_media.MEDIA_TYPES.get(media_type, {}).get("name", media_type))
 
+# --- 制造业与供应链（D26） ---
+
+func _found_factory(intent) -> Dictionary:
+	var mode := _object_id(intent, "mfg_mode")
+	if mode.is_empty():
+		mode = "own_factory"
+	var r: Dictionary = host.found_factory(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办工厂（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你开办了工厂，经营模式：%s。" % _mfg_mode_name(String(r.get("mode", mode)))], 0, "")
+
+func _mfg_hire(intent) -> Dictionary:
+	var role := _object_id(intent, "mfg_role")
+	var count: int = _param_number(intent, "number", 1)
+	var r: Dictionary = host.mfg_hire(role, count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法招工（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你招入 %d 名%s。" % [int(r.get("hired", count)), _mfg_role_name(role)]], 0, "")
+
+func _mfg_purchase(intent) -> Dictionary:
+	var material := _object_id(intent, "mfg_material")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.mfg_purchase(material, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法采购原料（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["采购%s %.1f 单位，花费 %d。" % [material, float(r.get("delivered", 0.0)), int(r.get("cost", 0))]], 0, "")
+
+func _mfg_produce(intent) -> Dictionary:
+	var recipe := _object_id(intent, "mfg_recipe")
+	var batches: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.mfg_produce(recipe, batches)
+	if not bool(r.get("ok", false)):
+		return _fail("无法生产（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["生产%s，良品 %.1f（良品率 %.0f%%）。" % [_mfg_recipe_name(recipe), float(r.get("good_output", 0.0)), float(r.get("quality_yield", 0.0)) * 100.0]], 0, "")
+
+func _mfg_order(intent) -> Dictionary:
+	var recipe := _object_id(intent, "mfg_recipe")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.mfg_accept_order(recipe, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法接单（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["承接%s订单 %d 件。" % [_mfg_recipe_name(recipe), int(qty)]], 0, "")
+
+func _mfg_deliver(intent) -> Dictionary:
+	var index: int = _param_number(intent, "number", 0)
+	var r: Dictionary = host.mfg_deliver_order(index)
+	if not bool(r.get("ok", false)):
+		return _fail("无法交付订单（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["交付 %.1f 件，结算收入 %d。" % [float(r.get("delivered", 0.0)), int(r.get("revenue", 0))]], 0, "")
+
+func _mfg_mode(intent) -> Dictionary:
+	var mode := _object_id(intent, "mfg_mode")
+	var r: Dictionary = host.mfg_set_mode(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法切换经营模式（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["经营模式改为%s。" % _mfg_mode_name(mode)], 0, "")
+
+func _mfg_role_name(role: String) -> String:
+	return String(host.manufacturing.ROLES.get(role, {}).get("name", role))
+
+func _mfg_mode_name(mode: String) -> String:
+	return String(host.manufacturing.MODES.get(mode, {}).get("name", mode))
+
+func _mfg_recipe_name(recipe: String) -> String:
+	return String(host.manufacturing.recipe_def(recipe).get("name", recipe))
+
+func _param_number(intent, key: String, default: int) -> int:
+	if intent.params is Dictionary and (intent.params as Dictionary).has(key):
+		return int((intent.params as Dictionary).get(key, default))
+	return default
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1254,6 +1341,24 @@ func _reason_cn(reason: String) -> String:
 			return "该知识产权为无限期或已到期"
 		"article_not_found":
 			return "未找到该稿件"
+		"unknown_mode":
+			return "未知经营模式"
+		"no_factory":
+			return "尚未开办工厂"
+		"unknown_recipe":
+			return "未知生产配方"
+		"no_supplier":
+			return "该原料暂无供应商"
+		"bad_quantity":
+			return "数量不合法"
+		"bad_batches":
+			return "批次不合法"
+		"disrupted":
+			return "产线中断，无法生产"
+		"already_fulfilled":
+			return "该订单已交付完毕"
+		"funding_chain_broken":
+			return "资金链断裂"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1381,8 +1486,29 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_late_tech_mission_by_name(text)
 		"ip_asset":
 			return _find_ip_asset_by_name(text)
+		"mfg_role":
+			return _find_catalog_by_name(host.mfg_roles_catalog(), text)
+		"mfg_mode":
+			return _find_catalog_by_name(host.mfg_modes_catalog(), text)
+		"mfg_recipe":
+			return _find_catalog_by_name(host.mfg_recipes_catalog(), text)
+		"mfg_material":
+			return _find_catalog_by_name(host.mfg_materials_catalog(), text)
 		_:
 			return ""
+
+## 通用目录名回退：按 id 或显示名匹配条目列表（[{id,name}]）。
+func _find_catalog_by_name(items: Array, text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for it in items:
+		if it is Dictionary and String((it as Dictionary).get("id", "")) == needle:
+			return String((it as Dictionary).get("id", ""))
+	for it in items:
+		if it is Dictionary and String((it as Dictionary).get("name", "")).find(needle) >= 0:
+			return String((it as Dictionary).get("id", ""))
+	return ""
 
 ## 辅具名回退：按辅具 id 或显示名匹配。
 func _find_device_by_name(text: String) -> String:

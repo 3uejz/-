@@ -103,6 +103,7 @@ const VERB_PANELS: Dictionary = {
 	"看数字": "digital", "平台": "digital",
 	"看科技": "late_tech", "后期科技": "late_tech", "前沿科技": "late_tech",
 	"看知识产权": "ip_media", "知识产权": "ip_media", "媒体": "ip_media",
+	"看工厂": "business",
 	"看疫情": "epidemic", "公共卫生": "epidemic",
 	"看军旅": "war", "前线": "war",
 	"看行情": "market", "宏观": "market",
@@ -415,6 +416,10 @@ func _catalogs() -> Dictionary:
 		"late_tech_mission": _sim.late_tech_missions_catalog(),
 		"ip_type": _sim.ip_types_catalog(),
 		"media_type": _sim.media_types_catalog(),
+		"mfg_role": _sim.mfg_roles_catalog(),
+		"mfg_mode": _sim.mfg_modes_catalog(),
+		"mfg_recipe": _sim.mfg_recipes_catalog(),
+		"mfg_material": _sim.mfg_materials_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -730,6 +735,9 @@ func _panel_context() -> Dictionary:
 		var ipm: Dictionary = _sim.ip_media_panel_data()
 		if not ipm.is_empty():
 			context["ip_media"] = ipm
+		var mfg: Dictionary = _sim.factory_panel_data()
+		if not mfg.is_empty():
+			context["manufacturing"] = mfg
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

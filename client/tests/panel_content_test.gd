@@ -41,6 +41,7 @@ func run_tests() -> void:
 	_test_digital_panel()
 	_test_late_tech_panel()
 	_test_ip_media_panel()
+	_test_manufacturing_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -282,6 +283,27 @@ func _test_ip_media_panel() -> void:
 	check(not bool(d2.get("empty", true)), "有知识产权上下文非空")
 	check(_find_section(d2, "知识产权").get("rows", []).size() >= 1, "知识产权分区有行")
 	check(_find_section(d2, "媒体机构").get("rows", []).size() >= 1, "媒体机构分区有行")
+
+func _test_manufacturing_panel() -> void:
+	# 无上下文时经营面板为空态。
+	var base: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), {})
+	check(bool(base.get("empty", true)), "无产业上下文时经营面板空态")
+	var ctx: Dictionary = {"manufacturing": {
+		"money": 8000000, "mode": "own_factory", "mode_name": "开厂", "headcount": 12,
+		"labor_factor": 0.6, "efficiency": 1.0, "bottleneck": "labor", "effective_capacity": 60.0,
+		"safety": 0.5, "automation": 0.0, "active_disruptions": [],
+		"staff": [{"id": "unskilled", "name": "普工", "count": 12}],
+		"materials": [{"id": "steel", "qty": 180.0}],
+		"products": [{"id": "steel_part", "name": "钢制零件", "qty": 82.0}],
+		"orders": [{"index": 0, "name": "钢制零件", "quantity": 50.0, "delivered": 50.0, "fulfilled": true}],
+	}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有工厂上下文非空")
+	check(_find_section(d, "工厂概况").get("rows", []).size() >= 1, "工厂概况分区有行")
+	check(_find_section(d, "产线人员").get("rows", []).size() >= 1, "产线人员分区有行")
+	check(_find_section(d, "原料库存").get("rows", []).size() >= 1, "原料库存分区有行")
+	check(_find_section(d, "成品库存").get("rows", []).size() >= 1, "成品库存分区有行")
+	check(_find_section(d, "订单").get("rows", []).size() >= 1, "订单分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

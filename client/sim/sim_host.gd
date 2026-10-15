@@ -40,6 +40,7 @@ const AgricultureScript = preload("res://sim/agriculture.gd")
 const DigitalScript = preload("res://sim/digital.gd")
 const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
+const ManufacturingScript = preload("res://sim/manufacturing.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -115,6 +116,8 @@ var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/�
 var ip_media                    ## 知识产权与媒体（IpMediaSystem）
 var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
+var manufacturing                ## 制造业与供应链（ManufacturingSystem）
+var _factory: Dictionary = {}        ## 玩家工厂运行时（工厂为纯数据字典），入档 sim_runtime.manufacturing
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -164,6 +167,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	late_tech = LateTechScript.new()
 	_late_tech = late_tech.new_state()
 	ip_media = IpMediaScript.new()
+	manufacturing = ManufacturingScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -254,6 +258,10 @@ func _ensure_world_geo() -> void:
 		if im is Dictionary and not (im as Dictionary).is_empty():
 			_ips = (im.get("ips", []) as Array).duplicate(true)
 			_outlets = (im.get("outlets", []) as Array).duplicate(true)
+		# 恢复制造业运行时（玩家工厂）。
+		var mf: Variant = (state.sim_runtime as Dictionary).get("manufacturing", {})
+		if mf is Dictionary and not (mf as Dictionary).is_empty():
+			_factory = manufacturing.from_dict(mf)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1594,6 +1602,200 @@ func _persist_ip_media() -> void:
 		"ips": _ips.duplicate(true),
 		"outlets": _outlets.duplicate(true),
 	}
+
+
+# --- 制造业与供应链（D26） ---
+
+func manufacturing_state() -> Dictionary:
+	return _factory
+
+func mfg_roles_catalog() -> Array:
+	var out: Array = []
+	for key in manufacturing.ROLES.keys():
+		var d: Dictionary = manufacturing.ROLES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mfg_modes_catalog() -> Array:
+	var out: Array = []
+	for key in manufacturing.MODES.keys():
+		var d: Dictionary = manufacturing.MODES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mfg_recipes_catalog() -> Array:
+	var out: Array = []
+	for key in manufacturing.RECIPES.keys():
+		var d: Dictionary = manufacturing.RECIPES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mfg_materials_catalog() -> Array:
+	const MATERIAL_NAMES: Dictionary = {"steel": "钢材", "resin": "树脂", "copper": "铜材"}
+	var seen: Dictionary = {}
+	var out: Array = []
+	for key in manufacturing.RECIPES.keys():
+		for mat in manufacturing.input_materials(String(key)):
+			var m := String(mat)
+			if seen.has(m):
+				continue
+			seen[m] = true
+			out.append({"id": m, "name": String(MATERIAL_NAMES.get(m, m))})
+	return out
+
+## 开办工厂：授予所选经营模式资质并注入初始营运资金（工厂为独立资金池）。
+func found_factory(mode: String = "own_factory") -> Dictionary:
+	if not manufacturing.MODES.has(mode):
+		return {"ok": false, "reason": "unknown_mode"}
+	_factory = manufacturing.new_factory(10000000, {"mode": "own_factory"})
+	manufacturing.grant_qualification(_factory, String((manufacturing.MODES[mode] as Dictionary)["qualification"]))
+	var setr: Dictionary = manufacturing.set_mode(_factory, mode)
+	if not bool(setr.get("ok", false)):
+		# 资金/资质不足时回落到开厂模式。
+		manufacturing.grant_qualification(_factory, "factory_license")
+		manufacturing.set_mode(_factory, "own_factory")
+	_persist_manufacturing()
+	return {"ok": true, "mode": String(_factory.get("mode", "own_factory"))}
+
+func mfg_hire(role: String, count: int) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.hire(_factory, role, count)
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+func mfg_fire(role: String, count: int) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.fire(_factory, role, count)
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+## 添加覆盖某原料的供应商。
+func mfg_add_supplier(material: String) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.add_supplier(_factory, {
+		"name": "%s 供应商" % material, "materials": [material], "reliability": 0.9, "price_factor": 1.0,
+	})
+	_persist_manufacturing()
+	return r
+
+func mfg_purchase(material: String, qty: float) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	# 首次采购该原料时惰性建立供应商，保证「采购原料」开箱可用。
+	var covered: bool = false
+	for s in (_factory.get("suppliers", []) as Array):
+		if (s as Dictionary).get("materials", []).has(material):
+			covered = true
+			break
+	if not covered:
+		mfg_add_supplier(material)
+	var r: Dictionary = manufacturing.purchase(_factory, material, qty, {"base_unit_cost": 1000})
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+func mfg_produce(recipe_key: String, batches: float = 1.0) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.produce(_factory, recipe_key, batches)
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+## 接单：价取配方基准价。
+func mfg_accept_order(recipe_key: String, quantity: float) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var def: Dictionary = manufacturing.recipe_def(recipe_key)
+	if def.is_empty():
+		return {"ok": false, "reason": "unknown_recipe"}
+	var r: Dictionary = manufacturing.accept_order(_factory, recipe_key, quantity, int(def.get("price", 0)))
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+func mfg_deliver_order(index: int = 0) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.deliver_order(_factory, index)
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+## 切换/升级经营模式。
+func mfg_set_mode(mode: String) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.upgrade_mode(_factory, mode)
+	if not bool(r.get("ok", false)):
+		r = manufacturing.set_mode(_factory, mode)
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+## 制造业面板数据：模式/产能/人员/原料/成品/订单/风险。
+func factory_panel_data() -> Dictionary:
+	if _factory.is_empty():
+		return {}
+	var staff: Array = []
+	for key in manufacturing.ROLES.keys():
+		var n: int = manufacturing.staff_count(_factory, String(key))
+		if n > 0:
+			staff.append({"id": String(key), "name": String((manufacturing.ROLES[key] as Dictionary).get("name", key)), "count": n})
+	var materials: Array = []
+	var max_factory := _factory
+	for mat in (max_factory.get("materials", {}) as Dictionary).keys():
+		var entry: Dictionary = (max_factory["materials"] as Dictionary)[mat]
+		if float(entry.get("qty", 0.0)) > 0.0:
+			materials.append({"id": String(mat), "qty": snappedf(float(entry.get("qty", 0.0)), 0.1)})
+	var products: Array = []
+	for rkey in (max_factory.get("products", {}) as Dictionary).keys():
+		var qty: float = float((max_factory["products"] as Dictionary)[rkey])
+		if qty > 0.0:
+			products.append({"id": String(rkey), "name": String(manufacturing.recipe_def(String(rkey)).get("name", rkey)), "qty": snappedf(qty, 0.1)})
+	var orders: Array = []
+	var idx: int = 0
+	for o in (max_factory.get("orders", []) as Array):
+		if o is Dictionary:
+			var od: Dictionary = o
+			orders.append({
+				"index": idx, "name": String(manufacturing.recipe_def(String(od.get("recipe", ""))).get("name", od.get("recipe", ""))),
+				"quantity": snappedf(float(od.get("quantity", 0.0)), 0.1),
+				"delivered": snappedf(float(od.get("delivered", 0.0)), 0.1),
+				"fulfilled": bool(od.get("fulfilled", false)),
+			})
+			idx += 1
+	var cap: Dictionary = {}
+	var recipe_keys: Array = manufacturing.recipe_keys()
+	if not recipe_keys.is_empty():
+		cap = manufacturing.capacity(_factory, String(recipe_keys[0]))
+	return {
+		"money": int(max_factory.get("money", 0)),
+		"mode": String(max_factory.get("mode", "")),
+		"mode_name": String(manufacturing.MODES.get(String(max_factory.get("mode", "")), {}).get("name", max_factory.get("mode", ""))),
+		"headcount": manufacturing.headcount(_factory),
+		"labor_factor": snappedf(manufacturing.labor_factor(_factory), 0.01),
+		"efficiency": snappedf(manufacturing.effective_efficiency(_factory), 0.01),
+		"bottleneck": String(cap.get("bottleneck", "")),
+		"effective_capacity": snappedf(float(cap.get("effective_capacity", 0.0)), 0.1),
+		"safety": snappedf(float(max_factory.get("safety", 0.0)), 0.01),
+		"automation": snappedf(float(max_factory.get("automation", 0.0)), 0.01),
+		"active_disruptions": manufacturing.active_disruptions(_factory),
+		"staff": staff,
+		"materials": materials,
+		"products": products,
+		"orders": orders,
+	}
+
+func _persist_manufacturing() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["manufacturing"] = manufacturing.to_dict(_factory)
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

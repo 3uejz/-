@@ -45,6 +45,7 @@ func run_tests() -> void:
 	_test_digital_runtime()
 	_test_late_tech_runtime()
 	_test_ip_media_runtime()
+	_test_manufacturing_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -671,4 +672,42 @@ func _test_ip_media_runtime() -> void:
 	reloaded.bind(state)
 	check((reloaded.ip_media_state().get("ips", []) as Array).size() == 1, "读档恢复 IP")
 	check((reloaded.ip_media_state().get("outlets", []) as Array).size() == 1, "读档恢复媒体机构")
+
+
+func _test_manufacturing_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(99)
+	var host = SimHostScript.new(state, 99)
+	host.bind(state)
+	check(host.mfg_roles_catalog().size() >= 7, "制造业岗位含普工/技工/工程师等")
+	check(host.mfg_modes_catalog().size() >= 4, "经营模式含开厂/代工/自建品牌/技术授权")
+	check(host.mfg_recipes_catalog().size() >= 3, "配方含钢制零件/塑料件/电路板")
+	# 开办工厂。
+	var found: Dictionary = host.found_factory("own_factory")
+	check(bool(found.get("ok", false)), "开办工厂成功")
+	# 招工。
+	var hire: Dictionary = host.mfg_hire("unskilled", 20)
+	check(bool(hire.get("ok", false)), "招入普工成功")
+	check_eq(host.manufacturing.headcount(host.manufacturing_state()), 20, "在册 20 人")
+	# 采购与生产。
+	host.mfg_add_supplier("steel")
+	var buy: Dictionary = host.mfg_purchase("steel", 200.0)
+	check(bool(buy.get("ok", false)) and float(buy.get("delivered", 0.0)) > 0.0, "采购钢材到货")
+	var prod: Dictionary = host.mfg_produce("steel_part", 100.0)
+	check(bool(prod.get("ok", false)) and float(prod.get("good_output", 0.0)) > 0.0, "生产出良品")
+	# 接单与交付。
+	var order: Dictionary = host.mfg_accept_order("steel_part", 50.0)
+	check(bool(order.get("ok", false)), "承接订单成功")
+	var deliver: Dictionary = host.mfg_deliver_order(0)
+	check(bool(deliver.get("ok", false)) and int(deliver.get("revenue", 0)) > 0, "交付订单结算收入")
+	# 缺料时生产被原料约束。
+	var prod2: Dictionary = host.mfg_produce("circuit_board", 10.0)
+	check(bool(prod2.get("ok", false)) and String(prod2.get("bottleneck", "")) == "material", "缺料时以原料为瓶颈")
+	# 持久化与读档恢复。
+	host._persist_manufacturing()
+	check(state.sim_runtime.get("manufacturing", null) is Dictionary, "制造业运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 99)
+	reloaded.bind(state)
+	check_eq(int(reloaded.manufacturing.headcount(reloaded.manufacturing_state())), 20, "读档恢复工厂人员")
+	check(not reloaded.factory_panel_data().is_empty(), "面板数据非空")
 

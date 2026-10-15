@@ -543,9 +543,73 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 		sections.append(_section("公司", _rows_from(companies, ["industry", "stage", "profit"], name_resolver)))
 	if not factories.is_empty():
 		sections.append(_section("工厂与产线", _rows_from(factories, ["industry", "stock", "capacity"], name_resolver)))
+	var mfg: Dictionary = context.get("manufacturing", {}) if context.get("manufacturing") is Dictionary else {}
+	if not mfg.is_empty():
+		sections.append_array(_mfg_sections(mfg))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)
+
+## 制造业面板分区：工厂概况、人员、原料、成品、订单。
+static func _mfg_sections(mfg: Dictionary) -> Array:
+	var sections: Array = []
+	var overview: Array = [{
+		"label": "经营模式", "value": String(mfg.get("mode_name", "")),
+	}, {
+		"label": "营运资金", "value": str(int(mfg.get("money", 0))),
+	}, {
+		"label": "用工人数", "value": str(int(mfg.get("headcount", 0))),
+	}, {
+		"label": "有效产能", "value": "%.1f（瓶颈：%s）" % [float(mfg.get("effective_capacity", 0.0)), _mfg_bottleneck_cn(String(mfg.get("bottleneck", "")))],
+	}]
+	var disruptions: Array = _items_of(mfg.get("active_disruptions", []))
+	if not disruptions.is_empty():
+		overview.append({"label": "在产风险", "value": "%d 项中断" % disruptions.size()})
+	sections.append(_section("工厂概况", overview))
+	var staff: Array = _items_of(mfg.get("staff", []))
+	if not staff.is_empty():
+		var srows: Array = []
+		for s in staff:
+			if s is Dictionary:
+				srows.append({"label": String((s as Dictionary).get("name", "?")), "value": "%d 人" % int((s as Dictionary).get("count", 0))})
+		sections.append(_section("产线人员", srows))
+	var materials: Array = _items_of(mfg.get("materials", []))
+	if not materials.is_empty():
+		var mrows: Array = []
+		for m in materials:
+			if m is Dictionary:
+				mrows.append({"label": String((m as Dictionary).get("id", "?")), "value": "%.1f" % float((m as Dictionary).get("qty", 0.0))})
+		sections.append(_section("原料库存", mrows))
+	var products: Array = _items_of(mfg.get("products", []))
+	if not products.is_empty():
+		var prows: Array = []
+		for p in products:
+			if p is Dictionary:
+				prows.append({"label": String((p as Dictionary).get("name", "?")), "value": "%.1f" % float((p as Dictionary).get("qty", 0.0))})
+		sections.append(_section("成品库存", prows))
+	var orders: Array = _items_of(mfg.get("orders", []))
+	if not orders.is_empty():
+		var orows: Array = []
+		for o in orders:
+			if o is Dictionary:
+				var od: Dictionary = o
+				var state: String = "已交付" if bool(od.get("fulfilled", false)) else "进行中"
+				orows.append({"label": "%s 订单 #%d" % [String(od.get("name", "?")), int(od.get("index", 0))], "value": "%s %.1f/%.1f" % [state, float(od.get("delivered", 0.0)), float(od.get("quantity", 0.0))]})
+		sections.append(_section("订单", orows))
+	return sections
+
+static func _mfg_bottleneck_cn(key: String) -> String:
+	match key:
+		"equipment":
+			return "设备"
+		"labor":
+			return "人力"
+		"efficiency":
+			return "效率"
+		"material":
+			return "原料"
+		_:
+			return key if key != "" else "无"
 
 static func organizations(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
