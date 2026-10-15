@@ -1,6 +1,6 @@
 extends "res://tests/test_base.gd"
 ## 面板入口与动词注册完整性检查（任务 51.1）。
-## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；40 面板与 ui.md 一致。
+## 校验：动词规格可解析且无重复；注册表覆盖核心动词且结构完整；41 面板与 ui.md 一致。
 
 const CoverageScript = preload("res://command/verb_coverage.gd")
 const RegistryScript = preload("res://command/verb_registry.gd")
@@ -50,6 +50,6 @@ func _test_panel_spec_matches() -> void:
 	var panel_registry = PanelRegistryScript.new()
 	var report: Dictionary = CoverageScript.panel_report(panel_registry)
 	var spec: Array = report["spec"]
-	check_eq(spec.size(), 40, "ui.md 面板清单 40 项")
+	check_eq(spec.size(), 41, "ui.md 面板清单 41 项")
 	check((report["missing"] as Array).is_empty(), "规格面板均已注册: %s" % str(report["missing"]))
 	check((report["extra"] as Array).is_empty(), "注册面板均在规格内: %s" % str(report["extra"]))

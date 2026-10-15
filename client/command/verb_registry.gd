@@ -23,6 +23,7 @@ const PANEL_VERBS: Dictionary = {
 	"看殡葬": "funeral", "看玄学": "metaphysics", "看医疗": "medical",
 	"看心理": "mental",
 	"看精神": "spirit",
+	"看语言": "language",
 	"看文娱": "content_industry", "看工程": "engineering", "看服务": "services",
 	"看交通": "transport_infra", "看家庭": "household", "看体育": "sports",
 	"看活动": "events", "看奖项": "awards", "看数字": "digital",
@@ -343,6 +344,11 @@ func _seed_core() -> void:
 		_seed("募捐", ["筹款"], ["organization"], [], "组织与社团", "募捐 [组织]", "发起组织募捐"),
 		_seed("游行", ["集会游行"], ["organization"], [], "组织与社团", "游行 [组织]", "发起集体游行"),
 		_seed("抵制", ["联合抵制"], ["organization"], [], "组织与社团", "抵制 [组织]", "发起联合抵制"),
+		# 语言与文化（D20）
+		_seed("学语言", ["学习语言", "上语言课", "学外语"], ["language"], ["duration"], "语言与文化", "学语言 <语言> [时长]", "学习一门外语"),
+		_seed("沉浸", ["语言沉浸", "留学"], ["language"], ["duration"], "语言与文化", "沉浸 <语言> [天数]", "在语言环境中快速提升"),
+		_seed("语言考试", ["考语言证书", "参加语言考试"], ["language"], [], "语言与文化", "语言考试 <语言>", "参加语言等级考试"),
+		_seed("适应文化", ["融入当地", "文化适应"], ["culture"], ["duration"], "语言与文化", "适应文化 <文化> [天数]", "适应当地文化、减轻文化冲击"),
 		# 面板查询
 		_seed("看自己", ["看角色", "属性"], [], [], "面板查询", "看自己", "查看角色与属性"),
 		_seed("看技能", ["技能树"], [], [], "面板查询", "看技能", "查看技能树"),
@@ -362,7 +368,7 @@ func _seed_core() -> void:
 		_seed("收容", ["封印"], [], [], "异常", "收容 <异常实体>", "收容异常实体", true),
 	]
 	# 面板查询：PANEL_VERBS 中尚未登记的面板动词统一登记，
-	# 确保全部 40 个面板都能通过中文指令「看 X」打开（与 ui/panel_registry 对齐）。
+	# 确保全部 41 个面板都能通过中文指令「看 X」打开（与 ui/panel_registry 对齐）。
 	var seeded: Dictionary = {}
 	for d in defs:
 		seeded[String((d as Dictionary)["verb"])] = true

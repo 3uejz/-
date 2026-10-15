@@ -60,6 +60,7 @@ func run_tests() -> void:
 	_test_mental_commands()
 	_test_spirit_commands()
 	_test_org_commands()
+	_test_language_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -210,6 +211,27 @@ func _test_org_commands() -> void:
 	# 退出组织。
 	_main.submit("退出组织 " + name)
 	check(sim.organizations.membership(_game.player, oid).is_empty(), "「退出组织」移除成员契约")
+
+func _test_language_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看语言")
+	check(_main.has_panel("language"), "「看语言」打开语言与文化面板")
+	# 学语言：提升综合等级。
+	var before: float = float(sim.language.overall(sim.language_state(), "en"))
+	_main.submit("学语言 英语")
+	var after: float = float(sim.language.overall(sim.language_state(), "en"))
+	check(after > before, "「学语言」提升语言等级")
+	# 沉浸：继续提升。
+	_main.submit("沉浸 英语")
+	check(float(sim.language.overall(sim.language_state(), "en")) >= after - 0.01, "「沉浸」不降低语言等级")
+	# 语言考试：预置等级后通过。
+	sim.language.set_level(sim.language_state(), "en", 90.0, 90.0, 90.0)
+	_main.submit("语言考试 英语")
+	var has_cert: bool = sim.language.has_certificate(sim.language_state(), "en", 60.0)
+	check(has_cert, "「语言考试」通过并颁发证书")
+	# 适应文化：提升适应度。
+	_main.submit("适应文化 美国")
+	check(float(sim.language.current_adaptation(sim._culture, "us")) > 0.0, "「适应文化」提升文化适应度")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

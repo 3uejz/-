@@ -39,6 +39,7 @@ func run_tests() -> void:
 	_test_mental_runtime()
 	_test_spirit_runtime()
 	_test_org_runtime()
+	_test_language_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -449,4 +450,36 @@ func _test_org_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 88)
 	reloaded.bind(state)
 	check(not reloaded.find_org(oid).is_empty(), "读档恢复组织运行态")
+
+
+func _test_language_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	var catalog: Array = host.languages_catalog()
+	check(catalog.size() >= 5, "语言目录含 5 种语言")
+	# 学习提升综合等级。
+	var before: float = float(host.language.overall(host.language_state(), "en"))
+	var s: Dictionary = host.study_language("en", "course", 100.0)
+	check(bool(s.get("ok", false)), "学习英语成功")
+	var after: float = float(host.language.overall(host.language_state(), "en"))
+	check(after > before, "学习后综合等级提升")
+	# 考试达标发证。
+	host.language.set_level(host.language_state(), "en", 90.0, 90.0, 90.0)
+	var e: Dictionary = host.take_language_exam("en", 60.0)
+	check(bool(e.get("passed", false)), "等级达标通过语言考试")
+	check(host.language.has_certificate(host.language_state(), "en", 60.0), "考试通过颁发证书")
+	# 文化适应。
+	var a: Dictionary = host.adapt_culture("us", 365.0)
+	check(bool(a.get("ok", false)), "适应美国文化成功")
+	check(float(a.get("adaptation", 0.0)) > 0.0, "适应度提升")
+	# 持久化并读档恢复。
+	var expect: float = float(host.language.overall(host.language_state(), "en"))
+	host._persist_language()
+	check(state.sim_runtime.get("language", null) is Dictionary, "语言档案写入 sim_runtime")
+	check(state.sim_runtime.get("culture", null) is Dictionary, "文化状态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check(reloaded.language.overall(reloaded.language_state(), "en") >= expect - 0.01, "读档恢复语言等级")
 

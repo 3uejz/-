@@ -114,6 +114,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = mental(player, context, name_resolver)
 		"spirit":
 			data = spirit(player, context, name_resolver)
+		"language":
+			data = language(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -785,6 +787,54 @@ static func spirit(player: Dictionary, context: Dictionary, name_resolver: Calla
 		]})
 	else:
 		sections.append({"title": "精神危机", "rows": [{"label": "状态", "value": "心境安稳"}]})
+	return _ok(sections)
+
+static func language(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("语言与文化", "尚未生成角色数据")
+	var d: Dictionary = context.get("language", {}) if context.get("language") is Dictionary else {}
+	if d.is_empty():
+		return _empty("语言与文化", "暂无语言档案；可学习外语、参加考试或适应当地文化")
+	var sections: Array = []
+	var langs: Array = _items_of(d.get("languages", []))
+	var lrows: Array = []
+	for l in langs:
+		if not (l is Dictionary):
+			continue
+		var ld: Dictionary = l
+		lrows.append({
+			"label": "%s（综合 %.0f）" % [String(ld.get("name", "?")), float(ld.get("overall", 0.0))],
+			"value": "口语 %.0f · 听力 %.0f · 读写 %.0f" % [
+				float(ld.get("speaking", 0.0)), float(ld.get("listening", 0.0)), float(ld.get("literacy", 0.0))],
+		})
+	if not lrows.is_empty():
+		sections.append(_section("语言能力", lrows))
+	var certs: Array = _items_of(d.get("certificates", []))
+	if not certs.is_empty():
+		sections.append(_section("语言证书", certs))
+	var cults: Array = _items_of(d.get("cultures", []))
+	var crows: Array = []
+	for c in cults:
+		if not (c is Dictionary):
+			continue
+		var cd: Dictionary = c
+		crows.append({"label": String(cd.get("name", "?")), "value": "适应度 %.0f%%" % (float(cd.get("adaptation", 0.0)) * 100.0)})
+	if not crows.is_empty():
+		crows.append({"label": "文化冲击", "value": "%.0f%%" % (float(d.get("shock", 0.0)) * 100.0)})
+		sections.append(_section("文化适应", crows))
+	var fest: Dictionary = d.get("festival", {}) if d.get("festival") is Dictionary else {}
+	var frows: Array = []
+	if bool(fest.get("is_festival", false)):
+		var names: Array = []
+		for f in _items_of(fest.get("festivals", [])):
+			names.append(String((f as Dictionary).get("name", "")))
+		frows.append({"label": "今日节日", "value": "、".join(names)})
+		frows.append({"label": "衣食住行", "value": "商铺%s · 交通×%.1f · 社交×%.1f · 消费×%.1f" % [
+			"开市" if bool(fest.get("shops_open", true)) else "歇业",
+			float(fest.get("traffic", 1.0)), float(fest.get("social", 1.0)), float(fest.get("spending", 1.0))]})
+	else:
+		frows.append({"label": "今日", "value": "非节日"})
+	sections.append(_section("节日民俗", frows))
 	return _ok(sections)
 
 static func _crisis_name(key: String) -> String:

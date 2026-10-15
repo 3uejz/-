@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 40 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 41 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -85,9 +85,11 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - 精神追求与信仰（`sim/spirituality.gd` `SpiritualitySystem`）：价值观三轴（利己-利他/保守-开放/物质-精神）随选择微调、七类精神追求（冥想/修行/哲学阅读/写作/自省/志愿服务/艺术创作）按小时降压力并漂移人格与价值观、十派信仰/哲学与修持境界、四类精神危机及出口化解、邪教卷入风险；`修持 <法门>`/`皈依 <信仰>`/`深化信仰`/`化解危机 <出口>` 指令经 `SimHost.pursue_spirit()`/`convert_faith()`/`deepen_faith()`/`resolve_spirit_crisis()` 结算；运行时经 `GameState.sim_runtime.spirituality` 持久化（`to_dict()`/`from_dict()`）；皈依后信仰境界抬升幸福/意义分量。「精神追求」面板渲染价值观/信仰境界/追求深度/精神危机。
 - 组织与社团（`sim/organizations.gd` `OrganizationSystem`）：八类组织（工会/行业协会/NGO/兴趣俱乐部/宗教团体/政党/秘密结社/犯罪团伙）、四级晋升阶梯、五类集体行动（罢工/请愿/募捐/游行/抵制，成功率由规模/支持/压力/舆论决定）、派系斗争、秘密组织暴露清算与内鬼排查、破产解散；`加入组织 <组织>`/`退出组织`/`缴会费`/`组织任务`/`罢工`/`请愿`/`募捐`/`游行`/`抵制` 指令经 `SimHost.join_organization()`/`leave_organization()`/`pay_org_dues()`/`do_org_task()`/`org_collective_action()` 结算；成员资格随 `player.org_memberships` 持久化，组织运行态经 `GameState.sim_runtime.organizations` 持久化（组织由（种子, 区域, 类型序号）确定性生成）。「组织」面板渲染「我的组织 / 可加入组织」。
 
+- 语言与文化（`sim/language.gd` `LanguageSystem`）：语言独立类型（0..100），五种语言分口语/听力/读写三项（权重 0.4/0.3/0.3），三种学习方法（课程/环境沉浸/自学）水平越高增益越小，长期不用按天遗忘（30 天宽限）；考试发证、专业术语门槛与移民/外交/翻译职业解锁、六大节日修正（商铺/交通/社交/消费/心情）、五种文化距离与适应/冲击曲线；`学语言 <语言> [时长]`/`沉浸 <语言> [天数]`/`语言考试 <语言>`/`适应文化 <文化>` 指令经 `SimHost.study_language()`/`immerse_language()`/`take_language_exam()`/`adapt_culture()` 结算；语言档案随 `GameState.sim_runtime.language`、文化适应随 `GameState.sim_runtime.culture` 持久化；`advance()` 按日衰减语言。「语言与文化」面板渲染语言能力/语言证书/文化适应/节日民俗。
+
 ## 面板与表现层
 
-- **40 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+- **41 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
   按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入

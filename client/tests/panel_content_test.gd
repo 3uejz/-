@@ -10,7 +10,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
-	"weather", "anomaly", "goldfinger", "mental", "spirit",
+	"weather", "anomaly", "goldfinger", "mental", "spirit", "language",
 ]
 
 func _suite_name() -> String:
@@ -35,6 +35,7 @@ func run_tests() -> void:
 	_test_ending_panel()
 	_test_mental_panel()
 	_test_spirit_panel()
+	_test_language_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -160,6 +161,22 @@ func _test_spirit_panel() -> void:
 	check_eq(_row_value(_find_section(d2, "信仰与修持"), "信仰"), "佛教", "信仰")
 	check_eq(_row_value(_find_section(d2, "精神追求"), "冥想"), "小成 · 累计60.0小时", "追求深度")
 	check_eq(_row_value(_find_section(d2, "精神危机"), "当前危机"), "意义丧失", "危机名称")
+
+func _test_language_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("language", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无语言上下文为空态")
+	var ctx: Dictionary = {"language": {
+		"languages": [{"name": "英语", "overall": 72.0, "speaking": 70.0, "listening": 68.0, "literacy": 78.0}],
+		"certificates": [{"label": "英语等级 60", "value": "已获得"}],
+		"cultures": [{"name": "美国", "adaptation": 0.6}],
+		"shock": 0.4,
+		"festival": {"is_festival": true, "festivals": [{"name": "春节"}], "shops_open": false, "traffic": 0.3, "social": 1.8, "spending": 2.2},
+	}}
+	var d2: Dictionary = PanelContentScript.build("language", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有语言上下文非空")
+	check_eq(_row_value(_find_section(d2, "语言能力"), "英语（综合 72）"), "口语 70 · 听力 68 · 读写 78", "语言分项能力")
+	check_eq(_row_value(_find_section(d2, "文化适应"), "美国"), "适应度 60%", "文化适应度")
+	check_eq(_row_value(_find_section(d2, "节日民俗"), "今日节日"), "春节", "节日名称")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

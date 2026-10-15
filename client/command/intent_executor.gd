@@ -161,6 +161,15 @@ func _dispatch(intent) -> Dictionary:
 			return _org_action(intent, "march")
 		"抵制":
 			return _org_action(intent, "boycott")
+		# 语言与文化（D20）
+		"学语言":
+			return _study_language(intent)
+		"沉浸":
+			return _immerse_language(intent)
+		"语言考试":
+			return _language_exam(intent)
+		"适应文化":
+			return _adapt_culture(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -184,11 +193,12 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看行情 / 看天气 …（全部 40 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看行情 / 看天气 …（全部 41 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
 		"· 组织：加入组织 <组织> / 缴会费 / 组织任务 / 罢工 / 请愿 / 募捐 / 退出组织",
+		"· 语言：学语言 <语言> [时长] / 沉浸 <语言> [天数] / 语言考试 <语言> / 适应文化 <文化>",
 	]
 	return _ok(lines, 0, "")
 
@@ -720,6 +730,65 @@ func _org_reason(reason: String) -> String:
 		_:
 			return reason if reason != "" else "操作未能完成"
 
+# --- 语言与文化（D20） ---
+
+func _study_language(intent) -> Dictionary:
+	var lang := _object_id(intent, "language")
+	if lang.is_empty():
+		return _fail("未指定语言；可学汉语、英语、西班牙语、日语或法语。")
+	var minutes := _duration_minutes(intent, HOUR)
+	var adv: Dictionary = _advance_time(minutes, {}, "study")
+	var lines: Array = adv["narration"]
+	var r: Dictionary = host.study_language(lang, "course", float(minutes) / 60.0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法学习该语言。")
+	lines.append("你修习「%s」%.0f 小时，综合等级升至 %.1f。" % [_language_name(lang), float(minutes) / 60.0, float(r.get("overall", 0.0))])
+	return _ok(lines, minutes, "")
+
+func _immerse_language(intent) -> Dictionary:
+	var lang := _object_id(intent, "language")
+	if lang.is_empty():
+		return _fail("未指定语言；可在海外环境中沉浸学习。")
+	var minutes := _duration_minutes(intent, DAY)
+	var adv: Dictionary = _advance_time(minutes, {}, "study")
+	var lines: Array = adv["narration"]
+	var days: float = float(minutes) / float(DAY)
+	var r: Dictionary = host.immerse_language(lang, days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法沉浸学习该语言。")
+	lines.append("你沉浸在「%s」的语言环境中 %.1f 天，综合等级升至 %.1f。" % [_language_name(lang), days, float(r.get("overall", 0.0))])
+	return _ok(lines, minutes, "")
+
+func _language_exam(intent) -> Dictionary:
+	var lang := _object_id(intent, "language")
+	if lang.is_empty():
+		return _fail("未指定语言；可参加汉语、英语、西班牙语、日语或法语考试。")
+	var target := 60.0
+	var r: Dictionary = host.take_language_exam(lang, target)
+	if not bool(r.get("ok", false)):
+		return _fail("无法参加该语言考试。")
+	if bool(r.get("passed", false)):
+		return _ok(["你通过了「%s」等级 %.0f 考试（成绩 %.1f），获得证书。" % [_language_name(lang), target, float(r.get("score", 0.0))]], 0, "")
+	return _fail("你的「%s」水平（%.1f）未达到等级 %.0f 的要求，未能通过考试。" % [_language_name(lang), float(r.get("score", 0.0)), target])
+
+func _adapt_culture(intent) -> Dictionary:
+	var culture := _object_id(intent, "culture")
+	if culture.is_empty():
+		return _fail("未指定文化；可适应中华、美国、日本、法国或阿拉伯文化。")
+	var minutes := _duration_minutes(intent, 30 * DAY)
+	var adv: Dictionary = _advance_time(minutes, {}, "rest")
+	var lines: Array = adv["narration"]
+	var days: float = float(minutes) / float(DAY)
+	var r: Dictionary = host.adapt_culture(culture, days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法适应该文化。")
+	lines.append("你用了 %.0f 天适应当地文化，适应度升至 %.0f%%，文化冲击降至 %.0f%%。" % [
+		days, float(r.get("adaptation", 0.0)) * 100.0, float(r.get("shock", 0.0)) * 100.0])
+	return _ok(lines, minutes, "")
+
+func _language_name(lang: String) -> String:
+	return String(host.language.language_def(lang).get("name", lang))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -835,8 +904,38 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_by_name(host.jobs, text)
 		"organization":
 			return _find_org_by_name(text)
+		"language":
+			return _find_language_by_name(text)
+		"culture":
+			return _find_culture_by_name(text)
 		_:
 			return ""
+
+## 语言名回退：按语言 id 或显示名匹配。
+func _find_language_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.language.LANGUAGES.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.language.LANGUAGES.keys():
+		if String((host.language.LANGUAGES[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
+
+## 文化名回退：按文化 id 或显示名匹配。
+func _find_culture_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	for key in host.language.CULTURES.keys():
+		if String(key) == needle:
+			return String(key)
+	for key in host.language.CULTURES.keys():
+		if String((host.language.CULTURES[key] as Dictionary).get("name", "")).find(needle) >= 0:
+			return String(key)
+	return ""
 
 ## 组织名回退：在可加入组织与已加入组织中按名称匹配。
 func _find_org_by_name(text: String) -> String:

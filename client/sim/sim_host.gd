@@ -34,6 +34,7 @@ const MentalHealthScript = preload("res://sim/mental_health.gd")
 const PersonalityScript = preload("res://sim/personality.gd")
 const SpiritualityScript = preload("res://sim/spirituality.gd")
 const OrganizationScript = preload("res://sim/organizations.gd")
+const LanguageScript = preload("res://sim/language.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -92,6 +93,9 @@ var spirituality                ## 价值观三轴/精神追求/信仰（Spiritu
 var _spirit: Dictionary = {}    ## 精神追求运行时（深度/信仰/危机），入档 sim_runtime.spirituality
 var organizations               ## 组织与社团（OrganizationSystem）
 var _orgs: Array = []           ## 所在城市可加入组织（确定性生成，运行时叠加存档增量）
+var language                    ## 语言与文化（LanguageSystem）
+var _lang_profile: Dictionary = {}   ## 语言档案（分项/证书/适应），入档 sim_runtime.language
+var _culture: Dictionary = {}        ## 文化适应状态（适应度/冲击），入档 sim_runtime.culture
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -129,6 +133,9 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	spirituality = SpiritualityScript.new()
 	_spirit = spirituality.new_state()
 	organizations = OrganizationScript.new()
+	language = LanguageScript.new()
+	_lang_profile = language.new_profile()
+	_culture = language.new_cultural_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -185,6 +192,13 @@ func _ensure_world_geo() -> void:
 		var spr: Variant = (state.sim_runtime as Dictionary).get("spirituality", {})
 		if spr is Dictionary and not (spr as Dictionary).is_empty():
 			_spirit = spirituality.from_dict(spr)
+		# 恢复语言档案（分项/证书）与文化适应状态。
+		var lr: Variant = (state.sim_runtime as Dictionary).get("language", {})
+		if lr is Dictionary and not (lr as Dictionary).is_empty():
+			_lang_profile = language.from_dict(lr)
+		var cr: Variant = (state.sim_runtime as Dictionary).get("culture", {})
+		if cr is Dictionary and not (cr as Dictionary).is_empty():
+			_culture = language.from_dict(cr)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -707,6 +721,121 @@ func _persist_organizations() -> void:
 	for org in _orgs:
 		arr.append((org as Dictionary).duplicate(true))
 	(state.sim_runtime as Dictionary)["organizations"] = arr
+
+# --- 语言与文化（D20） ---
+
+## 可学语言目录（供解析器链接「学语言 <语言>」）。
+func languages_catalog() -> Array:
+	var out: Array = []
+	for lang in language.languages():
+		var def: Dictionary = language.language_def(String(lang))
+		out.append({"id": String(lang), "name": String(def.get("name", lang))})
+	return out
+
+func language_state() -> Dictionary:
+	return _lang_profile
+
+## 学习语言：按课程/沉浸/自学推进分项等级。opts 可含 aptitude。
+func study_language(lang: String, method: String, hours: float, opts: Dictionary = {}) -> Dictionary:
+	if not language.has_language(lang):
+		return {"ok": false, "reason": "unknown_language"}
+	if not language.STUDY_METHODS.has(method):
+		return {"ok": false, "reason": "unknown_method"}
+	var o: Dictionary = opts.duplicate()
+	o["day"] = day_index()
+	var r: Dictionary = language.study(_lang_profile, lang, method, hours, o)
+	if bool(r.get("ok", false)):
+		_persist_language()
+	return r
+
+## 环境沉浸：以沉浸法按天学习。
+func immerse_language(lang: String, days: float) -> Dictionary:
+	if not language.has_language(lang):
+		return {"ok": false, "reason": "unknown_language"}
+	var o: Dictionary = {"day": day_index()}
+	var r: Dictionary = language.immerse(_lang_profile, lang, days, o)
+	if bool(r.get("ok", false)):
+		_persist_language()
+	return r
+
+## 参加语言考试：达到目标等级颁发证书。
+func take_language_exam(lang: String, target_level: float) -> Dictionary:
+	if not language.has_language(lang):
+		return {"ok": false, "reason": "unknown_language"}
+	var r: Dictionary = language.take_exam(_lang_profile, lang, target_level, {}, rng)
+	if bool(r.get("ok", false)):
+		_persist_language()
+	return r
+
+## 文化适应：按天推进对某文化的适应度并降低文化冲击。
+func adapt_culture(culture: String, days: float) -> Dictionary:
+	if language.culture_def(culture).is_empty():
+		return {"ok": false, "reason": "unknown_culture"}
+	var r: Dictionary = language.adapt(_culture, culture, days)
+	if bool(r.get("ok", false)):
+		_persist_language()
+	return r
+
+## 当日节日效果（基于日历，用于商铺/交通/社交/心情联动）。
+func today_festival_effects() -> Dictionary:
+	var cal: Dictionary = GregorianScript.from_absolute_minutes(now_minutes())
+	return language.festival_effects(int(cal.get("month", 1)), int(cal.get("day", 1)))
+
+## 语言与文化面板数据（语言分项/证书/文化适应/今日节日）。
+func language_panel_data() -> Dictionary:
+	var langs: Array = []
+	for lang in language.languages():
+		var key := String(lang)
+		var def: Dictionary = language.language_def(key)
+		langs.append({
+			"id": key,
+			"name": String(def.get("name", key)),
+			"overall": snappedf(language.overall(_lang_profile, key), 0.1),
+			"speaking": snappedf(language.component(_lang_profile, key, "speaking"), 0.1),
+			"listening": snappedf(language.component(_lang_profile, key, "listening"), 0.1),
+			"literacy": snappedf(language.component(_lang_profile, key, "literacy"), 0.1),
+		})
+	var certs: Array = []
+	for c in language.certificates(_lang_profile):
+		if not (c is Dictionary):
+			continue
+		var cd: Dictionary = c
+		var ldef: Dictionary = language.language_def(String(cd.get("lang", "")))
+		certs.append({"label": "%s 等级 %.0f" % [String(ldef.get("name", cd.get("lang", ""))), float(cd.get("level", 0.0))], "value": "已获证书"})
+	var cults: Array = []
+	for ck in language.CULTURES.keys():
+		var key := String(ck)
+		cults.append({
+			"name": String((language.CULTURES[ck] as Dictionary).get("name", key)),
+			"adaptation": snappedf(language.current_adaptation(_culture, key), 0.01),
+		})
+	return {
+		"languages": langs,
+		"certificates": certs,
+		"cultures": cults,
+		"shock": snappedf(float(_culture.get("shock", 0.0)), 0.01),
+		"festival": today_festival_effects(),
+	}
+
+## 语言遗忘：跨日推进时对长期未用语言按闲置天数衰减。
+func _decay_languages(before_minutes: int, after_minutes: int) -> void:
+	if after_minutes / MINUTES_PER_DAY <= before_minutes / MINUTES_PER_DAY:
+		return
+	var langs: Variant = _lang_profile.get("languages", {})
+	if not (langs is Dictionary):
+		return
+	for lang in (langs as Dictionary).keys():
+		var entry: Dictionary = (langs as Dictionary)[lang]
+		var last_day: float = float(entry.get("last_used_day", 0.0))
+		var idle: float = float(day_index()) - last_day
+		if idle > 0.0:
+			language.decay(_lang_profile, String(lang), idle)
+
+func _persist_language() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["language"] = language.to_dict(_lang_profile)
+	(state.sim_runtime as Dictionary)["culture"] = language.to_dict(_culture)
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:
@@ -1646,8 +1775,11 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append_array(_refresh_mental(minutes))
 		# 精神追求：检查精神危机触发（R55.6）。
 		events.append_array(_refresh_spirit())
+		# 语言：长期未用按闲置天数衰减（R64）。
+		_decay_languages(before_minutes, now_minutes())
 	_persist_mental()
 	_persist_spirituality()
+	_persist_language()
 	return {
 		"minutes": minutes,
 		"dead": bool(r.get("dead", false)),
