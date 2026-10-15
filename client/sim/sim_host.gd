@@ -41,6 +41,7 @@ const DigitalScript = preload("res://sim/digital.gd")
 const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
+const TradeScript = preload("res://sim/trade.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -118,6 +119,8 @@ var _ips: Array = []                 ## 已登记知识产权，入档 sim_runti
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 var manufacturing                ## 制造业与供应链（ManufacturingSystem）
 var _factory: Dictionary = {}        ## 玩家工厂运行时（工厂为纯数据字典），入档 sim_runtime.manufacturing
+var trade                        ## 国际贸易、海关与物流（TradeSystem）
+var _shipments: Array = []           ## 外贸单据列表，入档 sim_runtime.trade.shipments
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -168,6 +171,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_late_tech = late_tech.new_state()
 	ip_media = IpMediaScript.new()
 	manufacturing = ManufacturingScript.new()
+	trade = TradeScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -262,6 +266,10 @@ func _ensure_world_geo() -> void:
 		var mf: Variant = (state.sim_runtime as Dictionary).get("manufacturing", {})
 		if mf is Dictionary and not (mf as Dictionary).is_empty():
 			_factory = manufacturing.from_dict(mf)
+		# 恢复国际贸易运行时（外贸单据）。
+		var tr: Variant = (state.sim_runtime as Dictionary).get("trade", {})
+		if tr is Dictionary and not (tr as Dictionary).is_empty():
+			_shipments = ((tr as Dictionary).get("shipments", []) as Array).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1646,7 +1654,7 @@ func mfg_materials_catalog() -> Array:
 ## 开办工厂：授予所选经营模式资质并注入初始营运资金（工厂为独立资金池）。
 func found_factory(mode: String = "own_factory") -> Dictionary:
 	if not manufacturing.MODES.has(mode):
-		return {"ok": false, "reason": "unknown_mode"}
+		return {"ok": false, "reason": "unknown_mfg_mode"}
 	_factory = manufacturing.new_factory(10000000, {"mode": "own_factory"})
 	manufacturing.grant_qualification(_factory, String((manufacturing.MODES[mode] as Dictionary)["qualification"]))
 	var setr: Dictionary = manufacturing.set_mode(_factory, mode)
@@ -1736,6 +1744,8 @@ func mfg_set_mode(mode: String) -> Dictionary:
 		r = manufacturing.set_mode(_factory, mode)
 	if bool(r.get("ok", false)):
 		_persist_manufacturing()
+	elif String(r.get("reason", "")) == "unknown_mode":
+		r["reason"] = "unknown_mfg_mode"
 	return r
 
 ## 制造业面板数据：模式/产能/人员/原料/成品/订单/风险。
@@ -1796,6 +1806,168 @@ func _persist_manufacturing() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["manufacturing"] = manufacturing.to_dict(_factory)
+
+
+# --- 国际贸易、海关与物流（D27） ---
+
+func trade_state() -> Dictionary:
+	return {"shipments": _shipments}
+
+func trade_transport_modes_catalog() -> Array:
+	var out: Array = []
+	for key in trade.TRANSPORT_MODES.keys():
+		out.append({"id": String(key), "name": String((trade.TRANSPORT_MODES[key] as Dictionary).get("name", key))})
+	return out
+
+func trade_incoterms_catalog() -> Array:
+	var out: Array = []
+	for code in trade.INCOTERMS:
+		out.append({"id": String(code), "name": String(code)})
+	return out
+
+func trade_settlements_catalog() -> Array:
+	var out: Array = []
+	for key in trade.SETTLEMENTS.keys():
+		out.append({"id": String(key), "name": String((trade.SETTLEMENTS[key] as Dictionary).get("name", key))})
+	return out
+
+func trade_services_catalog() -> Array:
+	const NAMES: Dictionary = {"freight_forwarder": "货代", "customs_broker": "报关行", "overseas_warehouse": "海外仓", "cross_border_ecommerce": "跨境电商"}
+	var out: Array = []
+	for key in trade.SERVICES:
+		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
+	return out
+
+func trade_barriers_catalog() -> Array:
+	const NAMES: Dictionary = {"tariff": "加征关税", "quota": "配额", "anti_dumping": "反倾销", "origin": "原产地"}
+	var out: Array = []
+	for key in trade.BARRIERS:
+		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
+	return out
+
+## 新建出口单据：以货值建单，商品名落单据，返回序号。
+func export_shipment(goods: String, value: int) -> Dictionary:
+	var s: Dictionary = trade.new_shipment({"id": "shipment_%d" % _shipments.size(), "goods_value": maxi(0, value)})
+	s["goods"] = goods if goods != "" else "货物"
+	_shipments.append(s)
+	_persist_trade()
+	return {"ok": true, "index": _shipments.size() - 1, "goods": String(s["goods"]), "goods_value": int(s["goods_value"])}
+
+## 规划运输：报价并写入单据运费（海运/空运/铁路/快递/管道，超载拒绝）。
+func plan_trade_transport(index: int, mode: String) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var quote: Dictionary = trade.estimate_freight(mode, float(s.get("quantity_ton", 1.0)))
+	if not bool(quote.get("ok", false)):
+		return {"ok": false, "reason": String(quote.get("reason", "over_capacity"))}
+	s["transport"] = mode
+	s["freight"] = int(quote.get("freight", 0))
+	s["transit_days"] = float(quote.get("days", 0.0))
+	_persist_trade()
+	return {"ok": true, "mode": mode, "freight": int(s["freight"]), "days": float(s["transit_days"])}
+
+## 签订外贸合同：写入贸易术语与结算方式，进入签约阶段。
+func sign_trade_contract(index: int, incoterm: String, settlement: String = "letter_of_credit") -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	if not trade.INCOTERMS.has(incoterm):
+		return {"ok": false, "reason": "unknown_incoterm"}
+	if not trade.SETTLEMENTS.has(settlement):
+		settlement = "letter_of_credit"
+	s["incoterm"] = incoterm
+	s["settlement"] = settlement
+	s["stage"] = "contract"
+	(s["history"] as Array).append("contract")
+	_persist_trade()
+	return {"ok": true, "incoterm": incoterm, "settlement": settlement, "settlement_name": String((trade.SETTLEMENTS[settlement] as Dictionary).get("name", settlement))}
+
+## 报关并落税：关税+增值税从玩家现金扣除，进入报关阶段。
+func declare_shipment(index: int) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var duties: Dictionary = trade.declare_customs(s)
+	var tax: int = int(duties.get("total_tax", 0))
+	if economy.cash(account_id()) < tax:
+		return {"ok": false, "reason": "insufficient_funds", "total_tax": tax}
+	economy.add_money(account_id(), -tax, "customs_tax")
+	_persist_trade()
+	return {"ok": true, "tariff": int(duties.get("tariff", 0)), "vat": int(duties.get("vat", 0)), "total_tax": tax, "landed_cost": int(duties.get("landed_cost", 0))}
+
+## 清关：进入清关阶段。
+func clear_shipment(index: int) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.clear_customs(s)
+	_persist_trade()
+	return r
+
+## 发货交付：货值作为出口收入入账并进入交付阶段。
+func deliver_shipment(index: int) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.deliver(s)
+	var revenue: int = maxi(0, int(s.get("goods_value", 0)))
+	economy.add_money(account_id(), revenue, "export_revenue")
+	_persist_trade()
+	return {"ok": true, "revenue": revenue, "stage": String(r.get("stage", "delivery"))}
+
+## 结汇：按结算方式计手续费，从玩家现金扣除并标记已结汇。
+func settle_shipment(index: int) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var method: String = String(s.get("settlement", "letter_of_credit"))
+	if method == "":
+		method = "letter_of_credit"
+	var fee_r: Dictionary = trade.settlement_fee(int(s.get("goods_value", 0)), method)
+	var fee: int = int(fee_r.get("fee", 0))
+	if economy.cash(account_id()) < fee:
+		return {"ok": false, "reason": "insufficient_funds", "fee": fee}
+	economy.add_money(account_id(), -fee, "settlement_fee")
+	s["settled"] = true
+	_persist_trade()
+	return {"ok": true, "fee": fee, "method": method, "method_name": String((trade.SETTLEMENTS[method] as Dictionary).get("name", method))}
+
+## 外贸面板数据：单据、阶段、运输、税费、结算。
+func trade_panel_data() -> Dictionary:
+	if _shipments.is_empty():
+		return {}
+	var rows: Array = []
+	var idx: int = 0
+	for s in _shipments:
+		var sd: Dictionary = s
+		var stage: String = String(sd.get("stage", "inquiry"))
+		rows.append({
+			"index": idx,
+			"goods": String(sd.get("goods", "货物")),
+			"goods_value": int(sd.get("goods_value", 0)),
+			"stage": stage,
+			"stage_name": String(trade.STAGE_NAMES.get(stage, stage)),
+			"incoterm": String(sd.get("incoterm", "")),
+			"transport": String(sd.get("transport", "")),
+			"freight": int(sd.get("freight", 0)),
+			"settled": bool(sd.get("settled", false)),
+		})
+		idx += 1
+	return {"shipments": rows}
+
+func _shipment_at(index: int) -> Dictionary:
+	var i: int = index
+	if i < 0:
+		i = _shipments.size() - 1
+	if i < 0 or i >= _shipments.size():
+		return {}
+	return _shipments[i]
+
+func _persist_trade() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["trade"] = {"shipments": _shipments.duplicate(true)}
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

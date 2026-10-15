@@ -246,6 +246,21 @@ func _dispatch(intent) -> Dictionary:
 			return _mfg_deliver(intent)
 		"改进经营模式":
 			return _mfg_mode(intent)
+		# 国际贸易、海关与物流（D27）
+		"出口":
+			return _export_shipment(intent)
+		"规划运输":
+			return _plan_transport(intent)
+		"签订外贸合同":
+			return _sign_trade(intent)
+		"报关":
+			return _declare_shipment(intent)
+		"清关":
+			return _clear_shipment(intent)
+		"外贸交付":
+			return _deliver_shipment(intent)
+		"结汇":
+			return _settle_shipment(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -281,6 +296,7 @@ func _help() -> Dictionary:
 		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入]",
 		"· 知识产权与媒体：登记知识产权 <类型> / 知识产权授权 <IP> [规模] / 知识产权转让 <IP> [价格] / 知识产权质押 <IP> [金额] / 知识产权维权 <IP> / 开办媒体 <类型> / 发行作品 <标题>",
 		"· 制造业与供应链：开办工厂 [模式] / 招工 <岗位> [人数] / 采购原料 <原料> [数量] / 生产 <配方> [批次] / 接单 <配方> [数量] / 交付订单 [序号] / 改进经营模式 <模式>",
+		"· 国际贸易与物流：出口 <商品> [货值] / 规划运输 <方式> / 签订外贸合同 <术语> / 报关 / 清关 / 外贸交付 / 结汇",
 	]
 	return _ok(lines, 0, "")
 
@@ -1265,6 +1281,59 @@ func _param_number(intent, key: String, default: int) -> int:
 		return int((intent.params as Dictionary).get(key, default))
 	return default
 
+# --- 国际贸易、海关与物流（D27） ---
+
+func _export_shipment(intent) -> Dictionary:
+	var goods: String = String(intent.params.get("method", "")).strip_edges()
+	if goods.is_empty():
+		goods = "货物"
+	var value: int = _param_number(intent, "amount", 50000)
+	var r: Dictionary = host.export_shipment(goods, value)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建立出口单据（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["建立出口单据 #%d：%s，货值 %d。" % [int(r.get("index", 0)), String(r.get("goods", goods)), int(r.get("goods_value", value))]], 0, "")
+
+func _plan_transport(intent) -> Dictionary:
+	var mode := _object_id(intent, "trade_mode")
+	var r: Dictionary = host.plan_trade_transport(-1, mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法规划运输（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["规划%s，运费 %d，预计 %d 天。" % [_trade_mode_name(mode), int(r.get("freight", 0)), int(r.get("days", 0.0))]], 0, "")
+
+func _sign_trade(intent) -> Dictionary:
+	var incoterm := _object_id(intent, "trade_incoterm")
+	var r: Dictionary = host.sign_trade_contract(-1, incoterm)
+	if not bool(r.get("ok", false)):
+		return _fail("无法签订外贸合同（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["按 %s 签订外贸合同，结算方式 %s。" % [String(r.get("incoterm", incoterm)), String(r.get("settlement_name", ""))]], 0, "")
+
+func _declare_shipment(intent) -> Dictionary:
+	var r: Dictionary = host.declare_shipment(-1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法报关（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["报关完成：关税 %d，增值税 %d，落地成本 %d。" % [int(r.get("tariff", 0)), int(r.get("vat", 0)), int(r.get("landed_cost", 0))]], 0, "")
+
+func _clear_shipment(intent) -> Dictionary:
+	var r: Dictionary = host.clear_shipment(-1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法清关（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["清关完成。"], 0, "")
+
+func _deliver_shipment(intent) -> Dictionary:
+	var r: Dictionary = host.deliver_shipment(-1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法交付（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["外贸交付完成，出口收入 %d。" % int(r.get("revenue", 0))], 0, "")
+
+func _settle_shipment(intent) -> Dictionary:
+	var r: Dictionary = host.settle_shipment(-1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结汇（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["按%s结汇，手续费 %d。" % [String(r.get("method_name", "")), int(r.get("fee", 0))]], 0, "")
+
+func _trade_mode_name(mode: String) -> String:
+	return String(host.trade.TRANSPORT_MODES.get(mode, {}).get("name", mode))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1285,6 +1354,12 @@ func _reason_cn(reason: String) -> String:
 			return "未知辅具"
 		"unknown_mode":
 			return "未知养老模式"
+		"unknown_mfg_mode":
+			return "未知经营模式"
+		"not_qualified":
+			return "资质或资本不足"
+		"no_upgrade_path":
+			return "不存在该升级路径"
 		"unknown_crop":
 			return "未知作物"
 		"unknown_animal":
@@ -1341,8 +1416,12 @@ func _reason_cn(reason: String) -> String:
 			return "该知识产权为无限期或已到期"
 		"article_not_found":
 			return "未找到该稿件"
-		"unknown_mode":
+		"unknown_mfg_mode":
 			return "未知经营模式"
+		"not_qualified":
+			return "资质或资本不足"
+		"no_upgrade_path":
+			return "不存在该升级路径"
 		"no_factory":
 			return "尚未开办工厂"
 		"unknown_recipe":
@@ -1359,6 +1438,16 @@ func _reason_cn(reason: String) -> String:
 			return "该订单已交付完毕"
 		"funding_chain_broken":
 			return "资金链断裂"
+		"no_shipment":
+			return "尚未建立外贸单据"
+		"over_capacity":
+			return "超出该运输方式运力"
+		"unknown_incoterm":
+			return "未知贸易术语"
+		"unknown_settlement":
+			return "未知结算方式"
+		"at_end":
+			return "流程已到末段"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1494,6 +1583,12 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.mfg_recipes_catalog(), text)
 		"mfg_material":
 			return _find_catalog_by_name(host.mfg_materials_catalog(), text)
+		"trade_mode":
+			return _find_catalog_by_name(host.trade_transport_modes_catalog(), text)
+		"trade_incoterm":
+			return _find_catalog_by_name(host.trade_incoterms_catalog(), text)
+		"trade_settlement":
+			return _find_catalog_by_name(host.trade_settlements_catalog(), text)
 		_:
 			return ""
 

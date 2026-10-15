@@ -67,6 +67,7 @@ func run_tests() -> void:
 	_test_late_tech_commands()
 	_test_ip_media_commands()
 	_test_manufacturing_commands()
+	_test_trade_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -354,6 +355,24 @@ func _test_manufacturing_commands() -> void:
 	_main.submit("交付订单")
 	var orders: Array = sim.manufacturing_state().get("orders", [])
 	check(orders.size() >= 1 and float((orders[0] as Dictionary).get("delivered", 0.0)) > 0.0, "「交付订单」结算交付")
+
+func _test_trade_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看外贸")
+	check(_main.has_panel("business"), "「看外贸」打开经营面板")
+	_main.submit("出口 钢材")
+	check((sim.trade_state().get("shipments", []) as Array).size() >= 1, "「出口」建立外贸单据")
+	_main.submit("规划运输 海运")
+	var shipments: Array = sim.trade_state().get("shipments", [])
+	check(int((shipments[0] as Dictionary).get("freight", 0)) > 0, "「规划运输」写入运费")
+	_main.submit("签订外贸合同 FOB")
+	check_eq(String((shipments[0] as Dictionary).get("incoterm", "")), "FOB", "「签订外贸合同」写入术语")
+	_main.submit("报关")
+	check((shipments[0] as Dictionary).has("duties"), "「报关」落税")
+	_main.submit("外贸交付")
+	check(bool((shipments[0] as Dictionary).get("settled", false)) == false, "「外贸交付」进入交付")
+	_main.submit("结汇")
+	check(bool((shipments[0] as Dictionary).get("settled", false)), "「结汇」标记已结汇")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

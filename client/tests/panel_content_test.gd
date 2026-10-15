@@ -42,6 +42,7 @@ func run_tests() -> void:
 	_test_late_tech_panel()
 	_test_ip_media_panel()
 	_test_manufacturing_panel()
+	_test_trade_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -304,6 +305,15 @@ func _test_manufacturing_panel() -> void:
 	check(_find_section(d, "原料库存").get("rows", []).size() >= 1, "原料库存分区有行")
 	check(_find_section(d, "成品库存").get("rows", []).size() >= 1, "成品库存分区有行")
 	check(_find_section(d, "订单").get("rows", []).size() >= 1, "订单分区有行")
+
+func _test_trade_panel() -> void:
+	var ctx: Dictionary = {"trade": {"shipments": [{
+		"index": 0, "goods": "钢材", "goods_value": 50000, "stage": "contract",
+		"stage_name": "签约", "incoterm": "FOB", "transport": "sea", "freight": 50000, "settled": false,
+	}]}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有外贸上下文非空")
+	check(_find_section(d, "外贸单据").get("rows", []).size() >= 1, "外贸单据分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

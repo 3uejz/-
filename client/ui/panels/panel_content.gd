@@ -546,6 +546,22 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 	var mfg: Dictionary = context.get("manufacturing", {}) if context.get("manufacturing") is Dictionary else {}
 	if not mfg.is_empty():
 		sections.append_array(_mfg_sections(mfg))
+	var trd: Dictionary = context.get("trade", {}) if context.get("trade") is Dictionary else {}
+	var shipments: Array = _items_of(trd.get("shipments", []))
+	if not shipments.is_empty():
+		var trows: Array = []
+		for sh in shipments:
+			if sh is Dictionary:
+				var sd: Dictionary = sh
+				trows.append({
+					"label": "%s #%d" % [String(sd.get("goods", "货物")), int(sd.get("index", 0))],
+					"value": "%s · %s · %s" % [
+						String(sd.get("stage_name", "")),
+						String(sd.get("incoterm", "未签约")),
+						("已结汇" if bool(sd.get("settled", false)) else ("运费 %d" % int(sd.get("freight", 0)))),
+					],
+				})
+		sections.append(_section("外贸单据", trows))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)

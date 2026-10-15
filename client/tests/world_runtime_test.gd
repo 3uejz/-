@@ -46,6 +46,7 @@ func run_tests() -> void:
 	_test_late_tech_runtime()
 	_test_ip_media_runtime()
 	_test_manufacturing_runtime()
+	_test_trade_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -710,4 +711,43 @@ func _test_manufacturing_runtime() -> void:
 	reloaded.bind(state)
 	check_eq(int(reloaded.manufacturing.headcount(reloaded.manufacturing_state())), 20, "读档恢复工厂人员")
 	check(not reloaded.factory_panel_data().is_empty(), "面板数据非空")
+
+
+func _test_trade_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(77)
+	var host = SimHostScript.new(state, 77)
+	host.bind(state)
+	check(host.trade_transport_modes_catalog().size() >= 5, "运输方式含海运/空运/铁路/快递/管道")
+	check(host.trade_incoterms_catalog().size() >= 6, "贸易术语含 EXW/FOB/CFR/CIF/DAP/DDP")
+	check(host.trade_settlements_catalog().size() >= 4, "结算方式含信用证/汇付/保理/赊销")
+	# 建出口单据
+	var ex: Dictionary = host.export_shipment("钢材", 50000)
+	check(bool(ex.get("ok", false)), "建立出口单据成功")
+	check_eq((host.trade_state().get("shipments", []) as Array).size(), 1, "外贸单据列表含 1 项")
+	# 规划运输
+	var plan: Dictionary = host.plan_trade_transport(-1, "sea")
+	check(bool(plan.get("ok", false)) and int(plan.get("freight", 0)) > 0, "规划海运并报价")
+	# 签约
+	var sign: Dictionary = host.sign_trade_contract(-1, "FOB", "letter_of_credit")
+	check(bool(sign.get("ok", false)), "签订外贸合同成功")
+	# 报关扣税
+	var cash_before: int = host.economy.cash(host.account_id())
+	var dec: Dictionary = host.declare_shipment(-1)
+	check(bool(dec.get("ok", false)) and int(dec.get("total_tax", 0)) > 0, "报关计算关税与增值税")
+	check(host.economy.cash(host.account_id()) < cash_before, "报关扣除税费")
+	# 清关
+	check(bool(host.clear_shipment(-1).get("ok", false)), "清关成功")
+	# 交付结算收入
+	var del: Dictionary = host.deliver_shipment(-1)
+	check(bool(del.get("ok", false)) and int(del.get("revenue", 0)) > 0, "交付结算出口收入")
+	# 结汇手续费
+	var setl: Dictionary = host.settle_shipment(-1)
+	check(bool(setl.get("ok", false)) and int(setl.get("fee", 0)) > 0, "结汇收取手续费")
+	# 持久化与读档恢复
+	host._persist_trade()
+	check(state.sim_runtime.get("trade", null) is Dictionary, "国际贸易运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 77)
+	reloaded.bind(state)
+	check_eq((reloaded.trade_state().get("shipments", []) as Array).size(), 1, "读档恢复外贸单据")
 

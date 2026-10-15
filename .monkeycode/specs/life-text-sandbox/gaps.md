@@ -107,7 +107,8 @@
 - **待办**：工人工资/工资拖欠尚未按日结算（`payroll_cost()` 仅提供成本）；工厂间供应链上下游与物流联动未接（待 D27）；断电/罢工由模块接口提供，尚未接入宏观/灾害事件驱动。
 
 ### D27 国际贸易、海关与物流
-- 五种运输方式时效/费用/损耗/容量无数值；关务与结算（关税/增值税/汇率/Incoterms/信用证）无算法与 `TradeOrder`；贸易战/制裁接口未定；缺进出口/签约动词。
+- **已接线**：`TradeSystem`（`trade.gd`）外贸单据七阶段（询盘→签约→报关→检验检疫→运输→清关→交付，`STAGES`/`STAGE_NAMES`）；五种运输方式（海运/空运/铁路/快递/管道，`TRANSPORT_MODES`，含时效/吨运费/损耗率/运力/最低收费）与运费报价（`estimate_freight()`，超载拒绝）；完税价格/关税/增值税/落地成本（`calculate_duties()`/`declare_customs()`）；汇率与结算（`fx_rate()`/`has_currency()`/`convert()`/`settlement_fee()`/`hedge_fx()`/`fx_loss()`，结算方式信用证/汇付/保理/赊销）；贸易壁垒（加税/配额/反倾销/原产地，`BARRIERS`/`apply_barrier()`）与风险事件（贸易战/制裁/战争，`RISK_EVENTS`/`risk_event()`，含改航线与滞留）；Incoterms 责任划分（`INCOTERMS`/`INCOTERM_DUTIES`）；跨境服务（货代/报关行/海外仓/跨境电商，`SERVICES`/`add_service()`）；检验检疫/清关/交付与滞港费/货损/退运（`quarantine_inspect()`/`clear_customs()`/`deliver()`/`settle_demurrage()`/`damage_loss()`/`return_shipment()`）。运行时经 `GameState.sim_runtime.trade` 持久化（`shipments`）。`SimHost` 接线 `trade_state()`/`trade_transport_modes_catalog()`/`trade_incoterms_catalog()`/`trade_settlements_catalog()`/`trade_services_catalog()`/`trade_barriers_catalog()`/`export_shipment()`/`plan_trade_transport()`/`sign_trade_contract()`/`declare_shipment()`/`clear_shipment()`/`deliver_shipment()`/`settle_shipment()`/`trade_panel_data()`（报关扣税费、交付入出口收入、结汇计手续费）。UI：复用「经营」面板（`business`）增补外贸单据分区（`context["trade"]`）；指令 `出口 <商品> [货值]`/`规划运输 <方式>`/`签订外贸合同 <术语>`/`报关`/`清关`/`外贸交付`/`结汇` 与「看外贸」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `trade_test.gd` 覆盖）。
+- **待办**：贸易壁垒/风险事件/检验检疫/货损退运由模块提供，尚无独立指令与面板入口（待宏观/灾害系统驱动）；汇率联动世界宏观尚未接入；工厂产出与出口货值未打通。
 
 ### D28 矿业、能源与资源
 - 矿难/职业病无概率公式；能源价格作为宏观输入无接口（worldsim 缺项）；储量/品位/枯竭无数值；缺冶炼/电网运营动词。
