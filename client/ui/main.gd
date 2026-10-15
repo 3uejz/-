@@ -99,7 +99,7 @@ const VERB_PANELS: Dictionary = {
 	"看家庭": "household", "宠物": "household",
 	"看体育": "sports", "赛事": "sports",
 	"看活动": "events", "展会": "events",
-	"看奖项": "awards", "荣誉": "awards",
+	"看奖项": "awards", "荣誉": "awards", "名人堂": "awards",
 	"看数字": "digital", "平台": "digital",
 	"看科技": "late_tech", "后期科技": "late_tech", "前沿科技": "late_tech",
 	"看知识产权": "ip_media", "知识产权": "ip_media", "媒体": "ip_media",
@@ -453,6 +453,8 @@ func _catalogs() -> Dictionary:
 		"event_type": _sim.events_types_catalog(),
 		"event_role": _sim.events_roles_catalog(),
 		"sponsor_tier": _sim.events_sponsor_tiers_catalog(),
+		"award": _sim.honors_awards_catalog(),
+		"honor_category": _sim.honors_categories_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -792,6 +794,9 @@ func _panel_context() -> Dictionary:
 		var evp: Dictionary = _sim.events_panel_data()
 		if not evp.is_empty():
 			context["events"] = evp
+		var hop: Dictionary = _sim.honors_panel_data()
+		if not hop.is_empty():
+			context["honors"] = hop
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

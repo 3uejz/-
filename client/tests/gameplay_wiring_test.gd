@@ -74,6 +74,7 @@ func run_tests() -> void:
 	_test_fashion_commands()
 	_test_sports_commands()
 	_test_events_commands()
+	_test_honors_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -495,6 +496,20 @@ func _test_events_commands() -> void:
 	check(String((sim.events_state().get("event", {}) as Dictionary).get("stage", "")) == "live", "「举办活动」进入现场")
 	_main.submit("活动复盘")
 	check(String((sim.events_state().get("event", {}) as Dictionary).get("stage", "")) == "review", "「活动复盘」进入复盘")
+
+func _test_honors_commands() -> void:
+	var sim = _main._sim
+	_main.submit("名人堂")
+	check(_main.has_panel("awards"), "「名人堂」打开荣誉面板")
+	_main.submit("荣誉档案 90")
+	check(not (sim.honors_state().get("candidate", {}) as Dictionary).is_empty(), "「荣誉档案」建立档案")
+	_main.submit("提名 学术成就奖")
+	_main.submit("评审 学术成就奖")
+	_main.submit("领奖 学术成就奖")
+	check((sim.honors_state().get("candidate", {}) as Dictionary).get("honors", []).size() == 1, "「领奖」登记荣誉")
+	_main.submit("买奖 艺术大奖")
+	_main.submit("揭露黑幕")
+	check((sim.honors_state().get("candidate", {}) as Dictionary).get("honors", []).size() == 0, "「揭露黑幕」撤销荣誉")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

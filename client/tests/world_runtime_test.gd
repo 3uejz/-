@@ -53,6 +53,7 @@ func run_tests() -> void:
 	_test_fashion_runtime()
 	_test_sports_runtime()
 	_test_events_runtime()
+	_test_honors_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -938,4 +939,31 @@ func _test_events_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.events_state().get("event", {}) as Dictionary).is_empty(), "读档恢复活动")
 	check(not reloaded.events_panel_data().is_empty(), "会展面板数据非空")
+
+func _test_honors_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(81)
+	var host = SimHostScript.new(state, 81)
+	host.bind(state)
+	check(host.honors_categories_catalog().size() >= 6, "荣誉类别表含学术/艺术等")
+	check(host.honors_awards_catalog().size() >= 6, "奖项表含学术成就奖等")
+	check(bool(host.start_honor_profile(90.0).get("ok", false)), "建立荣誉档案成功")
+	check(bool(host.honors_nominate("academic_prize").get("eligible", false)), "提名达标")
+	check(bool(host.honors_evaluate("academic_prize").get("passed", false)), "评审通过")
+	var aw: Dictionary = host.honors_award("academic_prize")
+	check(bool(aw.get("awarded", false)), "领奖成功")
+	check((host.honors_state()["candidate"].get("honors", []) as Array).size() == 1, "荣誉登记")
+	check(aw.get("enshrined", null) is Dictionary, "入选名人堂")
+	check(bool(host.honors_buy("arts_prize").get("awarded", false)), "买奖运作成功")
+	var exp: Dictionary = host.honors_expose()
+	check(bool(exp.get("exposed", false)), "黑幕可揭露")
+	check((host.honors_state()["candidate"].get("honors", []) as Array).is_empty(), "揭露后荣誉撤销")
+	check(bool(host.honors_inherit().get("ok", false)), "传承评价可计算")
+	# 持久化与读档恢复。
+	host._persist_honors()
+	check(state.sim_runtime.get("honors", null) is Dictionary, "荣誉运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 81)
+	reloaded.bind(state)
+	check(not (reloaded.honors_state().get("candidate", {}) as Dictionary).is_empty(), "读档恢复荣誉档案")
+	check(not reloaded.honors_panel_data().is_empty(), "荣誉面板数据非空")
 

@@ -39,7 +39,8 @@
         "dining": { "type": "object", "additionalProperties": true },
         "fashion": { "type": "object", "additionalProperties": true },
         "sports": { "type": "object", "additionalProperties": true },
-        "events": { "type": "object", "additionalProperties": true }
+        "events": { "type": "object", "additionalProperties": true },
+        "honors": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

@@ -49,6 +49,7 @@ func run_tests() -> void:
 	_test_fashion_panel()
 	_test_sports_panel()
 	_test_events_panel()
+	_test_honors_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -412,6 +413,18 @@ func _test_events_panel() -> void:
 	check(not bool(d.get("empty", true)), "有会展上下文非空")
 	check(_find_section(d, "我的活动").get("rows", []).size() >= 1, "我的活动分区有行")
 	check(_find_section(d, "策划职业").get("rows", []).size() >= 1, "策划职业分区有行")
+
+func _test_honors_panel() -> void:
+	var ctx: Dictionary = {"honors": {
+		"achievement": 90.0, "relations": 0.0, "reputation": 12.0, "privileges": 1,
+		"honors": [{"name": "学术成就奖", "category": "学术", "prestige": 88.0}],
+		"hall_size": 1, "hall_active": 1,
+	}}
+	var d: Dictionary = PanelContentScript.build("awards", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有荣誉上下文非空")
+	check(_find_section(d, "荣誉档案").get("rows", []).size() >= 1, "荣誉档案分区有行")
+	check(_find_section(d, "已获荣誉").get("rows", []).size() >= 1, "已获荣誉分区有行")
+	check(_find_section(d, "名人堂").get("rows", []).size() >= 1, "名人堂分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

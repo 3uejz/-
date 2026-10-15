@@ -363,6 +363,18 @@ func _dispatch(intent) -> Dictionary:
 			return _events_hold(intent)
 		"活动复盘":
 			return _events_review(intent)
+		"荣誉档案":
+			return _honor_profile(intent)
+		"提名":
+			return _honor_nominate(intent)
+		"评审":
+			return _honor_evaluate(intent)
+		"领奖":
+			return _honor_award(intent)
+		"买奖":
+			return _honor_buy(intent)
+		"揭露黑幕":
+			return _honor_expose(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1831,6 +1843,58 @@ func _events_review(intent) -> Dictionary:
 		line += " 策划等级提升至 %d。" % int((r["planner"] as Dictionary).get("level", 1))
 	return _ok([line], 0, "")
 
+func _honor_profile(intent) -> Dictionary:
+	var achievement: float = float(_param_number(intent, "number", 60))
+	var r: Dictionary = host.start_honor_profile(achievement)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建立荣誉档案（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["建立荣誉档案，成就 %.0f。" % float(r.get("achievement", 0.0))], 0, "")
+
+func _honor_nominate(intent) -> Dictionary:
+	var award := _object_id(intent, "award")
+	var r: Dictionary = host.honors_nominate(award)
+	if not bool(r.get("ok", false)):
+		return _fail("无法提名（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("eligible", false)):
+		return _ok(["已提名%s。" % award], 0, "")
+	return _ok(["成就不足，还差 %.0f。" % float(r.get("gap", 0.0))], 0, "")
+
+func _honor_evaluate(intent) -> Dictionary:
+	var award := _object_id(intent, "award")
+	var r: Dictionary = host.honors_evaluate(award)
+	if not bool(r.get("ok", false)):
+		return _fail("无法评审（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["评审得分 %.2f（通过线 %.2f）——%s。" % [float(r.get("score", 0.0)), float(r.get("pass_line", 0.0)), ("通过" if bool(r.get("passed", false)) else "未通过")]], 0, "")
+
+func _honor_award(intent) -> Dictionary:
+	var award := _object_id(intent, "award")
+	var r: Dictionary = host.honors_award(award)
+	if not bool(r.get("ok", false)):
+		return _fail("无法领奖（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("awarded", false)):
+		return _ok(["未能获奖（%s）。" % _reason_cn(String(r.get("reason", "")))], 0, "")
+	var line := "你获得了%s。" % String((r.get("honor", {}) as Dictionary).get("name", ""))
+	if r.get("enshrined", null) is Dictionary:
+		line += " 已入选名人堂。"
+	return _ok([line], 0, "")
+
+func _honor_buy(intent) -> Dictionary:
+	var award := _object_id(intent, "award")
+	var r: Dictionary = host.honors_buy(award)
+	if not bool(r.get("ok", false)):
+		return _fail("无法运作（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("awarded", false)):
+		return _ok(["你运作获得了%s（此事暂无人知晓）。" % String((r.get("honor", {}) as Dictionary).get("name", ""))], 0, "")
+	return _ok(["运作未果。"], 0, "")
+
+func _honor_expose(intent) -> Dictionary:
+	var r: Dictionary = host.honors_expose()
+	if not bool(r.get("ok", false)):
+		return _fail("无法揭露（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("exposed", false)):
+		return _ok(["没有可揭露的黑幕。"], 0, "")
+	return _ok(["黑幕曝光：声望 %d，撤销荣誉 %d 项。" % [int(r.get("reputation_delta", 0)), int(r.get("revoked_honors", 0))]], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -2031,6 +2095,16 @@ func _reason_cn(reason: String) -> String:
 			return "活动尚未报批通过"
 		"unknown_tier":
 			return "未知赞助层级"
+		"no_profile":
+			return "尚未建立荣誉档案"
+		"already_profile":
+			return "你已建立荣誉档案"
+		"unknown_award":
+			return "未知奖项"
+		"below_threshold":
+			return "成就不达标"
+		"jury_rejected":
+			return "评审未通过"
 		_:
 			return reason if reason != "" else "未知原因"
 

@@ -135,7 +135,8 @@
 - **待办**：票务平台化与二级市场、艺人经纪与档期排期、大型活动对市政/交通（D34/D37）的实时联动待补。
 
 ### D34 荣誉、奖项与名人堂
-- 无 awards/honors 字段与名人堂传承结构；评审规则/门槛/周期与黑幕暴露无数值；奖项定义缺失；无面板/动词；任务 34.1 测试错位。
+- **已接线**：`HonorsSystem`（`honors.gd`）六大领域奖项表（学术/艺术/体育/商业/公共/军事，门槛/周期/威望/通过线/评审权重）；候选人（`new_candidate()`/`set_achievement()`/`set_jury_relation()`）；提名与确定性评审（`nominate()`/`evaluate()`/`award()`，加权和 + 偏好加成 + 买奖/腐败/政治化/造假修正）；黑幕（`mark_scandal()`/`has_scandal()`/`has_revealed_scandal()`/`expose_scandal()`，隐蔽—曝光—反噬闭环）；名人堂与传承（`new_hall()`/`enshrine()`/`revoke()`/`inherit_evaluation()`）；并列与影响（`resolve_tie()`/`honor_effects()`）。运行时经 `GameState.sim_runtime.honors`（`candidate`/`hall`）持久化。`SimHost` 接线 `honors_state()`/`honors_categories_catalog()`/`honors_awards_catalog()`/`start_honor_profile()`/`honors_nominate()`/`honors_evaluate()`/`honors_award()`/`honors_buy()`/`honors_expose()`/`honors_inherit()`/`honors_panel_data()`。UI：「奖项与荣誉」面板（`awards`）渲染荣誉档案/已获荣誉/名人堂分区（`context["honors"]`）；指令 `荣誉档案 [成就]`/`提名 <奖项>`/`评审 <奖项>`/`领奖 <奖项>`/`买奖 <奖项>`/`揭露黑幕` 与「看奖项」/「名人堂」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `honors` 自有测试覆盖）。
+- **待办**：并列决选/评委会裁定的多主体投票、奖项政治化的动态压力源、跨代名人堂与家族史（D17）联动的完整传承叙事待补。
 
 ### D35 安保、警务与刑侦
 - 案件状态机无字段与转移条件；破案率/误判无公式；案件/证据/搜查令/线人/卧底无 schema；警务内容缺失；无案件面板与办案动词；D35↔D12 契约未定。

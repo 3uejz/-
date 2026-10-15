@@ -48,6 +48,7 @@ const DiningScript = preload("res://sim/dining.gd")
 const FashionScript = preload("res://sim/fashion.gd")
 const SportsIndustryScript = preload("res://sim/sports_industry.gd")
 const EventsExpoScript = preload("res://sim/events_expo.gd")
+const HonorsScript = preload("res://sim/honors.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -148,6 +149,9 @@ var _sports_league: Dictionary = {}  ## 地区联赛，入档 sim_runtime.sports
 var events_expo                 ## 会展、演出与大型活动（EventsExpoSystem）
 var _event: Dictionary = {}          ## 当前筹办中的活动，入档 sim_runtime.events.event
 var _planner: Dictionary = {}        ## 活动策划职业，入档 sim_runtime.events.planner
+var honors                      ## 荣誉、奖项与名人堂（HonorsSystem）
+var _honor_candidate: Dictionary = {} ## 玩家荣誉候选人档案，入档 sim_runtime.honors.candidate
+var _hall: Dictionary = {}           ## 名人堂，入档 sim_runtime.honors.hall
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -208,6 +212,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_trend = fashion.new_trend()
 	sports_industry = SportsIndustryScript.new()
 	events_expo = EventsExpoScript.new()
+	honors = HonorsScript.new()
+	_hall = honors.new_hall()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -360,6 +366,14 @@ func _ensure_world_geo() -> void:
 				_event = events_expo.from_dict(evd["event"])
 			if evd.get("planner", null) is Dictionary and not (evd["planner"] as Dictionary).is_empty():
 				_planner = (evd["planner"] as Dictionary).duplicate(true)
+		# 恢复荣誉运行时（候选人/名人堂）。
+		var ho: Variant = (state.sim_runtime as Dictionary).get("honors", {})
+		if ho is Dictionary and not (ho as Dictionary).is_empty():
+			var hod: Dictionary = ho
+			if hod.get("candidate", null) is Dictionary and not (hod["candidate"] as Dictionary).is_empty():
+				_honor_candidate = honors.from_dict(hod["candidate"])
+			if hod.get("hall", null) is Dictionary and not (hod["hall"] as Dictionary).is_empty():
+				_hall = (hod["hall"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -2946,6 +2960,109 @@ func _persist_events() -> void:
 	(state.sim_runtime as Dictionary)["events"] = {
 		"event": events_expo.to_dict(_event),
 		"planner": _planner.duplicate(true),
+	}
+
+
+func honors_state() -> Dictionary:
+	return {"candidate": _honor_candidate, "hall": _hall}
+
+func honors_categories_catalog() -> Array:
+	var out: Array = []
+	for key in honors.categories():
+		out.append({"id": String(key), "name": honors.category_name(String(key))})
+	return out
+
+func honors_awards_catalog() -> Array:
+	var out: Array = []
+	for key in honors.award_keys():
+		var def: Dictionary = honors.AWARDS[key]
+		out.append({
+			"id": String(key),
+			"name": String(def.get("name", key)),
+			"category_name": honors.category_name(String(def.get("category", ""))),
+			"threshold": float(def.get("threshold", 0.0)),
+			"prestige": float(def.get("prestige", 0.0)),
+		})
+	return out
+
+## 开启荣誉档案：候选人初始成就由参数给定（缺省 60）。
+func start_honor_profile(achievement: float = 60.0) -> Dictionary:
+	if not _honor_candidate.is_empty():
+		return {"ok": false, "reason": "already_profile"}
+	_honor_candidate = honors.new_candidate("player", {
+		"name": String(player().get("name", "我")),
+		"achievement": clampf(achievement, 0.0, 100.0),
+	})
+	_persist_honors()
+	return {"ok": true, "achievement": float(_honor_candidate.get("achievement", 0.0))}
+
+func honors_nominate(award_key: String) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	return honors.nominate(_honor_candidate, award_key)
+
+func honors_evaluate(award_key: String) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	return honors.evaluate(_honor_candidate, award_key)
+
+## 领奖：完成评定并（达标时）登记荣誉与入名人堂。
+func honors_award(award_key: String, corrupt: bool = false) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	var jury: Dictionary = {"corruption": 0.9} if corrupt else {}
+	var r: Dictionary = honors.award(_honor_candidate, award_key, jury, {"hall": _hall, "enshrine": true})
+	if bool(r.get("awarded", false)):
+		honors.honor_effects(_honor_candidate)
+	_persist_honors()
+	return r
+
+## 买奖：打上隐蔽黑幕并借助评审腐败运作。
+func honors_buy(award_key: String) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	honors.mark_scandal(_honor_candidate, "bought_award", {"severity": 0.8})
+	var r: Dictionary = honors_award(award_key, true)
+	_persist_honors()
+	return r
+
+## 揭露黑幕：清算声望、撤销荣誉与名人堂记录。
+func honors_expose() -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	var r: Dictionary = honors.expose_scandal(_honor_candidate, {"hall": _hall})
+	_persist_honors()
+	return r
+
+func honors_inherit() -> Dictionary:
+	return honors.inherit_evaluation(_hall)
+
+func honors_panel_data() -> Dictionary:
+	if _honor_candidate.is_empty() and _hall.is_empty():
+		return {}
+	var out: Dictionary = {}
+	if not _honor_candidate.is_empty():
+		out["achievement"] = float(_honor_candidate.get("achievement", 0.0))
+		out["relations"] = float(_honor_candidate.get("relations", 0.0))
+		out["reputation"] = float(_honor_candidate.get("reputation", 0.0))
+		out["privileges"] = (_honor_candidate.get("privileges", []) as Array).size()
+		var honor_rows: Array = []
+		for h in (_honor_candidate.get("honors", []) as Array):
+			var hd: Dictionary = h
+			if bool(hd.get("revoked", false)):
+				continue
+			honor_rows.append({"name": String(hd.get("name", "")), "category": honors.category_name(String(hd.get("category", ""))), "prestige": float(hd.get("prestige", 0.0))})
+		out["honors"] = honor_rows
+	out["hall_size"] = honors.hall_size(_hall)
+	out["hall_active"] = int(honors.inherit_evaluation(_hall).get("active_honors", 0))
+	return out
+
+func _persist_honors() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["honors"] = {
+		"candidate": honors.to_dict(_honor_candidate),
+		"hall": _hall.duplicate(true),
 	}
 
 

@@ -1414,10 +1414,41 @@ static func _events_sections(ev: Dictionary) -> Array:
 static func awards(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("奖项与荣誉", "尚未生成角色数据")
+	var sections: Array = []
 	var items: Array = _items_of(player.get("awards", [])) + _items_of(_world(context).get("awards", []))
-	if items.is_empty():
-		return _empty("奖项与荣誉", "尚无奖项；可申报奖项、拉票并展示荣誉墙")
-	return _ok([_section("奖项与荣誉", _rows_from(items, ["title", "year", "grade"], name_resolver))])
+	if not items.is_empty():
+		sections.append(_section("奖项与荣誉", _rows_from(items, ["title", "year", "grade"], name_resolver)))
+	var hn: Dictionary = context.get("honors", {}) if context.get("honors") is Dictionary else {}
+	if not hn.is_empty():
+		sections.append_array(_honors_sections(hn))
+	if sections.is_empty():
+		return _empty("奖项与荣誉", "尚无奖项；可用「荣誉档案」建立档案并「提名」参评")
+	return _ok(sections)
+
+## 荣誉面板分区：荣誉档案、已获荣誉、名人堂。
+static func _honors_sections(hn: Dictionary) -> Array:
+	var sections: Array = []
+	if hn.has("achievement"):
+		sections.append(_section("荣誉档案", [
+			{"label": "成就", "value": "%.0f" % float(hn.get("achievement", 0.0))},
+			{"label": "关系", "value": "%.2f" % float(hn.get("relations", 0.0))},
+			{"label": "声望", "value": "%.0f" % float(hn.get("reputation", 0.0))},
+			{"label": "特权", "value": "%d 项" % int(hn.get("privileges", 0))},
+		]))
+	var honors: Array = _items_of(hn.get("honors", []))
+	if not honors.is_empty():
+		var rows: Array = []
+		for h in honors:
+			if h is Dictionary:
+				var hd: Dictionary = h
+				rows.append({"label": String(hd.get("name", "?")), "value": "%s · 威望 %.0f" % [String(hd.get("category", "")), float(hd.get("prestige", 0.0))]})
+		sections.append(_section("已获荣誉", rows))
+	if hn.has("hall_size"):
+		sections.append(_section("名人堂", [
+			{"label": "记录", "value": "%d 条" % int(hn.get("hall_size", 0))},
+			{"label": "在世荣誉", "value": str(int(hn.get("hall_active", 0)))},
+		]))
+	return sections
 
 static func digital(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
