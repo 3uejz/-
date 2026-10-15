@@ -562,6 +562,9 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 					],
 				})
 		sections.append(_section("外贸单据", trows))
+	var mn: Dictionary = context.get("mining", {}) if context.get("mining") is Dictionary else {}
+	if not mn.is_empty():
+		sections.append_array(_mining_sections(mn))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)
@@ -612,6 +615,40 @@ static func _mfg_sections(mfg: Dictionary) -> Array:
 				var state: String = "已交付" if bool(od.get("fulfilled", false)) else "进行中"
 				orows.append({"label": "%s 订单 #%d" % [String(od.get("name", "?")), int(od.get("index", 0))], "value": "%s %.1f/%.1f" % [state, float(od.get("delivered", 0.0)), float(od.get("quantity", 0.0))]})
 		sections.append(_section("订单", orows))
+	return sections
+
+## 矿业/能源面板分区：矿场概况、能源价格、新能源项目。
+static func _mining_sections(mn: Dictionary) -> Array:
+	var sections: Array = []
+	var mine: Dictionary = mn.get("mine", {}) if mn.get("mine") is Dictionary else {}
+	if not mine.is_empty():
+		var overview: Array = [
+			{"label": "矿种", "value": String(mine.get("mineral_name", ""))},
+			{"label": "矿权", "value": ("已取得" if bool(mine.get("concession", false)) else "未取得")},
+			{"label": "勘探", "value": ("已勘探" if bool(mine.get("explored", false)) else "未勘探")},
+			{"label": "储量", "value": "%.0f" % float(mine.get("reserve", 0.0))},
+			{"label": "品位", "value": "%.2f" % float(mine.get("grade", 0.0))},
+			{"label": "安全投入", "value": "%.2f" % float(mine.get("safety", 0.5))},
+			{"label": "矿石库存", "value": "%.1f" % float(mine.get("stockpile_ore", 0.0))},
+			{"label": "待炼矿石", "value": "%.1f" % float(mine.get("in_transit_ore", 0.0))},
+			{"label": "精炼金属", "value": "%.1f" % float(mine.get("refined_metal", 0.0))},
+			{"label": "累计营收", "value": str(int(mine.get("revenue", 0)))},
+		]
+		sections.append(_section("矿场概况", overview))
+	var prices: Array = _items_of(mn.get("energy_prices", []))
+	if not prices.is_empty():
+		var prows: Array = []
+		for p in prices:
+			if p is Dictionary:
+				prows.append({"label": String((p as Dictionary).get("name", "?")), "value": str(int((p as Dictionary).get("price", 0)))})
+		sections.append(_section("能源价格", prows))
+	var projects: Array = _items_of(mn.get("projects", []))
+	if not projects.is_empty():
+		var jrows: Array = []
+		for pj in projects:
+			if pj is Dictionary:
+				jrows.append({"label": String((pj as Dictionary).get("name", "?")), "value": "装机 %.1f" % float((pj as Dictionary).get("capacity", 0.0))})
+		sections.append(_section("新能源项目", jrows))
 	return sections
 
 static func _mfg_bottleneck_cn(key: String) -> String:

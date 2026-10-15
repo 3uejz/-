@@ -261,6 +261,21 @@ func _dispatch(intent) -> Dictionary:
 			return _deliver_shipment(intent)
 		"结汇":
 			return _settle_shipment(intent)
+		# 矿业、能源与资源（D28）
+		"开矿":
+			return _open_mine(intent)
+		"取得矿权":
+			return _acquire_mine_concession(intent)
+		"勘探":
+			return _explore_mine(intent)
+		"开采":
+			return _extract_ore(intent)
+		"冶炼":
+			return _smelt_ore(intent)
+		"卖矿":
+			return _sell_metal(intent)
+		"建能源项目":
+			return _build_energy_project(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1334,6 +1349,57 @@ func _settle_shipment(intent) -> Dictionary:
 func _trade_mode_name(mode: String) -> String:
 	return String(host.trade.TRANSPORT_MODES.get(mode, {}).get("name", mode))
 
+# --- 矿业、能源与资源（D28） ---
+
+func _open_mine(intent) -> Dictionary:
+	var mineral := _object_id(intent, "mineral")
+	var r: Dictionary = host.open_mine(mineral)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办矿场（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你开办了%s矿场。" % String(r.get("name", mineral))], 0, "")
+
+func _acquire_mine_concession(intent) -> Dictionary:
+	var r: Dictionary = host.acquire_mine_concession()
+	if not bool(r.get("ok", false)):
+		return _fail("无法取得矿权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你取得了矿权特许经营资格。"], 0, "")
+
+func _explore_mine(intent) -> Dictionary:
+	var budget: int = _param_number(intent, "amount", 1000000)
+	var r: Dictionary = host.explore_mine(budget)
+	if not bool(r.get("ok", false)):
+		return _fail("无法勘探（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["勘探完成：储量 %.0f，品位 %.2f。" % [float(r.get("reserve", 0.0)), float(r.get("grade", 0.0))]], 0, "")
+
+func _extract_ore(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.extract_ore(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开采（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["开采矿石 %.1f，剩余储量 %.0f。" % [float(r.get("ore", 0.0)), float(r.get("reserve", 0.0))]], 0, "")
+
+func _smelt_ore(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.smelt_ore(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法冶炼（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["冶炼出金属 %.1f（品位 %.2f）。" % [float(r.get("metal", 0.0)), float(r.get("grade", 0.0))]], 0, "")
+
+func _sell_metal(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.sell_metal(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法出售金属（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["售出 %.1f，单价 %d，收入 %d。" % [float(r.get("sold", 0.0)), int(r.get("unit_price", 0)), int(r.get("revenue", 0))]], 0, "")
+
+func _build_energy_project(intent) -> Dictionary:
+	var kind := _object_id(intent, "energy_kind")
+	var capacity: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.build_energy_project(kind, capacity)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建设能源项目（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["建成%s，装机 %.1f。" % [String(r.get("name", kind)), float(r.get("capacity", 0.0))]], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1448,6 +1514,22 @@ func _reason_cn(reason: String) -> String:
 			return "未知结算方式"
 		"at_end":
 			return "流程已到末段"
+		"no_mine":
+			return "尚未开办矿场"
+		"unknown_mineral":
+			return "未知矿种"
+		"no_qualification":
+			return "缺少所需资质"
+		"insufficient_capital":
+			return "资本不足"
+		"not_explored":
+			return "尚未勘探，无法开采"
+		"no_concession":
+			return "尚未取得矿权"
+		"depleted":
+			return "矿藏已枯竭"
+		"unknown_energy_kind":
+			return "未知新能源类型"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1589,6 +1671,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.trade_incoterms_catalog(), text)
 		"trade_settlement":
 			return _find_catalog_by_name(host.trade_settlements_catalog(), text)
+		"mineral":
+			return _find_catalog_by_name(host.mining_minerals_catalog(), text)
+		"energy_kind":
+			return _find_catalog_by_name(host.mining_energy_kinds_catalog(), text)
 		_:
 			return ""
 

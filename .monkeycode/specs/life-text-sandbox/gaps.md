@@ -111,7 +111,8 @@
 - **待办**：贸易壁垒/风险事件/检验检疫/货损退运由模块提供，尚无独立指令与面板入口（待宏观/灾害系统驱动）；汇率联动世界宏观尚未接入；工厂产出与出口货值未打通。
 
 ### D28 矿业、能源与资源
-- 矿难/职业病无概率公式；能源价格作为宏观输入无接口（worldsim 缺项）；储量/品位/枯竭无数值；缺冶炼/电网运营动词。
+- **已接线**：`MiningEnergySystem`（`mining_energy.gd`）矿种表（铁矿/铜矿/煤矿/金矿，含基础品位/储量/冶炼收得率/价格）；矿权特许（`acquire_concession()`，需资质与最低资本）；勘探（`explore()`，按投入揭示储量与品位）；开采（`extract()`，产量随安全与储量、消耗储量、枯竭停产）；转运（`transport_ore()`）；冶炼（`smelt()`，按品位与收得率折算金属）；出售（`sell()`，按市价入资金池）；安全投入与矿难概率（`safety_invest()`/`accident_rate()`/`accident_check()`，矿难/瓦斯/塌方/尘肺）；环保追责（`environmental_liability()`）；能源价格周期（`new_energy_state()`/`tick_energy()`，确定性正弦周期，随游戏内时钟按年演化）；期货与长约（`futures_contract()`/`settle_futures()`/`long_term_contract()`）；新能源项目（风电/光伏/核电/储能，`new_energy_project()`/`grid_dispatch()`/`carbon_trade()`/`apply_subsidy()`）；资源城市衰退（`reserve_ratio()`/`resource_city_decline()`）与战略资源管制囤积（`set_strategic_control()`/`stockpile()`/`tradable_ratio()`）。运行时经 `GameState.sim_runtime.mining`（`mine`/`energy`）持久化。`SimHost` 接线 `mining_state()`/`mining_minerals_catalog()`/`mining_energy_catalog()`/`mining_energy_kinds_catalog()`/`open_mine()`/`acquire_mine_concession()`/`explore_mine()`/`extract_ore()`（开采即转运）/`smelt_ore()`/`sell_metal()`/`build_energy_project()`/`mining_panel_data()`，并在 `advance()` 中按年 tick 能源价格。UI：复用「经营」面板（`business`）增补矿场概况/能源价格/新能源项目分区（`context["mining"]`）；指令 `开矿 <矿种>`（沿用既有动词行，新增矿种对象）/`取得矿权`/`勘探 [预算]`/`开采 [数量]`/`冶炼 [数量]`/`卖矿 [数量]`/`建能源项目 <类型>` 与「看矿业/看能源」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `mining_energy` 自有测试覆盖）。
+- **待办**：矿难/职业病的健康与法律后果、资源城市衰退与战略管制的宏观联动、期货/长约的独立指令入口、能源价格作为宏观输入至 worldsim 的接线待补。
 
 ### D29 农林牧渔深化
 - 渔业资源恢复/休渔无数值；林权/碳汇无计价；枪支政策归属与狩猎许可接口未定义；缺休渔/护林/造林动词与测试。

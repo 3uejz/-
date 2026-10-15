@@ -42,6 +42,7 @@ const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
+const MiningScript = preload("res://sim/mining_energy.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -121,6 +122,9 @@ var manufacturing                ## 制造业与供应链（ManufacturingSystem�
 var _factory: Dictionary = {}        ## 玩家工厂运行时（工厂为纯数据字典），入档 sim_runtime.manufacturing
 var trade                        ## 国际贸易、海关与物流（TradeSystem）
 var _shipments: Array = []           ## 外贸单据列表，入档 sim_runtime.trade.shipments
+var mining_energy                ## 矿业、能源与资源（MiningEnergySystem）
+var _mine: Dictionary = {}           ## 玩家矿场运行时，入档 sim_runtime.mining.mine
+var _energy: Dictionary = {}         ## 能源市场运行时（价格/期货/项目），入档 sim_runtime.mining.energy
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -172,6 +176,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	ip_media = IpMediaScript.new()
 	manufacturing = ManufacturingScript.new()
 	trade = TradeScript.new()
+	mining_energy = MiningScript.new()
+	_energy = mining_energy.new_energy_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -270,6 +276,14 @@ func _ensure_world_geo() -> void:
 		var tr: Variant = (state.sim_runtime as Dictionary).get("trade", {})
 		if tr is Dictionary and not (tr as Dictionary).is_empty():
 			_shipments = ((tr as Dictionary).get("shipments", []) as Array).duplicate(true)
+		# 恢复矿业/能源运行时（矿场/能源市场）。
+		var mn: Variant = (state.sim_runtime as Dictionary).get("mining", {})
+		if mn is Dictionary and not (mn as Dictionary).is_empty():
+			var mnd: Dictionary = mn
+			if mnd.get("mine", null) is Dictionary and not (mnd["mine"] as Dictionary).is_empty():
+				_mine = (mnd["mine"] as Dictionary).duplicate(true)
+			if mnd.get("energy", null) is Dictionary and not (mnd["energy"] as Dictionary).is_empty():
+				_energy = (mnd["energy"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1970,6 +1984,140 @@ func _persist_trade() -> void:
 	(state.sim_runtime as Dictionary)["trade"] = {"shipments": _shipments.duplicate(true)}
 
 
+# --- D28 矿业、能源与资源 ---
+
+func mining_state() -> Dictionary:
+	return {"mine": _mine, "energy": _energy}
+
+func mining_minerals_catalog() -> Array:
+	var out: Array = []
+	for key in mining_energy.mineral_keys():
+		var d: Dictionary = mining_energy.mineral_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mining_energy_catalog() -> Array:
+	var out: Array = []
+	for key in mining_energy.energy_keys():
+		var d: Dictionary = mining_energy.energy_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mining_energy_kinds_catalog() -> Array:
+	var out: Array = []
+	for key in mining_energy.NEW_ENERGY_KINDS:
+		out.append({"id": String(key), "name": String(mining_energy.NEW_ENERGY_NAMES.get(String(key), key))})
+	return out
+
+## 开办矿场：独立资金池，预置矿权资质（仍需另行取得矿权）。
+func open_mine(mineral: String, capital: int = 100000000) -> Dictionary:
+	var m: Dictionary = mining_energy.new_mine(mineral, maxi(0, capital), {"qualifications": [mining_energy.CONCESSION_QUALIFICATION]})
+	if m.is_empty():
+		return {"ok": false, "reason": "unknown_mineral"}
+	_mine = m
+	_persist_mining()
+	return {"ok": true, "mineral": mineral, "name": String((mining_energy.MINERALS[mineral] as Dictionary).get("name", mineral))}
+
+## 取得矿权（特许经营），需资质与最低资本。
+func acquire_mine_concession() -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.acquire_concession(_mine)
+	_persist_mining()
+	return r
+
+## 勘探矿场：投入预算揭示储量与品位。
+func explore_mine(budget: int) -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.explore(_mine, maxi(0, budget))
+	_persist_mining()
+	return r
+
+## 开采矿石：产出自动转运至冶炼环节。
+func extract_ore(amount: float) -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.extract(_mine, maxf(0.0, amount))
+	if bool(r.get("ok", false)):
+		mining_energy.transport_ore(_mine, float(r.get("ore", 0.0)))
+	_persist_mining()
+	return r
+
+## 冶炼金属。
+func smelt_ore(amount: float) -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.smelt(_mine, maxf(0.0, amount))
+	_persist_mining()
+	return r
+
+## 出售精炼金属，收入进矿场资金池。
+func sell_metal(amount: float) -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.sell(_mine, maxf(0.0, amount))
+	_persist_mining()
+	return r
+
+## 新能源项目：风电/光伏/核电/储能。
+func build_energy_project(kind: String, capacity: float) -> Dictionary:
+	var p: Dictionary = mining_energy.new_energy_project(kind, maxf(0.0, capacity))
+	if p.is_empty():
+		return {"ok": false, "reason": "unknown_energy_kind"}
+	var projects: Array = _energy.get("projects", [])
+	projects.append(p)
+	_energy["projects"] = projects
+	_persist_mining()
+	return {"ok": true, "kind": kind, "name": String(p.get("name", kind)), "capacity": float(p.get("capacity", 0.0))}
+
+## 矿业/能源面板数据：矿场概况、能源价格、新能源项目。
+func mining_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _mine.is_empty():
+		var mineral: String = String(_mine.get("mineral", ""))
+		out["mine"] = {
+			"mineral": mineral,
+			"mineral_name": String((mining_energy.MINERALS.get(mineral, {}) as Dictionary).get("name", mineral)),
+			"concession": bool(_mine.get("concession", false)),
+			"explored": bool(_mine.get("explored", false)),
+			"reserve": float(_mine.get("reserve", 0.0)),
+			"grade": float(_mine.get("grade", 0.0)),
+			"workers": int(_mine.get("workers", 0)),
+			"safety": float(_mine.get("safety", 0.5)),
+			"stockpile_ore": float(_mine.get("stockpile_ore", 0.0)),
+			"in_transit_ore": float(_mine.get("in_transit_ore", 0.0)),
+			"refined_metal": float(_mine.get("refined_metal", 0.0)),
+			"revenue": int(_mine.get("revenue", 0)),
+		}
+	var prices: Dictionary = _energy.get("prices", {})
+	var price_rows: Array = []
+	for key in mining_energy.energy_keys():
+		price_rows.append({
+			"key": String(key),
+			"name": String((mining_energy.ENERGY_TYPES[key] as Dictionary).get("name", key)),
+			"price": int(prices.get(key, 0)),
+		})
+	out["energy_prices"] = price_rows
+	var projects: Array = []
+	for p in _energy.get("projects", []):
+		projects.append({"name": String(p.get("name", "")), "kind": String(p.get("kind", "")), "capacity": float(p.get("capacity", 0.0))})
+	out["projects"] = projects
+	return out
+
+func _mining_tick(before_minutes: int, after_minutes: int) -> void:
+	var years: float = float(maxi(0, after_minutes - before_minutes)) / 525960.0
+	if years <= 0.0:
+		return
+	mining_energy.tick_energy(_energy, years)
+	_persist_mining()
+
+func _persist_mining() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["mining"] = {"mine": _mine.duplicate(true), "energy": _energy.duplicate(true)}
+
+
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:
 	var acct := account_id()
@@ -2912,6 +3060,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_decay_languages(before_minutes, now_minutes())
 		# 农业：作物按日生长、仓储按日损耗（R66）。
 		_advance_farm(before_minutes, now_minutes())
+	# 矿业/能源：能源价格按年周期演化（离线亦结算）。
+	_mining_tick(before_minutes, now_minutes())
 	_persist_mental()
 	_persist_spirituality()
 	_persist_language()

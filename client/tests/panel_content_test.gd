@@ -43,6 +43,7 @@ func run_tests() -> void:
 	_test_ip_media_panel()
 	_test_manufacturing_panel()
 	_test_trade_panel()
+	_test_mining_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -314,6 +315,20 @@ func _test_trade_panel() -> void:
 	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有外贸上下文非空")
 	check(_find_section(d, "外贸单据").get("rows", []).size() >= 1, "外贸单据分区有行")
+
+func _test_mining_panel() -> void:
+	var ctx: Dictionary = {"mining": {
+		"mine": {"mineral": "iron", "mineral_name": "铁矿", "concession": true, "explored": true,
+			"reserve": 1200000.0, "grade": 0.4, "workers": 0, "safety": 0.5,
+			"stockpile_ore": 500.0, "refined_metal": 120.0, "revenue": 96000},
+		"energy_prices": [{"key": "oil", "name": "石油", "price": 500000}, {"key": "power", "name": "电力", "price": 80000}],
+		"projects": [{"name": "光伏", "kind": "solar", "capacity": 100.0}],
+	}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有矿业上下文非空")
+	check(_find_section(d, "矿场概况").get("rows", []).size() >= 1, "矿场概况分区有行")
+	check(_find_section(d, "能源价格").get("rows", []).size() >= 1, "能源价格分区有行")
+	check(_find_section(d, "新能源项目").get("rows", []).size() >= 1, "新能源项目分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

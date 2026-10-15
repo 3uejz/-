@@ -33,7 +33,8 @@
         "late_tech": { "type": "object", "additionalProperties": true },
         "ip_media": { "type": "object", "additionalProperties": true },
         "manufacturing": { "type": "object", "additionalProperties": true },
-        "trade": { "type": "object", "additionalProperties": true }
+        "trade": { "type": "object", "additionalProperties": true },
+        "mining": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

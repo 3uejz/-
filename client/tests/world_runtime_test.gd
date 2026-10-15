@@ -47,6 +47,7 @@ func run_tests() -> void:
 	_test_ip_media_runtime()
 	_test_manufacturing_runtime()
 	_test_trade_runtime()
+	_test_mining_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -750,4 +751,44 @@ func _test_trade_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 77)
 	reloaded.bind(state)
 	check_eq((reloaded.trade_state().get("shipments", []) as Array).size(), 1, "读档恢复外贸单据")
+
+
+func _test_mining_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(55)
+	var host = SimHostScript.new(state, 55)
+	host.bind(state)
+	check(host.mining_minerals_catalog().size() >= 4, "矿种含铁矿/铜矿/煤矿/金矿")
+	check(host.mining_energy_catalog().size() >= 5, "能源品种含石油/天然气/煤炭/电力/新能源")
+	check(host.mining_energy_kinds_catalog().size() >= 4, "新能源含风电/光伏/核电/储能")
+	# 开办矿场。
+	var mine: Dictionary = host.open_mine("iron")
+	check(bool(mine.get("ok", false)), "开办铁矿场成功")
+	# 未取得矿权不可开采。
+	check(not bool(host.extract_ore(100.0).get("ok", false)), "未取得矿权不可开采")
+	# 取得矿权与勘探。
+	check(bool(host.acquire_mine_concession().get("ok", false)), "取得矿权成功")
+	var ex: Dictionary = host.explore_mine(1000000)
+	check(bool(ex.get("ok", false)) and float(ex.get("reserve", 0.0)) > 0.0, "勘探揭示储量")
+	# 开采→冶炼→出售链条。
+	var ore: Dictionary = host.extract_ore(1000.0)
+	check(bool(ore.get("ok", false)) and float(ore.get("ore", 0.0)) > 0.0, "开采产出矿石")
+	var smelt: Dictionary = host.smelt_ore(1000.0)
+	check(bool(smelt.get("ok", false)) and float(smelt.get("metal", 0.0)) > 0.0, "冶炼产出金属")
+	var sell: Dictionary = host.sell_metal(1000.0)
+	check(bool(sell.get("ok", false)) and int(sell.get("revenue", 0)) > 0, "出售金属获得收入")
+	# 新能源项目。
+	var proj: Dictionary = host.build_energy_project("solar", 100.0)
+	check(bool(proj.get("ok", false)), "建设光伏项目成功")
+	# 能源价格按年演化。
+	host.advance(525960)
+	var energy: Dictionary = host.mining_state().get("energy", {})
+	check(float(energy.get("clock", 0.0)) > 0.0, "推进一年后能源时钟前进")
+	# 持久化与读档恢复。
+	host._persist_mining()
+	check(state.sim_runtime.get("mining", null) is Dictionary, "矿业运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 55)
+	reloaded.bind(state)
+	check(not (reloaded.mining_state().get("mine", {}) as Dictionary).is_empty(), "读档恢复矿场")
+	check(not reloaded.mining_panel_data().is_empty(), "矿业面板数据非空")
 

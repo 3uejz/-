@@ -68,6 +68,7 @@ func run_tests() -> void:
 	_test_ip_media_commands()
 	_test_manufacturing_commands()
 	_test_trade_commands()
+	_test_mining_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -373,6 +374,26 @@ func _test_trade_commands() -> void:
 	check(bool((shipments[0] as Dictionary).get("settled", false)) == false, "「外贸交付」进入交付")
 	_main.submit("结汇")
 	check(bool((shipments[0] as Dictionary).get("settled", false)), "「结汇」标记已结汇")
+
+func _test_mining_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看矿业")
+	check(_main.has_panel("business"), "「看矿业」打开经营面板")
+	_main.submit("开矿 铁矿")
+	check(not (sim.mining_state().get("mine", {}) as Dictionary).is_empty(), "「开矿」建立矿场")
+	_main.submit("取得矿权")
+	check(bool((sim.mining_state().get("mine", {}) as Dictionary).get("concession", false)), "「取得矿权」取得特许")
+	_main.submit("勘探 1000000")
+	check(float((sim.mining_state().get("mine", {}) as Dictionary).get("reserve", 0.0)) > 0.0, "「勘探」揭示储量")
+	_main.submit("开采 1000")
+	var mined: Dictionary = sim.mining_state().get("mine", {})
+	check(float(mined.get("stockpile_ore", 0.0)) + float(mined.get("in_transit_ore", 0.0)) > 0.0, "「开采」产出矿石")
+	_main.submit("冶炼 1000")
+	check(float((sim.mining_state().get("mine", {}) as Dictionary).get("refined_metal", 0.0)) > 0.0, "「冶炼」产出金属")
+	_main.submit("卖矿 1000")
+	check(int((sim.mining_state().get("mine", {}) as Dictionary).get("revenue", 0)) > 0, "「卖矿」取得收入")
+	_main.submit("建能源项目 光伏")
+	check((sim.mining_panel_data().get("projects", []) as Array).size() >= 1, "「建能源项目」登记项目")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")
