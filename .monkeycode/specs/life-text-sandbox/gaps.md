@@ -80,7 +80,7 @@
 - 七类设施覆盖/容量/可靠性/价格/状态无字段；账单结算与信用影响无模型（无 credit 字段）；中断频率与抢修工期无量化；无「缴费」动词与账单面板；`InfrastructureOutage` 修饰符未定义。
 
 ### D19 组织与社团
-- 无组织实体/成员身份 schema（`organizations` 为空壳）；集体行动成功率与会费/叛逃无公式；design 有组织面板而 `ui.md` 无；组织类动词与规则内容缺失。
+- **已接线**：`OrganizationSystem`（`organizations.gd`）含八类组织（工会/行业协会/NGO/兴趣俱乐部/宗教团体/政党/秘密结社/犯罪团伙，`ORG_TYPES`，各带目标/合法性/月会费/最低成员/基础影响力/是否秘密）、四级内部晋升阶梯（`MEMBER_RANKS`，按完成任务数）、五类集体行动（罢工/请愿/募捐/游行/抵制，`ACTIONS`，成功率 = 基础 + 成员规模 + 外部支持 + 对方压力(负) + 舆论，封顶 0.95 / 保底 0.05）、派系斗争（`faction_struggle()`：夺权/分裂/清洗/妥协）、秘密组织暴露机制（`heat`/`counter_intel`/`expose_threshold`/`attempt_expose`/`handle_exposure` 清算留案底与声望损失）与内鬼排查（`plant_mole()`/`detect_mole()`）、破产解散。成员资格存 `player.org_memberships`（`player.schema.json` 新增 `org_membership` 定义），组织运行态经 `GameState.sim_runtime.organizations` 持久化（`_persist_organizations()`；组织由（种子, 区域, 类型序号）确定性生成）。`SimHost` 接线 `join_organization`/`leave_organization`/`pay_org_dues`/`do_org_task`（含晋升津贴）/`org_collective_action`/`organizations_panel_data()`。UI：「组织」面板渲染「我的组织 / 可加入组织」；指令 `加入组织 <组织>`/`退出组织`/`缴会费`/`组织任务`/`罢工`/`请愿`/`募捐`/`游行`/`抵制` 与「看组织」入口。
 
 ### D20 语言与文化
 - 语言 0..100 与技能 0..20 冲突（已定独立类型）；语言分项与术语门槛/遗忘速率缺失；节日只有清单无 modifier 与日历 schema；文化距离与冲击无量化；无学语言入口。

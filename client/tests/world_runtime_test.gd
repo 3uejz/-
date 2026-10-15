@@ -38,6 +38,7 @@ func run_tests() -> void:
 	_test_child_growth_and_mortality()
 	_test_mental_runtime()
 	_test_spirit_runtime()
+	_test_org_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -420,4 +421,32 @@ func _test_spirit_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 77)
 	check_eq(String(reloaded.spirit_state().get("faith", "")), "buddhism", "读档恢复信仰")
 	check(float(reloaded.spirit_state()["depth"].get("meditation", 0.0)) > 0.0, "读档恢复追求深度")
+
+func _test_org_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	var catalog: Array = host.organizations_catalog()
+	check(not catalog.is_empty(), "确定性生成可加入组织")
+	if catalog.is_empty():
+		return
+	var oid := String((catalog[0] as Dictionary).get("id", ""))
+	state.player["finances"]["cash"] = 100000000.0
+	host.economy.add_money(host.account_id(), 1000000000, "test")
+	# 加入并写入玩家成员资格。
+	var j: Dictionary = host.join_organization(oid)
+	check(bool(j.get("ok", false)), "加入组织成功")
+	check(not host.organizations.membership(state.player, oid).is_empty(), "成员资格写入 player.org_memberships")
+	# 完成任务并晋升。
+	host.organizations.membership(state.player, oid)["tasks_completed"] = 3
+	var t: Dictionary = host.do_org_task(oid)
+	check(bool(t.get("ok", false)), "承接组织任务成功")
+	# 退出并持久化。
+	host.leave_organization(oid, false)
+	host._persist_organizations()
+	check(state.sim_runtime.get("organizations", null) is Array, "组织运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check(not reloaded.find_org(oid).is_empty(), "读档恢复组织运行态")
 

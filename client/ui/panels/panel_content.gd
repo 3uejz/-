@@ -540,10 +540,37 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 static func organizations(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("组织", "尚未生成角色数据")
-	var orgs: Array = _items_of(_world(context).get("organizations", []))
-	if orgs.is_empty():
-		return _empty("组织", "尚未加入组织；可加入工会、NGO、俱乐部或阵营")
-	return _ok([_section("组织", _rows_from(orgs, ["type", "members", "reputation", "rank"], name_resolver))])
+	var data: Variant = context.get("organizations", {})
+	var memberships: Array = _items_of((data as Dictionary).get("memberships", [])) if data is Dictionary else []
+	var available: Array = _items_of((data as Dictionary).get("available", [])) if data is Dictionary else []
+	var sections: Array = []
+	if not memberships.is_empty():
+		var rows: Array = []
+		for m in memberships:
+			if typeof(m) != TYPE_DICTIONARY:
+				continue
+			var d: Dictionary = m
+			var parts := PackedStringArray([String(d.get("type", "")), String(d.get("rank", ""))])
+			parts.append("成员 %s" % str(d.get("members", 0)))
+			parts.append("影响力 %s" % String(d.get("influence", "")))
+			if int(d.get("dues_owed", 0)) > 0:
+				parts.append("欠费 %s" % _money(d.get("dues_owed", 0)))
+			rows.append({"label": String(d.get("name", "?")), "value": " · ".join(parts)})
+		sections.append(_section("我的组织", rows))
+	if not available.is_empty():
+		var arows: Array = []
+		for a in available:
+			if typeof(a) != TYPE_DICTIONARY:
+				continue
+			var d: Dictionary = a
+			arows.append({"label": String(d.get("name", "?")), "value": "%s · 入会费 %s · %s" % [String(d.get("type", "")), _money(d.get("fee", 0)), String(d.get("legality", ""))]})
+		sections.append(_section("可加入组织", arows))
+	if sections.is_empty():
+		var orgs: Array = _items_of(_world(context).get("organizations", []))
+		if orgs.is_empty():
+			return _empty("组织", "尚未加入组织；可加入工会、协会、NGO、俱乐部或阵营")
+		sections.append(_section("组织", _rows_from(orgs, ["type", "members", "reputation", "rank"], name_resolver)))
+	return _ok(sections)
 
 static func legal(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

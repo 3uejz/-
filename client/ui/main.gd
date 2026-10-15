@@ -397,6 +397,7 @@ func _catalogs() -> Dictionary:
 		"pursuit": _sim.pursuits_catalog(),
 		"faith": _sim.faiths_catalog(),
 		"crisis_exit": _sim.crisis_exits_catalog(),
+		"organization": _sim.organizations_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -691,6 +692,9 @@ func _panel_context() -> Dictionary:
 		var sp: Dictionary = _sim.spirit_panel_data()
 		if not sp.is_empty():
 			context["spirit"] = sp
+		var orgs: Dictionary = _sim.organizations_panel_data()
+		if not orgs.is_empty():
+			context["organizations"] = orgs
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

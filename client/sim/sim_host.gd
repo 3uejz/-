@@ -33,12 +33,15 @@ const ParentingScript = preload("res://sim/parenting.gd")
 const MentalHealthScript = preload("res://sim/mental_health.gd")
 const PersonalityScript = preload("res://sim/personality.gd")
 const SpiritualityScript = preload("res://sim/spirituality.gd")
+const OrganizationScript = preload("res://sim/organizations.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
 const ACQUAINTANCE_COUNT: int = 8
 ## 所在城市在售房源数量（确定性生成，供看房/买房）。
 const PROPERTY_LISTING_COUNT: int = 5
+## 所在城市可加入组织类型（确定性生成，供加入组织）。
+const ORG_TYPES_SEED: Array = ["union", "club", "ngo", "trade_association", "religious"]
 ## 妊娠天数（自受孕至分娩）。
 const GESTATION_DAYS: int = 280
 ## 持有房产按月结算的间隔（天）。
@@ -87,6 +90,8 @@ var mental                      ## 精神疾病与情绪（MentalHealthSystem）
 var personality                 ## 大五人格与标签（PersonalitySystem）
 var spirituality                ## 价值观三轴/精神追求/信仰（SpiritualitySystem）
 var _spirit: Dictionary = {}    ## 精神追求运行时（深度/信仰/危机），入档 sim_runtime.spirituality
+var organizations               ## 组织与社团（OrganizationSystem）
+var _orgs: Array = []           ## 所在城市可加入组织（确定性生成，运行时叠加存档增量）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -123,6 +128,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	personality = PersonalityScript.new()
 	spirituality = SpiritualityScript.new()
 	_spirit = spirituality.new_state()
+	organizations = OrganizationScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -201,6 +207,7 @@ func _ensure_world_geo() -> void:
 			weather.register_region(String(rid), _zone_for_region(String(rid)))
 	_ensure_acquaintances()
 	_ensure_property_market()
+	_ensure_organizations()
 
 ## 生成所在城市的熟人名册（确定性），建立初始关系并恢复婚姻状态。
 ## 名册由（种子, 区域, 序号）确定，不入档；关系随 player.relations 持久化。
@@ -430,6 +437,43 @@ func _ensure_property_market() -> void:
 			continue
 		_listings.append(p)
 
+## 生成所在城市的可加入组织（确定性），载入存档运行时增量。
+## 组织由（种子, 区域, 类型序号）确定，不入确定性世界；成员资格随 player.org_memberships
+## 持久化，组织运行态（成员数/影响力/热度/派系）随 sim_runtime.organizations 持久化。
+func _ensure_organizations() -> void:
+	if not _orgs.is_empty() or _home_region_id == "":
+		return
+	var rid := _home_region_id
+	var city := rid
+	var node = geo.get_node(rid)
+	if node != null:
+		city = String(node.name)
+	var r = RngScript.new(_seed * 2000003 + rid.hash())
+	for i in ORG_TYPES_SEED.size():
+		var t: String = ORG_TYPES_SEED[i]
+		var def: Dictionary = organizations.type_def(t)
+		if def.is_empty():
+			continue
+		var members := int(def.get("min_members", 5)) + _rand_int(r, 200)
+		var created: Dictionary = organizations.create_org(t, members, {
+			"id": "org:%s:%d" % [rid, i],
+			"name": "%s%s" % [city, String(def.get("name", t))],
+		})
+		if not bool(created.get("ok", false)):
+			continue
+		_orgs.append(created["org"])
+	if state != null and state.sim_runtime is Dictionary:
+		var saved: Variant = (state.sim_runtime as Dictionary).get("organizations", [])
+		if saved is Array:
+			for so in saved:
+				if not (so is Dictionary):
+					continue
+				var target := find_org(String((so as Dictionary).get("id", "")))
+				if target.is_empty():
+					continue
+				for k in (so as Dictionary).keys():
+					target[k] = (so as Dictionary)[k]
+
 func _rand_int(r, bound: int) -> int:
 	if bound <= 0:
 		return 0
@@ -507,6 +551,162 @@ func property_rent(prop_id: String, monthly_rent: int = -1) -> Dictionary:
 	var rent: int = monthly_rent if monthly_rent >= 0 else int(property.estimated_monthly_rent(prop))
 	property.set_rent(prop, rent, true)
 	return {"ok": true, "monthly_rent": rent}
+
+# --- 组织与社团（D19） ---
+
+## 可加入组织目录（供解析器链接「加入组织 <组织>」）。
+func organizations_catalog() -> Array:
+	var out: Array = []
+	for org in _orgs:
+		out.append({"id": String((org as Dictionary).get("id", "")), "name": String((org as Dictionary).get("name", ""))})
+	return out
+
+func find_org(org_id: String) -> Dictionary:
+	for org in _orgs:
+		if (org is Dictionary) and String((org as Dictionary).get("id", "")) == org_id:
+			return org
+	return {}
+
+## 加入组织：写入成员契约并扣除首次会费（不足则回滚）。
+func join_organization(org_id: String) -> Dictionary:
+	var org := find_org(org_id)
+	if org.is_empty():
+		return {"ok": false, "reason": "not_found"}
+	var r: Dictionary = organizations.join(player(), org, {"minute": now_minutes()})
+	if not bool(r.get("ok", false)):
+		return r
+	var fee := int(r.get("dues", 0))
+	if fee > 0:
+		if economy.cash(account_id()) < fee:
+			organizations.leave(player(), org, {"approved": true})
+			return {"ok": false, "reason": "insufficient_funds", "dues": fee}
+		economy.add_money(account_id(), -fee, "org_dues:%s" % org_id)
+		sync_finances()
+		var entry: Dictionary = organizations.membership(player(), org_id)
+		if not entry.is_empty():
+			organizations.pay_dues(entry, fee)
+	_persist_organizations()
+	r["name"] = String(org.get("name", ""))
+	return r
+
+## 退出组织：结算退出成本与叛逃/法律风险。
+func leave_organization(org_id: String, approved: bool = false) -> Dictionary:
+	var org := find_org(org_id)
+	if org.is_empty():
+		return {"ok": false, "reason": "not_found"}
+	var r: Dictionary = organizations.leave(player(), org, {"approved": approved})
+	if bool(r.get("ok", false)):
+		_persist_organizations()
+	r["name"] = String(org.get("name", ""))
+	return r
+
+## 缴纳组织会费（缺省清欠全部）。
+func pay_org_dues(org_id: String, amount: int = -1) -> Dictionary:
+	var entry: Dictionary = organizations.membership(player(), org_id)
+	if entry.is_empty():
+		return {"ok": false, "reason": "not_member"}
+	var owed := int(entry.get("dues_owed", 0))
+	var pay := owed if amount < 0 else mini(amount, owed)
+	if pay <= 0:
+		return {"ok": false, "reason": "nothing_due"}
+	if economy.cash(account_id()) < pay:
+		return {"ok": false, "reason": "insufficient_funds", "dues": pay}
+	economy.add_money(account_id(), -pay, "org_dues:%s" % org_id)
+	sync_finances()
+	var r: Dictionary = organizations.pay_dues(entry, pay)
+	_persist_organizations()
+	return r
+
+## 承接并完成一次组织任务：成功计任务数并可能晋升（晋升发放津贴）。
+func do_org_task(org_id: String) -> Dictionary:
+	var org := find_org(org_id)
+	if org.is_empty():
+		return {"ok": false, "reason": "not_found"}
+	var entry: Dictionary = organizations.membership(player(), org_id)
+	if entry.is_empty():
+		return {"ok": false, "reason": "not_member"}
+	if String(entry.get("pending_task", "")).is_empty():
+		organizations.assign_task(org, entry, "organizing")
+	var success: bool = rng.next_float() < 0.6
+	var r: Dictionary = organizations.complete_task(org, entry, success)
+	var promoted := false
+	if success and organizations.evaluate_promotion(org, entry):
+		var pr: Dictionary = organizations.promote(org, entry)
+		promoted = bool(pr.get("ok", false))
+		if promoted:
+			var stip: int = organizations.stipend(entry)
+			if stip > 0:
+				economy.add_money(account_id(), stip, "org_stipend:%s" % org_id)
+				sync_finances()
+	r["promoted"] = promoted
+	r["rank_name"] = String((organizations.rank(int(entry.get("rank_index", 0))) as Dictionary).get("name", ""))
+	_persist_organizations()
+	return r
+
+## 发起集体行动（罢工/请愿/募捐/游行/抵制）；秘密组织可能因失败抬升热度而暴露。
+func org_collective_action(org_id: String, action: String) -> Dictionary:
+	var org := find_org(org_id)
+	if org.is_empty():
+		return {"ok": false, "reason": "not_found"}
+	var entry: Dictionary = organizations.membership(player(), org_id)
+	if entry.is_empty():
+		return {"ok": false, "reason": "not_member"}
+	var r: Dictionary = organizations.collective_action(org, action, {}, rng)
+	if not bool(r.get("ok", false)):
+		return r
+	if organizations.is_secret(org):
+		var ex: Dictionary = organizations.attempt_expose(org, {}, rng)
+		if bool(ex.get("exposed", false)):
+			var hx: Dictionary = organizations.handle_exposure(player(), org)
+			r["exposed"] = true
+			r["wanted_level"] = int(hx.get("wanted_level", 0))
+	_persist_organizations()
+	return r
+
+## 组织面板数据（已加入成员资格 + 可加入组织）。
+func organizations_panel_data() -> Dictionary:
+	var memberships: Array = []
+	for entry in organizations.memberships(player()):
+		if not (entry is Dictionary):
+			continue
+		var org := find_org(String((entry as Dictionary).get("org_id", "")))
+		if org.is_empty():
+			continue
+		var type_def: Dictionary = organizations.type_def(String(org.get("type", "")))
+		var rank_def: Dictionary = organizations.rank(int((entry as Dictionary).get("rank_index", 0)))
+		memberships.append({
+			"id": String(org.get("id", "")),
+			"name": String(org.get("name", "")),
+			"type": String(type_def.get("name", "")),
+			"legality": String(org.get("legality", "")),
+			"rank": String(rank_def.get("name", "")),
+			"members": int(org.get("members", 0)),
+			"influence": "%s%%" % str(snappedf(float(org.get("influence", 0.0)) * 100.0, 0.1)),
+			"dues_owed": int((entry as Dictionary).get("dues_owed", 0)),
+			"tasks_completed": int((entry as Dictionary).get("tasks_completed", 0)),
+		})
+	var available: Array = []
+	for org in _orgs:
+		if not organizations.membership(player(), String((org as Dictionary).get("id", ""))).is_empty():
+			continue
+		var td: Dictionary = organizations.type_def(String((org as Dictionary).get("type", "")))
+		available.append({
+			"id": String((org as Dictionary).get("id", "")),
+			"name": String((org as Dictionary).get("name", "")),
+			"type": String(td.get("name", "")),
+			"fee": int(td.get("base_fee", 0)),
+			"legality": String((org as Dictionary).get("legality", "")),
+		})
+	return {"memberships": memberships, "available": available}
+
+## 持久化组织运行态到 state.sim_runtime.organizations。
+func _persist_organizations() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	var arr: Array = []
+	for org in _orgs:
+		arr.append((org as Dictionary).duplicate(true))
+	(state.sim_runtime as Dictionary)["organizations"] = arr
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:

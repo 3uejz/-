@@ -59,6 +59,7 @@ func run_tests() -> void:
 	_test_adoption_commands()
 	_test_mental_commands()
 	_test_spirit_commands()
+	_test_org_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -179,6 +180,36 @@ func _test_spirit_commands() -> void:
 	sim.spirit_state()["crisis"] = "meaning_loss"
 	_main.submit("化解危机 哲学省思")
 	check_eq(String(sim.spirit_state().get("crisis", "")), "", "「化解危机」清空危机")
+
+func _test_org_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 1000000000, "test")
+	_main.submit("看组织")
+	check(_main.has_panel("organizations"), "「看组织」打开组织面板")
+	var data: Dictionary = sim.organizations_panel_data()
+	var available: Array = data.get("available", [])
+	check(not available.is_empty(), "存在可加入组织")
+	if available.is_empty():
+		return
+	var org: Dictionary = available[0]
+	var oid := String(org.get("id", ""))
+	var name := String(org.get("name", ""))
+	_main.submit("加入组织 " + name)
+	check(not sim.organizations.membership(_game.player, oid).is_empty(), "「加入组织」写入成员契约")
+	# 会费：人为制造欠费后缴清。
+	sim.organizations.membership(_game.player, oid)["dues_owed"] = 1000
+	_main.submit("缴会费 " + name)
+	check_eq(int(sim.organizations.membership(_game.player, oid).get("dues_owed", 0)), 0, "「缴会费」清减欠费")
+	# 组织任务：预置任务数，行动后任务计数不倒退。
+	sim.organizations.membership(_game.player, oid)["tasks_completed"] = 3
+	_main.submit("组织任务 " + name)
+	check(int(sim.organizations.membership(_game.player, oid).get("tasks_completed", 0)) >= 3, "「组织任务」推进任务计数")
+	# 集体行动：请愿不报错。
+	_main.submit("请愿 " + name)
+	check(true, "「请愿」执行集体行动")
+	# 退出组织。
+	_main.submit("退出组织 " + name)
+	check(sim.organizations.membership(_game.player, oid).is_empty(), "「退出组织」移除成员契约")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

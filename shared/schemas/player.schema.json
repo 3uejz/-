@@ -79,6 +79,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/pet" }
     },
+    "org_memberships": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/org_membership" }
+    },
     "military": { "$ref": "#/$defs/military" },
     "disabilities": {
       "type": "array",
@@ -556,6 +560,21 @@
         "alive": { "type": "boolean" },
         "cost": { "type": "integer", "minimum": 0 },
         "adopted_minutes": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
+      }
+    },
+    "org_membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["org_id", "rank_index"],
+      "properties": {
+        "org_id": { "type": "string" },
+        "rank_index": { "type": "integer", "minimum": 0 },
+        "rank_key": { "type": "string" },
+        "dues_owed": { "type": "integer", "minimum": 0 },
+        "tasks_completed": { "type": "integer", "minimum": 0 },
+        "faction": { "type": "string" },
+        "pending_task": { "type": "string" },
+        "joined_minute": { "$ref": "common.schema.json#/$defs/absolute_minutes" }
       }
     },
     "military": {

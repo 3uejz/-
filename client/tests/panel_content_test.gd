@@ -86,6 +86,14 @@ func _test_domain_panels_content() -> void:
 	var org: Dictionary = PanelContentScript.build("organizations", GameStateScript.default_player(), Callable(), world_context)
 	check(not bool(org.get("empty", true)), "有组织非空")
 	check(String(_row_value(_find_section(org, "组织"), "工会")).find("成员42") >= 0, "组织成员行")
+	# 组织面板：注入玩法面板数据时渲染「我的组织 / 可加入组织」。
+	var org_ctx: Dictionary = {"organizations": {
+		"memberships": [{"id": "org:1:0", "name": "城中工会", "type": "工会", "rank": "骨干", "members": 120, "influence": "52.0%", "dues_owed": 50000}],
+		"available": [{"id": "org:1:1", "name": "城市NGO", "type": "NGO", "fee": 30000, "legality": "legal"}],
+	}}
+	var org2: Dictionary = PanelContentScript.build("organizations", GameStateScript.default_player(), Callable(), org_ctx)
+	check(String(_row_value(_find_section(org2, "我的组织"), "城中工会")).find("骨干") >= 0, "组织面板成员行")
+	check(not _find_section(org2, "可加入组织").is_empty(), "组织面板可加入分区")
 	var ano: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player(), Callable(), world_context)
 	check(not bool(ano.get("empty", true)), "有异常非空")
 	check(String(_row_value(_find_section(ano, "异常条目"), "收容物-7")).find("收容等级3") >= 0, "异常行")

@@ -142,6 +142,25 @@ func _dispatch(intent) -> Dictionary:
 			return _deepen_faith(intent)
 		"化解危机":
 			return _resolve_crisis(intent)
+		# 组织与社团（D19）
+		"加入组织":
+			return _join_org(intent)
+		"退出组织":
+			return _leave_org(intent)
+		"缴会费":
+			return _pay_org_dues(intent)
+		"组织任务":
+			return _org_task(intent)
+		"罢工":
+			return _org_action(intent, "strike")
+		"请愿":
+			return _org_action(intent, "petition")
+		"募捐":
+			return _org_action(intent, "fundraiser")
+		"游行":
+			return _org_action(intent, "march")
+		"抵制":
+			return _org_action(intent, "boycott")
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -169,6 +188,7 @@ func _help() -> Dictionary:
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
+		"· 组织：加入组织 <组织> / 缴会费 / 组织任务 / 罢工 / 请愿 / 募捐 / 退出组织",
 	]
 	return _ok(lines, 0, "")
 
@@ -595,6 +615,111 @@ func _exit_cn(kind: String) -> String:
 		_:
 			return kind
 
+# --- 组织与社团（D19） ---
+
+func _join_org(intent) -> Dictionary:
+	var oid := _object_id(intent, "organization")
+	if oid.is_empty():
+		return _fail("未指定要加入的组织；可打开「组织」面板了解可加入的工会、协会、NGO、俱乐部或阵营。")
+	var r: Dictionary = host.join_organization(oid)
+	if not bool(r.get("ok", false)):
+		return _fail(_org_reason(String(r.get("reason", ""))))
+	return _ok(["你加入了「%s」，缴纳首次会费 %.0f 元。" % [String(r.get("name", oid)), float(r.get("dues", 0))]], 0, "")
+
+func _leave_org(intent) -> Dictionary:
+	var oid := _object_id(intent, "organization")
+	if oid.is_empty():
+		var memberships: Array = host.organizations_panel_data().get("memberships", [])
+		if memberships.size() == 1:
+			oid = String((memberships[0] as Dictionary).get("id", ""))
+		else:
+			return _fail("请指定要退出哪个组织。")
+	var r: Dictionary = host.leave_organization(oid, false)
+	if not bool(r.get("ok", false)):
+		return _fail(_org_reason(String(r.get("reason", ""))))
+	var lines: Array = ["你退出了「%s」。" % String(r.get("name", oid))]
+	var cost := int(r.get("exit_cost", 0))
+	if cost > 0:
+		lines.append("退出成本 %.0f 元。" % float(cost))
+	if float(r.get("legal_risk", 0.0)) > 0.0:
+		lines.append("叛逃留下法律隐患（风险 %.0f%%）。" % (float(r.get("legal_risk", 0.0)) * 100.0))
+	return _ok(lines, 0, "")
+
+func _pay_org_dues(intent) -> Dictionary:
+	var oid := _object_id(intent, "organization")
+	if oid.is_empty():
+		var memberships: Array = host.organizations_panel_data().get("memberships", [])
+		if memberships.size() == 1:
+			oid = String((memberships[0] as Dictionary).get("id", ""))
+		else:
+			return _fail("请指定要缴纳会费的组织。")
+	var r: Dictionary = host.pay_org_dues(oid)
+	if not bool(r.get("ok", false)):
+		return _fail(_org_reason(String(r.get("reason", ""))))
+	return _ok(["你缴纳了 %.0f 元会费，尚欠 %.0f 元。" % [float(r.get("paid", 0)), float(r.get("dues_owed", 0))]], 0, "")
+
+func _org_task(intent) -> Dictionary:
+	var oid := _object_id(intent, "organization")
+	if oid.is_empty():
+		var memberships: Array = host.organizations_panel_data().get("memberships", [])
+		if memberships.size() == 1:
+			oid = String((memberships[0] as Dictionary).get("id", ""))
+		else:
+			return _fail("请指定要承接任务的组织。")
+	var r: Dictionary = host.do_org_task(oid)
+	if not bool(r.get("ok", false)):
+		return _fail(_org_reason(String(r.get("reason", ""))))
+	var lines: Array = []
+	if bool(r.get("success", false)):
+		lines.append("你完成了组织交办的事务，累计 %d 件。" % int(r.get("tasks_completed", 0)))
+		if bool(r.get("promoted", false)):
+			lines.append("你获得晋升，现任「%s」，开始领取津贴。" % String(r.get("rank_name", "")))
+	else:
+		lines.append("此次事务未能办妥，声望略有损失。")
+	return _ok(lines, 0, "")
+
+func _org_action(intent, action: String) -> Dictionary:
+	var oid := _object_id(intent, "organization")
+	if oid.is_empty():
+		var memberships: Array = host.organizations_panel_data().get("memberships", [])
+		if memberships.size() == 1:
+			oid = String((memberships[0] as Dictionary).get("id", ""))
+		else:
+			return _fail("请指定要发起行动的组织。")
+	var r: Dictionary = host.org_collective_action(oid, action)
+	if not bool(r.get("ok", false)):
+		return _fail(_org_reason(String(r.get("reason", ""))))
+	var lines: Array = ["你组织了「%s」（成功率 %.0f%%）。" % [_org_action_cn(action), float(r.get("probability", 0.0)) * 100.0]]
+	if bool(r.get("success", false)):
+		lines.append("行动奏效，组织影响力上升。")
+	else:
+		lines.append("行动受挫，组织影响力受损。")
+	if bool(r.get("exposed", false)):
+		lines.append("组织因此暴露并瓦解，你留下案底（通缉等级 %d）。" % int(r.get("wanted_level", 0)))
+	return _ok(lines, 0, "")
+
+func _org_action_cn(action: String) -> String:
+	return String(host.organizations.ACTIONS.get(action, {}).get("name", action))
+
+func _org_reason(reason: String) -> String:
+	match reason:
+		"not_found":
+			return "未找到该组织"
+		"already_member":
+			return "你已是该组织成员"
+		"not_member":
+			return "你并未加入该组织"
+		"disbanded":
+			return "该组织已经解散"
+		"insufficient_funds":
+			return "资金不足"
+		"nothing_due":
+			return "当前没有欠缴会费"
+		"unknown_action":
+			return "不支持该集体行动"
+		_:
+			return reason if reason != "" else "操作未能完成"
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -708,8 +833,32 @@ func _resolve_by_name(type: String, text: String) -> String:
 		"location":
 			# 岗位/机构名回退（求职等动词不声明对象类型，名称落在 method）。
 			return _find_by_name(host.jobs, text)
+		"organization":
+			return _find_org_by_name(text)
 		_:
 			return ""
+
+## 组织名回退：在可加入组织与已加入组织中按名称匹配。
+func _find_org_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	var data: Dictionary = host.organizations_panel_data()
+	for group in ["available", "memberships"]:
+		for item in data.get(group, []):
+			if not (item is Dictionary):
+				continue
+			var d: Dictionary = item
+			if String(d.get("name", "")) == needle:
+				return String(d.get("id", ""))
+	for group in ["available", "memberships"]:
+		for item in data.get(group, []):
+			if not (item is Dictionary):
+				continue
+			var d: Dictionary = item
+			if String(d.get("name", "")).find(needle) >= 0:
+				return String(d.get("id", ""))
+	return ""
 
 ## 在目录系统中按 id 或名称（含前后缀包含）查找定义 id。
 func _find_by_name(system, text: String) -> String:
