@@ -70,6 +70,7 @@ func run_tests() -> void:
 	_test_trade_commands()
 	_test_mining_commands()
 	_test_primary_commands()
+	_test_dining_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -418,6 +419,24 @@ func _test_primary_commands() -> void:
 	check(bool((sim.primary_state().get("hunter", {}) as Dictionary).get("license", false)), "「申请狩猎许可」取得许可")
 	_main.submit("狩猎 鹿 1")
 	check(int((sim.primary_state().get("hunter", {}) as Dictionary).get("money", 0)) > 0, "「狩猎」取得收益")
+
+func _test_dining_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看餐厅")
+	check(_main.has_panel("business"), "「看餐厅」打开经营面板")
+	_main.submit("建餐厅")
+	check(not sim.dining_state().is_empty(), "「建餐厅」开办餐厅")
+	_main.submit("加菜 家常小炒")
+	check((sim.dining_state().get("menu", []) as Array).has("home_style"), "「加菜」入菜单")
+	_main.submit("定菜价 家常小炒 4000")
+	check(int((sim.dining_state().get("prices", {}) as Dictionary).get("home_style", 0)) == 4000, "「定菜价」设置售价")
+	_main.submit("雇厨 厨师 2")
+	check(int((sim.dining_state().get("staff", {}) as Dictionary).get("cook", 0)) == 2, "「雇厨」雇佣厨师")
+	var money_before: int = int(sim.dining_state().get("money", 0))
+	_main.submit("营业")
+	check(int(sim.dining_state().get("money", 0)) != money_before, "「营业」结算一日流水")
+	_main.submit("食品认证 卫生")
+	check((sim.dining_state().get("certifications", []) as Array).has("hygiene_a"), "「食品认证」取得认证")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

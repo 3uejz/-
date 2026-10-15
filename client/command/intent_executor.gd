@@ -293,6 +293,27 @@ func _dispatch(intent) -> Dictionary:
 			return _apply_hunting_license(intent)
 		"狩猎":
 			return _hunt(intent)
+		# 餐饮与食品工业（D30）
+		"建餐厅":
+			return _build_restaurant(intent)
+		"加菜":
+			return _add_menu(intent)
+		"定菜价":
+			return _set_menu_price(intent)
+		"营业":
+			return _open_business(intent)
+		"雇厨":
+			return _hire_chef(intent)
+		"扩张餐饮":
+			return _expand_dining(intent)
+		"食品认证":
+			return _certify_food(intent)
+		"营销推广":
+			return _promote_food(intent)
+		"加工食品":
+			return _process_food(intent)
+		"分销食品":
+			return _distribute_food(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1482,6 +1503,96 @@ func _fish_species_name(species: String) -> String:
 func _game_species_name(species: String) -> String:
 	return String(host.primary_industry.GAME_SPECIES.get(species, {}).get("name", species))
 
+# --- 餐饮与食品工业（D30） ---
+
+func _build_restaurant(intent) -> Dictionary:
+	var r: Dictionary = host.open_restaurant()
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办餐厅（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你开了一家%s。" % String(r.get("name", "餐厅"))], 0, "")
+
+func _add_menu(intent) -> Dictionary:
+	var recipe := _object_id(intent, "recipe")
+	var r: Dictionary = host.restaurant_add_menu(recipe)
+	if not bool(r.get("ok", false)):
+		return _fail("无法加菜（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已将%s加入菜单。" % _recipe_name(recipe)], 0, "")
+
+func _set_menu_price(intent) -> Dictionary:
+	var recipe := _object_id(intent, "recipe")
+	var price: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.restaurant_set_price(recipe, price)
+	if not bool(r.get("ok", false)):
+		return _fail("无法定价（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已将%s定价为 %d。" % [_recipe_name(recipe), int(r.get("price", price))]], 0, "")
+
+func _open_business(intent) -> Dictionary:
+	var channel := _object_id(intent, "channel")
+	if channel == "":
+		channel = "dine_in"
+	var r: Dictionary = host.restaurant_sell_day(channel)
+	if not bool(r.get("ok", false)):
+		return _fail("无法营业（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s营业：客流 %.0f，营收 %d，利润 %d。" % [String(r.get("channel_name", "")), float(r.get("covers", 0.0)), int(r.get("revenue", 0)), int(r.get("profit", 0))]], 0, "")
+
+func _hire_chef(intent) -> Dictionary:
+	var role := _object_id(intent, "staff_role")
+	if role == "":
+		role = "cook"
+	var count: int = int(_param_number(intent, "number", 1))
+	var r: Dictionary = host.restaurant_hire(role, count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法雇佣（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已雇佣%s，现有 %d 人。" % [_staff_role_name(role), int(r.get("count", 0))]], 0, "")
+
+func _expand_dining(intent) -> Dictionary:
+	var mode := _object_id(intent, "dining_mode")
+	var r: Dictionary = host.restaurant_expand(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法扩张（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["餐饮扩张为%s，门店 %d 家。" % [String(r.get("mode", mode)), int(r.get("stores", 1))]], 0, "")
+
+func _certify_food(intent) -> Dictionary:
+	var cert := _object_id(intent, "cert")
+	var r: Dictionary = host.restaurant_certify(cert)
+	if not bool(r.get("ok", false)):
+		return _fail("无法认证（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已取得%s认证。" % String(r.get("certification", cert))], 0, "")
+
+func _promote_food(intent) -> Dictionary:
+	var kind := _object_id(intent, "marketing")
+	var cost: int = int(_param_number(intent, "number", 200000))
+	var r: Dictionary = host.restaurant_marketing(kind, cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法营销（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra := "（引发差评反噬）" if bool(r.get("backlash", false)) else ""
+	return _ok(["营销系数提升至 %.2f%s。" % [float(r.get("marketing", 1.0)), extra]], 0, "")
+
+func _process_food(intent) -> Dictionary:
+	var recipe := _object_id(intent, "recipe")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.restaurant_process(recipe, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法加工（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["加工%s，库存 %.1f。" % [_recipe_name(recipe), float(r.get("qty", 0.0))]], 0, "")
+
+func _distribute_food(intent) -> Dictionary:
+	var recipe := _object_id(intent, "recipe")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var channel := _object_id(intent, "channel")
+	if channel == "":
+		channel = "retail"
+	var r: Dictionary = host.restaurant_distribute(recipe, qty, channel)
+	if not bool(r.get("ok", false)):
+		return _fail("无法分销（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["分销%s %.1f，净收入 %d。" % [_recipe_name(recipe), float(r.get("sold", 0.0)), int(r.get("net", 0))]], 0, "")
+
+func _recipe_name(recipe: String) -> String:
+	return String((host.dining.RECIPES.get(recipe, {}) as Dictionary).get("name", recipe))
+
+func _staff_role_name(role: String) -> String:
+	return String((host.dining.STAFF_ROLES.get(role, {}) as Dictionary).get("name", role))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1628,6 +1739,22 @@ func _reason_cn(reason: String) -> String:
 			return "正处于休渔期"
 		"protected_area":
 			return "在保护区内违法"
+		"no_restaurant":
+			return "尚未开办餐厅"
+		"unknown_role":
+			return "未知岗位"
+		"hygiene_too_low":
+			return "卫生条件不达标"
+		"unknown_certification":
+			return "未知认证"
+		"not_packageable":
+			return "该菜品不可预包装"
+		"no_food_facility":
+			return "需中央厨房或食品工业模式"
+		"unknown_marketing":
+			return "未知营销方式"
+		"channel_disabled":
+			return "该渠道未开通"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1779,6 +1906,18 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.game_species_catalog(), text)
 		"forest_type":
 			return _find_catalog_by_name(host.forest_types_catalog(), text)
+		"recipe":
+			return _find_catalog_by_name(host.dining_recipes_catalog(), text)
+		"channel":
+			return _find_catalog_by_name(host.dining_channels_catalog(), text)
+		"staff_role":
+			return _find_catalog_by_name(host.dining_staff_roles_catalog(), text)
+		"dining_mode":
+			return _find_catalog_by_name(host.dining_modes_catalog(), text)
+		"cert":
+			return _find_catalog_by_name(host.dining_certs_catalog(), text)
+		"marketing":
+			return _find_catalog_by_name(host.dining_marketing_catalog(), text)
 		_:
 			return ""
 

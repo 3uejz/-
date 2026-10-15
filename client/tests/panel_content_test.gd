@@ -45,6 +45,7 @@ func run_tests() -> void:
 	_test_trade_panel()
 	_test_mining_panel()
 	_test_primary_panel()
+	_test_dining_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -344,6 +345,24 @@ func _test_primary_panel() -> void:
 	check(_find_section(d, "林场").get("rows", []).size() >= 1, "林场分区有行")
 	check(_find_section(d, "狩猎").get("rows", []).size() >= 1, "狩猎分区有行")
 	check(_find_section(d, "生态").get("rows", []).size() >= 1, "生态分区有行")
+
+func _test_dining_panel() -> void:
+	var ctx: Dictionary = {"dining": {
+		"name": "小馆", "money": 1200000, "mode": "chain", "mode_name": "连锁门店",
+		"stores": 3, "reputation": 60.0, "hygiene": 72.0, "brand": 45.0,
+		"stars": 4, "stars_name": "四星", "headcount": 5, "turnover": 2.4,
+		"menu": [{"key": "home_style", "name": "家常小炒", "price": 4000, "cost": 2100, "margin": 0.475}],
+		"staff": [{"role": "chef", "name": "主厨", "count": 1}],
+		"products": [{"key": "home_style", "qty": 20.0}],
+		"certifications": ["hygiene_a"],
+	}}
+	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有餐饮上下文非空")
+	check(_find_section(d, "餐厅概况").get("rows", []).size() >= 1, "餐厅概况分区有行")
+	check(_find_section(d, "菜单").get("rows", []).size() >= 1, "菜单分区有行")
+	check(_find_section(d, "员工").get("rows", []).size() >= 1, "员工分区有行")
+	check(_find_section(d, "预包装库存").get("rows", []).size() >= 1, "预包装库存分区有行")
+	check(_find_section(d, "食安认证").get("rows", []).size() >= 1, "食安认证分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

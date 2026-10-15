@@ -565,9 +565,56 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 	var mn: Dictionary = context.get("mining", {}) if context.get("mining") is Dictionary else {}
 	if not mn.is_empty():
 		sections.append_array(_mining_sections(mn))
+	var dng: Dictionary = context.get("dining", {}) if context.get("dining") is Dictionary else {}
+	if not dng.is_empty():
+		sections.append_array(_dining_sections(dng))
 	if sections.is_empty():
 		return _empty("经营", "尚无产业；可通过创业、融资或收购开启经营")
 	return _ok(sections)
+
+## 餐饮面板分区：门店概况、菜单、员工、产品、认证。
+static func _dining_sections(dng: Dictionary) -> Array:
+	var sections: Array = []
+	sections.append(_section("餐厅概况", [
+		{"label": "名称", "value": String(dng.get("name", ""))},
+		{"label": "经营模式", "value": String(dng.get("mode_name", ""))},
+		{"label": "门店", "value": "%d 家" % int(dng.get("stores", 1))},
+		{"label": "资金", "value": str(int(dng.get("money", 0)))},
+		{"label": "评星", "value": String(dng.get("stars_name", ""))},
+		{"label": "口碑", "value": "%.0f" % float(dng.get("reputation", 0.0))},
+		{"label": "卫生", "value": "%.0f" % float(dng.get("hygiene", 0.0))},
+		{"label": "品牌", "value": "%.0f" % float(dng.get("brand", 0.0))},
+		{"label": "翻台率", "value": "%.2f" % float(dng.get("turnover", 0.0))},
+	]))
+	var menu: Array = _items_of(dng.get("menu", []))
+	if not menu.is_empty():
+		var rows: Array = []
+		for m in menu:
+			if m is Dictionary:
+				var md: Dictionary = m
+				rows.append({"label": String(md.get("name", "?")), "value": "售价 %d · 成本 %d · 毛利 %.0f%%" % [int(md.get("price", 0)), int(md.get("cost", 0)), float(md.get("margin", 0.0)) * 100.0]})
+		sections.append(_section("菜单", rows))
+	var staff: Array = _items_of(dng.get("staff", []))
+	if not staff.is_empty():
+		var srows: Array = []
+		for s in staff:
+			if s is Dictionary:
+				srows.append({"label": String((s as Dictionary).get("name", "?")), "value": "%d 人" % int((s as Dictionary).get("count", 0))})
+		sections.append(_section("员工", srows))
+	var products: Array = _items_of(dng.get("products", []))
+	if not products.is_empty():
+		var prows: Array = []
+		for p in products:
+			if p is Dictionary:
+				prows.append({"label": String((p as Dictionary).get("key", "?")), "value": "%.1f" % float((p as Dictionary).get("qty", 0.0))})
+		sections.append(_section("预包装库存", prows))
+	var certs: Array = _items_of(dng.get("certifications", []))
+	if not certs.is_empty():
+		var names: Array = []
+		for c in certs:
+			names.append(String(c))
+		sections.append(_section("食安认证", [{"label": "已取得", "value": "、".join(PackedStringArray(names))}]))
+	return sections
 
 ## 制造业面板分区：工厂概况、人员、原料、成品、订单。
 static func _mfg_sections(mfg: Dictionary) -> Array:

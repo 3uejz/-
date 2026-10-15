@@ -44,6 +44,7 @@ const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
 const PrimaryScript = preload("res://sim/primary_industry.gd")
+const DiningScript = preload("res://sim/dining.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -131,6 +132,8 @@ var _fishery: Dictionary = {}        ## 渔场运行时，入档 sim_runtime.pri
 var _forest: Dictionary = {}         ## 林场运行时，入档 sim_runtime.primary.forest
 var _hunter: Dictionary = {}         ## 狩猎运行时，入档 sim_runtime.primary.hunter
 var _ecology: Dictionary = {}        ## 生态可持续运行时，入档 sim_runtime.primary.ecology
+var dining                      ## 餐饮与食品工业（DiningSystem）
+var _restaurant: Dictionary = {}     ## 玩家餐厅运行时（门店为纯数据字典），入档 sim_runtime.dining
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -186,6 +189,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_energy = mining_energy.new_energy_state()
 	primary_industry = PrimaryScript.new()
 	_ecology = primary_industry.new_ecology()
+	dining = DiningScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -304,6 +308,12 @@ func _ensure_world_geo() -> void:
 				_hunter = (prd["hunter"] as Dictionary).duplicate(true)
 			if prd.get("ecology", null) is Dictionary and not (prd["ecology"] as Dictionary).is_empty():
 				_ecology = (prd["ecology"] as Dictionary).duplicate(true)
+		# 恢复餐饮运行时（玩家餐厅）。
+		var dn: Variant = (state.sim_runtime as Dictionary).get("dining", {})
+		if dn is Dictionary and not (dn as Dictionary).is_empty():
+			var dnd: Dictionary = dn
+			if dnd.get("restaurant", null) is Dictionary and not (dnd["restaurant"] as Dictionary).is_empty():
+				_restaurant = dining.from_dict(dnd["restaurant"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -2265,6 +2275,173 @@ func _persist_primary() -> void:
 		"fishery": _fishery.duplicate(true), "forest": _forest.duplicate(true),
 		"hunter": _hunter.duplicate(true), "ecology": _ecology.duplicate(true),
 	}
+
+
+# --- D30 餐饮与食品工业 ---
+
+func dining_state() -> Dictionary:
+	return _restaurant.duplicate(true)
+
+func dining_recipes_catalog() -> Array:
+	var out: Array = []
+	for key in dining.recipe_keys():
+		out.append({"id": String(key), "name": String((dining.RECIPES[key] as Dictionary).get("name", key))})
+	return out
+
+func dining_channels_catalog() -> Array:
+	var out: Array = []
+	for key in dining.channel_keys():
+		out.append({"id": String(key), "name": String((dining.CHANNELS[key] as Dictionary).get("name", key))})
+	return out
+
+func dining_staff_roles_catalog() -> Array:
+	var out: Array = []
+	for key in dining.staff_role_keys():
+		out.append({"id": String(key), "name": String((dining.STAFF_ROLES[key] as Dictionary).get("name", key))})
+	return out
+
+func dining_modes_catalog() -> Array:
+	var out: Array = []
+	for key in dining.expansion_modes():
+		out.append({"id": String(key), "name": String((dining.EXPANSION[key] as Dictionary).get("name", key))})
+	return out
+
+func dining_certs_catalog() -> Array:
+	var out: Array = []
+	for key in dining.certification_keys():
+		out.append({"id": String(key), "name": String((dining.CERTIFICATIONS[key] as Dictionary).get("name", key))})
+	return out
+
+func dining_marketing_catalog() -> Array:
+	var out: Array = []
+	for key in dining.MARKETING.keys():
+		out.append({"id": String(key), "name": String((dining.MARKETING[key] as Dictionary).get("name", key))})
+	return out
+
+func open_restaurant(money: int = 1000000) -> Dictionary:
+	if not _restaurant.is_empty():
+		return {"ok": false, "reason": "already_owns"}
+	_restaurant = dining.new_restaurant(maxi(0, money))
+	_persist_dining()
+	return {"ok": true, "name": String(_restaurant.get("name", ""))}
+
+func restaurant_add_menu(recipe: String) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.add_to_menu(_restaurant, recipe)
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_set_price(recipe: String, price: int) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.set_price(_restaurant, recipe, maxi(0, price))
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_sell_day(channel: String = "dine_in") -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.sell_day(_restaurant, {"channel": channel})
+	_persist_dining()
+	return r
+
+func restaurant_hire(role: String, count: int) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.hire(_restaurant, role, maxi(0, count))
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_expand(mode: String) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.expand_to(_restaurant, mode)
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_certify(cert: String) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.certify(_restaurant, cert)
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_marketing(kind: String, cost: int) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.marketing_campaign(_restaurant, kind, maxi(0, cost))
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_process(recipe: String, qty: float) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.process_food(_restaurant, recipe, maxf(0.0, qty))
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+func restaurant_distribute(recipe: String, qty: float, channel: String = "retail") -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	var r: Dictionary = dining.distribute(_restaurant, recipe, maxf(0.0, qty), channel)
+	if bool(r.get("ok", false)):
+		_persist_dining()
+	return r
+
+## 餐饮面板数据：门店概况/菜单/员工/产品/认证。
+func dining_panel_data() -> Dictionary:
+	if _restaurant.is_empty():
+		return {}
+	var out: Dictionary = {
+		"name": String(_restaurant.get("name", "")),
+		"money": int(_restaurant.get("money", 0)),
+		"mode": String(_restaurant.get("mode", "single_shop")),
+		"mode_name": String((dining.EXPANSION.get(String(_restaurant.get("mode", "single_shop")), {}) as Dictionary).get("name", "")),
+		"stores": int(_restaurant.get("stores", 1)),
+		"reputation": float(_restaurant.get("reputation", 50.0)),
+		"hygiene": float(_restaurant.get("hygiene", 70.0)),
+		"brand": float(_restaurant.get("brand", 40.0)),
+		"stars": dining.review_stars(_restaurant),
+		"stars_name": dining.star_name(_restaurant),
+		"headcount": dining.headcount(_restaurant),
+		"turnover": dining.expected_turnover(_restaurant),
+	}
+	var menu_rows: Array = []
+	for recipe in dining.menu_keys(_restaurant):
+		var m: Dictionary = dining.recipe_margin(_restaurant, String(recipe))
+		menu_rows.append({
+			"key": String(recipe),
+			"name": String((dining.RECIPES.get(String(recipe), {}) as Dictionary).get("name", recipe)),
+			"price": int(m.get("price", 0)), "cost": int(m.get("cost", 0)),
+			"margin": float(m.get("gross_margin", 0.0)),
+		})
+	out["menu"] = menu_rows
+	var staff_rows: Array = []
+	for role in dining.staff_role_keys():
+		var n: int = dining.staff_count(_restaurant, String(role))
+		if n > 0:
+			staff_rows.append({"role": String(role), "name": String((dining.STAFF_ROLES[role] as Dictionary).get("name", role)), "count": n})
+	out["staff"] = staff_rows
+	var products: Array = []
+	for k in (_restaurant.get("products", {}) as Dictionary).keys():
+		products.append({"key": String(k), "qty": float((_restaurant["products"] as Dictionary)[k])})
+	out["products"] = products
+	out["certifications"] = (_restaurant.get("certifications", []) as Array).duplicate()
+	return out
+
+func _persist_dining() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["dining"] = {"restaurant": dining.to_dict(_restaurant)}
+
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

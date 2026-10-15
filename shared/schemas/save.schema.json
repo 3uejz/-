@@ -35,7 +35,8 @@
         "manufacturing": { "type": "object", "additionalProperties": true },
         "trade": { "type": "object", "additionalProperties": true },
         "mining": { "type": "object", "additionalProperties": true },
-        "primary": { "type": "object", "additionalProperties": true }
+        "primary": { "type": "object", "additionalProperties": true },
+        "dining": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

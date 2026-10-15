@@ -119,7 +119,8 @@
 - **待办**：枪支政策归属系统与狩猎许可的跨域联动、林权碳汇向宏观碳市场接线、生态退化对 D22 农业与 D41 环境的反馈待补。
 
 ### D30 餐饮与食品工业
-- 菜谱/成本毛利/定价/翻台率无公式；门店/连锁无状态；食安事故链无参数；依赖缺失的经营面板；无子测试。
+- **已接线**：`DiningSystem`（`dining.gd`）菜谱/原料/岗位/扩张/渠道/认证/营销/预包装表；菜单与成本毛利（`add_to_menu()`/`set_price()`/`recipe_cost()`/`recipe_margin()`）；选址与翻台率（`choose_location()`/`location_quality()`/`expected_turnover()`/`daily_capacity()`/`demand()`）；单日经营（`sell_day()`，堂食/外卖/零售/电商按渠道计营收/抽成/食材成本/房租/工资）；员工（`hire()`/`daily_payroll()`/`staff_factor()`）；扩张模式（单店/连锁/中央厨房/连锁加盟/食品工业，`can_enter_mode()`/`expand_to()`，资本与标准化门槛）；食安认证（`certify()`）；食品工业（`process_food()`/`spoilage()`/`distribute()`）；风险（`food_safety_incident()`/`recall_product()`）；评价营销（`review_stars()`/`rank_listing()`/`marketing_campaign()`/`viral_event()`）。运行时经 `GameState.sim_runtime.dining`（`restaurant`）持久化。`SimHost` 接线 `dining_state()`/`dining_recipes_catalog()`/`dining_channels_catalog()`/`dining_staff_roles_catalog()`/`dining_modes_catalog()`/`dining_certs_catalog()`/`dining_marketing_catalog()`/`open_restaurant()`/`restaurant_add_menu()`/`restaurant_set_price()`/`restaurant_sell_day()`/`restaurant_hire()`/`restaurant_expand()`/`restaurant_certify()`/`restaurant_marketing()`/`restaurant_process()`/`restaurant_distribute()`/`dining_panel_data()`。UI：复用「经营」面板（`business`）增补餐厅概况/菜单/员工/预包装库存/食安认证分区（`context["dining"]`）；指令 `建餐厅`/`加菜 <菜名>`/`定菜价 <菜名> <价格>`/`营业 [渠道]`/`雇厨 <岗位> <人数>`/`扩张餐饮 <模式>`/`食品认证 <认证>`/`营销推广 <方式> [预算]`/`加工食品 <菜名> <数量>`/`分销食品 <菜名> <数量> [渠道]` 与「看餐厅」入口；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `dining` 自有测试覆盖）。
+- **待办**：食安事故的监管处罚与 D40 消费者保护联动、中央厨房与 D26 食品制造的产线打通、网红爆单对客流需求的实时反馈待补。
 
 ### D31 时尚、设计与奢侈品
 - 作品评分公式不完整；鉴定/仿品无概率；品牌溢价/老化/复兴无数值；缺鉴定/拍卖/联名动词与测试。

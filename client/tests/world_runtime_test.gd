@@ -49,6 +49,7 @@ func run_tests() -> void:
 	_test_trade_runtime()
 	_test_mining_runtime()
 	_test_primary_runtime()
+	_test_dining_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -824,4 +825,29 @@ func _test_primary_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.primary_state().get("fishery", {}) as Dictionary).is_empty(), "读档恢复渔场")
 	check(not reloaded.primary_panel_data().is_empty(), "农林牧渔面板数据非空")
+
+
+func _test_dining_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(41)
+	var host = SimHostScript.new(state, 41)
+	host.bind(state)
+	check(host.dining_recipes_catalog().size() >= 4, "菜谱表含家常小炒等")
+	check(host.dining_channels_catalog().size() >= 4, "渠道表含堂食/外卖")
+	check(bool(host.open_restaurant().get("ok", false)), "开办餐厅成功")
+	check(bool(host.restaurant_add_menu("home_style").get("ok", false)), "加菜成功")
+	check(bool(host.restaurant_set_price("home_style", 4000).get("ok", false)), "定菜价成功")
+	var sell: Dictionary = host.restaurant_sell_day("dine_in")
+	check(bool(sell.get("ok", false)) and int(sell.get("revenue", 0)) > 0, "营业取得营收")
+	check(bool(host.restaurant_hire("chef", 1).get("ok", false)), "聘用主厨成功")
+	var cert: Dictionary = host.restaurant_certify("hygiene_a")
+	check(bool(cert.get("ok", false)), "取得卫生 A 级认证")
+	check(bool(host.restaurant_expand("single_shop").get("ok", false)), "扩张校验通过（单店）")
+	# 持久化与读档恢复。
+	host._persist_dining()
+	check(state.sim_runtime.get("dining", null) is Dictionary, "餐饮运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 41)
+	reloaded.bind(state)
+	check(not reloaded.dining_state().is_empty(), "读档恢复餐厅")
+	check(not reloaded.dining_panel_data().is_empty(), "餐饮面板数据非空")
 
