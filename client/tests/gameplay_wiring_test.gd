@@ -65,6 +65,7 @@ func run_tests() -> void:
 	_test_agriculture_commands()
 	_test_digital_commands()
 	_test_late_tech_commands()
+	_test_ip_media_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -311,6 +312,24 @@ func _test_late_tech_commands() -> void:
 	# 生物延寿（带金额参数）
 	_main.submit("生物延寿 1000000")
 	check(float(sim.late_tech_state().get("lifespan_bonus", 0.0)) > 0.0, "「生物延寿」写入延寿加成")
+
+func _test_ip_media_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看知识产权")
+	check(_main.has_panel("ip_media"), "「看知识产权」打开知识产权与媒体面板")
+	# 登记版权
+	_main.submit("登记知识产权 版权")
+	check((sim.ip_media_state().get("ips", []) as Array).size() >= 1, "「登记知识产权」写入 IP")
+	# 授权
+	_main.submit("知识产权授权 版权")
+	check(true, "「知识产权授权」执行授权")
+	# 开办媒体
+	_main.submit("开办媒体 出版社")
+	check((sim.ip_media_state().get("outlets", []) as Array).size() >= 1, "「开办媒体」写入媒体机构")
+	# 发行作品
+	var money_before: int = sim.economy.cash(sim.account_id())
+	_main.submit("发行作品 试作")
+	check(sim.economy.cash(sim.account_id()) >= money_before, "「发行作品」结算营收")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

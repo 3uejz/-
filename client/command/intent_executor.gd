@@ -216,6 +216,21 @@ func _dispatch(intent) -> Dictionary:
 			return _tech_mission(intent)
 		"生物延寿":
 			return _biotech(intent)
+		# 知识产权与媒体（D25）
+		"登记知识产权":
+			return _register_ip(intent)
+		"知识产权授权":
+			return _license_ip(intent)
+		"知识产权转让":
+			return _transfer_ip(intent)
+		"知识产权质押":
+			return _pledge_ip(intent)
+		"知识产权维权":
+			return _sue_ip(intent)
+		"开办媒体":
+			return _open_media(intent)
+		"发行作品":
+			return _release_work(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -239,7 +254,7 @@ func _dispatch(intent) -> Dictionary:
 func _help() -> Dictionary:
 	var lines: Array = [
 		"可用指令示例：",
-		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看养老 / 看行情 / 看天气 …（全部 44 个面板）",
+		"· 面板：看自己 / 看技能 / 看背包 / 看关系 / 看地图 / 看资产 / 看医疗 / 看心理 / 看精神 / 看语言 / 看养老 / 看行情 / 看天气 …（全部 45 个面板）",
 		"· 时间：等待 1 小时 / 睡 8 小时 / 工作 4 小时 / 学习 <技能> 2 小时 / 锻炼 1 小时",
 		"· 生活：吃 <食物> / 买 <物品> 2 / 卖 <物品> / 存钱 500 元 / 取钱 200 元",
 		"· 社交：聊天 <人物> / 送礼 <人物> / 约会 <人物> / 求职 <岗位>",
@@ -249,6 +264,7 @@ func _help() -> Dictionary:
 		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
 		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
 		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入]",
+		"· 知识产权与媒体：登记知识产权 <类型> / 知识产权授权 <IP> [规模] / 知识产权转让 <IP> [价格] / 知识产权质押 <IP> [金额] / 知识产权维权 <IP> / 开办媒体 <类型> / 发行作品 <标题>",
 	]
 	return _ok(lines, 0, "")
 
@@ -1074,6 +1090,94 @@ func _tech_career_name(career: String) -> String:
 func _tech_mission_name(mission: String) -> String:
 	return String(host.late_tech.MISSIONS.get(mission, {}).get("name", mission))
 
+# --- 知识产权与媒体（D25） ---
+
+func _register_ip(intent) -> Dictionary:
+	var ip_type := _object_id(intent, "ip_type")
+	if ip_type.is_empty():
+		return _fail("未指定知识产权类型；可选版权、专利、商标或商业秘密。")
+	var r: Dictionary = host.register_ip_asset(ip_type)
+	if not bool(r.get("ok", false)):
+		return _fail("无法登记知识产权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var ip: Dictionary = r.get("ip", {})
+	return _ok(["你登记了%s「%s」，登记费 %d。" % [_ip_type_name(ip_type), String(ip.get("title", "")), int(r.get("fee", 0))]], 0, "")
+
+func _license_ip(intent) -> Dictionary:
+	var ip_id := _resolve_by_name("ip_asset", String(intent.params.get("method", "")))
+	if ip_id.is_empty():
+		return _fail("未指定知识产权；可先「看知识产权」查看已登记资产。")
+	var deal: float = 1000000.0
+	if intent.params.has("amount"):
+		deal = float(intent.params.get("amount", 0))
+	var r: Dictionary = host.license_ip_asset(ip_id, deal, false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法授权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你对外授权，收取许可费 %d。" % int(r.get("fee", 0))], 0, "")
+
+func _transfer_ip(intent) -> Dictionary:
+	var ip_id := _resolve_by_name("ip_asset", String(intent.params.get("method", "")))
+	if ip_id.is_empty():
+		return _fail("未指定知识产权；可先「看知识产权」查看已登记资产。")
+	var price: int = 500000
+	if intent.params.has("amount"):
+		price = int(intent.params.get("amount", 0))
+	var r: Dictionary = host.transfer_ip_asset(ip_id, price)
+	if not bool(r.get("ok", false)):
+		return _fail("无法转让（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你以 %d 转让了该知识产权。" % int(r.get("price", 0))], 0, "")
+
+func _pledge_ip(intent) -> Dictionary:
+	var ip_id := _resolve_by_name("ip_asset", String(intent.params.get("method", "")))
+	if ip_id.is_empty():
+		return _fail("未指定知识产权；可先「看知识产权」查看已登记资产。")
+	var amount: int = 300000
+	if intent.params.has("amount"):
+		amount = int(intent.params.get("amount", 0))
+	var r: Dictionary = host.pledge_ip_asset(ip_id, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法质押（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你以该知识产权质押融资 %d。" % int(r.get("amount", 0))], 0, "")
+
+func _sue_ip(intent) -> Dictionary:
+	var ip_id := _resolve_by_name("ip_asset", String(intent.params.get("method", "")))
+	if ip_id.is_empty():
+		return _fail("未指定知识产权；可先「看知识产权」查看已登记资产。")
+	var r: Dictionary = host.sue_ip_infringer(ip_id)
+	if not bool(r.get("ok", false)):
+		return _fail("无法发起维权诉讼（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("win", false)):
+		return _ok(["维权诉讼败诉，未能获得赔偿。"], 0, "")
+	return _ok(["维权诉讼胜诉，获赔 %d。" % int(r.get("compensation", 0))], 0, "")
+
+func _open_media(intent) -> Dictionary:
+	var media_type := _object_id(intent, "media_type")
+	if media_type.is_empty():
+		return _fail("未指定媒体类型；可选新闻社、出版社、影视公司、MCN 或平台。")
+	var r: Dictionary = host.register_media_outlet(media_type)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办媒体（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var outlet: Dictionary = r.get("outlet", {})
+	return _ok(["你开办了%s「%s」。" % [_media_type_name(media_type), String(outlet.get("name", ""))]], 0, "")
+
+func _release_work(intent) -> Dictionary:
+	var outlets: Array = host.ip_media_state().get("outlets", [])
+	if outlets.is_empty():
+		return _fail("尚未开办媒体机构；先「开办媒体」再发行作品。")
+	var outlet_id: String = String((outlets[0] as Dictionary).get("id", ""))
+	var title: String = String(intent.params.get("method", "")).strip_edges()
+	if title.is_empty():
+		title = "未命名作品"
+	var r: Dictionary = host.release_media_work(outlet_id, title)
+	if not bool(r.get("ok", false)):
+		return _fail("无法发行作品（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["发行《%s》，票房/销量结算 %d。" % [title, int(r.get("revenue", 0))]], 0, "")
+
+func _ip_type_name(ip_type: String) -> String:
+	return String(host.ip_media.IP_TYPES.get(ip_type, {}).get("name", ip_type))
+
+func _media_type_name(media_type: String) -> String:
+	return String(host.ip_media.MEDIA_TYPES.get(media_type, {}).get("name", media_type))
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -1136,6 +1240,20 @@ func _reason_cn(reason: String) -> String:
 			return "已达最高科技阶段"
 		"era_before_late_tech":
 			return "时代尚未进入后期科技"
+		"unknown_ip_type":
+			return "未知知识产权类型"
+		"unknown_ip":
+			return "未找到该知识产权"
+		"unknown_media_type":
+			return "未知媒体类型"
+		"unknown_outlet":
+			return "未找到该媒体机构"
+		"public_domain":
+			return "该知识产权已进入公有领域"
+		"perpetual_or_expired":
+			return "该知识产权为无限期或已到期"
+		"article_not_found":
+			return "未找到该稿件"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -1261,6 +1379,8 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_late_tech_career_by_name(text)
 		"late_tech_mission":
 			return _find_late_tech_mission_by_name(text)
+		"ip_asset":
+			return _find_ip_asset_by_name(text)
 		_:
 			return ""
 
@@ -1405,6 +1525,20 @@ func _find_late_tech_mission_by_name(text: String) -> String:
 	for key in host.late_tech.MISSIONS.keys():
 		if String((host.late_tech.MISSIONS[key] as Dictionary).get("name", "")).find(needle) >= 0:
 			return String(key)
+	return ""
+
+## 知识产权名回退：在已登记 IP 中按 id 或标题匹配。
+func _find_ip_asset_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	var ips: Array = host.ip_media_state().get("ips", [])
+	for ip in ips:
+		if ip is Dictionary and String((ip as Dictionary).get("id", "")) == needle:
+			return String((ip as Dictionary).get("id", ""))
+	for ip in ips:
+		if ip is Dictionary and String((ip as Dictionary).get("title", "")).find(needle) >= 0:
+			return String((ip as Dictionary).get("id", ""))
 	return ""
 
 ## 组织名回退：在可加入组织与已加入组织中按名称匹配。

@@ -99,7 +99,8 @@
 - **待办**：自动化冲击/极端环境/气候难民/AI 伦理失控尚无独立指令与 UI 入口（模块已提供，供宏观/异常系统消费）；航天/深海/生物科技装备与场所内容仅以键名占位。
 
 ### D25 知识产权与媒体工业
-- IP 不是可交易资产；侵权胜率无公式；媒体经营与舆情无字段；IP/媒体内容缺失；缺授权/转让/质押/维权动词。
+- **已接线**：`IpMediaSystem`（`ip_media.gd`）知识产权四类（版权/专利/商标/商业秘密，`IP_TYPES`，含保护年限/登记费/许可费率）登记、续展、到期进入公有领域（`register_ip()`/`renew_ip()`/`expire_ip()`），许可/转让/质押（`license_fee()`/`license_ip()`/`transfer_ip()`/`pledge_ip()`）；侵权监测（相似度/取证 `monitor_infringement()`）与诉讼（胜率=证据+律师+法院倾向线性加权，胜诉结算赔偿与禁令 `file_lawsuit()`/`enforce_ip()`）；媒体机构五类（新闻社/出版社/影视公司/MCN/平台，`MEDIA_TYPES`）作品发行（票房/销量与声誉由质量/宣发/舆论/运气决定 `new_media_outlet()`/`release_work()`）、负面报道与危机公关/撤稿（`negative_report()`/`crisis_pr()`/`publish_article()`/`retract()`）、内容审核与版权下架（`moderate_content()`/`copyright_takedown()`），以及边界（商标抢注 `trademark_squatting()`、恶意诉讼 `malicious_lawsuit()`、抄袭揭露 `plagiarism_exposed()`、造谣担责 `defamation_liability()`）。运行时经 `GameState.sim_runtime.ip_media` 持久化（`ips`/`outlets`）。`SimHost` 接线 `ip_media_state()`/`ip_types_catalog()`/`media_types_catalog()`/`register_ip_asset()`/`license_ip_asset()`/`transfer_ip_asset()`/`pledge_ip_asset()`/`sue_ip_infringer()`/`register_media_outlet()`/`release_media_work()`/`ip_media_panel_data()`，登记扣费、许可费/成交价/融资/赔偿/营收入账。「知识产权与媒体」面板（`ip_media`，第 45 面板）渲染知识产权/媒体机构；指令 `登记知识产权 <类型>`/`知识产权授权 <IP> [规模]`/`知识产权转让 <IP> [价格]`/`知识产权质押 <IP> [金额]`/`知识产权维权 <IP>`/`开办媒体 <类型>`/`发行作品 <标题>` 与「看知识产权」入口；测试 `ip_media_test.gd` 覆盖模块纯逻辑。
+- **待办**：IP 尚未与 `ResearchSystem`/`CompanySystem` 联动（专利登记未接通研发）；平台审核/内容合规仅有纯逻辑入口，未接入数字平台面板。
 
 ### D26 制造业、工业与供应链
 - 工厂/产线无运行时结构；产能公式无系数；良品率/工时无基线；design 有经营面板而 `ui.md` 无；制造品类定义字段缺失；断电/罢工停线接口未定义。

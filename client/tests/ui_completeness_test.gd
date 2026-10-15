@@ -51,6 +51,6 @@ func _test_panel_spec_matches() -> void:
 	var panel_registry = PanelRegistryScript.new()
 	var report: Dictionary = CoverageScript.panel_report(panel_registry)
 	var spec: Array = report["spec"]
-	check_eq(spec.size(), 44, "ui.md 面板清单 44 项")
+	check_eq(spec.size(), 45, "ui.md 面板清单 45 项")
 	check((report["missing"] as Array).is_empty(), "规格面板均已注册: %s" % str(report["missing"]))
 	check((report["extra"] as Array).is_empty(), "注册面板均在规格内: %s" % str(report["extra"]))

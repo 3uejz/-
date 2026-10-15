@@ -122,6 +122,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = agriculture(player, context, name_resolver)
 		"late_tech":
 			data = late_tech(player, context, name_resolver)
+		"ip_media":
+			data = ip_media(player, context, name_resolver)
 		"content_industry":
 			data = content_industry(player, context, name_resolver)
 		"engineering":
@@ -982,6 +984,32 @@ static func _to_strings(items: Array) -> Array:
 		else:
 			out.append(String(it))
 	return out
+
+static func ip_media(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("知识产权与媒体", "尚未生成角色数据")
+	var d: Dictionary = context.get("ip_media", {}) if context.get("ip_media") is Dictionary else {}
+	var ips: Array = _items_of(d.get("ips", []))
+	var outlets: Array = _items_of(d.get("outlets", []))
+	if ips.is_empty() and outlets.is_empty():
+		return _empty("知识产权与媒体", "尚无 IP 或媒体机构；可登记版权/专利/商标或开办出版社/影视公司")
+	var sections: Array = []
+	if not ips.is_empty():
+		var irows: Array = []
+		for it in ips:
+			if it is Dictionary:
+				var id: Dictionary = it
+				var status: String = "已到期(公有领域)" if bool(id.get("public_domain", false)) else ("已质押" if bool(id.get("pledged", false)) else String(id.get("status", "")))
+				irows.append({"label": "%s（%s）" % [String(id.get("title", "?")), String(id.get("type_name", ""))], "value": "%s · 授权 %d 次" % [status, int(id.get("licenses", 0))]})
+		sections.append(_section("知识产权", irows))
+	if not outlets.is_empty():
+		var orows: Array = []
+		for ot in outlets:
+			if ot is Dictionary:
+				var od: Dictionary = ot
+				orows.append({"label": "%s（%s）" % [String(od.get("name", "?")), String(od.get("type_name", ""))], "value": "声誉 %.0f%% · 现金 %d · 作品 %d" % [float(od.get("reputation", 0.0)) * 100.0, int(od.get("cash", 0)), int(od.get("works", 0))]})
+		sections.append(_section("媒体机构", orows))
+	return _ok(sections)
 
 static func _crisis_name(key: String) -> String:
 	const NAMES: Dictionary = {

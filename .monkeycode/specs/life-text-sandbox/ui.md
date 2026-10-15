@@ -6,7 +6,7 @@
 
 - 桌面端单人自用，Godot 4 + GDScript。
 - 视觉方向：**水墨国风**插画；暗色为默认，提供亮色主题；键鼠优先，手柄后置。
-- 首发做满：全量 token 主题系统、44 个侧边抽屉面板、8 类关键弹窗、系统托盘与桌面通知、全套无障碍。
+- 首发做满：全量 token 主题系统、45 个侧边抽屉面板、8 类关键弹窗、系统托盘与桌面通知、全套无障碍。
 - 面板均以**侧边抽屉**滑出，可多开并排，不遮挡叙事流主体。
 
 ## 2. 设计 token 与主题系统
@@ -59,7 +59,7 @@
 - 快捷动作面板将常用动作做成按钮；文字、按钮、快捷键统一生成同一 `CommandIntent`（意图同源）。
 - 面板层级：叙事流 < 侧边抽屉 < 模态弹窗 < 系统通知。
 
-## 4. 面板规格（44 项）
+## 4. 面板规格（45 项）
 
 | 面板 | 主要内容 | 关键交互 | 空态/错误态 |
 |------|----------|----------|------------|
@@ -99,6 +99,7 @@
 | 奖项与荣誉 | 奖项申报、评审进度、荣誉墙、致辞 | 申报、拉票、领奖、展示 | 无奖项时显示可申报清单 |
 | 数字与平台 | 数字资产、平台账号、直播/电商、粉丝 | 开播、上架、投流、提现、实名 | 未开通时引导注册 |
 | 后期科技 | 科技阶段、新兴职业、高风险任务、航天/深海/星际、延寿 | 解锁科技、应聘科技职业、科技任务、生物延寿 | 未进入后期科技时展示阶段指引 |
+| 知识产权与媒体 | IP 登记与授权、媒体机构、作品发行、舆论与公关 | 登记知识产权、授权、转让、质押、维权、开办媒体、发行作品 | 无 IP/媒体时展示登记与开办指引 |
 | 疫情与公共卫生 | 疫情态势、疫苗/药物、隔离与防控 | 接种、检测、囤药、配合防控 | 无疫情时显示常态监测 |
 | 战争与军旅 | 军籍、军衔、前线、征兵、战报 | 参军、请战、补给、晋升、退伍 | 无军籍时显示征兵条件 |
 | 宏观行情 | GDP/通胀/失业/PMI、指数、行情、周期 | 查看指标、订阅预警、查看周期 | 无数据时显示模型摘要 |
@@ -109,7 +110,7 @@
 | 设置 | 字号、缩放、对比、色盲配色、主题色、键位、朗读、倍速、遥测、存档 | 实时预览、恢复默认、导入导出 | 保存失败给明确原因 |
 
 - 异常图鉴、金手指与人生结算属条件可见面板，未满足条件时不出现入口。
-- 全量面板按域覆盖 D1–D50；44 个面板均已接入内容装配（`panel_content.gd`），
+- 全量面板按域覆盖 D1–D50；45 个面板均已接入内容装配（`panel_content.gd`），
   无数据时以「引导性空态」呈现，不阻塞入口与导航；数据字段随各域模拟逐步填充。
 - 所有面板支持快捷键、按钮栏与中文指令三种打开方式。
 
@@ -177,7 +178,7 @@ client/ui/
 ├── theme/            # token 定义、Theme 资源、主题切换器
 ├── components/       # 通用控件（抽屉、弹窗、表格、语义标签、插画框）
 ├── layout/           # 状态栏、叙事流、指令区、快捷动作、帧结构
-├── panels/           # 44 个面板
+├── panels/           # 45 个面板
 ├── dialogs/          # 8 类弹窗
 ├── map/              # 地图与旅行交互
 ├── settings/         # 设置与无障碍
@@ -188,9 +189,9 @@ client/ui/
 - 视图与模拟解耦，headless 下可加载 UI 壳。
 - 主题 token 与 `shared/consistency/vectors/baseline.json` 无关；纯视觉常量走主题资源。
 
-已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（44 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
+已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（45 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
 
-主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通全部 44 个面板的内容装配：十个常驻核心面板（角色与属性、背包与装备、技能树、工作与职业、资产与财务、关系与人脉、成就与图鉴、家族史与传承、地图、设置，设置面板含切主题/配色/主色的实时预览控件），以及 33 个领域摘要面板（经营、组织、案件与法律、救援与灾害、环保与碳市场、市政、债务与催收、维权与消费、救助与福利、殡葬、玄学、医疗、精神健康、精神追求、语言与文化、残障与养老、农业与乡土、文娱、工程与基建、专业与生活服务、交通基建、家庭与宠物、体育、活动与展会、奖项与荣誉、数字与平台、后期科技、疫情与公共卫生、战争与军旅、宏观行情、天气预报）与条件可见面板（异常图鉴、金手指）；领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。`ui/main.gd` 另经 `command/intent_executor.gd` 与 `sim/flavor.gd` 为高频动作生成确定性、时段场景化的叙事变体。名称解析可注入内容注册表 Callable，离线回退 content_key。关键弹窗经 `DialogRegistry` 接入主壳 `DialogLayer`（遮罩 + 居中面板，层级高于抽屉）：模态互斥、危险弹窗二次确认、不可关闭弹窗禁用关闭按钮；`open_dialog/confirm_dialog/close_dialog` 为对外接口。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`、`intent_executor_test.gd`、`flavor_test.gd`。`ui/main.gd._process()` 另经 `sim/time_driver.gd`（`TimeDriver`）按「现实增量 × 倍速」实时推进游戏内时钟与生理（挂机实时世界，R1/M0）：快进目标到达即停并回落 1 倍速、玩家死亡暂停；headless（测试/CI）下自动关闭以保证确定性，可用 `set_auto_time()`/`auto_time_enabled()` 显式开关。对应测试 `client/tests/time_driver_test.gd`。
+主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通全部 45 个面板的内容装配：十个常驻核心面板（角色与属性、背包与装备、技能树、工作与职业、资产与财务、关系与人脉、成就与图鉴、家族史与传承、地图、设置，设置面板含切主题/配色/主色的实时预览控件），以及 34 个领域摘要面板（经营、组织、案件与法律、救援与灾害、环保与碳市场、市政、债务与催收、维权与消费、救助与福利、殡葬、玄学、医疗、精神健康、精神追求、语言与文化、残障与养老、农业与乡土、文娱、工程与基建、专业与生活服务、交通基建、家庭与宠物、体育、活动与展会、奖项与荣誉、数字与平台、后期科技、知识产权与媒体、疫情与公共卫生、战争与军旅、宏观行情、天气预报）与条件可见面板（异常图鉴、金手指）；领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。`ui/main.gd` 另经 `command/intent_executor.gd` 与 `sim/flavor.gd` 为高频动作生成确定性、时段场景化的叙事变体。名称解析可注入内容注册表 Callable，离线回退 content_key。关键弹窗经 `DialogRegistry` 接入主壳 `DialogLayer`（遮罩 + 居中面板，层级高于抽屉）：模态互斥、危险弹窗二次确认、不可关闭弹窗禁用关闭按钮；`open_dialog/confirm_dialog/close_dialog` 为对外接口。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`、`intent_executor_test.gd`、`flavor_test.gd`。`ui/main.gd._process()` 另经 `sim/time_driver.gd`（`TimeDriver`）按「现实增量 × 倍速」实时推进游戏内时钟与生理（挂机实时世界，R1/M0）：快进目标到达即停并回落 1 倍速、玩家死亡暂停；headless（测试/CI）下自动关闭以保证确定性，可用 `set_auto_time()`/`auto_time_enabled()` 显式开关。对应测试 `client/tests/time_driver_test.gd`。
 
 已落地的纯逻辑基座（任务 47 收尾）：`layout/history_view.gd`（历史窗口化视图模型：按滚动位置计算可见窗口，超长会话分段加载）、`components/illustration.gd`（内联水墨插画键解析，缺资源回退占位留白）、`notifications/notification_center.gd`（组合通知偏好与系统投递回调，未聚焦排队、聚焦排空、托盘常驻推进世界）。`ui/main.gd` 在叙事流接入窗口化渲染（超过 `VIRTUAL_THRESHOLD` 行改用可见窗口 + 上下占位块），并提供 `append_illustration/notify/set_focused/set_tray_enabled` 对外接口。对应测试 `client/tests/ui_narrative_test.gd`。
 
@@ -198,7 +199,7 @@ client/ui/
 
 - 主题：亮/暗与三套无障碍配色的对比度校验通过；切换幂等；token 无硬编码遗漏。
 - 缩放：各缩放档与字号档下布局不溢出、不遮挡。
-- 面板：44 个面板可开合、互不干扰（可多开）、空态与错误态正常。
+- 面板：45 个面板可开合、互不干扰（可多开）、空态与错误态正常。
 - 弹窗：8 类流程可完成，键盘焦点可达，危险操作二次确认生效。
 - 叙事：打字机开关、跳过、实体点击跳转正确。
 - 无障碍：键位重映射冲突检测、TTS 开关、减少动态生效。

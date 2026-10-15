@@ -40,6 +40,7 @@ func run_tests() -> void:
 	_test_agriculture_panel()
 	_test_digital_panel()
 	_test_late_tech_panel()
+	_test_ip_media_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -269,6 +270,18 @@ func _test_late_tech_panel() -> void:
 	check(_find_section(d2, "科技阶段").get("rows", []).size() >= 1, "科技阶段分区有行")
 	check(_find_section(d2, "科技职业").get("rows", []).size() >= 1, "科技职业分区有行")
 	check(_find_section(d2, "高风险任务").get("rows", []).size() >= 1, "高风险任务分区有行")
+
+func _test_ip_media_panel() -> void:
+	var data: Dictionary = PanelContentScript.build("ip_media", GameStateScript.default_player(), Callable(), {})
+	check(bool(data.get("empty", true)), "无知识产权上下文为空态")
+	var ctx: Dictionary = {"ip_media": {
+		"ips": [{"id": "ip.copyright.1", "type": "copyright", "type_name": "版权", "title": "测试作品", "status": "registered", "licenses": 2, "pledged": false, "public_domain": false}],
+		"outlets": [{"id": "media.1", "name": "出版社", "type_name": "出版社", "reputation": 0.6, "cash": 500000, "works": 3}],
+	}}
+	var d2: Dictionary = PanelContentScript.build("ip_media", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d2.get("empty", true)), "有知识产权上下文非空")
+	check(_find_section(d2, "知识产权").get("rows", []).size() >= 1, "知识产权分区有行")
+	check(_find_section(d2, "媒体机构").get("rows", []).size() >= 1, "媒体机构分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

@@ -30,7 +30,8 @@
         "disability": { "type": "object", "additionalProperties": true },
         "farm": { "type": "object", "additionalProperties": true },
         "digital": { "type": "object", "additionalProperties": true },
-        "late_tech": { "type": "object", "additionalProperties": true }
+        "late_tech": { "type": "object", "additionalProperties": true },
+        "ip_media": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

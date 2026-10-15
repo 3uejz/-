@@ -44,6 +44,7 @@ func run_tests() -> void:
 	_test_agriculture_runtime()
 	_test_digital_runtime()
 	_test_late_tech_runtime()
+	_test_ip_media_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -632,4 +633,42 @@ func _test_late_tech_runtime() -> void:
 	reloaded.bind(state)
 	check_eq(String(reloaded.late_tech_panel_data().get("stage", "")), "intelligent", "读档恢复科技阶段")
 	check(float(reloaded.late_tech_state().get("lifespan_bonus", 0.0)) > 0.0, "读档恢复延寿加成")
+
+
+func _test_ip_media_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(88)
+	var host = SimHostScript.new(state, 88)
+	host.bind(state)
+	check(host.ip_types_catalog().size() >= 4, "知识产权类型含版权/专利/商标/商业秘密")
+	check(host.media_types_catalog().size() >= 5, "媒体类型含新闻社/出版社/影视/MCN/平台")
+	# 登记版权并扣费。
+	var money_before: int = host.economy.cash(host.account_id())
+	var reg: Dictionary = host.register_ip_asset("copyright", "测试作品")
+	check(bool(reg.get("ok", false)), "登记版权成功")
+	check(host.economy.cash(host.account_id()) < money_before, "登记扣除登记费")
+	var ips: Array = host.ip_media_state().get("ips", [])
+	check_eq(ips.size(), 1, "IP 列表含 1 项")
+	var ip_id: String = String((ips[0] as Dictionary).get("id", ""))
+	# 授权收取许可费。
+	var lic: Dictionary = host.license_ip_asset(ip_id, 1000000.0, true)
+	check(bool(lic.get("ok", false)) and int(lic.get("fee", 0)) > 0, "授权收取许可费")
+	# 开办媒体并发行作品。
+	var outlet: Dictionary = host.register_media_outlet("publisher")
+	check(bool(outlet.get("ok", false)), "开办出版社成功")
+	var outlets: Array = host.ip_media_state().get("outlets", [])
+	check_eq(outlets.size(), 1, "媒体机构列表含 1 项")
+	var oid: String = String((outlets[0] as Dictionary).get("id", ""))
+	var rel: Dictionary = host.release_media_work(oid, "试作", 0.9, 10000000.0)
+	check(bool(rel.get("ok", false)) and int(rel.get("revenue", 0)) > 0, "发行作品产生营收")
+	# 诉讼判定返回。
+	var sue: Dictionary = host.sue_ip_infringer(ip_id, {"roll": 1.0})
+	check(bool(sue.get("ok", false)), "维权诉讼返回判定")
+	# 持久化并读档恢复。
+	host._persist_ip_media()
+	check(state.sim_runtime.get("ip_media", null) is Dictionary, "知识产权运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 88)
+	reloaded.bind(state)
+	check((reloaded.ip_media_state().get("ips", []) as Array).size() == 1, "读档恢复 IP")
+	check((reloaded.ip_media_state().get("outlets", []) as Array).size() == 1, "读档恢复媒体机构")
 

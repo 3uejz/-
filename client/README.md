@@ -15,7 +15,7 @@ sim/sim_host.gd     玩法接线层：绑定 GameState、惰性挂载系统、�
 sim/flavor.gd       文案变化层：为高频动作生成确定性、时段场景化的叙事变体
 sim/time_driver.gd  实时驱动：现实秒 × 倍速 → 游戏分钟（余数累积、单帧封顶）
 command/    中文指令解析（parser/intent/verb_registry）与执行（intent_executor.gd：意图 → 系统 → 叙事/面板）
-ui/         主界面壳（main.tscn）与面板（注册表 44 面板）、面板内容装配（panel_content.gd）
+ui/         主界面壳（main.tscn）与面板（注册表 45 面板）、面板内容装配（panel_content.gd）
 presentation/ 局部 3D 表现层（place_bindings.gd 场所绑定、scenes/placeholder_place.tscn 差异化占位场景）
 assets/     美术资产目录与契约（见 assets/README.md：命名/LOD/替换工作流）
 art/        叙事插画（illustrations/）
@@ -93,10 +93,11 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 
 - 数字生活与平台（`sim/digital.gd` `DigitalSystem`）：数字身份（平台账号/实名/隐私/数据条目与数据泄露牵连）与数字资产（账号/虚拟物品/加密钱包被盗与追回）；网络安全职业（渗透测试/安全防护/应急响应/数据泄露处置，合法无法律风险）；黑客（游戏内虚构抽象判定，四类目标，按 hacking 技能判定成败并结算收益/暴露概率/法律后果，不建模任何现实手法）；电子竞技（训练/战队/赛事/转会/伤病）；内容平台（直播/短视频，播放/涨粉/打赏/分成/带货与翻车封号、算法茧房、网络成瘾）；`开账号 <平台>`/`实名认证`/`网络兼职 <类型>`/`发布内容 [平台]`/`黑客攻击 <目标>` 指令经 `SimHost.open_digital_account()`/`verify_digital_identity()`/`digital_security_work()`/`publish_digital_content()`/`digital_hack()` 结算；运行时随 `GameState.sim_runtime.digital` 持久化；「数字与平台」面板渲染数字身份/平台账号/数字资产/内容创作/电竞生涯。
 - 后期科技（`sim/late_tech.gd` `LateTechSystem`）：科技阶段（信息→智能→星际，逐级严格解锁）；新兴职业（机器人运维/AI 训练师/航天工程师/宇航员/深海勘探/AI 伦理/生物科技/太空矿工/星球殖民者，含技能门槛与薪资）；高风险高回报任务（太空旅行/空间站工作/深海作业/星球殖民，事故与伤亡判定）；极端环境健康惩罚（失重/辐射/深海高压）；自动化冲击（失业率与社会保障议题）；生物科技延寿（联动寿命）；`解锁科技`/`应聘科技职业 <职业>`/`科技任务 <任务>`/`生物延寿 [投入]` 指令经 `SimHost.unlock_late_tech_stage()`/`apply_late_tech_career()`/`risk_late_tech_mission()`/`invest_biotech_lifespan()` 结算；运行时随 `GameState.sim_runtime.late_tech` 持久化；「后期科技」面板渲染科技阶段/科技职业/高风险任务。
+- 知识产权与媒体（`sim/ip_media.gd` `IpMediaSystem`）：知识产权（版权/专利/商标/商业秘密，各有保护年限/登记费/许可费率）登记、续展、到期进入公有领域、许可/转让/质押，以及侵权监测（相似度/取证）与诉讼（胜率由证据/律师/法院倾向线性决定，胜诉结算赔偿与禁令）；媒体机构（新闻社/出版社/影视公司/MCN/平台）作品发行（票房/销量与声誉由质量/宣发/舆论/运气决定）、负面报道与危机公关/撤稿、平台审核与版权下架，以及抢注/恶意诉讼/抄袭揭露/造谣担责等边界；`登记知识产权 <类型>`/`知识产权授权 <IP> [规模]`/`知识产权转让 <IP> [价格]`/`知识产权质押 <IP> [金额]`/`知识产权维权 <IP>`/`开办媒体 <类型>`/`发行作品 <标题>` 指令经 `SimHost.register_ip_asset()`/`license_ip_asset()`/`transfer_ip_asset()`/`pledge_ip_asset()`/`sue_ip_infringer()`/`register_media_outlet()`/`release_media_work()` 结算；运行时随 `GameState.sim_runtime.ip_media` 持久化；「知识产权与媒体」面板渲染知识产权/媒体机构。
 
 ## 面板与表现层
 
-- **44 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
+- **45 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
   按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入

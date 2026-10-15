@@ -39,6 +39,7 @@ const DisabilityElderlyScript = preload("res://sim/disability_elderly.gd")
 const AgricultureScript = preload("res://sim/agriculture.gd")
 const DigitalScript = preload("res://sim/digital.gd")
 const LateTechScript = preload("res://sim/late_tech.gd")
+const IpMediaScript = preload("res://sim/ip_media.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -111,6 +112,9 @@ var _creator: Dictionary = {}        ## 内容创作者运行时（粉丝/打赏
 var _esports: Dictionary = {}        ## 电竞生涯运行时（战队/技能/伤病），入档 sim_runtime.digital
 var late_tech                   ## 后期科技（LateTechSystem）
 var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/失业/延寿），入档 sim_runtime.late_tech
+var ip_media                    ## 知识产权与媒体（IpMediaSystem）
+var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
+var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -159,6 +163,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_identity = digital.new_identity("player")
 	late_tech = LateTechScript.new()
 	_late_tech = late_tech.new_state()
+	ip_media = IpMediaScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -244,6 +249,11 @@ func _ensure_world_geo() -> void:
 		var lt: Variant = (state.sim_runtime as Dictionary).get("late_tech", {})
 		if lt is Dictionary and not (lt as Dictionary).is_empty():
 			_late_tech = late_tech.from_dict(lt)
+		# 恢复知识产权与媒体运行时（IP/媒体机构）。
+		var im: Variant = (state.sim_runtime as Dictionary).get("ip_media", {})
+		if im is Dictionary and not (im as Dictionary).is_empty():
+			_ips = (im.get("ips", []) as Array).duplicate(true)
+			_outlets = (im.get("outlets", []) as Array).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -1429,6 +1439,161 @@ func _persist_late_tech() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["late_tech"] = late_tech.to_dict(_late_tech)
+
+
+# --- 知识产权与媒体（D25） ---
+
+func ip_media_state() -> Dictionary:
+	return {"ips": _ips, "outlets": _outlets}
+
+func ip_types_catalog() -> Array:
+	var out: Array = []
+	for key in ip_media.IP_TYPES.keys():
+		var d: Dictionary = ip_media.IP_TYPES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func media_types_catalog() -> Array:
+	var out: Array = []
+	for key in ip_media.MEDIA_TYPES.keys():
+		var d: Dictionary = ip_media.MEDIA_TYPES[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+## 登记知识产权：扣缴登记费，登记后入档。title 缺省用类型名。
+func register_ip_asset(ip_type: String, title: String = "") -> Dictionary:
+	if not ip_media.IP_TYPES.has(ip_type):
+		return {"ok": false, "reason": "unknown_ip_type"}
+	var def: Dictionary = ip_media.IP_TYPES[ip_type]
+	var fee: int = int(def.get("registration_fee", 0))
+	if int(economy.cash(account_id())) < fee:
+		return {"ok": false, "reason": "insufficient_funds"}
+	var name: String = title
+	if name.strip_edges() == "":
+		name = "%s%d" % [String(def.get("name", ip_type)), _ips.size() + 1]
+	var r: Dictionary = ip_media.register_ip(ip_type, "player", name, {"created_minute": now_minutes()})
+	if bool(r.get("ok", false)):
+		_ips.append(r["ip"])
+		economy.add_money(account_id(), -fee, "ip_registration")
+		_persist_ip_media()
+	return {"ok": true, "ip": r.get("ip", {}), "fee": fee}
+
+## 授权知识产权：许可费入账。
+func license_ip_asset(ip_id: String, deal_size: float, exclusive: bool = false) -> Dictionary:
+	var ip: Dictionary = _find_ip(ip_id)
+	if ip.is_empty():
+		return {"ok": false, "reason": "unknown_ip"}
+	var r: Dictionary = ip_media.license_ip(ip, "外部被许可方", deal_size, {"exclusive": exclusive, "minute": now_minutes()})
+	if bool(r.get("ok", false)):
+		economy.add_money(account_id(), int(r.get("fee", 0)), "ip_license")
+		_persist_ip_media()
+	return r
+
+## 转让知识产权：成交价入账并变更所有权。
+func transfer_ip_asset(ip_id: String, price: int) -> Dictionary:
+	var ip: Dictionary = _find_ip(ip_id)
+	if ip.is_empty():
+		return {"ok": false, "reason": "unknown_ip"}
+	var r: Dictionary = ip_media.transfer_ip(ip, "外部买家", price)
+	economy.add_money(account_id(), int(r.get("price", 0)), "ip_transfer")
+	_persist_ip_media()
+	return r
+
+## 质押知识产权：融资额入账。
+func pledge_ip_asset(ip_id: String, amount: int) -> Dictionary:
+	var ip: Dictionary = _find_ip(ip_id)
+	if ip.is_empty():
+		return {"ok": false, "reason": "unknown_ip"}
+	var r: Dictionary = ip_media.pledge_ip(ip, amount)
+	if bool(r.get("ok", false)):
+		economy.add_money(account_id(), int(r.get("amount", 0)), "ip_pledge")
+		_persist_ip_media()
+	return r
+
+## 知识产权维权诉讼：胜诉赔偿入账。
+func sue_ip_infringer(ip_id: String, opts: Dictionary = {}) -> Dictionary:
+	var ip: Dictionary = _find_ip(ip_id)
+	if ip.is_empty():
+		return {"ok": false, "reason": "unknown_ip"}
+	var r: Dictionary = ip_media.file_lawsuit(ip, opts)
+	if bool(r.get("win", false)) and int(r.get("compensation", 0)) > 0:
+		economy.add_money(account_id(), int(r["compensation"]), "ip_compensation")
+	_persist_ip_media()
+	return r
+
+## 开办媒体机构。
+func register_media_outlet(media_type: String, name: String = "") -> Dictionary:
+	if not ip_media.MEDIA_TYPES.has(media_type):
+		return {"ok": false, "reason": "unknown_media_type"}
+	var opts: Dictionary = {"reputation": 0.5, "cash": 0}
+	if name.strip_edges() != "":
+		opts["name"] = name
+	var r: Dictionary = ip_media.new_media_outlet(media_type, opts)
+	if bool(r.get("ok", false)):
+		_outlets.append(r["outlet"])
+		_persist_ip_media()
+	return r
+
+## 发行作品：票房/销量入账并影响机构声誉。
+func release_media_work(outlet_id: String, title: String, quality: float = 0.5, scale: float = 10000000.0) -> Dictionary:
+	var outlet: Dictionary = _find_outlet(outlet_id)
+	if outlet.is_empty():
+		return {"ok": false, "reason": "unknown_outlet"}
+	var work: Dictionary = {"title": title, "quality": clampf(quality, 0.0, 1.0)}
+	var r: Dictionary = ip_media.release_work(outlet, work, {"scale": scale})
+	if bool(r.get("ok", false)) and int(r.get("revenue", 0)) > 0:
+		economy.add_money(account_id(), int(r["revenue"]), "media_revenue")
+		_persist_ip_media()
+	return r
+
+func _find_ip(ip_id: String) -> Dictionary:
+	for ip in _ips:
+		if ip is Dictionary and String((ip as Dictionary).get("id", "")) == ip_id:
+			return ip
+	return {}
+
+func _find_outlet(outlet_id: String) -> Dictionary:
+	for o in _outlets:
+		if o is Dictionary and String((o as Dictionary).get("id", "")) == outlet_id:
+			return o
+	return {}
+
+func ip_media_panel_data() -> Dictionary:
+	var ips: Array = []
+	for ip in _ips:
+		if ip is Dictionary:
+			var d: Dictionary = ip
+			ips.append({
+				"id": String(d.get("id", "")),
+				"type": String(d.get("type", "")),
+				"type_name": String(ip_media.IP_TYPES.get(String(d.get("type", "")), {}).get("name", d.get("type", ""))),
+				"title": String(d.get("title", "")),
+				"status": String(d.get("status", "")),
+				"licenses": (d.get("licenses", []) as Array).size(),
+				"pledged": bool(d.get("pledged", false)),
+				"public_domain": bool(d.get("public_domain", false)),
+			})
+	var outlets: Array = []
+	for o in _outlets:
+		if o is Dictionary:
+			var od: Dictionary = o
+			outlets.append({
+				"id": String(od.get("id", "")),
+				"name": String(od.get("name", "")),
+				"type_name": String(ip_media.MEDIA_TYPES.get(String(od.get("type", "")), {}).get("name", od.get("type", ""))),
+				"reputation": snappedf(float(od.get("reputation", 0.0)), 0.001),
+				"cash": int(od.get("cash", 0)),
+				"works": (od.get("works", []) as Array).size(),
+			})
+	return {"ips": ips, "outlets": outlets}
+
+func _persist_ip_media() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["ip_media"] = {
+		"ips": _ips.duplicate(true),
+		"outlets": _outlets.duplicate(true),
+	}
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
