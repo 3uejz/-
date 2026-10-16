@@ -50,6 +50,10 @@ func run_tests() -> void:
 	_test_sports_panel()
 	_test_events_panel()
 	_test_honors_panel()
+	_test_police_panel()
+	_test_emergency_panel()
+	_test_environment_panel()
+	_test_municipal_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -425,6 +429,75 @@ func _test_honors_panel() -> void:
 	check(_find_section(d, "荣誉档案").get("rows", []).size() >= 1, "荣誉档案分区有行")
 	check(_find_section(d, "已获荣誉").get("rows", []).size() >= 1, "已获荣誉分区有行")
 	check(_find_section(d, "名人堂").get("rows", []).size() >= 1, "名人堂分区有行")
+
+func _test_police_panel() -> void:
+	var ctx: Dictionary = {"police": {
+		"case": {
+			"crime": "theft", "region": "beijing", "stage": "取证", "role": "刑侦",
+			"evidence_score": 0.3, "leads": 0.5, "legality": 1.0, "solve_probability": 0.4, "wrongful": false,
+			"evidence": [{"name": "物证", "value": 0.3}, {"name": "监控", "value": 0.5}],
+		},
+		"firm": {
+			"name": "测试安保", "staff": 4, "funds": 100000, "reputation": 0.5,
+			"contracts": [{"name": "押运", "fee": 200000, "resolved": false, "failure": false}],
+		},
+	}}
+	var d: Dictionary = PanelContentScript.build("legal", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有警务上下文非空")
+	check(_find_section(d, "经办案件").get("rows", []).size() >= 1, "经办案件分区有行")
+	check(_find_section(d, "证据链").get("rows", []).size() >= 1, "证据链分区有行")
+	check(_find_section(d, "安保公司").get("rows", []).size() >= 1, "安保公司分区有行")
+	check(_find_section(d, "安保业务").get("rows", []).size() >= 1, "安保业务分区有行")
+
+func _test_emergency_panel() -> void:
+	var ctx: Dictionary = {"emergency": {
+		"incident": {
+			"type": "消防", "stage": "善后", "severity": 0.6, "at_risk": 200, "trapped": 40,
+			"response_minutes": 12.5, "deaths": 3, "injured": 20, "rescued": 35, "fault": "",
+			"triage": {"treated": 15.0, "untreated": 5.0},
+		},
+		"org": {"name": "测试志愿队", "volunteers": 10, "equipment": 2, "funds": 100000, "reputation": 0.4},
+	}}
+	var d: Dictionary = PanelContentScript.build("rescue", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有应急上下文非空")
+	check(_find_section(d, "处置事件").get("rows", []).size() >= 1, "处置事件分区有行")
+	check(_find_section(d, "检伤分诊").get("rows", []).size() >= 1, "检伤分诊分区有行")
+	check(_find_section(d, "志愿救援队").get("rows", []).size() >= 1, "志愿救援队分区有行")
+
+func _test_environment_panel() -> void:
+	var ctx: Dictionary = {"environment": {
+		"city": {
+			"garbage_sorting": 0.8, "recycling_rate": 0.4, "sewage_treatment": 0.9,
+			"air_quality": 0.7, "pollution_index": 0.3, "health_index": 0.95,
+			"reputation": 0.9, "lawsuit_open": false,
+		},
+		"enterprise": {
+			"name": "我的企业", "emissions": 120.0, "quota": 100.0, "credits": 30.0,
+			"balance": -10.0, "esg": 72.0, "fines": 0,
+		},
+		"org": {"kind": "env_company", "name": "环保企业", "funds": 500000, "reputation": 0.5, "emission_cut": 15.0},
+	}}
+	var d: Dictionary = PanelContentScript.build("environment", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有环保上下文非空")
+	check(_find_section(d, "城市环保").get("rows", []).size() >= 1, "城市环保分区有行")
+	check(_find_section(d, "企业碳账户").get("rows", []).size() >= 1, "企业碳账户分区有行")
+	check(_find_section(d, "环保组织").get("rows", []).size() >= 1, "环保组织分区有行")
+
+func _test_municipal_panel() -> void:
+	var ctx: Dictionary = {"municipal": {
+		"city": {
+			"facilities": [{"name": "道路", "condition": 0.8, "grade": "合格"}],
+			"commute_factor": 1.4, "nuisance": 0.3, "unresolved_complaints": 2, "franchises": 1,
+		},
+		"hub": {"pending": 3, "processed": 5, "lost": 1, "damaged": 1, "claims_paid": 10000, "overload": 0.5},
+		"courier": {"name": "张三", "deliveries": 120, "rank_index": 1, "income": 5000, "reputation": 0.6},
+	}}
+	var d: Dictionary = PanelContentScript.build("municipal", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有市政上下文非空")
+	check(_find_section(d, "市政设施").get("rows", []).size() >= 1, "市政设施分区有行")
+	check(_find_section(d, "通行与扰民").get("rows", []).size() >= 1, "通行与扰民分区有行")
+	check(_find_section(d, "邮政枢纽").get("rows", []).size() >= 1, "邮政枢纽分区有行")
+	check(_find_section(d, "快递员").get("rows", []).size() >= 1, "快递员分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

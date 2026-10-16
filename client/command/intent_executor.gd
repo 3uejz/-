@@ -375,6 +375,112 @@ func _dispatch(intent) -> Dictionary:
 			return _honor_buy(intent)
 		"揭露黑幕":
 			return _honor_expose(intent)
+		"立案":
+			return _police_case(intent)
+		"勘查":
+			return _police_survey(intent)
+		"取证":
+			return _police_collect(intent)
+		"搜查令":
+			return _police_warrant(intent)
+		"审讯":
+			return _police_interrogate(intent)
+		"线人":
+			return _police_informant(intent)
+		"卧底":
+			return _police_undercover(intent)
+		"技侦":
+			return _police_tech(intent)
+		"侦破":
+			return _police_advance(intent)
+		"开安保公司":
+			return _security_firm(intent)
+		"承接安保":
+			return _security_take(intent)
+		"履约安保":
+			return _security_resolve(intent)
+		"接警":
+			return _emergency_new(intent)
+		"出警":
+			return _emergency_dispatch(intent)
+		"现场救援":
+			return _emergency_rescue(intent)
+		"二次事故":
+			return _emergency_secondary(intent)
+		"善后处理":
+			return _emergency_aftermath(intent)
+		"开志愿队":
+			return _volunteer_org(intent)
+		"采购救援装备":
+			return _volunteer_purchase(intent)
+		"招募志愿者":
+			return _volunteer_recruit(intent)
+		"志愿出警":
+			return _volunteer_dispatch(intent)
+		"垃圾分类":
+			return _env_garbage(intent)
+		"回收":
+			return _env_recycle(intent)
+		"污水处理":
+			return _env_sewage(intent)
+		"空气治理":
+			return _env_air(intent)
+		"排污许可":
+			return _env_permit(intent)
+		"碳核算":
+			return _env_carbon_account(intent)
+		"碳交易":
+			return _env_carbon_trade(intent)
+		"碳履约":
+			return _env_carbon_compliance(intent)
+		"碳申报":
+			return _env_carbon_report(intent)
+		"开环保公司":
+			return _env_org(intent)
+		"承接环保项目":
+			return _env_project(intent)
+		"举报污染":
+			return _env_expose(intent)
+		"环境诉讼":
+			return _env_lawsuit(intent)
+		"申请绿色补贴":
+			return _env_subsidy(intent)
+		"低碳转型":
+			return _env_transition(intent)
+		"偷排":
+			return _env_discharge(intent)
+		"邻避评估":
+			return _env_nimby(intent)
+		"市政养护":
+			return _municipal_maintain(intent)
+		"设施巡检":
+			return _municipal_inspect(intent)
+		"市政施工":
+			return _municipal_construct(intent)
+		"施工推进":
+			return _municipal_advance(intent)
+		"道路开挖":
+			return _municipal_excavate(intent)
+		"市政投诉":
+			return _municipal_complain(intent)
+		"投诉处理":
+			return _municipal_resolve(intent)
+		"邮政寄件":
+			return _postal_accept(intent)
+		"包裹发运":
+			return _postal_ship(intent)
+		"包裹理赔":
+			return _postal_claim(intent)
+		"快递生涯":
+			return _courier_career(intent)
+		"揽投":
+			return _courier_deliver(intent)
+		"特许经营":
+			return _municipal_franchise(intent)
+		"服务考核":
+			return _municipal_quality(intent)
+		"政府购买":
+			return _municipal_purchase(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -1895,6 +2001,414 @@ func _honor_expose(intent) -> Dictionary:
 		return _ok(["没有可揭露的黑幕。"], 0, "")
 	return _ok(["黑幕曝光：声望 %d，撤销荣誉 %d 项。" % [int(r.get("reputation_delta", 0)), int(r.get("revoked_honors", 0))]], 0, "")
 
+func _police_case(intent) -> Dictionary:
+	var crime := _object_id(intent, "crime")
+	var r: Dictionary = host.police_start_case(crime)
+	if not bool(r.get("ok", false)):
+		return _fail("无法立案（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已立案，案件进入勘查阶段。"], 0, "")
+
+func _police_survey(intent) -> Dictionary:
+	var r: Dictionary = host.police_survey()
+	if not bool(r.get("ok", false)):
+		return _fail("无法勘查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["勘查完成，线索 %.2f。" % float(r.get("leads", 0.0))], 0, "")
+
+func _police_collect(intent) -> Dictionary:
+	var kind := _object_id(intent, "evidence_kind")
+	var strength: float = float(_param_number(intent, "number", 30)) / 100.0
+	var r: Dictionary = host.police_collect(kind, strength)
+	if not bool(r.get("ok", false)):
+		return _fail("无法取证（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已采集%s，证据强度 %.2f。" % [String(r.get("kind", "")), float(r.get("score", 0.0))]], 0, "")
+
+func _police_warrant(intent) -> Dictionary:
+	var r: Dictionary = host.police_warrant()
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请搜查令（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["搜查令已获批。" if bool(r.get("granted", false)) else "搜查令未获批。"], 0, "")
+
+func _police_interrogate(intent) -> Dictionary:
+	var pressure: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.police_interrogate(pressure)
+	if not bool(r.get("ok", false)):
+		return _fail("无法审讯（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("confession", false)):
+		return _ok(["取得供词%s。" % ("（逼供）" if bool(r.get("coercive", false)) else "")], 0, "")
+	return _ok(["审讯未取得供词%s。" % ("（逼供）" if bool(r.get("coercive", false)) else "")], 0, "")
+
+func _police_informant(intent) -> Dictionary:
+	var r: Dictionary = host.police_informant()
+	if not bool(r.get("ok", false)):
+		return _fail("无法启用线人（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["线人情报%s，线索 %.2f。" % [("可靠" if bool(r.get("reliable", false)) else "存疑"), float(r.get("leads", 0.0))]], 0, "")
+
+func _police_undercover(intent) -> Dictionary:
+	var r: Dictionary = host.police_undercover()
+	if not bool(r.get("ok", false)):
+		return _fail("无法部署卧底（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _fail("卧底暴露，行动失败。")
+	return _ok(["卧底成功取得证据。"], 0, "")
+
+func _police_tech(intent) -> Dictionary:
+	var r: Dictionary = host.police_tech()
+	if not bool(r.get("ok", false)):
+		return _fail("无法技术侦查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["技术侦查取得电子证据。"], 0, "")
+
+func _police_advance(intent) -> Dictionary:
+	var r: Dictionary = host.police_advance()
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进案件（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("terminal", false)):
+		return _ok(["案件已终结（%s）。" % _reason_cn(String(r.get("reason", "")))], 0, "")
+	if r.has("solved"):
+		if bool(r.get("solved", false)):
+			var line := "侦破成功（概率 %.2f）。" % float(r.get("probability", 0.0))
+			if bool(r.get("wrongful", false)):
+				line += " 但证据薄弱且存在逼供，恐为冤假错案。"
+			return _ok([line], 0, "")
+		return _ok(["侦破未果，案件转为冷案。"], 0, "")
+	return _ok(["案件推进至新阶段。"], 0, "")
+
+func _security_firm(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "安保公司"))
+	var r: Dictionary = host.start_security_firm(name)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办安保公司（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["安保公司已开办。"], 0, "")
+
+func _security_take(intent) -> Dictionary:
+	var kind := _object_id(intent, "security_service")
+	var r: Dictionary = host.security_take_contract(kind)
+	if not bool(r.get("ok", false)):
+		return _fail("无法承接业务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var c: Dictionary = r.get("contract", {})
+	return _ok(["承接%s，费用 %d%s。" % [String(c.get("name", "")), int(c.get("fee", 0)), ("（人手不足）" if bool(r.get("understaffed", false)) else "")]], 0, "")
+
+func _security_resolve(intent) -> Dictionary:
+	var r: Dictionary = host.security_resolve_contract()
+	if not bool(r.get("ok", false)):
+		return _fail("无法履约（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("failure", false)):
+		return _fail("安保失职，赔偿 %d，声誉 %.2f。" % [int(r.get("liability", 0)), float(r.get("reputation", 0.0))])
+	return _ok(["履约成功，收入 %d，声誉 %.2f。" % [int(r.get("payment", 0)), float(r.get("reputation", 0.0))]], 0, "")
+
+func _emergency_new(intent) -> Dictionary:
+	var type := _object_id(intent, "emergency_profession")
+	var severity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.emergency_new_incident(type, severity)
+	if not bool(r.get("ok", false)):
+		return _fail("无法接警（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已接警并建立事件档案。"], 0, "")
+
+func _emergency_dispatch(intent) -> Dictionary:
+	var distance: float = float(_param_number(intent, "number", 5))
+	var r: Dictionary = host.emergency_dispatch(distance)
+	if not bool(r.get("ok", false)):
+		return _fail("无法出警（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["出警，响应时间 %.1f 分钟。" % float(r.get("response_minutes", 0.0))], 0, "")
+
+func _emergency_rescue(intent) -> Dictionary:
+	var r: Dictionary = host.emergency_rescue()
+	if not bool(r.get("ok", false)):
+		return _fail("无法救援（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["救援结算：需救治 %d，死亡 %d，获救 %d。" % [int(r.get("injured", 0)), int(r.get("deaths", 0)), int(r.get("rescued", 0))]], 0, "")
+
+func _emergency_secondary(intent) -> Dictionary:
+	var r: Dictionary = host.emergency_secondary()
+	if not bool(r.get("ok", false)):
+		return _fail("无法处置二次事故（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("occurred", false)):
+		return _fail("发生二次事故，救援人员伤亡 %d。" % int(r.get("responder_casualties", 0)))
+	return _ok(["现场未发生二次事故。"], 0, "")
+
+func _emergency_aftermath(intent) -> Dictionary:
+	var r: Dictionary = host.emergency_aftermath()
+	if not bool(r.get("ok", false)):
+		return _fail("无法善后（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "善后完成，心理创伤 %.2f。" % float(r.get("psych_trauma", 0.0))
+	if String(r.get("fault", "")) != "":
+		line += " 认定责任：%s，罚金 %d。" % [_reason_cn(String(r.get("fault", ""))), int(r.get("penalty", 0))]
+	return _ok([line], 0, "")
+
+func _volunteer_org(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "志愿救援队"))
+	var r: Dictionary = host.start_volunteer_org(name)
+	if not bool(r.get("ok", false)):
+		return _fail("无法组建志愿队（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["志愿救援队已组建。"], 0, "")
+
+func _volunteer_purchase(intent) -> Dictionary:
+	var item := String(intent.params.get("method", "救援装备"))
+	var cost: int = int(_param_number(intent, "number", 50000))
+	var r: Dictionary = host.volunteer_purchase(item, cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法采购装备（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已采购装备，当前装备 %d。" % int(r.get("equipment", 0))], 0, "")
+
+func _volunteer_recruit(intent) -> Dictionary:
+	var count: int = int(_param_number(intent, "number", 5))
+	var r: Dictionary = host.volunteer_recruit(count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法招募志愿者（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已招募志愿者，当前 %d 人。" % int(r.get("volunteers", 0))], 0, "")
+
+func _volunteer_dispatch(intent) -> Dictionary:
+	var r: Dictionary = host.volunteer_dispatch_incident()
+	if not bool(r.get("ok", false)):
+		return _fail("无法志愿出警（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["志愿支援出警，响应时间 %.1f 分钟。" % float(r.get("response_minutes", 0.0))], 0, "")
+
+func _env_garbage(intent) -> Dictionary:
+	var rate: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.env_set_garbage_sorting(rate)
+	if not bool(r.get("ok", false)):
+		return _fail("无法设置垃圾分类（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["垃圾分类率设为 %.2f。" % float(r.get("garbage_sorting", 0.0))], 0, "")
+
+func _env_recycle(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.env_recycle(float(amount))
+	if not bool(r.get("ok", false)):
+		return _fail("无法回收（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["回收 %.0f，填埋 %.0f。" % [float(r.get("recovered", 0.0)), float(r.get("landfill", 0.0))]], 0, "")
+
+func _env_sewage(intent) -> Dictionary:
+	var rate: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.env_treat_sewage(rate)
+	if not bool(r.get("ok", false)):
+		return _fail("无法治理污水（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["污水处理率设为 %.2f。" % float(r.get("sewage_treatment", 0.0))], 0, "")
+
+func _env_air(intent) -> Dictionary:
+	var investment: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.env_air_control(investment)
+	if not bool(r.get("ok", false)):
+		return _fail("无法空气治理（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["空气治理完成，空气质量 %.2f，污染 %.2f。" % [float(r.get("air_quality", 0.0)), float(r.get("pollution", 0.0))]], 0, "")
+
+func _env_permit(intent) -> Dictionary:
+	var source := String(intent.params.get("method", "factory"))
+	var allowance: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.env_issue_permit(source, allowance)
+	if not bool(r.get("ok", false)):
+		return _fail("无法发放排污许可（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已发放排污许可，额度 %.0f。" % float(r.get("allowance", 0.0))], 0, "")
+
+func _env_carbon_account(intent) -> Dictionary:
+	var r: Dictionary = host.env_carbon_account()
+	if not bool(r.get("ok", false)):
+		return _fail("无法碳核算（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var esg: Dictionary = r.get("esg", {})
+	return _ok(["碳平衡 %.1f，ESG %.1f（%s 级）。" % [float(r.get("balance", 0.0)), float(esg.get("score", 0.0)), String(esg.get("grade", ""))]], 0, "")
+
+func _env_carbon_trade(intent) -> Dictionary:
+	var credits: float = float(_param_number(intent, "number", 10))
+	var r: Dictionary = host.env_carbon_trade(credits)
+	if not bool(r.get("ok", false)):
+		return _fail("无法碳交易（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["碳交易完成，信用 %.1f，现金 %d。" % [float(r.get("credits", 0.0)), int(r.get("cash", 0))]], 0, "")
+
+func _env_carbon_compliance(intent) -> Dictionary:
+	var mode := String(intent.params.get("method", "buy"))
+	if mode not in ["buy", "fine"]:
+		mode = "buy"
+	var r: Dictionary = host.env_carbon_compliance(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法碳履约（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("compliant", false)):
+		return _ok(["碳排合规，无需履约。"], 0, "")
+	return _ok(["碳履约（%s），成本 %d。" % [String(r.get("action", "")), int(r.get("cost", 0))]], 0, "")
+
+func _env_carbon_report(intent) -> Dictionary:
+	var reported: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.env_report_carbon(reported)
+	if not bool(r.get("ok", false)):
+		return _fail("无法碳申报（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("detected", false)):
+		return _fail("碳数据造假被查获。")
+	return _ok(["碳申报完成%s。" % ("（低报，暂未查获）" if bool(r.get("understated", false)) else "")], 0, "")
+
+func _env_org(intent) -> Dictionary:
+	var kind := _object_id(intent, "env_career")
+	var r: Dictionary = host.start_env_org(kind)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办环保组织（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["环保组织已开办。"], 0, "")
+
+func _env_project(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "环保项目"))
+	var budget: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.env_run_project(name, budget)
+	if not bool(r.get("ok", false)):
+		return _fail("无法承接环保项目（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["承接%s，利润 %d。" % [name, int(r.get("profit", 0))]], 0, "")
+
+func _env_expose(intent) -> Dictionary:
+	var r: Dictionary = host.env_expose_pollution()
+	if not bool(r.get("ok", false)):
+		return _fail("无法举报污染（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "污染指数 %.2f，声誉变化 %d。" % [float(r.get("pollution_index", 0.0)), int(r.get("reputation_delta", 0))]
+	if bool(r.get("lawsuit_open", false)):
+		line += " 已触发环境诉讼。"
+	return _ok([line], 0, "")
+
+func _env_lawsuit(intent) -> Dictionary:
+	var r: Dictionary = host.env_lawsuit()
+	if not bool(r.get("ok", false)):
+		return _fail("无法提起环境诉讼（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("liable", false)):
+		return _ok(["环境诉讼胜诉，赔偿 %d。" % int(r.get("compensation", 0))], 0, "")
+	return _ok(["环境诉讼未认定责任。"], 0, "")
+
+func _env_subsidy(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 100000))
+	var r: Dictionary = host.env_green_subsidy(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请绿色补贴（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("detected", false)):
+		return _fail("绿色补贴骗补被查获。")
+	return _ok(["绿色补贴到账 %d。" % int(r.get("granted", 0))], 0, "")
+
+func _env_transition(intent) -> Dictionary:
+	var investment: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.env_low_carbon_transition(investment)
+	if not bool(r.get("ok", false)):
+		return _fail("无法低碳转型（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["低碳转型，减排 %.1f，排放降至 %.1f。" % [float(r.get("emission_cut", 0.0)), float(r.get("emissions", 0.0))]], 0, "")
+
+func _env_discharge(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 50))
+	var r: Dictionary = host.env_illegal_discharge(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法偷排（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("detected", false)):
+		return _fail("偷排被查获，罚款 %d。" % int(r.get("fines", 0)))
+	return _ok(["偷排完成（暂未查获）。"], 0, "")
+
+func _env_nimby(intent) -> Dictionary:
+	var scale: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.env_nimby(scale)
+	if not bool(r.get("ok", false)):
+		return _fail("无法邻避评估（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "邻避反对度 %.2f，延期 %d 天。" % [float(r.get("opposition", 0.0)), int(r.get("delay_days", 0))]
+	if bool(r.get("cancelled", false)):
+		line += " 项目取消。"
+	return _ok([line], 0, "")
+
+func _municipal_maintain(intent) -> Dictionary:
+	var facility := _object_id(intent, "municipal_facility")
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.municipal_maintain(facility, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法养护（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["养护完成，健康度 %.2f。" % float(r.get("condition", 0.0))], 0, "")
+
+func _municipal_inspect(intent) -> Dictionary:
+	var r: Dictionary = host.municipal_inspect()
+	if not bool(r.get("ok", false)):
+		return _fail("无法巡检（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["巡检完成，维护缺位公园 %d 处，未处理投诉 %d 件。" % [(r.get("neglected_parks", []) as Array).size(), int(r.get("unresolved_complaints", 0))]], 0, "")
+
+func _municipal_construct(intent) -> Dictionary:
+	var facility := _object_id(intent, "municipal_facility")
+	var days: float = float(_param_number(intent, "number", 30))
+	var r: Dictionary = host.municipal_construct(facility, days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法施工（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["施工开始，工期 %.0f 天，通行系数 %.2f。" % [float(r.get("days_left", 0.0)), float(r.get("commute_factor", 1.0))]], 0, "")
+
+func _municipal_advance(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 10))
+	var r: Dictionary = host.municipal_advance_construction(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进施工（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["施工推进，完成 %d 处，通行系数 %.2f。" % [(r.get("completed", []) as Array).size(), float(r.get("commute_factor", 1.0))]], 0, "")
+
+func _municipal_excavate(intent) -> Dictionary:
+	var facility := _object_id(intent, "municipal_facility")
+	var r: Dictionary = host.municipal_excavate(facility)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开挖（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("repeated", false)):
+		return _ok(["反复开挖（拉链路），额外成本 %d。" % int(r.get("extra_cost", 0))], 0, "")
+	return _ok(["开挖登记完成。"], 0, "")
+
+func _municipal_complain(intent) -> Dictionary:
+	var source := String(intent.params.get("method", "扰民"))
+	var r: Dictionary = host.municipal_complain(source)
+	if not bool(r.get("ok", false)):
+		return _fail("无法投诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["市政投诉已登记。"], 0, "")
+
+func _municipal_resolve(intent) -> Dictionary:
+	var index: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.municipal_resolve_complaint(index)
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理投诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["投诉已处理，扰民度 %.2f。" % float(r.get("nuisance", 0.0))], 0, "")
+
+func _postal_accept(intent) -> Dictionary:
+	var id := String(intent.params.get("method", "parcel"))
+	var r: Dictionary = host.postal_accept(id, 1.0, 100.0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法寄件（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已收寄，待处理 %d 件。" % int(r.get("pending", 0))], 0, "")
+
+func _postal_ship(intent) -> Dictionary:
+	var r: Dictionary = host.postal_ship()
+	if not bool(r.get("ok", false)):
+		return _fail("无法发运（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("lost", false)):
+		return _fail("包裹丢失。")
+	if bool(r.get("damaged", false)):
+		return _ok(["包裹破损，预计 %d 天送达。" % int(r.get("expected_days", 0))], 0, "")
+	return _ok(["包裹已发运，预计 %d 天送达。" % int(r.get("expected_days", 0))], 0, "")
+
+func _postal_claim(intent) -> Dictionary:
+	var r: Dictionary = host.postal_claim()
+	if not bool(r.get("ok", false)):
+		return _fail("无法理赔（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if int(r.get("paid", 0)) <= 0:
+		return _ok(["无可理赔事项。"], 0, "")
+	return _ok(["理赔到账 %d。" % int(r.get("paid", 0))], 0, "")
+
+func _courier_career(intent) -> Dictionary:
+	var r: Dictionary = host.start_courier_career()
+	if not bool(r.get("ok", false)):
+		return _fail("无法成为快递员（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你成为实习快递员。"], 0, "")
+
+func _courier_deliver(intent) -> Dictionary:
+	var r: Dictionary = host.courier_deliver()
+	if not bool(r.get("ok", false)):
+		return _fail("无法揽投（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["揽投完成，累计 %d 件%s。" % [int(r.get("deliveries", 0)), ("，晋升" if bool(r.get("promoted", false)) else "")]], 0, "")
+
+func _municipal_franchise(intent) -> Dictionary:
+	var service := _object_id(intent, "franchise_service")
+	var r: Dictionary = host.municipal_grant_franchise(service)
+	if not bool(r.get("ok", false)):
+		return _fail("无法授予特许（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["特许经营合同已登记。"], 0, "")
+
+func _municipal_quality(intent) -> Dictionary:
+	var score: float = clampf(float(_param_number(intent, "number", 70)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.municipal_assess_quality(score)
+	if not bool(r.get("ok", false)):
+		return _fail("无法考核（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["服务考核 %s 级%s。" % [String(r.get("grade", "")), ("，扣减服务费 %d" % int(r.get("penalty", 0))) if int(r.get("penalty", 0)) > 0 else ""]], 0, "")
+
+func _municipal_purchase(intent) -> Dictionary:
+	var service := _object_id(intent, "franchise_service")
+	var budget: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.municipal_government_purchase(service, budget)
+	if not bool(r.get("ok", false)):
+		return _fail("无法政府购买（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["政府购买服务完成，预算 %d。" % int(r.get("budget", 0))], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -2105,6 +2619,52 @@ func _reason_cn(reason: String) -> String:
 			return "成就不达标"
 		"jury_rejected":
 			return "评审未通过"
+		"no_case":
+			return "尚未立案"
+		"no_firm":
+			return "尚未开办安保公司"
+		"already_firm":
+			return "你已开办安保公司"
+		"no_contract":
+			return "尚无待履约的安保业务"
+		"unknown_kind":
+			return "未知证据种类"
+		"unknown_service":
+			return "未知安保业务"
+		"illegal_collection":
+			return "非法取证，证据无效"
+		"no_warrant":
+			return "缺少搜查令"
+		"terminal":
+			return "案件已终结"
+		"no_incident":
+			return "当前无处置中的应急事件"
+		"no_org":
+			return "尚未组建志愿救援队"
+		"already_org":
+			return "你已组建志愿救援队"
+		"command_fault":
+			return "指挥失当"
+		"secondary_negligence":
+			return "二次事故处置不力"
+		"unknown_facility":
+			return "未知市政设施"
+		"already_under_construction":
+			return "该设施已在施工中"
+		"no_such_complaint":
+			return "投诉编号不存在"
+		"no_parcel":
+			return "没有待处理的包裹"
+		"no_career":
+			return "尚未成为快递员"
+		"already_career":
+			return "你已是快递员"
+		"unknown_franchise":
+			return "未知特许服务"
+		"no_license":
+			return "缺少公用事业特许资质"
+		"no_franchise":
+			return "尚无特许经营合同"
 		_:
 			return reason if reason != "" else "未知原因"
 

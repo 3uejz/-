@@ -455,6 +455,13 @@ func _catalogs() -> Dictionary:
 		"sponsor_tier": _sim.events_sponsor_tiers_catalog(),
 		"award": _sim.honors_awards_catalog(),
 		"honor_category": _sim.honors_categories_catalog(),
+		"crime": _sim.police_crimes_catalog(),
+		"evidence_kind": _sim.police_evidence_catalog(),
+		"security_service": _sim.police_services_catalog(),
+		"emergency_profession": _sim.emergency_professions_catalog(),
+		"env_career": _sim.environment_careers_catalog(),
+		"municipal_facility": _sim.municipal_facilities_catalog(),
+		"franchise_service": _sim.municipal_franchise_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -797,6 +804,18 @@ func _panel_context() -> Dictionary:
 		var hop: Dictionary = _sim.honors_panel_data()
 		if not hop.is_empty():
 			context["honors"] = hop
+		var pop: Dictionary = _sim.police_panel_data()
+		if not pop.is_empty():
+			context["police"] = pop
+		var emp: Dictionary = _sim.emergency_panel_data()
+		if not emp.is_empty():
+			context["emergency"] = emp
+		var envp: Dictionary = _sim.environment_panel_data()
+		if not envp.is_empty():
+			context["environment"] = envp
+		var mup: Dictionary = _sim.municipal_panel_data()
+		if not mup.is_empty():
+			context["municipal"] = mup
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

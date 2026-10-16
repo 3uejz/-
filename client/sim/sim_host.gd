@@ -49,6 +49,11 @@ const FashionScript = preload("res://sim/fashion.gd")
 const SportsIndustryScript = preload("res://sim/sports_industry.gd")
 const EventsExpoScript = preload("res://sim/events_expo.gd")
 const HonorsScript = preload("res://sim/honors.gd")
+const PoliceScript = preload("res://sim/police.gd")
+const CrimeScript = preload("res://sim/crime.gd")
+const EmergencyScript = preload("res://sim/emergency.gd")
+const EnvironmentScript = preload("res://sim/environment.gd")
+const MunicipalScript = preload("res://sim/municipal.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -152,6 +157,21 @@ var _planner: Dictionary = {}        ## 活动策划职业，入档 sim_runtime.
 var honors                      ## 荣誉、奖项与名人堂（HonorsSystem）
 var _honor_candidate: Dictionary = {} ## 玩家荣誉候选人档案，入档 sim_runtime.honors.candidate
 var _hall: Dictionary = {}           ## 名人堂，入档 sim_runtime.honors.hall
+var police                      ## 安保、警务与刑侦（PoliceSystem）
+var _police_case: Dictionary = {}     ## 当前经办案件，入档 sim_runtime.police.case
+var _security_firm: Dictionary = {}   ## 民营安保公司，入档 sim_runtime.police.firm
+var emergency                    ## 应急、消防与灾害救援（EmergencySystem）
+var _incident: Dictionary = {}        ## 当前处置中的应急事件，入档 sim_runtime.emergency.incident
+var _volunteer_org: Dictionary = {}   ## 志愿救援组织，入档 sim_runtime.emergency.org
+var environment_sys              ## 环保、碳排与可持续发展（EnvironmentSystem）
+var _city_env: Dictionary = {}        ## 城市环保状态，入档 sim_runtime.environment.city
+var _env_enterprise: Dictionary = {}  ## 玩家企业碳排账户，入档 sim_runtime.environment.enterprise
+var _env_org: Dictionary = {}         ## 环保从业组织，入档 sim_runtime.environment.org
+var municipal                    ## 市政公用与邮政（MunicipalSystem）
+var _city_municipal: Dictionary = {}  ## 城市市政状态，入档 sim_runtime.municipal.city
+var _postal_hub: Dictionary = {}      ## 邮政枢纽，入档 sim_runtime.municipal.hub
+var _courier: Dictionary = {}         ## 快递员职业，入档 sim_runtime.municipal.courier
+var _municipal_license: bool = false  ## 公用事业特许资质，入档 sim_runtime.municipal.license
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -214,6 +234,14 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	events_expo = EventsExpoScript.new()
 	honors = HonorsScript.new()
 	_hall = honors.new_hall()
+	police = PoliceScript.new()
+	emergency = EmergencyScript.new()
+	environment_sys = EnvironmentScript.new()
+	_city_env = environment_sys.new_city_env(1000000)
+	_env_enterprise = environment_sys.new_enterprise("我的企业")
+	municipal = MunicipalScript.new()
+	_city_municipal = municipal.new_city(1000000)
+	_postal_hub = municipal.new_postal_hub()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -374,6 +402,43 @@ func _ensure_world_geo() -> void:
 				_honor_candidate = honors.from_dict(hod["candidate"])
 			if hod.get("hall", null) is Dictionary and not (hod["hall"] as Dictionary).is_empty():
 				_hall = (hod["hall"] as Dictionary).duplicate(true)
+		# 恢复警务运行时（经办案件/安保公司）。
+		var po: Variant = (state.sim_runtime as Dictionary).get("police", {})
+		if po is Dictionary and not (po as Dictionary).is_empty():
+			var pod: Dictionary = po
+			if pod.get("case", null) is Dictionary and not (pod["case"] as Dictionary).is_empty():
+				_police_case = police.from_dict(pod["case"])
+			if pod.get("firm", null) is Dictionary and not (pod["firm"] as Dictionary).is_empty():
+				_security_firm = (pod["firm"] as Dictionary).duplicate(true)
+		# 恢复应急运行时（处置事件/志愿组织）。
+		var em: Variant = (state.sim_runtime as Dictionary).get("emergency", {})
+		if em is Dictionary and not (em as Dictionary).is_empty():
+			var emd: Dictionary = em
+			if emd.get("incident", null) is Dictionary and not (emd["incident"] as Dictionary).is_empty():
+				_incident = emergency.from_dict(emd["incident"])
+			if emd.get("org", null) is Dictionary and not (emd["org"] as Dictionary).is_empty():
+				_volunteer_org = (emd["org"] as Dictionary).duplicate(true)
+		# 恢复环保运行时（城市环保/企业碳排/环保组织）。
+		var en: Variant = (state.sim_runtime as Dictionary).get("environment", {})
+		if en is Dictionary and not (en as Dictionary).is_empty():
+			var end_: Dictionary = en
+			if end_.get("city", null) is Dictionary and not (end_["city"] as Dictionary).is_empty():
+				_city_env = environment_sys.from_dict(end_["city"])
+			if end_.get("enterprise", null) is Dictionary and not (end_["enterprise"] as Dictionary).is_empty():
+				_env_enterprise = environment_sys.from_dict(end_["enterprise"])
+			if end_.get("org", null) is Dictionary and not (end_["org"] as Dictionary).is_empty():
+				_env_org = (end_["org"] as Dictionary).duplicate(true)
+		# 恢复市政运行时（城市市政/邮政枢纽/快递员/资质）。
+		var mu: Variant = (state.sim_runtime as Dictionary).get("municipal", {})
+		if mu is Dictionary and not (mu as Dictionary).is_empty():
+			var mud: Dictionary = mu
+			if mud.get("city", null) is Dictionary and not (mud["city"] as Dictionary).is_empty():
+				_city_municipal = municipal.from_dict(mud["city"])
+			if mud.get("hub", null) is Dictionary and not (mud["hub"] as Dictionary).is_empty():
+				_postal_hub = municipal.from_dict(mud["hub"])
+			if mud.get("courier", null) is Dictionary and not (mud["courier"] as Dictionary).is_empty():
+				_courier = (mud["courier"] as Dictionary).duplicate(true)
+			_municipal_license = bool(mud.get("license", false))
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -3063,6 +3128,622 @@ func _persist_honors() -> void:
 	(state.sim_runtime as Dictionary)["honors"] = {
 		"candidate": honors.to_dict(_honor_candidate),
 		"hall": _hall.duplicate(true),
+	}
+
+
+
+# --- D35 安保、警务与刑侦 ---
+
+func police_state() -> Dictionary:
+	return {"case": _police_case, "firm": _security_firm}
+
+func police_crimes_catalog() -> Array:
+	var out: Array = []
+	var defs: Dictionary = CrimeScript.CRIMES
+	for key in defs.keys():
+		out.append({"id": String(key), "name": String((defs[key] as Dictionary).get("name", key))})
+	return out
+
+func police_roles_catalog() -> Array:
+	var out: Array = []
+	for key in police.role_keys():
+		var d: Dictionary = police.role_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key)), "skill": String(d.get("skill", ""))})
+	return out
+
+func police_evidence_catalog() -> Array:
+	var out: Array = []
+	for key in police.evidence_kinds():
+		out.append({"id": String(key), "name": String(police.EVIDENCE_NAMES.get(String(key), key))})
+	return out
+
+func police_stages_catalog() -> Array:
+	var names: Dictionary = police.stage_names()
+	var out: Array = []
+	for st in police.STAGES:
+		out.append({"id": String(st), "name": String(names.get(String(st), st))})
+	return out
+
+func police_services_catalog() -> Array:
+	var out: Array = []
+	for key in police.security_service_keys():
+		var d: Dictionary = police.security_service_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key)), "base_fee": int(d.get("base_fee", 0))})
+	return out
+
+func police_start_case(crime: String, role: String = "detective") -> Dictionary:
+	var region: String = _home_region_id
+	var r: Dictionary = police.new_case(crime, region, {"role": role})
+	_police_case = r
+	_persist_police()
+	return {"ok": true, "case": _police_case}
+
+func police_survey() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.survey(_police_case)
+	_persist_police()
+	return r
+
+func police_collect(kind: String, strength: float = 0.3) -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.collect(_police_case, kind, strength)
+	_persist_police()
+	return r
+
+func police_warrant() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.request_warrant(_police_case, {"granted": true})
+	_persist_police()
+	return r
+
+func police_interrogate(pressure: float = 0.5) -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.interrogate(_police_case, pressure, {"roll": -1.0}, rng)
+	_persist_police()
+	return r
+
+func police_informant() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.use_informant(_police_case, {"roll": -1.0}, rng)
+	_persist_police()
+	return r
+
+func police_undercover() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.deploy_undercover(_police_case, {"roll": -1.0}, rng)
+	_persist_police()
+	return r
+
+func police_tech() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.tech_surveillance(_police_case)
+	_persist_police()
+	return r
+
+func police_advance() -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.advance(_police_case, {"roll": -1.0}, rng)
+	_persist_police()
+	return r
+
+func start_security_firm(name: String) -> Dictionary:
+	if not _security_firm.is_empty():
+		return {"ok": false, "reason": "already_firm"}
+	_security_firm = police.new_security_firm(name, {"funds": int(economy.cash(account_id()))})
+	_persist_police()
+	return {"ok": true, "firm": _security_firm}
+
+func security_take_contract(kind: String) -> Dictionary:
+	if _security_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = police.take_contract(_security_firm, kind)
+	_persist_police()
+	return r
+
+func security_resolve_contract() -> Dictionary:
+	if _security_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var contracts: Array = _security_firm.get("contracts", [])
+	if contracts.is_empty():
+		return {"ok": false, "reason": "no_contract"}
+	var contract: Dictionary = contracts[contracts.size() - 1]
+	var r: Dictionary = police.resolve_contract(_security_firm, contract, {"roll": -1.0}, rng)
+	_persist_police()
+	return r
+
+func police_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _police_case.is_empty():
+		var ev: Dictionary = _police_case.get("evidence", {})
+		var ev_rows: Array = []
+		for k in police.evidence_kinds():
+			ev_rows.append({"name": String(police.EVIDENCE_NAMES.get(String(k), k)), "value": float(ev.get(String(k), 0.0))})
+		out["case"] = {
+			"crime": String(_police_case.get("crime", "")),
+			"region": String(_police_case.get("region", "")),
+			"stage": String(police.STAGE_NAMES.get(String(_police_case.get("stage", "")), _police_case.get("stage", ""))),
+			"role": String((police.role_def(String(_police_case.get("role", ""))) as Dictionary).get("name", "")),
+			"evidence": ev_rows,
+			"evidence_score": police.evidence_score(_police_case),
+			"leads": float(_police_case.get("leads", 0.0)),
+			"legality": police.legality_score(_police_case),
+			"solve_probability": police.solve_probability(_police_case),
+			"wrongful": bool(_police_case.get("wrongful", false)),
+		}
+	if not _security_firm.is_empty():
+		var contracts: Array = _security_firm.get("contracts", [])
+		var c_rows: Array = []
+		for c in contracts:
+			c_rows.append({
+				"name": String((c as Dictionary).get("name", "")),
+				"fee": int((c as Dictionary).get("fee", 0)),
+				"resolved": bool((c as Dictionary).get("resolved", false)),
+				"failure": bool((c as Dictionary).get("failure", false)),
+			})
+		out["firm"] = {
+			"name": String(_security_firm.get("name", "")),
+			"staff": int(_security_firm.get("staff", 0)),
+			"funds": int(_security_firm.get("funds", 0)),
+			"reputation": float(_security_firm.get("reputation", 0.0)),
+			"contracts": c_rows,
+		}
+	return out
+
+func _persist_police() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["police"] = {
+		"case": police.to_dict(_police_case),
+		"firm": _security_firm.duplicate(true),
+	}
+
+
+
+# --- D36 应急、消防与灾害救援 ---
+
+func emergency_state() -> Dictionary:
+	return {"incident": _incident, "org": _volunteer_org}
+
+func emergency_professions_catalog() -> Array:
+	var out: Array = []
+	for key in emergency.profession_keys():
+		var d: Dictionary = emergency.profession_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func emergency_stages_catalog() -> Array:
+	var names: Dictionary = emergency.stage_names()
+	var out: Array = []
+	for st in emergency.STAGES:
+		out.append({"id": String(st), "name": String(names.get(String(st), st))})
+	return out
+
+func emergency_new_incident(type: String, severity: float = 0.5) -> Dictionary:
+	var r: Dictionary = emergency.new_incident(type, {"region": _home_region_id, "severity": severity, "at_risk": 200, "trapped": 40})
+	_incident = r
+	_persist_emergency()
+	return {"ok": true, "incident": _incident}
+
+func emergency_dispatch(distance_km: float = 5.0) -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	var r: Dictionary = emergency.dispatch(_incident, {"distance_km": distance_km})
+	_persist_emergency()
+	return r
+
+func emergency_rescue() -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	var r: Dictionary = emergency.rescue(_incident)
+	_persist_emergency()
+	return r
+
+func emergency_secondary() -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	var r: Dictionary = emergency.secondary_incident(_incident, {"roll": -1.0}, rng)
+	_persist_emergency()
+	return r
+
+func emergency_aftermath() -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	var r: Dictionary = emergency.aftermath(_incident)
+	_persist_emergency()
+	return r
+
+func start_volunteer_org(name: String) -> Dictionary:
+	if not _volunteer_org.is_empty():
+		return {"ok": false, "reason": "already_org"}
+	_volunteer_org = emergency.new_volunteer_org(name, {"funds": int(economy.cash(account_id()))})
+	_persist_emergency()
+	return {"ok": true, "org": _volunteer_org}
+
+func volunteer_purchase(item: String, cost: int) -> Dictionary:
+	if _volunteer_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = emergency.purchase_equipment(_volunteer_org, item, cost)
+	_persist_emergency()
+	return r
+
+func volunteer_recruit(count: int) -> Dictionary:
+	if _volunteer_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = emergency.recruit_volunteers(_volunteer_org, count)
+	_persist_emergency()
+	return r
+
+func volunteer_dispatch_incident() -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	if _volunteer_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = emergency.volunteer_dispatch(_volunteer_org, _incident)
+	_persist_emergency()
+	return r
+
+func emergency_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _incident.is_empty():
+		var tri: Dictionary = _incident.get("triage", {})
+		out["incident"] = {
+			"type": String((emergency.profession_def(String(_incident.get("type", ""))) as Dictionary).get("name", _incident.get("type", ""))),
+			"stage": String(emergency.STAGE_NAMES.get(String(_incident.get("stage", "")), _incident.get("stage", ""))),
+			"severity": float(_incident.get("severity", 0.0)),
+			"at_risk": int(_incident.get("at_risk", 0)),
+			"trapped": int(_incident.get("trapped", 0)),
+			"response_minutes": float(_incident.get("response_minutes", -1.0)),
+			"deaths": int(_incident.get("deaths", 0)),
+			"injured": int(_incident.get("injured", 0)),
+			"rescued": int(_incident.get("rescued", 0)),
+			"fault": String(_incident.get("fault", "")),
+			"triage": {"treated": float(tri.get("treated", 0.0)), "untreated": float(tri.get("untreated", 0.0))},
+		}
+	if not _volunteer_org.is_empty():
+		out["org"] = {
+			"name": String(_volunteer_org.get("name", "")),
+			"volunteers": int(_volunteer_org.get("volunteers", 0)),
+			"equipment": int(_volunteer_org.get("equipment", 0)),
+			"funds": int(_volunteer_org.get("funds", 0)),
+			"reputation": float(_volunteer_org.get("reputation", 0.0)),
+		}
+	return out
+
+func _persist_emergency() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["emergency"] = {
+		"incident": emergency.to_dict(_incident),
+		"org": _volunteer_org.duplicate(true),
+	}
+
+
+
+# --- D37 环保、碳排与可持续发展 ---
+
+func environment_state() -> Dictionary:
+	return {"city": _city_env, "enterprise": _env_enterprise, "org": _env_org}
+
+func environment_careers_catalog() -> Array:
+	var out: Array = []
+	for key in environment_sys.career_keys():
+		var d: Dictionary = environment_sys.career_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func env_set_garbage_sorting(rate: float) -> Dictionary:
+	var r: Dictionary = environment_sys.set_garbage_sorting(_city_env, rate)
+	_persist_environment()
+	return r
+
+func env_recycle(generated: float) -> Dictionary:
+	var r: Dictionary = environment_sys.recycle(_city_env, generated)
+	_persist_environment()
+	return r
+
+func env_treat_sewage(rate: float) -> Dictionary:
+	var r: Dictionary = environment_sys.treat_sewage(_city_env, rate)
+	_persist_environment()
+	return r
+
+func env_air_control(investment: int) -> Dictionary:
+	var r: Dictionary = environment_sys.air_control(_city_env, investment)
+	_persist_environment()
+	return r
+
+func env_issue_permit(source: String, allowance: float) -> Dictionary:
+	var r: Dictionary = environment_sys.issue_permit(_city_env, source, allowance)
+	_persist_environment()
+	return r
+
+func env_carbon_account() -> Dictionary:
+	var footprint: Dictionary = environment_sys.carbon_footprint(_env_enterprise)
+	var esg: Dictionary = environment_sys.esg_rating(_env_enterprise)
+	_persist_environment()
+	return {"ok": true, "balance": environment_sys.carbon_balance(_env_enterprise), "footprint": footprint, "esg": esg}
+
+func env_carbon_trade(credits: float) -> Dictionary:
+	var r: Dictionary = environment_sys.carbon_trade(_env_enterprise, credits)
+	_persist_environment()
+	return r
+
+func env_carbon_compliance(mode: String) -> Dictionary:
+	var r: Dictionary = environment_sys.compliance(_env_enterprise, {"mode": mode})
+	_persist_environment()
+	return r
+
+func env_report_carbon(reported: float) -> Dictionary:
+	var r: Dictionary = environment_sys.report_carbon(_env_enterprise, reported, {"roll": -1.0}, rng)
+	_persist_environment()
+	return r
+
+func start_env_org(kind: String) -> Dictionary:
+	if not _env_org.is_empty():
+		return {"ok": false, "reason": "already_org"}
+	var r: Dictionary = environment_sys.new_career_org(kind, {"funds": int(economy.cash(account_id()))})
+	if not bool(r.get("ok", false)):
+		return r
+	_env_org = r["org"]
+	_persist_environment()
+	return {"ok": true, "org": _env_org}
+
+func env_run_project(name: String, budget: int) -> Dictionary:
+	if _env_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = environment_sys.run_project(_env_org, name, budget)
+	_persist_environment()
+	return r
+
+func env_pollute(severity: float) -> Dictionary:
+	var r: Dictionary = environment_sys.pollute(_city_env, severity)
+	_persist_environment()
+	return r
+
+func env_expose_pollution() -> Dictionary:
+	var r: Dictionary = environment_sys.expose_pollution(_city_env)
+	_persist_environment()
+	return r
+
+func env_lawsuit() -> Dictionary:
+	var r: Dictionary = environment_sys.environmental_lawsuit(_city_env)
+	_persist_environment()
+	return r
+
+func env_green_subsidy(amount: int) -> Dictionary:
+	if _env_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = environment_sys.green_subsidy(_env_org, amount)
+	_persist_environment()
+	return r
+
+func env_low_carbon_transition(investment: int) -> Dictionary:
+	var r: Dictionary = environment_sys.low_carbon_transition(_env_enterprise, investment)
+	_persist_environment()
+	return r
+
+func env_illegal_discharge(amount: float) -> Dictionary:
+	var r: Dictionary = environment_sys.illegal_discharge(_env_enterprise, amount, {"roll": -1.0}, rng)
+	_persist_environment()
+	return r
+
+func env_nimby(scale: float) -> Dictionary:
+	var r: Dictionary = environment_sys.nimby(_city_env, {}, {"scale": scale, "near_residents": scale})
+	_persist_environment()
+	return r
+
+func environment_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _city_env.is_empty():
+		out["city"] = {
+			"garbage_sorting": float(_city_env.get("garbage_sorting", 0.0)),
+			"recycling_rate": float(_city_env.get("recycling_rate", 0.0)),
+			"sewage_treatment": float(_city_env.get("sewage_treatment", 0.0)),
+			"air_quality": float(_city_env.get("air_quality", 0.0)),
+			"pollution_index": environment_sys.pollution_index(_city_env),
+			"health_index": float(_city_env.get("health_index", 0.0)),
+			"reputation": float(_city_env.get("reputation", 0.0)),
+			"lawsuit_open": bool(_city_env.get("lawsuit_open", false)),
+		}
+	if not _env_enterprise.is_empty():
+		out["enterprise"] = {
+			"name": String(_env_enterprise.get("name", "")),
+			"emissions": float(_env_enterprise.get("emissions", 0.0)),
+			"quota": float(_env_enterprise.get("quota", 0.0)),
+			"credits": float(_env_enterprise.get("credits", 0.0)),
+			"balance": environment_sys.carbon_balance(_env_enterprise),
+			"esg": float(_env_enterprise.get("esg", 0.0)),
+			"fines": int(_env_enterprise.get("fines", 0)),
+		}
+	if not _env_org.is_empty():
+		out["org"] = {
+			"kind": String(_env_org.get("kind", "")),
+			"name": String(_env_org.get("name", "")),
+			"funds": int(_env_org.get("funds", 0)),
+			"reputation": float(_env_org.get("reputation", 0.0)),
+			"emission_cut": float(_env_org.get("emission_cut", 0.0)),
+		}
+	return out
+
+func _persist_environment() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["environment"] = {
+		"city": environment_sys.to_dict(_city_env),
+		"enterprise": environment_sys.to_dict(_env_enterprise),
+		"org": _env_org.duplicate(true),
+	}
+
+
+
+# --- D38 市政公用与邮政 ---
+
+func municipal_state() -> Dictionary:
+	return {"city": _city_municipal, "hub": _postal_hub, "courier": _courier, "license": _municipal_license}
+
+func municipal_facilities_catalog() -> Array:
+	var out: Array = []
+	for t in municipal.facility_types():
+		out.append({"id": String(t), "name": municipal.facility_name(String(t))})
+	return out
+
+func municipal_franchise_catalog() -> Array:
+	var out: Array = []
+	for key in municipal.franchise_service_keys():
+		var d: Dictionary = municipal.franchise_service_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func municipal_maintain(facility_type: String, amount: int) -> Dictionary:
+	var r: Dictionary = municipal.maintain_facility(_city_municipal, facility_type, amount)
+	_persist_municipal()
+	return r
+
+func municipal_inspect() -> Dictionary:
+	var neglected: Array = municipal.inspect_parks(_city_municipal)
+	return {"ok": true, "neglected_parks": neglected, "unresolved_complaints": municipal.unresolved_complaints(_city_municipal)}
+
+func municipal_construct(facility_type: String, days: float) -> Dictionary:
+	var r: Dictionary = municipal.start_construction(_city_municipal, facility_type, {"days": days})
+	_persist_municipal()
+	return r
+
+func municipal_advance_construction(days: float) -> Dictionary:
+	var r: Dictionary = municipal.advance_construction(_city_municipal, days)
+	_persist_municipal()
+	return r
+
+func municipal_excavate(facility_type: String) -> Dictionary:
+	var r: Dictionary = municipal.start_excavation(_city_municipal, facility_type)
+	_persist_municipal()
+	return r
+
+func municipal_complain(source: String) -> Dictionary:
+	var r: Dictionary = municipal.report_nuisance(_city_municipal, {"source": source})
+	_persist_municipal()
+	return {"ok": true, "complaint": r, "unresolved_complaints": municipal.unresolved_complaints(_city_municipal)}
+
+func municipal_resolve_complaint(index: int) -> Dictionary:
+	var r: Dictionary = municipal.resolve_complaint(_city_municipal, index)
+	_persist_municipal()
+	return r
+
+func postal_accept(id: String, weight_kg: float, distance_km: float) -> Dictionary:
+	var parcel: Dictionary = municipal.new_parcel(id, {"weight_kg": weight_kg, "distance_km": distance_km})
+	var r: Dictionary = municipal.accept_parcel(_postal_hub, parcel)
+	_persist_municipal()
+	return {"ok": true, "pending": int(r.get("pending", 0))}
+
+func postal_ship() -> Dictionary:
+	var pending: Array = _postal_hub.get("pending", [])
+	if pending.is_empty():
+		return {"ok": false, "reason": "no_parcel"}
+	var parcel: Dictionary = pending[0]
+	var r: Dictionary = municipal.ship(_postal_hub, parcel, {"loss_roll": -1.0, "damage_roll": -1.0}, rng)
+	# 记录最近一件已发运包裹，供理赔引用（发运即出队）。
+	_postal_hub["last_parcel"] = parcel
+	_persist_municipal()
+	return r
+
+func postal_claim() -> Dictionary:
+	# 取最近发运的包裹（含丢件/破损）。
+	var target: Dictionary = _postal_hub.get("last_parcel", {})
+	if target.is_empty():
+		return {"ok": false, "reason": "no_parcel"}
+	var r: Dictionary = municipal.file_claim(_postal_hub, target)
+	_persist_municipal()
+	return r
+
+func start_courier_career() -> Dictionary:
+	if not _courier.is_empty():
+		return {"ok": false, "reason": "already_career"}
+	_courier = municipal.new_courier("player")
+	_persist_municipal()
+	return {"ok": true, "courier": _courier}
+
+func courier_deliver() -> Dictionary:
+	if _courier.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var parcel: Dictionary = municipal.new_parcel("last", {})
+	var r: Dictionary = municipal.courier_deliver(_courier, parcel)
+	_persist_municipal()
+	return r
+
+func municipal_grant_franchise(service: String) -> Dictionary:
+	var operator: Dictionary = {"id": account_id(), "license": _municipal_license}
+	var r: Dictionary = municipal.grant_franchise(_city_municipal, service, operator)
+	if not bool(r.get("ok", false)) and String(r.get("reason", "")) == "unknown_service":
+		r["reason"] = "unknown_franchise"
+	_persist_municipal()
+	return r
+
+func municipal_assess_quality(score: float) -> Dictionary:
+	var franchises: Array = _city_municipal.get("franchises", [])
+	if franchises.is_empty():
+		return {"ok": false, "reason": "no_franchise"}
+	var contract: Dictionary = franchises[franchises.size() - 1]
+	var r: Dictionary = municipal.assess_service_quality(_city_municipal, contract, score)
+	_persist_municipal()
+	return r
+
+func municipal_government_purchase(service: String, budget: int) -> Dictionary:
+	var r: Dictionary = municipal.government_purchase(_city_municipal, service, budget)
+	if not bool(r.get("ok", false)) and String(r.get("reason", "")) == "unknown_service":
+		r["reason"] = "unknown_franchise"
+	_persist_municipal()
+	return r
+
+func municipal_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _city_municipal.is_empty():
+		var f_rows: Array = []
+		for t in municipal.facility_types():
+			f_rows.append({
+				"name": municipal.facility_name(String(t)),
+				"condition": municipal.facility_condition(_city_municipal, String(t)),
+				"grade": municipal.facility_grade(_city_municipal, String(t)),
+			})
+		out["city"] = {
+			"facilities": f_rows,
+			"commute_factor": municipal.commute_impact(_city_municipal),
+			"nuisance": float(_city_municipal.get("nuisance", 0.0)),
+			"unresolved_complaints": municipal.unresolved_complaints(_city_municipal),
+			"franchises": (_city_municipal.get("franchises", []) as Array).size(),
+		}
+	if not _postal_hub.is_empty():
+		out["hub"] = {
+			"pending": (_postal_hub.get("pending", []) as Array).size(),
+			"processed": int(_postal_hub.get("processed", 0)),
+			"lost": int(_postal_hub.get("lost", 0)),
+			"damaged": int(_postal_hub.get("damaged", 0)),
+			"claims_paid": int(_postal_hub.get("claims_paid", 0)),
+			"overload": municipal.postal_overload(_postal_hub),
+		}
+	if not _courier.is_empty():
+		out["courier"] = {
+			"name": String(_courier.get("name", "")),
+			"deliveries": int(_courier.get("deliveries", 0)),
+			"rank_index": int(_courier.get("rank_index", 0)),
+			"income": int(_courier.get("income", 0)),
+			"reputation": float(_courier.get("reputation", 0.0)),
+		}
+	return out
+
+func _persist_municipal() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["municipal"] = {
+		"city": municipal.to_dict(_city_municipal),
+		"hub": municipal.to_dict(_postal_hub),
+		"courier": _courier.duplicate(true),
+		"license": _municipal_license,
 	}
 
 

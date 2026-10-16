@@ -835,6 +835,37 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 	var cases: Array = _items_of(player.get("cases", [])) + _items_of(_world(context).get("cases", []))
 	if not cases.is_empty():
 		sections.append(_section("案件", _rows_from(cases, ["type", "stage", "status"], name_resolver)))
+	var pol: Dictionary = context.get("police", {})
+	if pol.has("case"):
+		var pc: Dictionary = pol["case"]
+		var rows: Array = [
+			{"label": "罪名", "value": String(pc.get("crime", ""))},
+			{"label": "阶段", "value": String(pc.get("stage", ""))},
+			{"label": "角色", "value": String(pc.get("role", ""))},
+			{"label": "证据强度", "value": "%.2f" % float(pc.get("evidence_score", 0.0))},
+			{"label": "线索", "value": "%.2f" % float(pc.get("leads", 0.0))},
+			{"label": "程序合法度", "value": "%.2f" % float(pc.get("legality", 0.0))},
+			{"label": "侦破概率", "value": "%.2f" % float(pc.get("solve_probability", 0.0))},
+		]
+		if bool(pc.get("wrongful", false)):
+			rows.append({"label": "警示", "value": "疑似冤假错案"})
+		sections.append(_section("经办案件", rows))
+		var ev_rows: Array = []
+		for e in (pc.get("evidence", []) as Array):
+			ev_rows.append({"label": String((e as Dictionary).get("name", "")), "value": "%.2f" % float((e as Dictionary).get("value", 0.0))})
+		if not ev_rows.is_empty():
+			sections.append(_section("证据链", ev_rows))
+	if pol.has("firm"):
+		var pf: Dictionary = pol["firm"]
+		sections.append(_section("安保公司", [
+			{"label": "名称", "value": String(pf.get("name", ""))},
+			{"label": "人手", "value": str(int(pf.get("staff", 0)))},
+			{"label": "资金", "value": _money(int(pf.get("funds", 0)))},
+			{"label": "声誉", "value": "%.2f" % float(pf.get("reputation", 0.0))},
+		]))
+		var c_rows: Array = _rows_from(_items_of(pf.get("contracts", [])), ["name", "fee", "resolved", "failure"], name_resolver)
+		if not c_rows.is_empty():
+			sections.append(_section("安保业务", c_rows))
 	if sections.is_empty():
 		return _empty("案件与法律", "暂无案件；如需可寻求法律咨询与代理")
 	return _ok(sections)
@@ -849,6 +880,36 @@ static func rescue(player: Dictionary, context: Dictionary, name_resolver: Calla
 	var disabilities: Array = _items_of(player.get("disabilities", []))
 	if not disabilities.is_empty():
 		sections.append(_section("伤残与救助", _rows_from(disabilities, ["type", "severity", "status"], name_resolver)))
+	var emg: Dictionary = context.get("emergency", {})
+	if emg.has("incident"):
+		var ei: Dictionary = emg["incident"]
+		var rows: Array = [
+			{"label": "类型", "value": String(ei.get("type", ""))},
+			{"label": "阶段", "value": String(ei.get("stage", ""))},
+			{"label": "严重度", "value": "%.2f" % float(ei.get("severity", 0.0))},
+			{"label": "响应时间", "value": "%.1f 分钟" % float(ei.get("response_minutes", -1.0))},
+			{"label": "需救治", "value": str(int(ei.get("injured", 0)))},
+			{"label": "死亡", "value": str(int(ei.get("deaths", 0)))},
+			{"label": "获救", "value": str(int(ei.get("rescued", 0)))},
+		]
+		if String(ei.get("fault", "")) != "":
+			rows.append({"label": "责任认定", "value": String(ei.get("fault", ""))})
+		sections.append(_section("处置事件", rows))
+		var tri: Dictionary = ei.get("triage", {})
+		if not tri.is_empty():
+			sections.append(_section("检伤分诊", [
+				{"label": "已救治", "value": "%.0f" % float(tri.get("treated", 0.0))},
+				{"label": "待救治", "value": "%.0f" % float(tri.get("untreated", 0.0))},
+			]))
+	if emg.has("org"):
+		var eo: Dictionary = emg["org"]
+		sections.append(_section("志愿救援队", [
+			{"label": "名称", "value": String(eo.get("name", ""))},
+			{"label": "志愿者", "value": str(int(eo.get("volunteers", 0)))},
+			{"label": "装备", "value": str(int(eo.get("equipment", 0)))},
+			{"label": "资金", "value": _money(int(eo.get("funds", 0)))},
+			{"label": "声誉", "value": "%.2f" % float(eo.get("reputation", 0.0))},
+		]))
 	if sections.is_empty():
 		return _empty("救援与灾害", "当前无灾害；可关注常态风险与应急演练")
 	return _ok(sections)
@@ -856,18 +917,84 @@ static func rescue(player: Dictionary, context: Dictionary, name_resolver: Calla
 static func environment(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("环保与碳市场", "尚未生成角色数据")
+	var sections: Array = []
 	var lands: Array = _items_of(player.get("lands", []))
-	if lands.is_empty():
+	if not lands.is_empty():
+		sections.append(_section("土地与生态", _rows_from(lands, ["kind", "area", "value"], name_resolver)))
+	var env: Dictionary = context.get("environment", {})
+	if env.has("city"):
+		var c: Dictionary = env["city"]
+		sections.append(_section("城市环保", [
+			{"label": "垃圾分类率", "value": "%.2f" % float(c.get("garbage_sorting", 0.0))},
+			{"label": "回收率", "value": "%.2f" % float(c.get("recycling_rate", 0.0))},
+			{"label": "污水处理率", "value": "%.2f" % float(c.get("sewage_treatment", 0.0))},
+			{"label": "空气质量", "value": "%.2f" % float(c.get("air_quality", 0.0))},
+			{"label": "污染指数", "value": "%.2f" % float(c.get("pollution_index", 0.0))},
+			{"label": "健康指数", "value": "%.2f" % float(c.get("health_index", 0.0))},
+			{"label": "诉讼在办", "value": _yes_no(bool(c.get("lawsuit_open", false)))},
+		]))
+	if env.has("enterprise"):
+		var e: Dictionary = env["enterprise"]
+		sections.append(_section("企业碳账户", [
+			{"label": "名称", "value": String(e.get("name", ""))},
+			{"label": "排放", "value": "%.1f" % float(e.get("emissions", 0.0))},
+			{"label": "配额", "value": "%.1f" % float(e.get("quota", 0.0))},
+			{"label": "碳信用", "value": "%.1f" % float(e.get("credits", 0.0))},
+			{"label": "碳平衡", "value": "%.1f" % float(e.get("balance", 0.0))},
+			{"label": "ESG", "value": "%.1f" % float(e.get("esg", 0.0))},
+			{"label": "罚款", "value": _money(int(e.get("fines", 0)))},
+		]))
+	if env.has("org"):
+		var o: Dictionary = env["org"]
+		sections.append(_section("环保组织", [
+			{"label": "类型", "value": String(o.get("kind", ""))},
+			{"label": "名称", "value": String(o.get("name", ""))},
+			{"label": "资金", "value": _money(int(o.get("funds", 0)))},
+			{"label": "声誉", "value": "%.2f" % float(o.get("reputation", 0.0))},
+			{"label": "累计减排", "value": "%.1f" % float(o.get("emission_cut", 0.0))},
+		]))
+	if sections.is_empty():
 		return _empty("环保与碳市场", "未涉猎低碳项目；可从绿色产业、减排项目或碳交易入门")
-	return _ok([_section("土地与生态", _rows_from(lands, ["kind", "area", "value"], name_resolver))])
+	return _ok(sections)
 
 static func municipal(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("市政", "尚未生成角色数据")
-	var orders: Array = _items_of(player.get("orders", []))
-	if orders.is_empty():
-		return _empty("市政", "暂无市政事项；可缴纳公用事业费、参与招投标或听证")
-	return _ok([_section("市政事项", _rows_from(orders, ["type", "status", "amount"], name_resolver))])
+	var mu: Dictionary = context.get("municipal", {})
+	var sections: Array = []
+	if mu.has("city"):
+		var c: Dictionary = mu["city"]
+		var facs: Array = _items_of(c.get("facilities", []))
+		if not facs.is_empty():
+			sections.append(_section("市政设施", _rows_from(facs, ["condition", "grade"], name_resolver)))
+		sections.append(_section("通行与扰民", [
+			{"label": "通行系数", "value": "%.2f" % float(c.get("commute_factor", 1.0))},
+			{"label": "扰民度", "value": "%.2f" % float(c.get("nuisance", 0.0))},
+			{"label": "未处理投诉", "value": str(int(c.get("unresolved_complaints", 0)))},
+			{"label": "特许合同", "value": str(int(c.get("franchises", 0)))},
+		]))
+	if mu.has("hub"):
+		var h: Dictionary = mu["hub"]
+		sections.append(_section("邮政枢纽", [
+			{"label": "待处理", "value": str(int(h.get("pending", 0)))},
+			{"label": "已处理", "value": str(int(h.get("processed", 0)))},
+			{"label": "丢失", "value": str(int(h.get("lost", 0)))},
+			{"label": "破损", "value": str(int(h.get("damaged", 0)))},
+			{"label": "累计理赔", "value": _money(int(h.get("claims_paid", 0)))},
+			{"label": "爆仓程度", "value": "%.2f" % float(h.get("overload", 0.0))},
+		]))
+	if mu.has("courier"):
+		var co: Dictionary = mu["courier"]
+		sections.append(_section("快递员", [
+			{"label": "姓名", "value": String(co.get("name", ""))},
+			{"label": "揽投量", "value": str(int(co.get("deliveries", 0)))},
+			{"label": "职级序号", "value": str(int(co.get("rank_index", 0)))},
+			{"label": "月收入", "value": _money(int(co.get("income", 0)))},
+			{"label": "声誉", "value": "%.2f" % float(co.get("reputation", 0.0))},
+		]))
+	if sections.is_empty():
+		return _empty("市政", "暂无市政事项；可从市政养护、邮政快递或特许经营入门")
+	return _ok(sections)
 
 static func debt(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
