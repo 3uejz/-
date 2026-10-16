@@ -88,6 +88,7 @@ func run_tests() -> void:
 	_test_medical_commands()
 	_test_content_industry_commands()
 	_test_engineering_commands()
+	_test_professional_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -826,6 +827,27 @@ func _test_engineering_commands() -> void:
 	check(not sim._eng_project.is_empty(), "「承接工程」建立工程")
 	check(not sim._eng_city.is_empty(), "「规划新城」建立城市")
 	check(not sim._eng_developer.is_empty(), "「办地产公司」成立地产公司")
+
+
+func _test_professional_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看事务所")
+	_main.submit("开事务所 恒信事务所")
+	_main.submit("考执业资质 注册会计师")
+	_main.submit("开发客户")
+	_main.submit("立项项目 会计审计 客户甲")
+	_main.submit("尽职调查 90")
+	_main.submit("并购顾问 10000000")
+	_main.submit("独立性审查 审计+咨询")
+	_main.submit("虚假报告 60")
+	_main.submit("内幕交易 1000000")
+	_main.submit("商业贿赂 500000")
+	_main.submit("吸收合伙人 王会计 20")
+	_main.submit("合伙人分裂 王会计")
+	_main.submit("竞业限制")
+	_main.submit("客户流失")
+	check(not sim._prof_firm.is_empty(), "「开事务所」成立事务所")
+	check(not sim._prof_project.is_empty(), "「立项项目」建立项目")
 
 
 func _test_save_writes_file() -> void:

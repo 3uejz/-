@@ -94,6 +94,7 @@ const VERB_PANELS: Dictionary = {
 	"看农业": "agriculture", "农业": "agriculture", "农事": "agriculture",
 	"看文娱": "content_industry", "版权": "content_industry",
 	"看工程": "engineering", "在建": "engineering",
+	"看事务所": "services", "事务所": "services",
 	"看服务": "services", "生活服务": "services",
 	"看交通": "transport_infra", "班次": "transport_infra",
 	"看家庭": "household", "宠物": "household",
@@ -492,6 +493,8 @@ func _catalogs() -> Dictionary:
 		"engineering_stage": _sim.engineering_stages_catalog(),
 		"engineering_procurement": _sim.engineering_procurement_catalog(),
 		"engineering_zone": _sim.engineering_zone_types_catalog(),
+		"prof_practice": _sim.prof_practice_types_catalog(),
+		"prof_cert": _sim.prof_qualifications_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -870,6 +873,9 @@ func _panel_context() -> Dictionary:
 		var egp: Dictionary = _sim.engineering_panel_data()
 		if not egp.is_empty():
 			context["engineering"] = egp
+		var pfp: Dictionary = _sim.professional_panel_data()
+		if not pfp.is_empty():
+			context["professional"] = pfp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

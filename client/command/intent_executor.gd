@@ -761,6 +761,34 @@ func _dispatch(intent) -> Dictionary:
 			return _eng_develop(intent)
 		"楼盘烂尾":
 			return _eng_unfinished(intent)
+		"开事务所":
+			return _prof_new_firm(intent)
+		"考执业资质":
+			return _prof_acquire(intent)
+		"开发客户":
+			return _prof_client(intent)
+		"立项项目":
+			return _prof_new_project(intent)
+		"尽职调查":
+			return _prof_due_diligence(intent)
+		"并购顾问":
+			return _prof_ma(intent)
+		"独立性审查":
+			return _prof_independence(intent)
+		"虚假报告":
+			return _prof_false_report(intent)
+		"内幕交易":
+			return _prof_insider(intent)
+		"商业贿赂":
+			return _prof_bribery(intent)
+		"吸收合伙人":
+			return _prof_add_partner(intent)
+		"合伙人分裂":
+			return _prof_split(intent)
+		"竞业限制":
+			return _prof_non_compete(intent)
+		"客户流失":
+			return _prof_churn(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3779,6 +3807,148 @@ func _eng_rival_name(id: String) -> String:
 			return String((rv as Dictionary).get("name", id))
 	return id if id != "" else "其他单位"
 
+func _prof_new_firm(intent) -> Dictionary:
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.prof_new_firm(nm)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办事务所（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["开办事务所「%s」。" % String(r.get("name", ""))], 0, "")
+
+func _prof_acquire(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var cert: String = _object_id(intent, "prof_cert")
+	if cert.is_empty():
+		return _fail("请指明执业资质。")
+	var r: Dictionary = host.prof_acquire(cert)
+	if not bool(r.get("ok", false)):
+		return _fail("无法考取资质（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s%s，报考费 %d。" % [("考取" if bool(r.get("passed", false)) else "未通过"), _catalog_name(host.prof_qualifications_catalog(), cert), int(r.get("fee", 0))]], 0, "")
+
+func _prof_client(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var r: Dictionary = host.prof_client()
+	if not bool(r.get("ok", false)):
+		return _fail("无法开发客户（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("success", false)):
+		return _ok(["客户开发未果。"], 0, "")
+	return _ok(["开发客户成功，规模 %d。" % int(r.get("size", 0))], 0, "")
+
+func _prof_new_project(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var practice: String = _object_id(intent, "prof_practice")
+	if practice.is_empty():
+		return _fail("请指明执业类型。")
+	var client: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.prof_new_project(practice, client)
+	if not bool(r.get("ok", false)):
+		return _fail("无法立项（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var p: Dictionary = r.get("project", {})
+	return _ok(["立项%s项目，费用 %d。" % [_catalog_name(host.prof_practice_types_catalog(), practice), int(p.get("fee", 0))]], 0, "")
+
+func _prof_due_diligence(intent) -> Dictionary:
+	if host._prof_project.is_empty():
+		return _fail("尚无立项项目。")
+	var depth: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.prof_due_diligence(depth)
+	if not bool(r.get("ok", false)):
+		return _fail("无法尽调（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["尽职调查完成，发现 %d 项问题。" % (r.get("findings", []) as Array).size()], 0, "")
+
+func _prof_ma(intent) -> Dictionary:
+	if host._prof_project.is_empty():
+		return _fail("尚无立项项目。")
+	var deal: int = maxi(0, _param_number(intent, "number", 10000000))
+	var r: Dictionary = host.prof_ma_advisory(deal)
+	if not bool(r.get("ok", false)):
+		return _fail("无法顾问（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("success", false)):
+		return _ok(["并购顾问未成交。"], 0, "")
+	return _ok(["并购成交，抽佣 %d。" % int(r.get("fee", 0))], 0, "")
+
+func _prof_independence(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var roles: Array = []
+	if not raw.is_empty():
+		for part in raw.split("+"):
+			var s: String = String(part).strip_edges()
+			if not s.is_empty():
+				roles.append(s)
+	var r: Dictionary = host.prof_independence(roles)
+	return _ok(["独立性审查：%s。" % ("存在角色冲突" if bool(r.get("conflict", false)) else "无冲突")], 0, "")
+
+func _prof_false_report(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var sev: float = clampf(float(_param_number(intent, "number", 60)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.prof_false_report(sev)
+	if not bool(r.get("ok", false)):
+		return _fail("无法出具报告（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["虚假报告被查处，罚款 %d。" % int(r.get("fine", 0))], 0, "")
+	return _ok(["出具虚假报告，未被查处但声誉受损。"], 0, "")
+
+func _prof_insider(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var profit: int = maxi(0, _param_number(intent, "number", 1000000))
+	var r: Dictionary = host.prof_insider(profit)
+	if not bool(r.get("ok", false)):
+		return _fail("无法交易（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["内幕交易被查处，罚款 %d%s。" % [int(r.get("fine", 0)), "，触刑" if bool(r.get("legal", false)) else ""]], 0, "")
+	return _ok(["内幕交易获利 %d，未被查处。" % profit], 0, "")
+
+func _prof_bribery(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var amount: int = maxi(0, _param_number(intent, "number", 500000))
+	var r: Dictionary = host.prof_bribery(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["商业贿赂被查处，罚款 %d%s。" % [int(r.get("fine", 0)), "，触刑" if bool(r.get("legal", false)) else ""]], 0, "")
+	return _ok(["商业贿赂未被查处。"], 0, "")
+
+func _prof_add_partner(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var pid: String = String(intent.params.get("method", "")).strip_edges()
+	if pid.is_empty():
+		return _fail("请指明合伙人姓名。")
+	var share: float = clampf(float(_param_number(intent, "number", 20)) / 100.0, 0.0, 0.9)
+	var r: Dictionary = host.prof_add_partner(pid, share, 0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法吸收合伙人（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["吸收合伙人「%s」，份额 %.0f%%。" % [pid, share * 100.0]], 0, "")
+
+func _prof_split(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var pid: String = String(intent.params.get("method", "")).strip_edges()
+	if pid.is_empty():
+		return _fail("请指明合伙人姓名。")
+	var r: Dictionary = host.prof_partner_split(pid)
+	if not bool(r.get("ok", false)):
+		return _fail("无法拆伙（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["合伙人「%s」分裂，带走 %d 名客户。" % [pid, int(r.get("clients_carried", 0))]], 0, "")
+
+func _prof_non_compete(intent) -> Dictionary:
+	var r: Dictionary = host.prof_non_compete()
+	if bool(r.get("violation", false)):
+		return _ok(["违反竞业限制，赔偿 %d。" % int(r.get("damages", 0))], 0, "")
+	return _ok(["无竞业违约。"], 0, "")
+
+func _prof_churn(intent) -> Dictionary:
+	if host.professional_firm().is_empty():
+		return _fail("尚未开办事务所。")
+	var r: Dictionary = host.prof_churn()
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算流失（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["客户流失 %d 名。" % int(r.get("lost", 0))], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -4087,6 +4257,16 @@ func _reason_cn(reason: String) -> String:
 			return "尚未登记捐献"
 		"not_unclaimed":
 			return "并非无人认领情形"
+		"unknown_cert":
+			return "未知执业资质"
+		"already_qualified":
+			return "已持有该资质"
+		"already_partner":
+			return "该合伙人已在册"
+		"not_partner":
+			return "查无此合伙人"
+		"bad_partner":
+			return "合伙人姓名无效"
 		"unknown_practice":
 			return "未知民俗活动"
 		"no_business":
@@ -4374,6 +4554,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.engineering_qualifications_catalog(), text)
 		"engineering_zone":
 			return _find_catalog_by_name(host.engineering_zone_types_catalog(), text)
+		"prof_practice":
+			return _find_catalog_by_name(host.prof_practice_types_catalog(), text)
+		"prof_cert":
+			return _find_catalog_by_name(host.prof_qualifications_catalog(), text)
 		_:
 			return ""
 

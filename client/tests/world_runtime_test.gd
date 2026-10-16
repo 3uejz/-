@@ -67,6 +67,7 @@ func run_tests() -> void:
 	_test_medical_runtime()
 	_test_content_industry_runtime()
 	_test_engineering_runtime()
+	_test_professional_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1551,6 +1552,51 @@ func _test_engineering_runtime() -> void:
 	check(String(reloaded._eng_contractor.get("name", "")) == "宏基建设", "读档恢复工程公司")
 	check(String(reloaded._eng_city.get("name", "")) == "云港", "读档恢复城市")
 	check(not reloaded.engineering_panel_data().is_empty(), "工程面板数据非空")
+
+
+func _test_professional_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(221)
+	var host = SimHostScript.new(state, 221)
+	host.bind(state)
+	check(host.prof_practice_types_catalog().size() >= 8, "执业类型≥8")
+	check(host.prof_qualifications_catalog().size() >= 3, "专业资质≥3")
+	# 开事务所与资质。
+	check(bool(host.prof_new_firm("恒信事务所").get("ok", false)), "开办事务所")
+	check(not host._prof_firm.is_empty(), "事务所非空")
+	check(bool(host.prof_acquire("cpa").get("ok", false)), "考取 CPA")
+	check(bool(host.prof_acquire("cpa").get("reason", "") == "already_qualified"), "重复考取被拒")
+	check(bool(host.prof_acquire("nope").get("reason", "") == "unknown_cert"), "未知资质被拒")
+	# 客户与项目。
+	var ca: Dictionary = host.prof_client()
+	check(bool(ca.get("ok", false)), "开发客户结算")
+	check(bool(host.prof_new_project("accounting_audit", "客户甲").get("ok", false)), "立项项目")
+	check(not host._prof_project.is_empty(), "立项项目非空")
+	# 尽调与并购。
+	check(bool(host.prof_due_diligence(0.9).has("findings")), "尽职调查")
+	check(bool(host.prof_ma_advisory(10000000).has("success")), "并购顾问")
+	# 独立性审查。
+	check(bool(host.prof_independence(["audit", "consulting"]).get("conflict", false)), "审计独立性冲突")
+	check(not bool(host.prof_independence(["audit"]).get("conflict", false)), "单一角色无冲突")
+	# 执业风险。
+	check(bool(host.prof_false_report(0.6).get("ok", false)), "虚假报告结算")
+	check(bool(host.prof_insider(1000000).has("exposed")), "内幕交易结算")
+	check(bool(host.prof_bribery(500000).has("exposed")), "商业贿赂结算")
+	# 合伙人。
+	check(bool(host.prof_add_partner("王会计", 0.2, 3).get("ok", false)), "吸收合伙人")
+	check(bool(host.prof_add_partner("王会计").get("reason", "") == "already_partner"), "重复合伙人被拒")
+	check(bool(host.prof_partner_split("王会计").get("ok", false)), "合伙人分裂")
+	check(bool(host.prof_partner_split("王会计").get("reason", "") == "not_partner"), "查无合伙人被拒")
+	# 边界。
+	check(bool(host.prof_non_compete().has("violation")), "竞业限制结算")
+	check(bool(host.prof_churn().get("ok", false)), "客户流失结算")
+	# 持久化与读档恢复。
+	host._persist_professional()
+	check(state.sim_runtime.get("professional", null) is Dictionary, "专业服务运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 221)
+	reloaded.bind(state)
+	check(String(reloaded._prof_firm.get("name", "")) == "恒信事务所", "读档恢复事务所")
+	check(not reloaded.professional_panel_data().is_empty(), "专业服务面板数据非空")
 
 
 

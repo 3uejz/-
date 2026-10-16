@@ -53,7 +53,8 @@
         "anomaly": { "type": "object", "additionalProperties": true },
         "medical": { "type": "object", "additionalProperties": true },
         "content": { "type": "object", "additionalProperties": true },
-        "engineering": { "type": "object", "additionalProperties": true }
+        "engineering": { "type": "object", "additionalProperties": true },
+        "professional": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

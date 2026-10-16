@@ -64,6 +64,7 @@ const MedicalScript = preload("res://sim/medical.gd")
 const MedTechScript = preload("res://sim/medtech.gd")
 const ContentIndustryScript = preload("res://sim/content_industry.gd")
 const EngineeringScript = preload("res://sim/engineering.gd")
+const ProfessionalServicesScript = preload("res://sim/professional_services.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -222,6 +223,9 @@ var _eng_project: Dictionary = {}          ## 当前在建工程，入档 sim_ru
 var _eng_city: Dictionary = {}             ## 当前城市（规划载体），入档 sim_runtime.engineering.city
 var _eng_developer: Dictionary = {}        ## 玩家地产开发商，入档 sim_runtime.engineering.developer
 var _eng_rivals: Array = []                ## 招标对手承包商（确定性生成，不入档）
+var professional                    ## 专业服务业（ProfessionalServicesSystem）
+var _prof_firm: Dictionary = {}            ## 玩家专业事务所，入档 sim_runtime.professional.firm
+var _prof_project: Dictionary = {}         ## 当前项目，入档 sim_runtime.professional.project
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -319,6 +323,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 		engineering.new_contractor({"id": "rival.b", "name": "恒基工程", "qualification": "second", "capital": 20000000, "workmanship": 0.5, "relationship": 0.4, "reputation": 0.5}),
 		engineering.new_contractor({"id": "rival.c", "name": "远洋建工", "qualification": "special", "capital": 90000000, "workmanship": 0.8, "relationship": 0.3, "reputation": 0.8}),
 	]
+	professional = ProfessionalServicesScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -609,6 +614,14 @@ func _ensure_world_geo() -> void:
 				_eng_city = engineering.from_dict(egd["city"])
 			if egd.get("developer", null) is Dictionary and not (egd["developer"] as Dictionary).is_empty():
 				_eng_developer = engineering.from_dict(egd["developer"])
+		# 恢复专业服务业运行态（事务所/项目）。
+		var pf: Variant = (state.sim_runtime as Dictionary).get("professional", {})
+		if pf is Dictionary and not (pf as Dictionary).is_empty():
+			var pfd: Dictionary = pf
+			if pfd.get("firm", null) is Dictionary and not (pfd["firm"] as Dictionary).is_empty():
+				_prof_firm = professional.from_dict(pfd["firm"])
+			if pfd.get("project", null) is Dictionary and not (pfd["project"] as Dictionary).is_empty():
+				_prof_project = professional.from_dict(pfd["project"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5590,6 +5603,154 @@ func _persist_engineering() -> void:
 		"project": engineering.to_dict(_eng_project),
 		"city": engineering.to_dict(_eng_city),
 		"developer": engineering.to_dict(_eng_developer),
+	}
+
+
+# --- D48 专业服务业 ---
+
+func prof_practice_types_catalog() -> Array:
+	var out: Array = []
+	for key in professional.PRACTICE_TYPES.keys():
+		out.append({"id": String(key), "name": String((professional.PRACTICE_TYPES[key] as Dictionary).get("name", key))})
+	return out
+
+func prof_qualifications_catalog() -> Array:
+	var out: Array = []
+	for key in professional.QUALIFICATIONS.keys():
+		out.append({"id": String(key), "name": String((professional.QUALIFICATIONS[key] as Dictionary).get("name", key))})
+	return out
+
+func professional_firm() -> Dictionary:
+	return _prof_firm
+
+func prof_new_firm(name: String = "") -> Dictionary:
+	var nm: String = name if not name.is_empty() else "我的事务所"
+	_prof_firm = professional.new_firm({"id": "firm.player", "name": nm, "money": 5000000})
+	_prof_project = {}
+	_persist_professional()
+	return {"ok": true, "name": String(_prof_firm.get("name", nm))}
+
+func prof_acquire(cert: String) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.acquire_qualification(_prof_firm, cert, {"skill": 0.8, "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_client() -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.client_acquisition(_prof_firm, {"roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_new_project(practice: String, client_id: String = "") -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var cid: String = client_id if not client_id.is_empty() else "客户"
+	var r: Dictionary = professional.new_project(_prof_firm, cid, practice, {})
+	if bool(r.get("ok", false)):
+		_prof_project = r["project"]
+	_persist_professional()
+	return r
+
+func prof_due_diligence(depth: float = 0.5) -> Dictionary:
+	if _prof_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = professional.due_diligence(_prof_project, {"depth": clampf(depth, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_ma_advisory(deal_size: int = 10000000) -> Dictionary:
+	if _prof_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = professional.ma_advisory(_prof_project, {"deal_size": maxi(0, deal_size), "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_independence(roles: Array) -> Dictionary:
+	return professional.independence_conflict({"roles": roles}, {})
+
+func prof_false_report(severity: float = 0.6) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.false_report(_prof_firm, _prof_project, {"severity": clampf(severity, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_insider(profit: int = 1000000) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.insider_trading(_prof_firm, {"profit": maxi(0, profit), "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_bribery(amount: int = 500000) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.commercial_bribery(_prof_firm, {"amount": maxi(0, amount), "roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_add_partner(partner_id: String, share: float = 0.2, clients: int = 0) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	if partner_id.strip_edges().is_empty():
+		return {"ok": false, "reason": "bad_partner"}
+	var r: Dictionary = professional.add_partner(_prof_firm, partner_id, {"share": clampf(share, 0.0, 0.9), "clients": maxi(0, clients)})
+	_persist_professional()
+	return r
+
+func prof_partner_split(partner_id: String) -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.partner_split(_prof_firm, partner_id, {"roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func prof_non_compete() -> Dictionary:
+	return professional.non_compete_violation({})
+
+func prof_churn() -> Dictionary:
+	if _prof_firm.is_empty():
+		return {"ok": false, "reason": "no_firm"}
+	var r: Dictionary = professional.client_churn(_prof_firm, {"roll": -1.0}, rng)
+	_persist_professional()
+	return r
+
+func professional_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _prof_firm.is_empty():
+		var quals: Array = []
+		for cert in (_prof_firm.get("qualifications", {}) as Dictionary).keys():
+			quals.append(String((professional.QUALIFICATIONS.get(cert, {}) as Dictionary).get("name", cert)))
+		out["firm"] = {
+			"name": String(_prof_firm.get("name", "")),
+			"money": int(_prof_firm.get("money", 0)),
+			"reputation": float(_prof_firm.get("reputation", 0.0)),
+			"qualifications": quals,
+			"partners": (_prof_firm.get("partners", {}) as Dictionary).size(),
+			"clients": (_prof_firm.get("clients", {}) as Dictionary).size(),
+			"violations": (_prof_firm.get("violations", []) as Array).size(),
+			"projects": (_prof_firm.get("projects", []) as Array).size(),
+		}
+	if not _prof_project.is_empty():
+		out["project"] = {
+			"id": String(_prof_project.get("id", "")),
+			"practice": String(_prof_project.get("practice", "")),
+			"practice_name": String((professional.PRACTICE_TYPES.get(String(_prof_project.get("practice", "")), {}) as Dictionary).get("name", _prof_project.get("practice", ""))),
+			"fee": int(_prof_project.get("fee", 0)),
+			"status": String(_prof_project.get("status", "")),
+			"findings": (_prof_project.get("findings", []) as Array).size(),
+		}
+	return out
+
+func _persist_professional() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["professional"] = {
+		"firm": professional.to_dict(_prof_firm),
+		"project": professional.to_dict(_prof_project),
 	}
 
 

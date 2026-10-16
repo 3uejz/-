@@ -129,7 +129,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"engineering":
 			data = engineering(player, context, name_resolver)
 		"services":
-			data = services(player, name_resolver)
+			data = services(player, context, name_resolver)
 		"transport_infra":
 			data = transport_infra(player, context, name_resolver)
 		"household":
@@ -1811,13 +1811,44 @@ static func _engineering_runtime_sections(e: Dictionary) -> Array:
 		]))
 	return sections
 
-static func services(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func services(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("专业与生活服务", "尚未生成角色数据")
+	var sections: Array = []
+	sections.append_array(_professional_runtime_sections(context.get("professional", {})))
 	var orders: Array = _items_of(player.get("orders", []))
-	if orders.is_empty():
-		return _empty("专业与生活服务", "暂无服务单；可预约律师、会计、维修、家政或搬家")
-	return _ok([_section("服务单", _rows_from(orders, ["type", "status", "amount", "rating"], name_resolver))])
+	if not orders.is_empty():
+		sections.append(_section("服务单", _rows_from(orders, ["type", "status", "amount", "rating"], name_resolver)))
+	if sections.is_empty():
+		return _empty("专业与生活服务", "暂无服务单；可开事务所、承接项目，或预约维修、家政、搬家")
+	return _ok(sections)
+
+static func _professional_runtime_sections(p: Dictionary) -> Array:
+	if p.is_empty():
+		return []
+	var sections: Array = []
+	var f: Dictionary = p.get("firm", {}) if p.get("firm", null) is Dictionary else {}
+	if not f.is_empty():
+		var quals: Array = f.get("qualifications", [])
+		sections.append(_section("专业事务所", [
+			{"label": "名称", "value": String(f.get("name", ""))},
+			{"label": "资金", "value": str(int(f.get("money", 0)))},
+			{"label": "声誉", "value": "%.0f%%" % (float(f.get("reputation", 0.0)) * 100.0)},
+			{"label": "资质", "value": "、".join(PackedStringArray(_str_list(quals))) if not quals.is_empty() else "无"},
+			{"label": "合伙人", "value": str(int(f.get("partners", 0)))},
+			{"label": "客户", "value": str(int(f.get("clients", 0)))},
+			{"label": "违规", "value": str(int(f.get("violations", 0)))},
+			{"label": "项目", "value": str(int(f.get("projects", 0)))},
+		]))
+	var pj: Dictionary = p.get("project", {}) if p.get("project", null) is Dictionary else {}
+	if not pj.is_empty():
+		sections.append(_section("立项项目", [
+			{"label": "类型", "value": String(pj.get("practice_name", pj.get("practice", "")))},
+			{"label": "费用", "value": str(int(pj.get("fee", 0)))},
+			{"label": "状态", "value": String(pj.get("status", ""))},
+			{"label": "发现", "value": str(int(pj.get("findings", 0)))},
+		]))
+	return sections
 
 static func transport_infra(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

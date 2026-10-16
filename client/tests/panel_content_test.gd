@@ -64,6 +64,7 @@ func run_tests() -> void:
 	_test_medical_panel()
 	_test_content_industry_panel()
 	_test_engineering_panel()
+	_test_professional_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -179,6 +180,16 @@ func _test_engineering_panel() -> void:
 	check(_find_section(d, "城市规划").get("rows", []).size() >= 1, "城市规划分区有行")
 	check(_find_section(d, "功能区").get("rows", []).size() >= 1, "功能区分区有行")
 	check(_find_section(d, "房地产").get("rows", []).size() >= 1, "房地产分区有行")
+
+func _test_professional_panel() -> void:
+	var ctx: Dictionary = {"professional": {
+		"firm": {"name": "恒信事务所", "money": 5000000, "reputation": 0.6, "qualifications": ["注册会计师"], "partners": 1, "clients": 3, "violations": 0, "projects": 1},
+		"project": {"id": "project.1", "practice": "accounting_audit", "practice_name": "会计审计", "fee": 200000, "status": "open", "findings": 1},
+	}}
+	var d: Dictionary = PanelContentScript.build("services", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有专业服务上下文非空")
+	check(_find_section(d, "专业事务所").get("rows", []).size() >= 1, "专业事务所分区有行")
+	check(_find_section(d, "立项项目").get("rows", []).size() >= 1, "立项项目分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

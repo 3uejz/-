@@ -17,7 +17,7 @@
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
 8. **后端权威边界未逐域标注（中）**：碳市场、区域医疗、城市规划、交通基建、灾害等同时改区域与宏观，未声明权威归属与合并锚点。
-9. **测试点系统性缺失（中）**：D48/D49/D50 无专属测试；多为域无边界的测试。
+9. **测试点系统性缺失（中）**：D49/D50 无专属测试；多为域无边界的测试。
 10. **硬冲突（高）**：
     - D20 语言等级 0..100 与技能 0..20 矛盾（已决议：语言独立类型）。
     - `npc.schema.json` 的 `relations` 引用单个 relation，而 `player.relations` 是数组。
@@ -191,7 +191,8 @@
 - **残留待办**：工程/招投标/规划实体的独立 schema（当前以 `sim_runtime.engineering` 内联字典承载）；与 D9 区域权威、D50 交通基建的深接入仍为最小实现。
 
 ### D48 专业服务业
-- 执业门槛/声誉接单/收费/执业风险/合伙人分成无模型；事务所/合伙人/项目无 schema；事务所类型/项目/风险内容缺失；缺审计/咨询/尽调动词与面板。
+- **已收敛**：`sim/professional_services.gd` `ProfessionalServicesSystem` 覆盖执业类型 8（必需资质/基准费用/风险度/审计独立性）、专业资质 cpa/cfa/lawyer（付费应试按技能与难度判定、通过抬升声誉、`gatekeep_capacity` 接单能力）、事务所在籍（`new_firm`/`add_partner`/`partner_split` 合伙人份额与客户随迁）、客户与项目（`client_acquisition`/`new_project`/`due_diligence`/`ma_advisory`）、执业风险（`false_report`/`insider_trading`/`commercial_bribery`/`independence_conflict`）、边界（`non_compete_violation`/`client_churn`）；`SimHost` 公开 `prof_*()` 与 `_persist_professional()`、14 条指令与「专业与生活服务」面板、`sim_runtime.professional` 白名单、4 套接线测试齐备。
+- **残留待办**：事务所/合伙人/客户/项目的独立 schema（当前以 `sim_runtime.professional` 内联字典承载）；与 D9 区域权威、D46 文娱经纪的深接入仍为最小实现。
 
 ### D49 家庭与生活服务业
 - 服务定价/平台抽成/背景核查/纠纷事故无模型；服务订单/家政/婚介/宠物服务无 schema；服务项目内容缺失；缺相亲/保洁/搬家/维修等动词与面板。
