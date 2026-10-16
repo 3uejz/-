@@ -466,6 +466,9 @@ func _catalogs() -> Dictionary:
 		"funeral_method": _sim.funeral_methods_catalog(),
 		"funeral_grave": _sim.funeral_grave_types_catalog(),
 		"memorial_kind": _sim.funeral_memorial_kinds_catalog(),
+		"meta_service": _sim.metaphysics_services_catalog(),
+		"meta_mode": _sim.metaphysics_modes_catalog(),
+		"folk_practice": _sim.metaphysics_folk_practices_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -832,6 +835,9 @@ func _panel_context() -> Dictionary:
 		var fnp: Dictionary = _sim.funeral_panel_data()
 		if not fnp.is_empty():
 			context["funeral"] = fnp
+		var mtp: Dictionary = _sim.metaphysics_panel_data()
+		if not mtp.is_empty():
+			context["metaphysics"] = mtp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

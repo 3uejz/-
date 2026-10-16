@@ -82,6 +82,8 @@ func run_tests() -> void:
 	_test_debt_commands()
 	_test_consumer_commands()
 	_test_welfare_commands()
+	_test_funeral_commands()
+	_test_metaphysics_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -687,6 +689,46 @@ func _test_welfare_commands() -> void:
 	_main.submit("虐待举报")
 	_main.submit("救助依赖")
 	check(not (sim.welfare_state().get("worker", {}) as Dictionary).is_empty(), "「社工入职」开启社工路径")
+
+func _test_funeral_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看殡葬")
+	check(_main.has_panel("funeral"), "「看殡葬」打开殡葬面板")
+	_main.submit("殡葬安排 火化")
+	_main.submit("殡葬执行")
+	_main.submit("器官捐献")
+	_main.submit("伦理审查")
+	_main.submit("器官分配")
+	_main.submit("器官移植")
+	_main.submit("立纪念碑")
+	_main.submit("祭扫")
+	_main.submit("数字纪念")
+	_main.submit("遗嘱执行")
+	_main.submit("开殡仪馆")
+	_main.submit("殡葬报价 火化")
+	_main.submit("殡葬成交 火化")
+	_main.submit("殡葬监管")
+	_main.submit("殡葬改革")
+	_main.submit("无人认领")
+	_main.submit("撤销捐献")
+	_main.submit("捐献争议")
+	check(not (sim.funeral_state().get("state", {}) as Dictionary).is_empty(), "「殡葬安排」建立运行态")
+
+func _test_metaphysics_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看玄学")
+	check(_main.has_panel("metaphysics"), "「看玄学」打开玄学面板")
+	_main.submit("玄学咨询 算命")
+	_main.submit("民俗仪式 许愿")
+	_main.submit("开玄学馆")
+	_main.submit("玄学营业")
+	_main.submit("玄学投诉")
+	_main.submit("诈骗查处")
+	_main.submit("人设翻车")
+	_main.submit("组织迷信 500")
+	_main.submit("勾结灰产")
+	_main.submit("真假难辨")
+	check(not (sim.metaphysics_state().get("business", {}) as Dictionary).is_empty(), "「开玄学馆」建立经营体")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

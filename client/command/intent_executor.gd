@@ -605,6 +605,26 @@ func _dispatch(intent) -> Dictionary:
 			return _funeral_unclaimed(intent)
 		"捐献争议":
 			return _funeral_dispute(intent)
+		"玄学咨询":
+			return _meta_consult(intent)
+		"民俗仪式":
+			return _meta_folk(intent)
+		"开玄学馆":
+			return _meta_business(intent)
+		"玄学营业":
+			return _meta_operate(intent)
+		"玄学投诉":
+			return _meta_complaint(intent)
+		"诈骗查处":
+			return _meta_investigate(intent)
+		"人设翻车":
+			return _meta_fall(intent)
+		"组织迷信":
+			return _meta_superstition(intent)
+		"勾结灰产":
+			return _meta_collude(intent)
+		"真假难辨":
+			return _meta_blur(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -2970,6 +2990,84 @@ func _funeral_dispute(intent) -> Dictionary:
 		return _fail("无法处理争议（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["捐献争议已%s。" % ("调解撤销捐献" if bool(r.get("revoked", false)) else "受理待调")], 0, "")
 
+func _meta_consult(intent) -> Dictionary:
+	var service: String = _object_id(intent, "meta_service")
+	if service.is_empty():
+		service = "fortune"
+	var mode: String = _object_id(intent, "meta_mode")
+	if mode.is_empty():
+		mode = "offline"
+	var r: Dictionary = host.metaphysics_consult(service, mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法咨询（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line: String = "%s（%s）——%s" % [String(r.get("service_name", "")), String(r.get("mode", "")), String(r.get("claimed", ""))]
+	if bool(r.get("scam", false)):
+		line += "（疑似诈骗话术）"
+	return _ok([line], 0, "")
+
+func _meta_folk(intent) -> Dictionary:
+	var practice: String = _object_id(intent, "folk_practice")
+	if practice.is_empty():
+		practice = "festival_ritual"
+	var r: Dictionary = host.metaphysics_folk(practice)
+	if not bool(r.get("ok", false)):
+		return _fail("无法进行民俗活动（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["进行%s，心情 +%d。" % [String(r.get("name", "")), int(r.get("mood_delta", 0))]], 0, "")
+
+func _meta_business(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "玄学馆"))
+	var r: Dictionary = host.metaphysics_new_business(name)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办。")
+	return _ok(["已开办「%s」。" % name], 0, "")
+
+func _meta_operate(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_operate()
+	if not bool(r.get("ok", false)):
+		return _fail("无法营业（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["营业入账 %d%s。" % [int(r.get("earned", 0)), "，遭投诉" if bool(r.get("complained", false)) else ""]], 0, "")
+
+func _meta_complaint(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_complaint(true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法投诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已投诉举报，举报数 %d。" % int(r.get("reports", 0))], 0, "")
+
+func _meta_investigate(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_investigate()
+	if not bool(r.get("ok", false)):
+		return _fail("无法查处（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("convicted", false)):
+		return _ok(["诈骗查处成立，罚款 %d。" % int(r.get("fine", 0))], 0, "")
+	return _ok(["举报量不足或未定罪。"], 0, "")
+
+func _meta_fall(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_master_fall()
+	if not bool(r.get("ok", false)):
+		return _fail("无法翻车（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["大师人设翻车，声誉跌至 %d%%。" % int(round(float(r.get("reputation", 0.0)) * 100.0))], 0, "")
+
+func _meta_superstition(intent) -> Dictionary:
+	var members: int = int(_param_number(intent, "number", 100))
+	var r: Dictionary = host.metaphysics_superstition(members)
+	if not bool(r.get("ok", false)):
+		return _fail("无法组织。")
+	return _ok(["组织化迷信，成员 %d，影响力 %d%%。" % [int(r.get("members", 0)), int(round(float(r.get("influence", 0.0)) * 100.0))]], 0, "")
+
+func _meta_collude(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_collude()
+	if not bool(r.get("ok", false)):
+		return _fail("无法勾结（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _fail("与灰产勾结被曝光，牵连追责。")
+	return _ok(["与灰产勾结，暂未曝光。"], 0, "")
+
+func _meta_blur(intent) -> Dictionary:
+	var r: Dictionary = host.metaphysics_blur()
+	if not bool(r.get("ok", false)):
+		return _fail("无法判断。")
+	return _ok(["外观%s，%s。" % ["不可区分", String(r.get("label", "普通从业者"))]], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -3278,6 +3376,10 @@ func _reason_cn(reason: String) -> String:
 			return "尚未登记捐献"
 		"not_unclaimed":
 			return "并非无人认领情形"
+		"unknown_practice":
+			return "未知民俗活动"
+		"no_business":
+			return "尚未开办玄学业务"
 		_:
 			return reason if reason != "" else "未知原因"
 

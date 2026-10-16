@@ -1251,22 +1251,53 @@ static func _funeral_sections(fn: Dictionary) -> Array:
 		]))
 	return sections
 
-static func _str_list(items: Array) -> Array:
-	var out: Array = []
-	for item in items:
-		out.append(String(item))
-	return out
 
 static func metaphysics(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("玄学", "尚未生成角色数据")
+	var mt: Dictionary = context.get("metaphysics", {})
+	var sections: Array = _metaphysics_sections(mt)
 	var talents: Array = _items_of(player.get("talents", []))
-	if talents.is_empty():
-		return _empty("玄学", "未接触玄学；可求签、看相、占卦、请符或开坛")
-	var rows: Array = []
-	for t in talents:
-		rows.append({"label": _resolve(String(t), name_resolver), "value": "具"})
-	return _ok([_section("命理印记", rows)])
+	if not talents.is_empty():
+		var rows: Array = []
+		for t in talents:
+			rows.append({"label": _resolve(String(t), name_resolver), "value": "具"})
+		sections.append(_section("命理印记", rows))
+	if sections.is_empty():
+		return _empty("玄学", "未接触玄学；可算命、看风水、求护身符或开办玄学馆")
+	return _ok(sections)
+
+static func _metaphysics_sections(mt: Dictionary) -> Array:
+	var sections: Array = []
+	var client: Dictionary = mt.get("client", {})
+	if not client.is_empty():
+		var rows: Array = [
+			{"label": "心情", "value": str(int(round(float(client.get("mood", 0.0)))))},
+			{"label": "信念", "value": "%d%%" % int(round(float(client.get("belief", 0.0)) * 100.0))},
+			{"label": "社交", "value": str(int(round(float(client.get("social", 0.0)))))},
+		]
+		if not String(client.get("last_consult", "")).is_empty():
+			rows.append({"label": "上次求测", "value": String(client.get("last_consult", ""))})
+		sections.append(_section("求测状态", rows))
+	var practitioner: Dictionary = mt.get("practitioner", {})
+	if not practitioner.is_empty():
+		sections.append(_section("从业者", [
+			{"label": "姓名", "value": String(practitioner.get("name", ""))},
+			{"label": "真实能力", "value": "有" if bool(practitioner.get("real_ability", false)) else "无"},
+			{"label": "诈骗", "value": "是" if bool(practitioner.get("scamming", false)) else "否"},
+			{"label": "声誉", "value": "%d%%" % int(round(float(practitioner.get("reputation", 0.0)) * 100.0))},
+		]))
+	var business: Dictionary = mt.get("business", {})
+	if not business.is_empty():
+		sections.append(_section("玄学经营", [
+			{"label": "名称", "value": String(business.get("name", ""))},
+			{"label": "累计收入", "value": str(int(business.get("income", 0)))},
+			{"label": "客流量", "value": str(int(business.get("customers", 0)))},
+			{"label": "投诉", "value": str(int(business.get("complaints", 0)))},
+			{"label": "举报", "value": str(int(business.get("reports", 0)))},
+			{"label": "立案调查", "value": "是" if bool(business.get("under_investigation", false)) else "否"},
+		]))
+	return sections
 
 static func medical(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

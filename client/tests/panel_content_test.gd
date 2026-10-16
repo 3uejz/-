@@ -57,6 +57,8 @@ func run_tests() -> void:
 	_test_debt_panel()
 	_test_consumer_panel()
 	_test_welfare_panel()
+	_test_funeral_panel()
+	_test_metaphysics_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -73,6 +75,35 @@ func _test_welfare_panel() -> void:
 	check(_find_section(d, "社工").get("rows", []).size() >= 1, "社工分区有行")
 	check(_find_section(d, "个案").get("rows", []).size() >= 1, "个案分区有行")
 	check(_find_section(d, "变故儿童").get("rows", []).size() >= 1, "变故儿童分区有行")
+
+func _test_funeral_panel() -> void:
+	var ctx: Dictionary = {"funeral": {
+		"funeral": {"method": "burial", "method_name": "土葬", "grave": "premium", "grave_name": "高档墓", "cost": 1060000, "affordable": true, "executed": true, "paid": 1060000},
+		"donation": {"registered": true, "ethics_approved": true, "legal": true, "revoked": false, "organs": ["heart", "kidney"], "allocated": 2},
+		"memorials": [{"kind": "monument", "name": "纪念碑", "visits": 3}],
+		"digital": {"created": true, "visits": 5},
+		"industry": {"name": "永宁殡仪馆", "balance": 500000, "profit": 200000, "price_mult": 1.2, "reputation": 0.6},
+		"meaning": 10.0,
+	}}
+	var d: Dictionary = PanelContentScript.build("funeral", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有殡葬上下文非空")
+	check(_find_section(d, "殡葬安排").get("rows", []).size() >= 1, "殡葬安排分区有行")
+	check(_find_section(d, "器官捐献").get("rows", []).size() >= 1, "器官捐献分区有行")
+	check(_find_section(d, "纪念").get("rows", []).size() >= 1, "纪念分区有行")
+	check(_find_section(d, "数字纪念").get("rows", []).size() >= 1, "数字纪念分区有行")
+	check(_find_section(d, "殡葬行业").get("rows", []).size() >= 1, "殡葬行业分区有行")
+
+func _test_metaphysics_panel() -> void:
+	var ctx: Dictionary = {"metaphysics": {
+		"client": {"mood": 55.0, "belief": 0.3, "social": 2.0, "last_consult": "fortune"},
+		"practitioner": {"name": "本人", "real_ability": false, "scamming": true, "reputation": 0.4},
+		"business": {"name": "青云观", "income": 200000, "customers": 5, "complaints": 1, "reports": 3, "reputation": 0.4, "under_investigation": true},
+	}}
+	var d: Dictionary = PanelContentScript.build("metaphysics", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有玄学上下文非空")
+	check(_find_section(d, "求测状态").get("rows", []).size() >= 1, "求测状态分区有行")
+	check(_find_section(d, "从业者").get("rows", []).size() >= 1, "从业者分区有行")
+	check(_find_section(d, "玄学经营").get("rows", []).size() >= 1, "玄学经营分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

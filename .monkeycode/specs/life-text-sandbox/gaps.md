@@ -17,7 +17,7 @@
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
 8. **后端权威边界未逐域标注（中）**：碳市场、区域医疗、城市规划、交通基建、灾害等同时改区域与宏观，未声明权威归属与合并锚点。
-9. **测试点系统性缺失（中）**：D42/D43/D46 无专属测试；多为域无边界的测试。
+9. **测试点系统性缺失（中）**：D44/D46 无专属测试；多为域无边界的测试。
 10. **硬冲突（高）**：
     - D20 语言等级 0..100 与技能 0..20 矛盾（已决议：语言独立类型）。
     - `npc.schema.json` 的 `relations` 引用单个 relation，而 `player.relations` 是数组。
@@ -167,10 +167,12 @@
 - **待办**：收养等待期与撤销、跨区资格互认、慈善信息公开平台、个案台账与政府购买服务对接的程序细化待补。
 
 ### D42 殡葬、器官捐献与纪念
-- 殡葬费用/墓地价格/器官分配/捐献撤销/遗产不足无模型；葬礼/墓地/捐献/纪念碑无 schema；殡葬服务内容缺失；缺火化/海葬/祭扫/移植动词与面板。
+- **已接线**：`FuneralSystem`（`funeral.gd`）殡葬方式/墓位（`methods()`/`method_def()`/`grave_types()`/`grave_def()`）；殡葬安排与执行（`arrange_funeral()` 按生前意愿/家属决议结算，`execute_funeral()` 遗产不足走公益救助）；器官与遗体捐献（`register_donation()`/`review_ethics()`/`revoke_donation()`（生前不可撤销）/`allocate_organs()` 按紧迫度匹配/`transplant()` 排异判定）；纪念（`build_memorial()`/`tomb_sweeping()`/`create_digital_memorial()` 提升意义感与家庭关系）；遗嘱执行（`execute_will()`）；殡葬行业（`new_funeral_home()`/`quote_service()`/`settle_sale()` 暴利触发监管/`regulate_market()`/`reform_customs()`）；边界（`unclaimed_body()`/`donation_dispute()`）。运行时经 `GameState.sim_runtime.funeral`（`state`/`home`）持久化。`SimHost` 接线 `funeral_methods_catalog()`/`funeral_grave_types_catalog()`/`funeral_memorial_kinds_catalog()`/`funeral_arrange()`/`funeral_execute()`/`funeral_register_donation()`/`funeral_review_ethics()`/`funeral_revoke_donation()`/`funeral_allocate_organs()`/`funeral_transplant()`/`funeral_build_memorial()`/`funeral_tomb_sweeping()`/`funeral_digital_memorial()`/`funeral_execute_will()`/`funeral_new_home()`/`funeral_quote()`/`funeral_sale()`/`funeral_regulate()`/`funeral_reform()`/`funeral_unclaimed()`/`funeral_dispute()`/`funeral_panel_data()`。UI：重写「殡葬」面板（殡葬安排/器官捐献/纪念/数字纪念/殡葬行业/遗嘱，`context["funeral"]`）；指令 `殡葬安排 <方式> [墓位]`/`殡葬执行`/`器官捐献`/`伦理审查`/`撤销捐献`/`器官分配`/`器官移植`/`立纪念碑`/`祭扫`/`数字纪念`/`遗嘱执行`/`开殡仪馆`/`殡葬报价 <方式>`/`殡葬成交 <方式>`/`殡葬监管`/`殡葬改革`/`无人认领`/`捐献争议`；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线。
+- **待办**：与死亡系统（R2）自动衔接的触发点、器官库跨区分配算法、数字纪念平台化与遗产不足的公益经费来源细化待补。
 
-### D43 玄学、命理与民俗信仰
-- 成功率随机基准、安慰剂/确认偏误系数、诈骗追责概率缺失；服务/信仰/护身符/许愿无 schema；算命/风水/占星等内容与话术缺失；缺动词与面板。
+### D43 玄学、命理与民俗信仰（已收敛）
+- 已接线：`sim/metaphysics.gd` 服务/方式/民俗表、`consult()`（**硬约束不改变属性与事件结果**）、`folk_practice()`、经营与风险（开办/营业/投诉/查处/翻车）、组织化与灰产、真假难辨、持久化；指令与「玄学」面板、`sim_runtime.metaphysics` 白名单、4 套测试齐备。
+- **残留待办**：成功率随机基准的显式话术库与风水/占星文案仍为占位；内容 catalog 话术条目待补。
 
 ### D44 隐秘异常收容体系
 - 缺 anomaly 状态树与 2000 实体 schema；能力线曲线/暴露阈值/记忆删除剂量/认知抗性/对抗战斗无数值；收容管理与阵营任务交互未细化；D44↔D4/D12/传承接口未定。

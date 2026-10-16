@@ -61,6 +61,8 @@ func run_tests() -> void:
 	_test_debt_runtime()
 	_test_consumer_runtime()
 	_test_welfare_runtime()
+	_test_funeral_runtime()
+	_test_metaphysics_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1258,4 +1260,86 @@ func _test_welfare_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.welfare_state().get("application", {}) as Dictionary).is_empty(), "读档恢复救助申请")
 	check(not reloaded.welfare_panel_data().is_empty(), "救助面板数据非空")
+
+
+func _test_funeral_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(161)
+	var host = SimHostScript.new(state, 161)
+	host.bind(state)
+	check(host.funeral_methods_catalog().size() >= 5, "殡葬方式表含火化/土葬/海葬等")
+	check(host.funeral_grave_types_catalog().size() >= 3, "墓位类型表")
+	check(host.funeral_memorial_kinds_catalog().size() >= 4, "纪念形式表")
+	# 安排与执行（遗产充足）。
+	var arr: Dictionary = host.funeral_arrange("cremation", "", 1000000)
+	check(bool(arr.get("ok", false)) and bool(arr.get("affordable", false)), "殡葬安排可行")
+	check(bool(host.funeral_execute(false).get("ok", false)), "殡葬执行成功")
+	# 遗产不足时拒绝下葬，公益救助可兜底。
+	host.funeral_arrange("burial", "premium", 0)
+	check(not bool(host.funeral_execute(false).get("ok", true)), "遗产不足拒绝下葬")
+	check(bool(host.funeral_execute(true).get("ok", false)), "公益救助下葬")
+	# 器官捐献：登记、伦理、分配、移植、撤销。
+	check(bool(host.funeral_register_donation().get("ok", false)), "登记器官捐献")
+	check(bool(host.funeral_review_ethics().get("approved", false)), "伦理审查通过")
+	check(bool(host.funeral_allocate_organs().get("ok", false)), "器官分配")
+	check(bool(host.funeral_transplant("heart").get("ok", false)), "器官移植结算")
+	check(bool(host.funeral_revoke_donation(true).get("ok", false)), "家属撤销捐献")
+	# 纪念：立碑、祭扫、数字纪念。
+	check(bool(host.funeral_build_memorial("monument").get("ok", false)), "立纪念碑")
+	check(bool(host.funeral_tomb_sweeping("monument").get("ok", false)), "祭扫纪念")
+	check(bool(host.funeral_digital_memorial().get("ok", false)), "数字纪念")
+	# 遗嘱执行（无效遗嘱仅建议）。
+	check(bool(host.funeral_execute_will().get("ok", false)), "遗嘱执行结算")
+	# 殡葬行业：开办、报价、成交、监管、改革。
+	check(bool(host.funeral_new_home("永宁殡仪馆").get("ok", false)), "开办殡仪馆")
+	check(int(host.funeral_quote("cremation").get("price", 0)) > 0, "殡葬报价")
+	check(bool(host.funeral_sale("burial").get("ok", false)), "殡葬成交")
+	check(bool(host.funeral_regulate().get("ok", false)), "殡葬监管")
+	check(bool(host.funeral_reform().get("ok", false)), "殡葬改革")
+	# 边界：无人认领、捐献争议。
+	check(bool(host.funeral_unclaimed().get("ok", false)), "无人认领遗体处置")
+	check(bool(host.funeral_dispute().get("ok", false)), "捐献争议流程")
+	# 持久化与读档恢复。
+	host._persist_funeral()
+	check(state.sim_runtime.get("funeral", null) is Dictionary, "殡葬运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 161)
+	reloaded.bind(state)
+	check(not (reloaded.funeral_state().get("state", {}) as Dictionary).is_empty(), "读档恢复殡葬状态")
+	check(not reloaded.funeral_panel_data().is_empty(), "殡葬面板数据非空")
+
+
+func _test_metaphysics_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(171)
+	var host = SimHostScript.new(state, 171)
+	host.bind(state)
+	check(host.metaphysics_services_catalog().size() >= 7, "玄学服务表含算命/风水等")
+	check(host.metaphysics_modes_catalog().size() >= 2, "线上/线下模式")
+	check(host.metaphysics_folk_practices_catalog().size() >= 4, "民俗活动表")
+	# 咨询不改变属性与事件结果（硬约束）。
+	var c: Dictionary = host.metaphysics_consult("fortune", "online")
+	check(bool(c.get("ok", false)), "玄学咨询结算")
+	check(not bool(c.get("attributes_changed", true)), "咨询不改变属性")
+	check(not bool(c.get("event_outcome_changed", true)), "咨询不改变事件结果")
+	# 民俗信仰。
+	check(bool(host.metaphysics_folk("festival_ritual").get("ok", false)), "民俗仪式")
+	# 经营与风险。
+	check(bool(host.metaphysics_new_business("青云观").get("ok", false)), "开办玄学馆")
+	check(int(host.metaphysics_operate().get("earned", 0)) > 0, "玄学营业入账")
+	host.metaphysics_complaint(true)
+	host.metaphysics_complaint(true)
+	host.metaphysics_complaint(true)
+	check(bool(host.metaphysics_investigate().get("ok", false)), "诈骗查处")
+	check(bool(host.metaphysics_master_fall().get("ok", false)), "人设翻车")
+	# 边界。
+	check(float(host.metaphysics_superstition(500).get("influence", 0.0)) > 0.0, "组织化迷信影响力")
+	check(bool(host.metaphysics_collude().get("ok", false)), "勾结灰产")
+	check(bool(host.metaphysics_blur().get("indistinguishable", false)), "真假不可区分")
+	# 持久化与读档恢复。
+	host._persist_metaphysics()
+	check(state.sim_runtime.get("metaphysics", null) is Dictionary, "玄学运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 171)
+	reloaded.bind(state)
+	check(not (reloaded.metaphysics_state().get("business", {}) as Dictionary).is_empty(), "读档恢复玄学经营")
+	check(not reloaded.metaphysics_panel_data().is_empty(), "玄学面板数据非空")
 

@@ -58,6 +58,7 @@ const DebtServiceScript = preload("res://sim/debt_service.gd")
 const ConsumerProtectionScript = preload("res://sim/consumer_protection.gd")
 const SocialWelfareScript = preload("res://sim/social_welfare.gd")
 const FuneralScript = preload("res://sim/funeral.gd")
+const MetaphysicsScript = preload("res://sim/metaphysics.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -194,6 +195,10 @@ var _welfare_child: Dictionary = {}        ## 变故儿童，入档 sim_runtime.
 var funeral                       ## 殡葬、器官捐献与纪念（FuneralSystem）
 var _funeral_state: Dictionary = {}        ## 殡葬运行态，入档 sim_runtime.funeral.state
 var _funeral_home: Dictionary = {}         ## 殡葬行业经营体，入档 sim_runtime.funeral.home
+var metaphysics                    ## 玄学、命理与民俗信仰（MetaphysicsSystem）
+var _meta_client: Dictionary = {}          ## 求测者心理状态，入档 sim_runtime.metaphysics.client
+var _meta_practitioner: Dictionary = {}    ## 从业者（大师）人设，入档 sim_runtime.metaphysics.practitioner
+var _meta_business: Dictionary = {}        ## 玄学经营体，入档 sim_runtime.metaphysics.business
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -272,6 +277,9 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_welfare_fund = social_welfare.new_charity_fund("公益基金", {"balance": 0, "transparency": 1.0, "reputation": 0.5})
 	funeral = FuneralScript.new()
 	_funeral_state = funeral.new_state()
+	metaphysics = MetaphysicsScript.new()
+	_meta_client = metaphysics.new_client()
+	_meta_practitioner = metaphysics.new_practitioner("player", {"name": "本人"})
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -512,6 +520,16 @@ func _ensure_world_geo() -> void:
 				_funeral_state = funeral.from_dict(fnd["state"])
 			if fnd.get("home", null) is Dictionary and not (fnd["home"] as Dictionary).is_empty():
 				_funeral_home = funeral.from_dict(fnd["home"])
+		# 恢复玄学运行时（求测者/从业者/经营体）。
+		var mt: Variant = (state.sim_runtime as Dictionary).get("metaphysics", {})
+		if mt is Dictionary and not (mt as Dictionary).is_empty():
+			var mtd: Dictionary = mt
+			if mtd.get("client", null) is Dictionary and not (mtd["client"] as Dictionary).is_empty():
+				_meta_client = metaphysics.from_dict(mtd["client"])
+			if mtd.get("practitioner", null) is Dictionary and not (mtd["practitioner"] as Dictionary).is_empty():
+				_meta_practitioner = metaphysics.from_dict(mtd["practitioner"])
+			if mtd.get("business", null) is Dictionary and not (mtd["business"] as Dictionary).is_empty():
+				_meta_business = metaphysics.from_dict(mtd["business"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -4360,7 +4378,7 @@ func funeral_register_donation() -> Dictionary:
 	return r
 
 func funeral_review_ethics() -> Dictionary:
-	var r: Dictionary = funeral.review_ethics(_funeral_state, {"roll": -1.0}, rng)
+	var r: Dictionary = funeral.review_ethics(_funeral_state, {"roll": -1.0})
 	_persist_funeral()
 	return r
 
@@ -4499,6 +4517,126 @@ func _persist_funeral() -> void:
 	(state.sim_runtime as Dictionary)["funeral"] = {
 		"state": funeral.to_dict(_funeral_state),
 		"home": funeral.to_dict(_funeral_home),
+	}
+
+
+# --- D43 玄学、命理与民俗信仰 ---
+
+func metaphysics_state() -> Dictionary:
+	return {"client": _meta_client, "practitioner": _meta_practitioner, "business": _meta_business}
+
+func metaphysics_services_catalog() -> Array:
+	var out: Array = []
+	for key in metaphysics.services():
+		var d: Dictionary = metaphysics.service_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func metaphysics_modes_catalog() -> Array:
+	var names: Dictionary = {"online": "线上", "offline": "线下"}
+	var out: Array = []
+	for key in metaphysics.modes():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func metaphysics_folk_practices_catalog() -> Array:
+	var names: Dictionary = {"taboo": "禁忌", "festival_ritual": "节日仪式", "amulet": "护身符", "wish": "许愿"}
+	var out: Array = []
+	for key in metaphysics.folk_practices():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func metaphysics_consult(service: String, mode: String = "offline") -> Dictionary:
+	var r: Dictionary = metaphysics.consult(_meta_practitioner, service, _meta_client, {"mode": mode, "roll": -1.0}, rng)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_folk(practice: String) -> Dictionary:
+	var r: Dictionary = metaphysics.use_folk_practice(_meta_client, practice)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_new_business(name: String = "玄学馆") -> Dictionary:
+	_meta_business = metaphysics.new_business(name, {"reputation": 0.5})
+	_persist_metaphysics()
+	return {"ok": true, "business": _meta_business}
+
+func metaphysics_operate() -> Dictionary:
+	if _meta_business.is_empty():
+		return {"ok": false, "reason": "no_business"}
+	var r: Dictionary = metaphysics.operate_business(_meta_business, {"roll": -1.0}, rng)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_complaint(report: bool = true) -> Dictionary:
+	if _meta_business.is_empty():
+		return {"ok": false, "reason": "no_business"}
+	var r: Dictionary = metaphysics.file_complaint(_meta_business, {"report": report})
+	_persist_metaphysics()
+	return r
+
+func metaphysics_investigate() -> Dictionary:
+	if _meta_business.is_empty():
+		return {"ok": false, "reason": "no_business"}
+	var r: Dictionary = metaphysics.investigate_fraud(_meta_business, {"roll": -1.0}, rng)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_master_fall() -> Dictionary:
+	if _meta_business.is_empty():
+		return {"ok": false, "reason": "no_business"}
+	var r: Dictionary = metaphysics.master_fall(_meta_business)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_superstition(members: int) -> Dictionary:
+	return metaphysics.organized_superstition(members)
+
+func metaphysics_collude() -> Dictionary:
+	if _meta_business.is_empty():
+		return {"ok": false, "reason": "no_business"}
+	var r: Dictionary = metaphysics.collude_gray_market(_meta_business, {"roll": -1.0}, rng)
+	_persist_metaphysics()
+	return r
+
+func metaphysics_blur() -> Dictionary:
+	return metaphysics.blur_real_and_fake(_meta_practitioner)
+
+func metaphysics_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _meta_client.is_empty():
+		out["client"] = {
+			"mood": float(_meta_client.get("mood", 0.0)),
+			"belief": float(_meta_client.get("belief", 0.0)),
+			"social": float(_meta_client.get("social", 0.0)),
+			"last_consult": String(_meta_client.get("last_consult", "")),
+		}
+	if not _meta_practitioner.is_empty():
+		out["practitioner"] = {
+			"name": String(_meta_practitioner.get("name", "")),
+			"real_ability": bool(_meta_practitioner.get("real_ability", false)),
+			"scamming": bool(_meta_practitioner.get("scamming", false)),
+			"reputation": float(_meta_practitioner.get("reputation", 0.0)),
+		}
+	if not _meta_business.is_empty():
+		out["business"] = {
+			"name": String(_meta_business.get("name", "")),
+			"income": int(_meta_business.get("income", 0)),
+			"customers": int(_meta_business.get("customers", 0)),
+			"complaints": int(_meta_business.get("complaints", 0)),
+			"reports": int(_meta_business.get("reports", 0)),
+			"reputation": float(_meta_business.get("reputation", 0.0)),
+			"under_investigation": bool(_meta_business.get("under_investigation", false)),
+		}
+	return out
+
+func _persist_metaphysics() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["metaphysics"] = {
+		"client": metaphysics.to_dict(_meta_client),
+		"practitioner": metaphysics.to_dict(_meta_practitioner),
+		"business": metaphysics.to_dict(_meta_business),
 	}
 
 
