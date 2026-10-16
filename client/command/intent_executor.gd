@@ -533,6 +533,78 @@ func _dispatch(intent) -> Dictionary:
 			return _consumer_fraud(intent)
 		"恶意索赔":
 			return _consumer_malicious(intent)
+		"收养评估":
+			return _welfare_apply(intent, "adoption")
+		"寄养申请":
+			return _welfare_apply(intent, "foster")
+		"低保申请":
+			return _welfare_apply(intent, "dibao")
+		"医疗救助":
+			return _welfare_apply(intent, "medical_aid")
+		"临时救助":
+			return _welfare_apply(intent, "temporary_aid")
+		"流浪救助":
+			return _welfare_apply(intent, "homeless_relief")
+		"救助发放":
+			return _welfare_disburse(intent)
+		"家庭变故":
+			return _welfare_crisis(intent)
+		"慈善基金":
+			return _welfare_fund_new(intent)
+		"慈善捐赠":
+			return _welfare_donate(intent)
+		"公益支出":
+			return _welfare_spend(intent)
+		"善款审计":
+			return _welfare_audit(intent)
+		"善款挪用":
+			return _welfare_misappropriate(intent)
+		"社工入职":
+			return _welfare_worker(intent)
+		"个案跟进":
+			return _welfare_follow_up(intent)
+		"个案结案":
+			return _welfare_close_case(intent)
+		"虐待举报":
+			return _welfare_abuse(intent)
+		"救助依赖":
+			return _welfare_dependency(intent)
+		"殡葬安排":
+			return _funeral_arrange(intent)
+		"殡葬执行":
+			return _funeral_execute(intent)
+		"器官捐献":
+			return _funeral_donation(intent)
+		"伦理审查":
+			return _funeral_ethics(intent)
+		"撤销捐献":
+			return _funeral_revoke(intent)
+		"器官分配":
+			return _funeral_allocate(intent)
+		"器官移植":
+			return _funeral_transplant(intent)
+		"立纪念碑":
+			return _funeral_memorial(intent)
+		"祭扫":
+			return _funeral_sweep(intent)
+		"数字纪念":
+			return _funeral_digital(intent)
+		"遗嘱执行":
+			return _funeral_will(intent)
+		"开殡仪馆":
+			return _funeral_home(intent)
+		"殡葬报价":
+			return _funeral_quote(intent)
+		"殡葬成交":
+			return _funeral_sale(intent)
+		"殡葬监管":
+			return _funeral_regulate(intent)
+		"殡葬改革":
+			return _funeral_reform(intent)
+		"无人认领":
+			return _funeral_unclaimed(intent)
+		"捐献争议":
+			return _funeral_dispute(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -2657,6 +2729,247 @@ func _consumer_malicious(intent) -> Dictionary:
 		return _fail("恶意索赔%s。" % ("被识别驳回" if bool(r.get("detected", false)) else "成立"))
 	return _ok(["索赔属正当维权。"], 0, "")
 
+func _welfare_apply(intent, kind: String) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.welfare_apply(kind, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var label: String = {"adoption": "收养", "foster": "寄养", "dibao": "低保", "medical_aid": "医疗救助", "temporary_aid": "临时救助", "homeless_relief": "流浪救助"}.get(kind, kind)
+	if bool(r.get("approved", false)):
+		return _ok(["%s申请通过。" % label], 0, "")
+	var reasons: Array = r.get("reasons", [])
+	var cn: Array = []
+	for reason in reasons:
+		cn.append(_reason_cn(String(reason)))
+	return _fail("%s申请被拒（%s）。" % [label, "、".join(cn)])
+
+func _welfare_disburse(intent) -> Dictionary:
+	var days: int = int(_param_number(intent, "number", 30))
+	var r: Dictionary = host.welfare_disburse(days)
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "not_approved":
+			return _fail("救助申请尚未获批。")
+		return _fail("无法发放（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["救助金发放 %d（%d 天）。" % [int(r.get("paid", 0)), int(r.get("days", 0))]], 0, "")
+
+func _welfare_crisis(intent) -> Dictionary:
+	var situation := String(intent.params.get("method", "orphan"))
+	var r: Dictionary = host.welfare_crisis(situation, false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法安置（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["儿童进入%s。" % _route_cn(String(r.get("route", "")))], 0, "")
+
+func _route_cn(route: String) -> String:
+	match route:
+		"kinship_care":
+			return "亲属抚养"
+		"institution":
+			return "福利机构"
+		"relief":
+			return "救助体系"
+		_:
+			return "寄养家庭"
+
+func _welfare_fund_new(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "公益基金"))
+	var r: Dictionary = host.welfare_fund_new(name)
+	if not bool(r.get("ok", false)):
+		return _fail("无法设立基金。")
+	return _ok(["已设立慈善基金「%s」。" % name], 0, "")
+
+func _welfare_donate(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 10000))
+	var r: Dictionary = host.welfare_fund_donate(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法捐款（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["捐款 %d，累计募得 %d。" % [amount, int(r.get("raised", 0))]], 0, "")
+
+func _welfare_spend(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 10000))
+	var purpose := String(intent.params.get("method", "公益救助"))
+	var r: Dictionary = host.welfare_fund_spend(purpose, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法支出（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["公益支出 %d（%s），结余 %d。" % [amount, purpose, int(r.get("balance", 0))]], 0, "")
+
+func _welfare_audit(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_fund_audit()
+	if not bool(r.get("ok", false)):
+		return _fail("无法审计（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["透明度 %d，评级 %s。" % [int(r.get("transparency", 0)), String(r.get("grade", ""))]], 0, "")
+
+func _welfare_misappropriate(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 10000))
+	var r: Dictionary = host.welfare_fund_misappropriate(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法挪用（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("detected", false)):
+		return _fail("善款挪用被查获，声誉受损。")
+	return _ok(["善款挪用 %d，暂未被查获。" % amount], 0, "")
+
+func _welfare_worker(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_worker_start()
+	if not bool(r.get("ok", false)):
+		return _fail("无法入职。")
+	return _ok(["已入职社工。"], 0, "")
+
+func _welfare_follow_up(intent) -> Dictionary:
+	var note := String(intent.params.get("method", "家访"))
+	var r: Dictionary = host.welfare_follow_up(note)
+	if not bool(r.get("ok", false)):
+		return _fail("无法跟进（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["个案跟进，第 %d 次探访，进展 %d%%。" % [int(r.get("visits", 0)), int(round(float(r.get("progress", 0.0)) * 100.0))]], 0, "")
+
+func _welfare_close_case(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_close_case()
+	if not bool(r.get("ok", false)):
+		return _fail("无法结案（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["个案结案，累计结案 %d%s。" % [int(r.get("cases_closed", 0)), "，获晋升" if bool(r.get("promoted", false)) else ""]], 0, "")
+
+func _welfare_abuse(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_report_abuse()
+	if not bool(r.get("ok", false)):
+		return _fail("无法举报（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("substantiated", false)):
+		return _ok(["虐待举报属实，撤销监护并转介寄养。"], 0, "")
+	return _fail("虐待举报未获证实。")
+
+func _welfare_dependency(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_dependency()
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估。")
+	if bool(r.get("escaped", false)):
+		return _ok(["经就业脱困，摆脱救助依赖。"], 0, "")
+	return _ok(["救助依赖度 %d%%。" % int(round(float(r.get("dependency", 0.0)) * 100.0))], 0, "")
+
+func _funeral_arrange(intent) -> Dictionary:
+	var method: String = _object_id(intent, "funeral_method")
+	if method.is_empty():
+		method = "cremation"
+	var grave: String = _object_id(intent, "funeral_grave")
+	var estate: int = int(_param_number(intent, "number", -1))
+	var r: Dictionary = host.funeral_arrange(method, grave, estate)
+	if not bool(r.get("ok", false)):
+		return _fail("无法安排殡葬（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已安排%s%s，费用 %d%s。" % [String(r.get("name", "")), "与" + String((host.funeral.grave_def(String(r.get("grave", ""))) as Dictionary).get("name", "")) if String(r.get("grave", "")) != "" else "", int(r.get("cost", 0)), "" if bool(r.get("affordable", true)) else "（遗产不足）"]], 0, "")
+
+func _funeral_execute(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_execute(false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法执行殡葬（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["殡葬已执行，支出 %d。" % int(r.get("paid", 0))], 0, "")
+
+func _funeral_donation(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_register_donation()
+	if not bool(r.get("ok", false)):
+		return _fail("无法登记捐献（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已登记器官捐献，共 %d 项。" % int((r.get("organs", []) as Array).size())], 0, "")
+
+func _funeral_ethics(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_review_ethics()
+	if not bool(r.get("ok", false)):
+		return _fail("无法审查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("approved", false)):
+		return _ok(["伦理与法律审查通过。"], 0, "")
+	return _fail("伦理审查未通过。")
+
+func _funeral_revoke(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_revoke_donation(true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法撤销捐献（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["家属已撤销捐献。"], 0, "")
+
+func _funeral_allocate(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_allocate_organs()
+	if not bool(r.get("ok", false)):
+		return _fail("无法分配器官（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["器官分配完成，共 %d 例。" % int(r.get("count", 0))], 0, "")
+
+func _funeral_transplant(intent) -> Dictionary:
+	var organ := String(intent.params.get("method", "heart"))
+	var r: Dictionary = host.funeral_transplant(organ)
+	if bool(r.get("success", false)):
+		return _ok(["%s移植成功。" % String(r.get("organ_name", organ))], 0, "")
+	return _fail("%s移植出现排异。" % String(r.get("organ_name", organ)))
+
+func _funeral_memorial(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_build_memorial("monument")
+	if not bool(r.get("ok", false)):
+		return _fail("无法立碑（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已立纪念碑，意义感提升。"], 0, "")
+
+func _funeral_sweep(intent) -> Dictionary:
+	var kind := String(intent.params.get("method", "family_grave"))
+	var r: Dictionary = host.funeral_tomb_sweeping(kind)
+	if not bool(r.get("ok", false)):
+		return _fail("无法祭扫（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["祭扫完成，累计 %d 次。" % int(r.get("visits", 0))], 0, "")
+
+func _funeral_digital(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_digital_memorial()
+	if not bool(r.get("ok", false)):
+		return _fail("无法创建数字纪念。")
+	return _ok(["数字纪念已创建，访问 %d 次。" % int(r.get("visits", 0))], 0, "")
+
+func _funeral_will(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_execute_will()
+	if not bool(r.get("ok", false)):
+		return _fail("无法执行遗嘱（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("valid", false)):
+		return _ok(["遗嘱已按生前意愿执行。"], 0, "")
+	return _fail("遗嘱无效，仅能给出建议。")
+
+func _funeral_home(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "殡仪馆"))
+	var r: Dictionary = host.funeral_new_home(name)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办殡仪馆。")
+	return _ok(["已开办「%s」。" % name], 0, "")
+
+func _funeral_quote(intent) -> Dictionary:
+	var method: String = _object_id(intent, "funeral_method")
+	if method.is_empty():
+		method = "cremation"
+	var r: Dictionary = host.funeral_quote(method)
+	if not bool(r.get("ok", false)):
+		return _fail("无法报价（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["报价 %d。" % int(r.get("price", 0))], 0, "")
+
+func _funeral_sale(intent) -> Dictionary:
+	var method: String = _object_id(intent, "funeral_method")
+	if method.is_empty():
+		method = "cremation"
+	var r: Dictionary = host.funeral_sale(method)
+	if not bool(r.get("ok", false)):
+		return _fail("无法成交（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["成交价 %d，利润 %d%s。" % [int(r.get("price", 0)), int(r.get("profit", 0)), "（涉嫌暴利）" if bool(r.get("excessive", false)) else ""]], 0, "")
+
+func _funeral_regulate(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_regulate()
+	if not bool(r.get("ok", false)):
+		return _fail("无法监管（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("detected", false)):
+		return _ok(["查处暴利，罚款 %d。" % int(r.get("fine", 0))], 0, "")
+	return _ok(["本次未查获违规。"], 0, "")
+
+func _funeral_reform(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_reform()
+	if not bool(r.get("ok", false)):
+		return _fail("无法改革（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["殡葬陋习改革，降价后倍数 %s。" % str(r.get("price_mult", 1.0))], 0, "")
+
+func _funeral_unclaimed(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_unclaimed()
+	if not bool(r.get("ok", false)):
+		return _fail("无法处置（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["无人认领遗体已公益火化。"], 0, "")
+
+func _funeral_dispute(intent) -> Dictionary:
+	var r: Dictionary = host.funeral_dispute()
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理争议（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["捐献争议已%s。" % ("调解撤销捐献" if bool(r.get("revoked", false)) else "受理待调")], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -2933,6 +3246,38 @@ func _reason_cn(reason: String) -> String:
 			return "尚无消费订单"
 		"no_product":
 			return "尚无商品"
+		"no_application":
+			return "尚无申请记录"
+		"no_fund":
+			return "尚未设立慈善基金"
+		"no_worker":
+			return "尚未从事社工"
+		"no_welfare_case":
+			return "尚无在办个案"
+		"unknown_situation":
+			return "未知变故情形"
+		"unknown_organ":
+			return "未知器官"
+		"ethics_rejected":
+			return "伦理审查未通过"
+		"donor_alive":
+			return "生前不可撤销捐献"
+		"donation_unavailable":
+			return "捐献不可用（未登记或已撤销）"
+		"not_arranged":
+			return "尚未安排殡葬"
+		"insufficient_estate":
+			return "遗产不足以支付殡葬费用"
+		"unknown_method":
+			return "未知殡葬方式"
+		"no_memorial":
+			return "尚无相关纪念物"
+		"no_industry":
+			return "尚未开办殡葬经营体"
+		"not_registered":
+			return "尚未登记捐献"
+		"not_unclaimed":
+			return "并非无人认领情形"
 		_:
 			return reason if reason != "" else "未知原因"
 

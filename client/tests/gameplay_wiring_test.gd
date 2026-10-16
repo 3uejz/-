@@ -81,6 +81,7 @@ func run_tests() -> void:
 	_test_municipal_commands()
 	_test_debt_commands()
 	_test_consumer_commands()
+	_test_welfare_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -655,6 +656,37 @@ func _test_consumer_commands() -> void:
 	_main.submit("商品召回 100")
 	_main.submit("职业打假")
 	_main.submit("恶意索赔")
+
+func _test_welfare_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看福利")
+	check(_main.has_panel("welfare"), "「看福利」打开救助面板")
+	var p: Dictionary = sim.player()
+	p["age"] = 35
+	p["income"] = 200000.0
+	p["assets"] = 100000.0
+	p["criminal_record"] = false
+	p["major_illness"] = false
+	_main.submit("收养评估")
+	check(not (sim.welfare_state().get("application", {}) as Dictionary).is_empty(), "「收养评估」登记申请")
+	p["income"] = 6000.0
+	p["household_size"] = 3
+	p["registered_local"] = true
+	_main.submit("低保申请")
+	_main.submit("救助发放 30")
+	_main.submit("家庭变故")
+	_main.submit("慈善基金")
+	_main.submit("慈善捐赠 500000")
+	_main.submit("公益支出 100000")
+	_main.submit("善款审计")
+	_main.submit("善款挪用 50000")
+	check(not (sim.welfare_state().get("fund", {}) as Dictionary).is_empty(), "「慈善基金」建立基金")
+	_main.submit("社工入职")
+	_main.submit("个案跟进")
+	_main.submit("个案结案")
+	_main.submit("虐待举报")
+	_main.submit("救助依赖")
+	check(not (sim.welfare_state().get("worker", {}) as Dictionary).is_empty(), "「社工入职」开启社工路径")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

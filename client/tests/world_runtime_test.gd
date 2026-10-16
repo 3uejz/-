@@ -60,6 +60,7 @@ func run_tests() -> void:
 	_test_municipal_runtime()
 	_test_debt_runtime()
 	_test_consumer_runtime()
+	_test_welfare_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1201,4 +1202,60 @@ func _test_consumer_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.consumer_state().get("order", {}) as Dictionary).is_empty(), "读档恢复消费订单")
 	check(not reloaded.consumer_panel_data().is_empty(), "消费者面板数据非空")
+
+
+func _test_welfare_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(151)
+	var host = SimHostScript.new(state, 151)
+	host.bind(state)
+	check(host.welfare_application_kinds_catalog().size() >= 6, "救助类型含收养/寄养/低保等")
+	check(host.welfare_crisis_kinds_catalog().size() >= 3, "变故情形含孤儿/遗弃/监护人失能")
+	# 收养资格（满足门槛）。
+	var p: Dictionary = host.player()
+	p["age"] = 35
+	p["income"] = 200000.0
+	p["assets"] = 100000.0
+	p["criminal_record"] = false
+	p["major_illness"] = false
+	check(bool(host.welfare_apply("adoption").get("approved", false)), "收养资格通过")
+	# 不符合门槛被拒，原因逐条可查。
+	p["age"] = 20
+	var rej: Dictionary = host.welfare_apply("adoption")
+	check(not bool(rej.get("approved", true)), "低龄收养被拒")
+	check((rej.get("reasons", []) as Array).size() > 0, "驳回原因逐条可查")
+	# 低保资格与救助发放。
+	p["age"] = 40
+	p["income"] = 6000.0
+	p["household_size"] = 3
+	p["registered_local"] = true
+	check(bool(host.welfare_apply("dibao").get("approved", false)), "低保资格通过")
+	check(int(host.welfare_disburse(30).get("paid", 0)) > 0, "救助金发放")
+	# 家庭变故安置。
+	check(String(host.welfare_crisis("orphan", false).get("route", "")) != "", "孤儿进入安置体系")
+	# 慈善基金：设立、捐赠、结算、支出、审计、挪用。
+	check(bool(host.welfare_fund_new("希望基金").get("ok", false)), "设立慈善基金")
+	host.welfare_fund_donate(500000)
+	check(int(host.welfare_fund_settle().get("to_cause", 0)) > 0, "募捐结算")
+	check(bool(host.welfare_fund_spend("助学", 100000).get("ok", false)), "公益支出")
+	check(int(host.welfare_fund_audit().get("transparency", 0)) >= 0, "善款审计")
+	check(bool(host.welfare_fund_misappropriate(50000).get("ok", false)), "善款挪用登记")
+	# 社工与个案。
+	check(bool(host.welfare_worker_start().get("ok", false)), "社工入职")
+	check(bool(host.welfare_case_open("family-1").get("ok", false)), "开立个案")
+	var follow: Dictionary = {}
+	for i in range(4):
+		follow = host.welfare_follow_up("家访%d" % (i + 1))
+	check(bool(follow.get("closed", false)), "进展达标结案")
+	check(bool(host.welfare_close_case().get("ok", false)), "结案累计业绩")
+	# 虐待举报与救助依赖。
+	check(bool(host.welfare_report_abuse().get("ok", false)), "虐待举报受理")
+	check(bool(host.welfare_dependency().get("ok", false)), "救助依赖评估")
+	# 持久化与读档恢复。
+	host._persist_welfare()
+	check(state.sim_runtime.get("welfare", null) is Dictionary, "救助运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 151)
+	reloaded.bind(state)
+	check(not (reloaded.welfare_state().get("application", {}) as Dictionary).is_empty(), "读档恢复救助申请")
+	check(not reloaded.welfare_panel_data().is_empty(), "救助面板数据非空")
 

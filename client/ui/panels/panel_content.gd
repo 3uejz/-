@@ -103,9 +103,9 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"consumer":
 			data = consumer(player, context, name_resolver)
 		"welfare":
-			data = welfare(player, name_resolver)
+			data = welfare(player, context, name_resolver)
 		"funeral":
-			data = funeral(player, name_resolver)
+			data = funeral(player, context, name_resolver)
 		"metaphysics":
 			data = metaphysics(player, context, name_resolver)
 		"medical":
@@ -1100,35 +1100,162 @@ static func consumer(player: Dictionary, context: Dictionary, name_resolver: Cal
 		return _empty("维权与消费", "暂无投诉；遇到消费纠纷可投诉、举证并申请调解或仲裁")
 	return _ok(sections)
 
-static func welfare(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func welfare(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("救助与福利", "尚未生成角色数据")
-	var level: int = int(player.get("disability_level", 0))
-	var disabilities: Array = _items_of(player.get("disabilities", []))
-	if level <= 0 and disabilities.is_empty():
-		return _empty("救助与福利", "暂无救助资格；低保/社保需满足收入与身份准入条件")
-	var rows: Array = [
-		{"label": "残疾等级", "value": str(level)},
-		{"label": "认定项", "value": str(disabilities.size())},
-		{"label": "信用分", "value": str(int(player.get("credit_score", 0)))},
-	]
-	return _ok([_section("资格概览", rows)])
+	var wf: Dictionary = context.get("welfare", {})
+	var sections: Array = _welfare_sections(wf)
+	if sections.is_empty():
+		var level: int = int(player.get("disability_level", 0))
+		var disabilities: Array = _items_of(player.get("disabilities", []))
+		if level <= 0 and disabilities.is_empty():
+			return _empty("救助与福利", "暂无救助资格；可申请低保/医疗救助或登记慈善基金")
+		var rows: Array = [
+			{"label": "残疾等级", "value": str(level)},
+			{"label": "认定项", "value": str(disabilities.size())},
+			{"label": "信用分", "value": str(int(player.get("credit_score", 0)))},
+		]
+		sections.append(_section("资格概览", rows))
+	return _ok(sections)
 
-static func funeral(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func _welfare_sections(wf: Dictionary) -> Array:
+	var sections: Array = []
+	var app: Dictionary = wf.get("application", {})
+	if not app.is_empty():
+		var rows: Array = [
+			{"label": "申请类型", "value": String(app.get("kind_name", ""))},
+			{"label": "状态", "value": "已批准" if bool(app.get("approved", false)) else "已驳回"},
+		]
+		if int(app.get("amount", 0)) > 0:
+			rows.append({"label": "申请金额", "value": str(int(app.get("amount", 0)))})
+		if int(app.get("disbursed", 0)) > 0:
+			rows.append({"label": "已发放", "value": str(int(app.get("disbursed", 0)))})
+		var reasons: Array = app.get("reasons", [])
+		if not reasons.is_empty():
+			rows.append({"label": "驳回原因", "value": ", ".join(_str_list(reasons))})
+		sections.append(_section("申请与资格", rows))
+	var fund: Dictionary = wf.get("fund", {})
+	if not fund.is_empty():
+		var frows: Array = [
+			{"label": "基金", "value": String(fund.get("name", ""))},
+			{"label": "结余", "value": str(int(fund.get("balance", 0)))},
+			{"label": "累计募得", "value": str(int(fund.get("raised", 0)))},
+			{"label": "累计支出", "value": str(int(fund.get("spent", 0)))},
+			{"label": "透明度", "value": "%d%%" % int(round(float(fund.get("transparency", 0.0)) * 100.0))},
+		]
+		sections.append(_section("慈善基金", frows))
+	var worker: Dictionary = wf.get("worker", {})
+	if not worker.is_empty():
+		var wrows: Array = [
+			{"label": "社工", "value": String(worker.get("name", ""))},
+			{"label": "累计结案", "value": str(int(worker.get("cases_closed", 0)))},
+			{"label": "在办个案", "value": str(int(worker.get("active_cases", 0)))},
+		]
+		sections.append(_section("社工", wrows))
+	var wcase: Dictionary = wf.get("case", {})
+	if not wcase.is_empty():
+		var crows: Array = [
+			{"label": "个案编号", "value": String(wcase.get("id", ""))},
+			{"label": "状态", "value": "已结案" if String(wcase.get("status", "")) == "closed" else "在办"},
+			{"label": "家访次数", "value": str(int(wcase.get("visits", 0)))},
+			{"label": "进展", "value": "%d%%" % int(round(float(wcase.get("progress", 0.0)) * 100.0))},
+		]
+		sections.append(_section("个案", crows))
+	var child: Dictionary = wf.get("child", {})
+	if not child.is_empty():
+		sections.append(_section("变故儿童", [
+			{"label": "儿童", "value": String(child.get("id", ""))},
+			{"label": "安置去向", "value": _welfare_route_cn(String(child.get("route", "")))},
+		]))
+	return sections
+
+static func _welfare_route_cn(route: String) -> String:
+	match route:
+		"kinship_care":
+			return "亲属抚养"
+		"institution":
+			return "福利机构"
+		"relief":
+			return "救助体系"
+		"foster":
+			return "寄养家庭"
+		_:
+			return "未安置"
+
+static func _str_list(items: Array) -> Array:
+	var out: Array = []
+	for item in items:
+		out.append(String(item))
+	return out
+
+static func funeral(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("殡葬", "尚未生成角色数据")
+	var fn: Dictionary = context.get("funeral", {})
+	var sections: Array = _funeral_sections(fn)
+	# 遗嘱信息（若已立）。
 	var will: Dictionary = player.get("will", {})
-	if will.is_empty():
-		return _empty("殡葬", "尚未立遗嘱；可预约殡葬服务、选购墓地与安排祭扫")
-	var rows: Array = []
-	if will.has("written_minutes"):
-		rows.append({"label": "立嘱时间", "value": "%d 分钟" % int(will["written_minutes"])})
-	if not String(will.get("executor_id", "")).is_empty():
-		rows.append({"label": "执行人", "value": _short_id(String(will["executor_id"]))})
-	rows.append({"label": "受益人", "value": str(_items_of(will.get("beneficiaries", [])).size())})
-	if will.has("notes"):
-		rows.append({"label": "备注", "value": String(will["notes"])})
-	return _ok([_section("遗嘱", rows)])
+	if not will.is_empty():
+		var wrows: Array = []
+		if will.has("written_minutes"):
+			wrows.append({"label": "立嘱时间", "value": "%d 分钟" % int(will["written_minutes"])})
+		if not String(will.get("executor_id", "")).is_empty():
+			wrows.append({"label": "执行人", "value": _short_id(String(will["executor_id"]))})
+		wrows.append({"label": "受益人", "value": str(_items_of(will.get("beneficiaries", [])).size())})
+		if will.has("notes"):
+			wrows.append({"label": "备注", "value": String(will["notes"])})
+		sections.append(_section("遗嘱", wrows))
+	if sections.is_empty():
+		return _empty("殡葬", "尚未安排殡葬；可预约殡葬服务、登记捐献与建立纪念")
+	return _ok(sections)
+
+static func _funeral_sections(fn: Dictionary) -> Array:
+	var sections: Array = []
+	var f: Dictionary = fn.get("funeral", {})
+	if not f.is_empty():
+		var rows: Array = [{"label": "方式", "value": String(f.get("method_name", ""))}]
+		if not String(f.get("grave_name", "")).is_empty():
+			rows.append({"label": "墓位", "value": String(f.get("grave_name", ""))})
+		rows.append({"label": "费用", "value": str(int(f.get("cost", 0)))})
+		rows.append({"label": "状态", "value": "已执行" if bool(f.get("executed", false)) else "已安排"})
+		sections.append(_section("殡葬安排", rows))
+	var d: Dictionary = fn.get("donation", {})
+	if not d.is_empty():
+		var drows: Array = [
+			{"label": "登记", "value": "是" if bool(d.get("registered", false)) else "否"},
+			{"label": "伦理审查", "value": "通过" if bool(d.get("ethics_approved", false)) else "未通过"},
+			{"label": "合法有效", "value": "是" if bool(d.get("legal", false)) else "否"},
+			{"label": "已撤销", "value": "是" if bool(d.get("revoked", false)) else "否"},
+		]
+		if (d.get("organs", []) as Array).size() > 0:
+			drows.append({"label": "登记器官", "value": ", ".join(_str_list(d.get("organs", [])))})
+		if int(d.get("allocated", 0)) > 0:
+			drows.append({"label": "已分配", "value": str(int(d.get("allocated", 0)))})
+		sections.append(_section("器官捐献", drows))
+	var memorials: Array = fn.get("memorials", [])
+	if not memorials.is_empty():
+		var mrows: Array = []
+		for m in memorials:
+			mrows.append({"label": String((m as Dictionary).get("name", "")), "value": "祭扫 %d 次" % int((m as Dictionary).get("visits", 0))})
+		sections.append(_section("纪念", mrows))
+	var digital: Dictionary = fn.get("digital", {})
+	if not digital.is_empty():
+		sections.append(_section("数字纪念", [{"label": "访问", "value": str(int(digital.get("visits", 0)))}]))
+	var industry: Dictionary = fn.get("industry", {})
+	if not industry.is_empty():
+		sections.append(_section("殡葬行业", [
+			{"label": "经营体", "value": String(industry.get("name", ""))},
+			{"label": "结余", "value": str(int(industry.get("balance", 0)))},
+			{"label": "累计利润", "value": str(int(industry.get("profit", 0)))},
+			{"label": "溢价倍数", "value": str(industry.get("price_mult", 1.0))},
+		]))
+	return sections
+
+static func _str_list(items: Array) -> Array:
+	var out: Array = []
+	for item in items:
+		out.append(String(item))
+	return out
 
 static func metaphysics(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

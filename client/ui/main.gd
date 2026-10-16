@@ -463,6 +463,9 @@ func _catalogs() -> Dictionary:
 		"municipal_facility": _sim.municipal_facilities_catalog(),
 		"franchise_service": _sim.municipal_franchise_catalog(),
 		"debt_business": _sim.debt_businesses_catalog(),
+		"funeral_method": _sim.funeral_methods_catalog(),
+		"funeral_grave": _sim.funeral_grave_types_catalog(),
+		"memorial_kind": _sim.funeral_memorial_kinds_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -823,6 +826,12 @@ func _panel_context() -> Dictionary:
 		var csp: Dictionary = _sim.consumer_panel_data()
 		if not csp.is_empty():
 			context["consumer"] = csp
+		var wsp: Dictionary = _sim.welfare_panel_data()
+		if not wsp.is_empty():
+			context["welfare"] = wsp
+		var fnp: Dictionary = _sim.funeral_panel_data()
+		if not fnp.is_empty():
+			context["funeral"] = fnp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

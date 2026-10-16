@@ -56,6 +56,23 @@ func run_tests() -> void:
 	_test_municipal_panel()
 	_test_debt_panel()
 	_test_consumer_panel()
+	_test_welfare_panel()
+
+func _test_welfare_panel() -> void:
+	var ctx: Dictionary = {"welfare": {
+		"application": {"kind": "dibao", "kind_name": "低保", "status": "approved", "approved": true, "amount": 120000, "disbursed": 120000, "reasons": []},
+		"fund": {"name": "希望基金", "balance": 300000, "raised": 500000, "spent": 200000, "transparency": 0.9, "reputation": 0.7},
+		"worker": {"name": "本人", "cases_closed": 3, "rank_index": 1, "active_cases": 1},
+		"case": {"id": "player#1", "family_id": "family-1", "status": "open", "visits": 2, "progress": 0.5},
+		"child": {"id": "child", "route": "foster"},
+	}}
+	var d: Dictionary = PanelContentScript.build("welfare", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有救助上下文非空")
+	check(_find_section(d, "申请与资格").get("rows", []).size() >= 1, "申请与资格分区有行")
+	check(_find_section(d, "慈善基金").get("rows", []).size() >= 1, "慈善基金分区有行")
+	check(_find_section(d, "社工").get("rows", []).size() >= 1, "社工分区有行")
+	check(_find_section(d, "个案").get("rows", []).size() >= 1, "个案分区有行")
+	check(_find_section(d, "变故儿童").get("rows", []).size() >= 1, "变故儿童分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

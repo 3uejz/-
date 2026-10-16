@@ -56,6 +56,8 @@ const EnvironmentScript = preload("res://sim/environment.gd")
 const MunicipalScript = preload("res://sim/municipal.gd")
 const DebtServiceScript = preload("res://sim/debt_service.gd")
 const ConsumerProtectionScript = preload("res://sim/consumer_protection.gd")
+const SocialWelfareScript = preload("res://sim/social_welfare.gd")
+const FuneralScript = preload("res://sim/funeral.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -183,6 +185,15 @@ var consumer                     ## 消费者保护与产品质量（ConsumerPro
 var _consumer_order: Dictionary = {}    ## 当前消费订单，入档 sim_runtime.consumer.order
 var _consumer_product: Dictionary = {}  ## 当前商品，入档 sim_runtime.consumer.product
 var _consumer_merchant: Dictionary = {} ## 涉事商家，入档 sim_runtime.consumer.merchant
+var social_welfare                ## 社会救助、收养寄养与慈善（SocialWelfareSystem）
+var _welfare_application: Dictionary = {}  ## 当前救助/收养申请，入档 sim_runtime.welfare.application
+var _welfare_fund: Dictionary = {}         ## 慈善基金，入档 sim_runtime.welfare.fund
+var _welfare_worker: Dictionary = {}       ## 社工，入档 sim_runtime.welfare.worker
+var _welfare_case: Dictionary = {}         ## 当前个案，入档 sim_runtime.welfare.case
+var _welfare_child: Dictionary = {}        ## 变故儿童，入档 sim_runtime.welfare.child
+var funeral                       ## 殡葬、器官捐献与纪念（FuneralSystem）
+var _funeral_state: Dictionary = {}        ## 殡葬运行态，入档 sim_runtime.funeral.state
+var _funeral_home: Dictionary = {}         ## 殡葬行业经营体，入档 sim_runtime.funeral.home
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -257,6 +268,10 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_debt_lender = debt.new_lender("player", {"name": "本人", "license": true})
 	consumer = ConsumerProtectionScript.new()
 	_consumer_merchant = {"id": "merchant", "name": "商家", "reputation": 0.5, "sales": 1.0, "fines": 0, "compensation_paid": 0}
+	social_welfare = SocialWelfareScript.new()
+	_welfare_fund = social_welfare.new_charity_fund("公益基金", {"balance": 0, "transparency": 1.0, "reputation": 0.5})
+	funeral = FuneralScript.new()
+	_funeral_state = funeral.new_state()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -475,6 +490,28 @@ func _ensure_world_geo() -> void:
 				_consumer_product = consumer.from_dict(csd["product"])
 			if csd.get("merchant", null) is Dictionary and not (csd["merchant"] as Dictionary).is_empty():
 				_consumer_merchant = (csd["merchant"] as Dictionary).duplicate(true)
+		# 恢复社会救助运行时（申请/基金/社工/个案/变故儿童）。
+		var wf: Variant = (state.sim_runtime as Dictionary).get("welfare", {})
+		if wf is Dictionary and not (wf as Dictionary).is_empty():
+			var wfd: Dictionary = wf
+			if wfd.get("application", null) is Dictionary and not (wfd["application"] as Dictionary).is_empty():
+				_welfare_application = social_welfare.from_dict(wfd["application"])
+			if wfd.get("fund", null) is Dictionary and not (wfd["fund"] as Dictionary).is_empty():
+				_welfare_fund = social_welfare.from_dict(wfd["fund"])
+			if wfd.get("worker", null) is Dictionary and not (wfd["worker"] as Dictionary).is_empty():
+				_welfare_worker = social_welfare.from_dict(wfd["worker"])
+			if wfd.get("case", null) is Dictionary and not (wfd["case"] as Dictionary).is_empty():
+				_welfare_case = social_welfare.from_dict(wfd["case"])
+			if wfd.get("child", null) is Dictionary and not (wfd["child"] as Dictionary).is_empty():
+				_welfare_child = social_welfare.from_dict(wfd["child"])
+		# 恢复殡葬运行时（殡葬状态/经营体）。
+		var fn: Variant = (state.sim_runtime as Dictionary).get("funeral", {})
+		if fn is Dictionary and not (fn as Dictionary).is_empty():
+			var fnd: Dictionary = fn
+			if fnd.get("state", null) is Dictionary and not (fnd["state"] as Dictionary).is_empty():
+				_funeral_state = funeral.from_dict(fnd["state"])
+			if fnd.get("home", null) is Dictionary and not (fnd["home"] as Dictionary).is_empty():
+				_funeral_home = funeral.from_dict(fnd["home"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -4076,6 +4113,392 @@ func _persist_consumer() -> void:
 		"order": consumer.to_dict(_consumer_order),
 		"product": consumer.to_dict(_consumer_product),
 		"merchant": _consumer_merchant.duplicate(true),
+	}
+
+
+# --- D41 社会救助、收养寄养与慈善 ---
+
+func welfare_state() -> Dictionary:
+	return {
+		"application": _welfare_application, "fund": _welfare_fund,
+		"worker": _welfare_worker, "case": _welfare_case, "child": _welfare_child,
+	}
+
+func welfare_application_kinds_catalog() -> Array:
+	var out: Array = []
+	for key in social_welfare.application_kinds():
+		out.append({"id": String(key), "name": social_welfare.application_name(String(key))})
+	return out
+
+func welfare_crisis_kinds_catalog() -> Array:
+	var names: Dictionary = {"orphan": "孤儿", "abandoned": "被遗弃", "guardian_disabled": "监护人失能"}
+	var out: Array = []
+	for key in social_welfare.crisis_kinds():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func welfare_applicant() -> Dictionary:
+	var p := player()
+	return {
+		"id": str(p.get("id", "player")),
+		"age": int(p.get("age", 30)),
+		"income": float(p.get("income", 0.0)),
+		"assets": float(p.get("assets", 0.0)),
+		"household_size": int(p.get("household_size", 1)),
+		"registered_local": bool(p.get("registered_local", true)),
+		"criminal_record": bool(p.get("criminal_record", false)),
+		"major_illness": bool(p.get("major_illness", false)),
+		"medical_need": bool(p.get("medical_need", false)),
+		"in_crisis": bool(p.get("in_crisis", false)),
+		"homeless": bool(p.get("homeless", false)),
+		"capacity": int(p.get("capacity", 1)),
+		"housing_score": float(p.get("housing_score", 0.5)),
+		"abuse_history": bool(p.get("abuse_history", false)),
+		"aid_months": int(p.get("aid_months", 0)),
+		"employable": float(p.get("employable", 0.0)),
+	}
+
+func welfare_apply(kind: String, amount: int = 0) -> Dictionary:
+	var applicant: Dictionary = welfare_applicant()
+	_welfare_application = social_welfare.new_application(kind, applicant, {"amount": amount})
+	var r: Dictionary = social_welfare.review_qualification(_welfare_application, applicant)
+	_persist_welfare()
+	if not bool(r.get("ok", false)):
+		return r
+	return {
+		"ok": true, "approved": bool(r.get("approved", false)),
+		"reasons": r.get("reasons", []), "application": _welfare_application,
+	}
+
+func welfare_disburse(days: int = 30) -> Dictionary:
+	if _welfare_application.is_empty():
+		return {"ok": false, "reason": "no_application"}
+	var r: Dictionary = social_welfare.disburse_assistance(_welfare_application, welfare_applicant(), {"days": days})
+	_persist_welfare()
+	return r
+
+func welfare_assess_home() -> Dictionary:
+	return social_welfare.assess_home(welfare_applicant())
+
+func welfare_crisis(situation: String, has_relative: bool = false) -> Dictionary:
+	if _welfare_child.is_empty():
+		_welfare_child = {"id": "child", "name": "儿童"}
+	var r: Dictionary = social_welfare.child_in_crisis(_welfare_child, situation, {"has_relative": has_relative})
+	_persist_welfare()
+	return r
+
+func welfare_report_abuse() -> Dictionary:
+	if _welfare_child.is_empty():
+		_welfare_child = {"id": "child", "name": "儿童"}
+	var guardian: Dictionary = welfare_applicant()
+	var r: Dictionary = social_welfare.report_abuse(_welfare_child, guardian, {"evidence": 0.6}, rng)
+	_persist_welfare()
+	return r
+
+func welfare_dependency() -> Dictionary:
+	return social_welfare.welfare_dependency(welfare_applicant())
+
+func welfare_fund_new(name: String = "公益基金") -> Dictionary:
+	_welfare_fund = social_welfare.new_charity_fund(name)
+	_persist_welfare()
+	return {"ok": true, "fund": _welfare_fund}
+
+func welfare_fund_donate(amount: int) -> Dictionary:
+	if _welfare_fund.is_empty():
+		_welfare_fund = social_welfare.new_charity_fund("公益基金")
+	var r: Dictionary = social_welfare.donate(_welfare_fund, amount)
+	_persist_welfare()
+	return r
+
+func welfare_fund_settle() -> Dictionary:
+	if _welfare_fund.is_empty():
+		return {"ok": false, "reason": "no_fund"}
+	return social_welfare.settle_fund(_welfare_fund)
+
+func welfare_fund_spend(purpose: String, amount: int) -> Dictionary:
+	if _welfare_fund.is_empty():
+		return {"ok": false, "reason": "no_fund"}
+	var r: Dictionary = social_welfare.spend_fund(_welfare_fund, purpose, amount)
+	_persist_welfare()
+	return r
+
+func welfare_fund_audit() -> Dictionary:
+	if _welfare_fund.is_empty():
+		return {"ok": false, "reason": "no_fund"}
+	var r: Dictionary = social_welfare.audit_transparency(_welfare_fund)
+	_persist_welfare()
+	return r
+
+func welfare_fund_misappropriate(amount: int) -> Dictionary:
+	if _welfare_fund.is_empty():
+		return {"ok": false, "reason": "no_fund"}
+	var r: Dictionary = social_welfare.misappropriate(_welfare_fund, amount, {"roll": -1.0}, rng)
+	_persist_welfare()
+	return r
+
+func welfare_worker_start() -> Dictionary:
+	_welfare_worker = social_welfare.new_social_worker("player", {"name": "本人"})
+	_persist_welfare()
+	return {"ok": true, "worker": _welfare_worker}
+
+func welfare_case_open(family_id: String = "family") -> Dictionary:
+	if _welfare_worker.is_empty():
+		return {"ok": false, "reason": "no_worker"}
+	_welfare_case = social_welfare.new_case(_welfare_worker, family_id)
+	_persist_welfare()
+	return {"ok": true, "case": _welfare_case}
+
+func welfare_follow_up(note: String = "家访") -> Dictionary:
+	if _welfare_case.is_empty():
+		return {"ok": false, "reason": "no_welfare_case"}
+	var r: Dictionary = social_welfare.follow_up(_welfare_case, note)
+	_persist_welfare()
+	return r
+
+func welfare_close_case() -> Dictionary:
+	if _welfare_worker.is_empty():
+		return {"ok": false, "reason": "no_worker"}
+	if _welfare_case.is_empty():
+		return {"ok": false, "reason": "no_welfare_case"}
+	var r: Dictionary = social_welfare.close_case(_welfare_worker, _welfare_case)
+	_persist_welfare()
+	return r
+
+func welfare_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _welfare_application.is_empty():
+		out["application"] = {
+			"kind": String(_welfare_application.get("kind", "")),
+			"kind_name": social_welfare.application_name(String(_welfare_application.get("kind", ""))),
+			"status": String(_welfare_application.get("status", "")),
+			"approved": String(_welfare_application.get("status", "")) == "approved",
+			"amount": int(_welfare_application.get("amount", 0)),
+			"disbursed": int(_welfare_application.get("disbursed", 0)),
+			"reasons": (_welfare_application.get("reasons", []) as Array).duplicate(),
+		}
+	if not _welfare_fund.is_empty() and (int(_welfare_fund.get("raised", 0)) > 0 or int(_welfare_fund.get("spent", 0)) > 0 or int(_welfare_fund.get("balance", 0)) > 0):
+		out["fund"] = {
+			"name": String(_welfare_fund.get("name", "")),
+			"balance": int(_welfare_fund.get("balance", 0)),
+			"raised": int(_welfare_fund.get("raised", 0)),
+			"spent": int(_welfare_fund.get("spent", 0)),
+			"transparency": float(_welfare_fund.get("transparency", 0.0)),
+			"reputation": float(_welfare_fund.get("reputation", 0.0)),
+		}
+	if not _welfare_worker.is_empty():
+		out["worker"] = {
+			"name": String(_welfare_worker.get("name", "")),
+			"cases_closed": int(_welfare_worker.get("cases_closed", 0)),
+			"rank_index": int(_welfare_worker.get("rank_index", 0)),
+			"active_cases": (_welfare_worker.get("active_cases", []) as Array).size(),
+		}
+	if not _welfare_case.is_empty():
+		out["case"] = {
+			"id": String(_welfare_case.get("id", "")),
+			"family_id": String(_welfare_case.get("family_id", "")),
+			"status": String(_welfare_case.get("status", "")),
+			"visits": int(_welfare_case.get("visits", 0)),
+			"progress": float(_welfare_case.get("progress", 0.0)),
+		}
+	if not _welfare_child.is_empty():
+		out["child"] = {
+			"id": String(_welfare_child.get("id", "")),
+			"route": String(_welfare_child.get("welfare_route", "")),
+		}
+	return out
+
+func _persist_welfare() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["welfare"] = {
+		"application": social_welfare.to_dict(_welfare_application),
+		"fund": social_welfare.to_dict(_welfare_fund),
+		"worker": social_welfare.to_dict(_welfare_worker),
+		"case": social_welfare.to_dict(_welfare_case),
+		"child": social_welfare.to_dict(_welfare_child),
+	}
+
+
+# --- D42 殡葬、器官捐献与纪念 ---
+
+func funeral_state() -> Dictionary:
+	return {"state": _funeral_state, "home": _funeral_home}
+
+func funeral_methods_catalog() -> Array:
+	var out: Array = []
+	for key in funeral.methods():
+		out.append({"id": String(key), "name": String((funeral.method_def(String(key)) as Dictionary).get("name", key))})
+	return out
+
+func funeral_grave_types_catalog() -> Array:
+	var out: Array = []
+	for key in funeral.grave_types():
+		out.append({"id": String(key), "name": String((funeral.grave_def(String(key)) as Dictionary).get("name", key))})
+	return out
+
+func funeral_memorial_kinds_catalog() -> Array:
+	var names: Dictionary = {"monument": "纪念碑", "family_grave": "家族墓", "digital_cemetery": "数字纪念", "virtual_grave": "虚拟墓园"}
+	var out: Array = []
+	for key in funeral.memorial_kinds():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func funeral_arrange(method: String, grave: String, estate: int = -1) -> Dictionary:
+	var death_info: Dictionary = {"id": "player", "estate": estate if estate >= 0 else int(player_estate_minor())}
+	var r: Dictionary = funeral.arrange_funeral(death_info, _funeral_state, {"method": method, "grave": grave})
+	_persist_funeral()
+	return r
+
+func funeral_execute(public_assistance: bool = false) -> Dictionary:
+	var r: Dictionary = funeral.execute_funeral(_funeral_state, {"public_assistance": public_assistance})
+	_persist_funeral()
+	return r
+
+func funeral_register_donation() -> Dictionary:
+	var r: Dictionary = funeral.register_donation(_funeral_state)
+	_persist_funeral()
+	return r
+
+func funeral_review_ethics() -> Dictionary:
+	var r: Dictionary = funeral.review_ethics(_funeral_state, {"roll": -1.0}, rng)
+	_persist_funeral()
+	return r
+
+func funeral_revoke_donation(deceased: bool = true) -> Dictionary:
+	var r: Dictionary = funeral.revoke_donation(_funeral_state, {"deceased": deceased})
+	_persist_funeral()
+	return r
+
+func funeral_allocate_organs() -> Dictionary:
+	var recipients: Array = [
+		{"id": "recipient-1", "organ": "heart", "urgency": 0.9},
+		{"id": "recipient-2", "organ": "kidney", "urgency": 0.7},
+		{"id": "recipient-3", "organ": "cornea", "urgency": 0.5},
+	]
+	var r: Dictionary = funeral.allocate_organs(_funeral_state, recipients)
+	_persist_funeral()
+	return r
+
+func funeral_transplant(organ: String) -> Dictionary:
+	return funeral.transplant(player(), organ, {"roll": -1.0}, rng)
+
+func funeral_build_memorial(kind: String) -> Dictionary:
+	var r: Dictionary = funeral.build_memorial(_funeral_state, kind)
+	_persist_funeral()
+	return r
+
+func funeral_tomb_sweeping(kind: String = "family_grave") -> Dictionary:
+	var r: Dictionary = funeral.tomb_sweeping(_funeral_state, {"kind": kind})
+	_persist_funeral()
+	return r
+
+func funeral_digital_memorial() -> Dictionary:
+	var r: Dictionary = funeral.create_digital_memorial(_funeral_state)
+	_persist_funeral()
+	return r
+
+func funeral_execute_will() -> Dictionary:
+	var will: Dictionary = player().get("will", {})
+	var r: Dictionary = funeral.execute_will(will, {"id": "player"}, _funeral_state)
+	_persist_funeral()
+	return r
+
+func funeral_new_home(name: String = "殡仪馆") -> Dictionary:
+	_funeral_home = funeral.new_funeral_home(name, {"balance": 0})
+	_funeral_state["industry"] = _funeral_home
+	_persist_funeral()
+	return {"ok": true, "home": _funeral_home}
+
+func funeral_quote(method: String) -> Dictionary:
+	if _funeral_home.is_empty():
+		return {"ok": false, "reason": "no_industry"}
+	return funeral.quote_service(_funeral_home, method)
+
+func funeral_sale(method: String) -> Dictionary:
+	if _funeral_home.is_empty():
+		return {"ok": false, "reason": "no_industry"}
+	var r: Dictionary = funeral.settle_sale(_funeral_home, method)
+	_persist_funeral()
+	return r
+
+func funeral_regulate() -> Dictionary:
+	if _funeral_home.is_empty():
+		return {"ok": false, "reason": "no_industry"}
+	var r: Dictionary = funeral.regulate_market(_funeral_home, {"roll": -1.0}, rng)
+	_persist_funeral()
+	return r
+
+func funeral_reform() -> Dictionary:
+	if _funeral_home.is_empty():
+		return {"ok": false, "reason": "no_industry"}
+	var r: Dictionary = funeral.reform_customs(_funeral_state)
+	_persist_funeral()
+	return r
+
+func funeral_unclaimed() -> Dictionary:
+	var r: Dictionary = funeral.unclaimed_body(_funeral_state, {"unclaimed": true, "action": "public_cremation"})
+	_persist_funeral()
+	return r
+
+func funeral_dispute() -> Dictionary:
+	var r: Dictionary = funeral.donation_dispute(_funeral_state, {"roll": -1.0, "revoke": true}, rng)
+	_persist_funeral()
+	return r
+
+func funeral_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	var st: Dictionary = _funeral_state
+	var f: Dictionary = st.get("funeral", {})
+	if bool(f.get("arranged", false)):
+		out["funeral"] = {
+			"method": String(f.get("method", "")),
+			"method_name": String((funeral.method_def(String(f.get("method", ""))) as Dictionary).get("name", "")),
+			"grave": String(f.get("grave", "")),
+			"grave_name": String((funeral.grave_def(String(f.get("grave", ""))) as Dictionary).get("name", "")),
+			"cost": int(f.get("cost", 0)),
+			"affordable": bool(f.get("affordable", true)),
+			"executed": bool(f.get("executed", false)),
+			"paid": int(f.get("paid", 0)),
+		}
+	var d: Dictionary = st.get("donation", {})
+	if bool(d.get("registered", false)) or bool(d.get("revoked", false)) or bool(d.get("ethics_reviewed", false)):
+		out["donation"] = {
+			"registered": bool(d.get("registered", false)),
+			"ethics_approved": bool(d.get("ethics_approved", false)),
+			"legal": bool(d.get("legal", false)),
+			"revoked": bool(d.get("revoked", false)),
+			"organs": (d.get("organs", []) as Array).duplicate(),
+			"allocated": (d.get("allocated", []) as Array).size(),
+		}
+	var memorials: Array = st.get("memorials", [])
+	if not memorials.is_empty():
+		out["memorials"] = []
+		for m in memorials:
+			out["memorials"].append({
+				"kind": String((m as Dictionary).get("kind", "")),
+				"name": String((m as Dictionary).get("name", "")),
+				"visits": int((m as Dictionary).get("visits", 0)),
+			})
+	var digital: Dictionary = st.get("digital", {})
+	if bool(digital.get("created", false)):
+		out["digital"] = {"created": true, "visits": int(digital.get("visits", 0))}
+	if not _funeral_home.is_empty():
+		out["industry"] = {
+			"name": String(_funeral_home.get("name", "")),
+			"balance": int(_funeral_home.get("balance", 0)),
+			"profit": int(_funeral_home.get("profit", 0)),
+			"price_mult": float(_funeral_home.get("price_mult", 1.0)),
+			"reputation": float(_funeral_home.get("reputation", 0.0)),
+		}
+	out["meaning"] = float(st.get("meaning", 0.0))
+	return out
+
+func _persist_funeral() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["funeral"] = {
+		"state": funeral.to_dict(_funeral_state),
+		"home": funeral.to_dict(_funeral_home),
 	}
 
 

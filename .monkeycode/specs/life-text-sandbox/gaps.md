@@ -17,7 +17,7 @@
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
 8. **后端权威边界未逐域标注（中）**：碳市场、区域医疗、城市规划、交通基建、灾害等同时改区域与宏观，未声明权威归属与合并锚点。
-9. **测试点系统性缺失（中）**：D41/D42/D43/D46 无专属测试；多为域无边界的测试。
+9. **测试点系统性缺失（中）**：D42/D43/D46 无专属测试；多为域无边界的测试。
 10. **硬冲突（高）**：
     - D20 语言等级 0..100 与技能 0..20 矛盾（已决议：语言独立类型）。
     - `npc.schema.json` 的 `relations` 引用单个 relation，而 `player.relations` 是数组。
@@ -163,7 +163,8 @@
 - **待办**：具体诉讼程序委托 `CivilSystem`（D12）、召回批次与供应链溯源、平台/12315 真实对接模拟与商家反诉敲诈的程序细化待补。
 
 ### D41 收养、寄养与社会救助
-- 收养资格评分/匹配/低保线/救助金额/慈善透明无模型；收养/寄养/监护/救助/慈善无 schema；救助项目内容缺失；缺寄养/低保申请动词与面板。
+- **已接线**：`SocialWelfareSystem`（`social_welfare.gd`）收养/寄养/监护（`new_application()`/`review_qualification()` 确定性门槛：年龄/收入/资产/犯罪/重病，`_review_adoption`/`_review_foster`/`_review_dibao`/`_review_aid`）；家庭评估与匹配（`assess_home()` 0..100 适配分、`match_family()` 择优、`place_child()` 返回家庭接口字典交由 FamilySystem D11 落地、`guardianship_assessment()`）；社会救助（`disburse_assistance()` 按标准与天数结算，低保线真源 `baseline.social_welfare`）；家庭变故（`child_in_crisis()` 孤儿/被遗弃/监护人失能 → 亲属抚养/寄养/机构/救助）；慈善基金（`new_charity_fund()`/`donate()`/`settle_fund()`/`spend_fund()`/`audit_transparency()`/`misappropriate()` 挪用查获反噬声誉）；社工与个案（`new_social_worker()`/`new_case()`/`follow_up()`/`close_case()`/`promote_social_worker()` 四阶晋升）；边界（`report_abuse()` 虐待属实撤销监护、`welfare_dependency()` 救助依赖与脱困）。运行时经 `GameState.sim_runtime.welfare`（`application`/`fund`/`worker`/`case`/`child`）持久化。`SimHost` 接线 `welfare_application_kinds_catalog()`/`welfare_crisis_kinds_catalog()`/`welfare_apply()`/`welfare_disburse()`/`welfare_crisis()`/`welfare_report_abuse()`/`welfare_dependency()`/`welfare_fund_*()`/`welfare_worker_start()`/`welfare_case_open()`/`welfare_follow_up()`/`welfare_close_case()`/`welfare_panel_data()`。UI：重写「救助与福利」面板（申请与资格/慈善基金/社工/个案/变故儿童，`context["welfare"]`）；指令 `收养评估`/`寄养申请`/`低保申请`/`医疗救助`/`临时救助`/`流浪救助`/`救助发放 [天数]`/`家庭变故`/`慈善基金`/`慈善捐赠 [金额]`/`公益支出 [金额]`/`善款审计`/`善款挪用 [金额]`/`社工入职`/`个案跟进`/`个案结案`/`虐待举报`/`救助依赖`；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `social_welfare` 相关测试覆盖）。
+- **待办**：收养等待期与撤销、跨区资格互认、慈善信息公开平台、个案台账与政府购买服务对接的程序细化待补。
 
 ### D42 殡葬、器官捐献与纪念
 - 殡葬费用/墓地价格/器官分配/捐献撤销/遗产不足无模型；葬礼/墓地/捐献/纪念碑无 schema；殡葬服务内容缺失；缺火化/海葬/祭扫/移植动词与面板。
