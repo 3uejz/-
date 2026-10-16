@@ -721,6 +721,46 @@ func _dispatch(intent) -> Dictionary:
 			return _content_approval(intent)
 		"粉丝运营":
 			return _content_fandom(intent)
+		"办工程公司":
+			return _eng_new_contractor(intent)
+		"承接工程":
+			return _eng_take_project(intent)
+		"工程推进":
+			return _eng_advance(intent)
+		"工程监理":
+			return _eng_supervise(intent)
+		"工程招标":
+			return _eng_tender(intent)
+		"围标":
+			return _eng_rig(intent)
+		"招标行贿":
+			return _eng_bribe(intent)
+		"偷工减料":
+			return _eng_cut_corners(intent)
+		"工程事故":
+			return _eng_accident(intent)
+		"拖欠工程款":
+			return _eng_arrears(intent)
+		"三角债":
+			return _eng_debt_chain(intent)
+		"规划新城":
+			return _eng_new_city(intent)
+		"变更用地":
+			return _eng_rezone(intent)
+		"城建交通":
+			return _eng_transport(intent)
+		"规划腐败":
+			return _eng_planning_corruption(intent)
+		"房屋拆迁":
+			return _eng_demolition(intent)
+		"办地产公司":
+			return _eng_new_developer(intent)
+		"楼盘预售":
+			return _eng_pre_sale(intent)
+		"楼盘施工":
+			return _eng_develop(intent)
+		"楼盘烂尾":
+			return _eng_unfinished(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3567,6 +3607,178 @@ func _content_fandom(intent) -> Dictionary:
 	var extra: String = "，出现粉丝反噬" if bool(r.get("backlash", false)) else ""
 	return _ok(["粉丝规模 %d，毒性 %.0f%%%s。" % [int(r.get("fandom_size", 0)), float(r.get("toxicity", 0.0)) * 100.0, extra]], 0, "")
 
+func _eng_new_contractor(intent) -> Dictionary:
+	var q: String = _object_id(intent, "engineering_qualification")
+	if q.is_empty():
+		q = "second"
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.eng_new_contractor(nm, q)
+	if not bool(r.get("ok", false)):
+		return _fail("无法成立工程公司（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["成立「%s」，资质 %s。" % [String(r.get("name", "")), _catalog_name(host.engineering_qualifications_catalog(), q)]], 0, "")
+
+func _eng_take_project(intent) -> Dictionary:
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var scale: int = maxi(1, _param_number(intent, "number", 50000000))
+	var r: Dictionary = host.eng_take_project(nm, scale)
+	if not bool(r.get("ok", false)):
+		return _fail("无法承接工程（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["承接「%s」，规模 %d，需 %s 资质。" % [String(r.get("name", "")), scale, _catalog_name(host.engineering_qualifications_catalog(), String(r.get("required_qualification", "")))]], 0, "")
+
+func _eng_advance(intent) -> Dictionary:
+	var r: Dictionary = host.eng_advance()
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进工程（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var stage_name: String = _catalog_name(host.engineering_stages_catalog(), String(r.get("stage", "")))
+	var next_id: String = String(r.get("next", ""))
+	var tail: String = "，工程完成" if next_id == "completed" else "，进入%s" % _catalog_name(host.engineering_stages_catalog(), next_id)
+	return _ok(["完成%s%s，质量 %.0f%%。" % [stage_name, tail, float(r.get("quality", 0.0)) * 100.0]], 0, "")
+
+func _eng_supervise(intent) -> Dictionary:
+	var strength: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.eng_supervise(strength)
+	if not bool(r.get("ok", false)):
+		return _fail("无法监理（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["监理力度 %.0f%%，%s。" % [strength * 100.0, "发现质量缺陷" if bool(r.get("found_defect", false)) else "未发现缺陷"]], 0, "")
+
+func _eng_tender(intent) -> Dictionary:
+	var r: Dictionary = host.eng_tender()
+	if not bool(r.get("ok", false)):
+		return _fail("无法招标（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if String(r.get("winner", "")) == "contractor.player":
+		return _ok(["招标中标，赢得工程。"], 0, "")
+	return _ok(["招标未中标，工程由 %s 获得。" % _eng_rival_name(String(r.get("winner", "")))], 0, "")
+
+func _eng_rig(intent) -> Dictionary:
+	var r: Dictionary = host.eng_rig()
+	if not bool(r.get("ok", false)):
+		return _fail("无法围标（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已串通陪标，抬高本家中标率。"], 0, "")
+
+func _eng_bribe(intent) -> Dictionary:
+	var amount: int = maxi(0, _param_number(intent, "number", 5000000))
+	var r: Dictionary = host.eng_bribe(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法行贿（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		var extra: String = "，并追究刑责" if bool(r.get("criminal", false)) else ""
+		return _ok(["行贿被查处，罚款 %d%s。" % [int(r.get("fine", 0)), extra]], 0, "")
+	return _ok(["行贿未被查处，中标加成 %.0f%%。" % (float(r.get("collusion_bonus", 0.0)) * 100.0)], 0, "")
+
+func _eng_cut_corners(intent) -> Dictionary:
+	var degree: float = clampf(float(_param_number(intent, "number", 30)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.eng_cut_corners(degree)
+	if not bool(r.get("ok", false)):
+		return _fail("无法减料（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["偷工减料 %.0f%%，省 %d，质量降至 %.0f%%。" % [degree * 100.0, int(r.get("saved", 0)), float(r.get("quality", 0.0)) * 100.0]], 0, "")
+
+func _eng_accident(intent) -> Dictionary:
+	var r: Dictionary = host.eng_accident()
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算事故（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("occurred", false)):
+		return _ok(["本次未发生工程事故。"], 0, "")
+	var acct: Dictionary = r.get("accountability", {})
+	return _ok(["发生工程事故，损失 %d，死亡 %d 人，罚款 %d%s。" % [int(r.get("loss", 0)), int(r.get("deaths", 0)), int(acct.get("fine", 0)), "，追究刑责" if bool(acct.get("criminal", false)) else ""]], 0, "")
+
+func _eng_arrears(intent) -> Dictionary:
+	var amount: int = maxi(0, _param_number(intent, "number", 10000000))
+	var r: Dictionary = host.eng_arrears(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算欠款（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["拖欠 %d，%s，利息 %d。" % [amount, "资金不足停工" if bool(r.get("stop_work", false)) else "尚可垫付", int(r.get("interest", 0))]], 0, "")
+
+func _eng_debt_chain(intent) -> Dictionary:
+	var amount: int = maxi(0, _param_number(intent, "number", 10000000))
+	var r: Dictionary = host.eng_debt_chain(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算三角债（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["三角债违约 %d 家，累积欠款 %d。" % [int(r.get("default_count", 0)), int(r.get("total_arrears", 0))]], 0, "")
+
+func _eng_new_city(intent) -> Dictionary:
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var pop: int = maxi(0, _param_number(intent, "number", 1000000))
+	var r: Dictionary = host.eng_new_city(nm, pop)
+	if not bool(r.get("ok", false)):
+		return _fail("无法规划新城（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["设立城市「%s」，人口 %d。" % [String(r.get("name", "")), pop]], 0, "")
+
+func _eng_rezone(intent) -> Dictionary:
+	var ztype: String = _object_id(intent, "engineering_zone")
+	if ztype.is_empty():
+		return _fail("请指明功能区类型。")
+	var zone_id: String = _catalog_name(host.engineering_zone_types_catalog(), ztype)
+	var r: Dictionary = host.eng_rezone(zone_id, ztype)
+	if not bool(r.get("ok", false)):
+		return _fail("无法变更用地（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["划为%s，地价 %.0f，人口变动 %d。" % [zone_id, float(r.get("new_land_price", 0.0)), int(r.get("population_delta", 0))]], 0, "")
+
+func _eng_transport(intent) -> Dictionary:
+	var ztype: String = _object_id(intent, "engineering_zone")
+	if ztype.is_empty():
+		return _fail("请指明功能区。")
+	var zone_id: String = _catalog_name(host.engineering_zone_types_catalog(), ztype)
+	var r: Dictionary = host.eng_transport(zone_id)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建设交通（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["交通改善，沿线地价 +%.0f。" % float(r.get("land_delta", 0.0))], 0, "")
+
+func _eng_planning_corruption(intent) -> Dictionary:
+	var bribe: int = maxi(0, _param_number(intent, "number", 10000000))
+	var r: Dictionary = host.eng_planning_corruption(bribe)
+	if not bool(r.get("ok", false)):
+		return _fail("无法调规（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["违规调规被查处，罚款 %d。" % int(r.get("fine", 0))], 0, "")
+	return _ok(["违规调规，地价虚高 %.0f%%。" % (float(r.get("land_bubble", 0.0)) * 100.0)], 0, "")
+
+func _eng_demolition(intent) -> Dictionary:
+	var ztype: String = _object_id(intent, "engineering_zone")
+	if ztype.is_empty():
+		return _fail("请指明功能区。")
+	var zone_id: String = _catalog_name(host.engineering_zone_types_catalog(), ztype)
+	var comp: int = maxi(0, _param_number(intent, "number", 300000))
+	var r: Dictionary = host.eng_demolition(zone_id, 1000, comp)
+	if not bool(r.get("ok", false)):
+		return _fail("无法拆迁（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra: String = "" if bool(r.get("fair", false)) else "，%d 户产生纠纷" % int(r.get("disputes", 0))
+	return _ok(["拆迁 %d 人，补偿 %d%s。" % [int(r.get("residents", 0)), int(r.get("compensation", 0)), extra]], 0, "")
+
+func _eng_new_developer(intent) -> Dictionary:
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.eng_new_developer(nm, 50000000)
+	if not bool(r.get("ok", false)):
+		return _fail("无法成立地产公司（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["成立地产公司「%s」。" % String(r.get("name", ""))], 0, "")
+
+func _eng_pre_sale(intent) -> Dictionary:
+	var units: int = maxi(1, _param_number(intent, "number", 10))
+	var r: Dictionary = host.eng_pre_sale(units, 1000000)
+	if not bool(r.get("ok", false)):
+		return _fail("无法预售（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["预售 %d 套，回笼资金 %d，现金 %d。" % [units, int(r.get("income", 0)), int(r.get("cash", 0))]], 0, "")
+
+func _eng_develop(intent) -> Dictionary:
+	var cost: int = maxi(0, _param_number(intent, "number", 5000000))
+	var r: Dictionary = host.eng_develop(cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进楼盘（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["投入 %d，楼盘进度 %.0f%%。" % [cost, float(r.get("progress", 0.0)) * 100.0]], 0, "")
+
+func _eng_unfinished(intent) -> Dictionary:
+	var r: Dictionary = host.eng_unfinished()
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算楼盘（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("stalled", false)):
+		return _ok(["资金充足，楼盘未烂尾。"], 0, "")
+	return _ok(["资金断裂，楼盘烂尾，缺 %d，买家受损 %d。" % [int(r.get("deficit", 0)), int(r.get("buyers_lost", 0))]], 0, "")
+
+func _eng_rival_name(id: String) -> String:
+	for rv in host._eng_rivals:
+		if String((rv as Dictionary).get("id", "")) == id:
+			return String((rv as Dictionary).get("name", id))
+	return id if id != "" else "其他单位"
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -3963,6 +4175,16 @@ func _reason_cn(reason: String) -> String:
 			return "未知运营方式"
 		"no_target":
 			return "对手无此角色可挖"
+		"no_contractor":
+			return "尚未成立工程公司"
+		"no_project":
+			return "尚无在建工程"
+		"no_city":
+			return "尚未规划城市"
+		"no_developer":
+			return "尚未成立地产公司"
+		"unknown_qualification":
+			return "未知资质等级"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -4148,6 +4370,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.content_ip_operations_catalog(), text)
 		"funding_stage":
 			return _find_funding_stage_by_name(text)
+		"engineering_qualification":
+			return _find_catalog_by_name(host.engineering_qualifications_catalog(), text)
+		"engineering_zone":
+			return _find_catalog_by_name(host.engineering_zone_types_catalog(), text)
 		_:
 			return ""
 

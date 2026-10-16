@@ -66,6 +66,7 @@ func run_tests() -> void:
 	_test_anomaly_runtime()
 	_test_medical_runtime()
 	_test_content_industry_runtime()
+	_test_engineering_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1498,6 +1499,59 @@ func _test_content_industry_runtime() -> void:
 	check(String(reloaded._content_studio.get("name", "")) == "星火", "读档恢复工作室")
 	check(not reloaded.content_panel_data().is_empty(), "文娱面板数据非空")
 	check(not reloaded._content_work.is_empty(), "读档恢复在研作品")
+
+
+func _test_engineering_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(211)
+	var host = SimHostScript.new(state, 211)
+	host.bind(state)
+	check(host.engineering_qualifications_catalog().size() >= 3, "资质等级≥3")
+	check(host.engineering_stages_catalog().size() >= 6, "工程链条≥6 阶段")
+	check(host.engineering_zone_types_catalog().size() >= 5, "功能区类型≥5")
+	# 工程公司与承接。
+	check(bool(host.eng_new_contractor("宏基建设", "first").get("ok", false)), "成立工程公司")
+	check(not host._eng_contractor.is_empty(), "工程公司非空")
+	check(bool(host.eng_take_project("跨江大桥", 50000000).get("ok", false)), "承接工程")
+	check(not host._eng_project.is_empty(), "在建工程非空")
+	# 链条推进：勘察→设计→造价→施工→监理→验收。
+	for _i in 6:
+		host.eng_advance()
+	check(String(host._eng_project.get("stage", "")) == "completed", "链条推完")
+	check(int(host._eng_project.get("stage_index", 0)) >= 6, "链条阶段走满")
+	# 验收：高质量工程方可验收。
+	host._eng_project["quality"] = 0.9
+	check(bool(host.engineering.accept(host._eng_project, {"threshold": 0.6}).get("passed", false)), "优质工程验收通过")
+	# 监理。
+	check(bool(host.eng_supervise(0.8).get("ok", false)), "工程监理")
+	# 招投标与风险。
+	check(bool(host.eng_tender().has("winner")), "招标")
+	check(bool(host.eng_rig().get("ok", false)), "围标")
+	check(bool(host.eng_bribe(20000000).has("exposed")), "招标行贿")
+	check(bool(host.eng_cut_corners(0.5).get("ok", false)), "偷工减料")
+	check(bool(host.eng_accident().has("occurred")), "工程事故结算")
+	check(bool(host.eng_arrears(10000000).get("ok", false)), "欠款结算")
+	check(bool(host.eng_debt_chain(10000000).get("ok", false)), "三角债结算")
+	# 城市规划。
+	check(bool(host.eng_new_city("云港", 1200000).get("ok", false)), "规划新城")
+	check(bool(host.eng_rezone("商业区", "commercial").get("ok", false)), "变更用地")
+	check(bool(host.eng_transport("商业区").get("ok", false)), "城建交通")
+	check(bool(host.eng_planning_corruption(20000000).has("exposed")), "规划腐败")
+	check(bool(host.eng_demolition("商业区", 1000, 500000).get("ok", false)), "房屋拆迁")
+	# 房地产。
+	check(bool(host.eng_new_developer("宏基地产", 50000000).get("ok", false)), "成立地产公司")
+	check(bool(host.eng_pre_sale(10, 1000000).get("ok", false)), "楼盘预售")
+	check(bool(host.eng_develop(5000000).get("ok", false)), "楼盘施工")
+	check(bool(host.eng_unfinished().has("stalled")), "楼盘烂尾结算")
+	# 持久化与读档恢复。
+	host._persist_engineering()
+	check(state.sim_runtime.get("engineering", null) is Dictionary, "工程运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 211)
+	reloaded.bind(state)
+	check(String(reloaded._eng_contractor.get("name", "")) == "宏基建设", "读档恢复工程公司")
+	check(String(reloaded._eng_city.get("name", "")) == "云港", "读档恢复城市")
+	check(not reloaded.engineering_panel_data().is_empty(), "工程面板数据非空")
+
 
 
 

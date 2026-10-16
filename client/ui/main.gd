@@ -488,6 +488,10 @@ func _catalogs() -> Dictionary:
 		"content_platform": _sim.content_platforms_catalog(),
 		"ip_operation": _sim.content_ip_operations_catalog(),
 		"funding_stage": _sim.content_funding_stages_catalog(),
+		"engineering_qualification": _sim.engineering_qualifications_catalog(),
+		"engineering_stage": _sim.engineering_stages_catalog(),
+		"engineering_procurement": _sim.engineering_procurement_catalog(),
+		"engineering_zone": _sim.engineering_zone_types_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -863,6 +867,9 @@ func _panel_context() -> Dictionary:
 		var ctp: Dictionary = _sim.content_panel_data()
 		if not ctp.is_empty():
 			context["content"] = ctp
+		var egp: Dictionary = _sim.engineering_panel_data()
+		if not egp.is_empty():
+			context["engineering"] = egp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

@@ -63,6 +63,7 @@ func run_tests() -> void:
 	_test_hidden_anomaly_panel_empty()
 	_test_medical_panel()
 	_test_content_industry_panel()
+	_test_engineering_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -163,6 +164,21 @@ func _test_content_industry_panel() -> void:
 	check(_find_section(d, "发行作品").get("rows", []).size() >= 1, "发行作品分区有行")
 	check(_find_section(d, "IP 库").get("rows", []).size() >= 1, "IP 库分区有行")
 	check(_find_section(d, "粉丝文化").get("rows", []).size() >= 1, "粉丝文化分区有行")
+
+func _test_engineering_panel() -> void:
+	var ctx: Dictionary = {"engineering": {
+		"contractor": {"name": "宏基建设", "qualification": "一级", "capital": 50000000, "workmanship": 0.7, "reputation": 0.6},
+		"project": {"name": "跨江大桥", "stage": "construction", "stage_name": "施工", "progress": 0.5, "quality": 0.6, "budget": 50000000, "accepted": false, "accident": false},
+		"city": {"name": "云港", "population": 1200000, "land_price": 18000.0, "traffic": 0.6, "zones": [{"zone": "商业区", "type": "commercial", "type_name": "商业区", "land_price": 18000.0}]},
+		"developer": {"name": "宏基地产", "cash": 30000000, "debt": 0},
+	}}
+	var d: Dictionary = PanelContentScript.build("engineering", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有工程上下文非空")
+	check(_find_section(d, "施工单位").get("rows", []).size() >= 1, "施工单位分区有行")
+	check(_find_section(d, "在建工程").get("rows", []).size() >= 1, "在建工程分区有行")
+	check(_find_section(d, "城市规划").get("rows", []).size() >= 1, "城市规划分区有行")
+	check(_find_section(d, "功能区").get("rows", []).size() >= 1, "功能区分区有行")
+	check(_find_section(d, "房地产").get("rows", []).size() >= 1, "房地产分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

@@ -1754,10 +1754,62 @@ static func _content_runtime_sections(c: Dictionary) -> Array:
 static func engineering(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("工程与基建", "尚未生成角色数据")
+	var sections: Array = []
+	var e: Dictionary = context.get("engineering", {})
+	sections.append_array(_engineering_runtime_sections(e))
 	var projects: Array = _items_of(_world(context).get("projects", []))
-	if projects.is_empty():
-		return _empty("工程与基建", "暂无在建项目；可关注招标信息并投标开工")
-	return _ok([_section("在建工程", _rows_from(projects, ["type", "stage", "progress", "budget"], name_resolver))])
+	if not projects.is_empty():
+		sections.append(_section("在建工程", _rows_from(projects, ["type", "stage", "progress", "budget"], name_resolver)))
+	if sections.is_empty():
+		return _empty("工程与基建", "暂无工程；可办工程公司、承接工程并推进链条")
+	return _ok(sections)
+
+static func _engineering_runtime_sections(e: Dictionary) -> Array:
+	if e.is_empty():
+		return []
+	var sections: Array = []
+	var c: Dictionary = e.get("contractor", {}) if e.get("contractor", null) is Dictionary else {}
+	if not c.is_empty():
+		sections.append(_section("施工单位", [
+			{"label": "名称", "value": String(c.get("name", ""))},
+			{"label": "资质", "value": String(c.get("qualification", ""))},
+			{"label": "资本", "value": str(int(c.get("capital", 0)))},
+			{"label": "工艺", "value": "%.0f%%" % (float(c.get("workmanship", 0.0)) * 100.0)},
+			{"label": "声誉", "value": "%.0f%%" % (float(c.get("reputation", 0.0)) * 100.0)},
+		]))
+	var p: Dictionary = e.get("project", {}) if e.get("project", null) is Dictionary else {}
+	if not p.is_empty():
+		var status: String = "已验收" if bool(p.get("accepted", false)) else ("事故" if bool(p.get("accident", false)) else "进行中")
+		sections.append(_section("在建工程", [
+			{"label": "名称", "value": String(p.get("name", ""))},
+			{"label": "阶段", "value": String(p.get("stage_name", p.get("stage", "")))},
+			{"label": "进度", "value": "%.0f%%" % (float(p.get("progress", 0.0)) * 100.0)},
+			{"label": "质量", "value": "%.0f%%" % (float(p.get("quality", 0.0)) * 100.0)},
+			{"label": "预算", "value": str(int(p.get("budget", 0)))},
+			{"label": "状态", "value": status},
+		]))
+	var city: Dictionary = e.get("city", {}) if e.get("city", null) is Dictionary else {}
+	if not city.is_empty():
+		sections.append(_section("城市规划", [
+			{"label": "名称", "value": String(city.get("name", ""))},
+			{"label": "人口", "value": str(int(city.get("population", 0)))},
+			{"label": "地价", "value": "%.0f" % float(city.get("land_price", 0.0))},
+			{"label": "交通", "value": "%.0f%%" % (float(city.get("traffic", 0.0)) * 100.0)},
+		]))
+		var zones: Array = _items_of(city.get("zones", []))
+		if not zones.is_empty():
+			var zone_rows: Array = []
+			for z in zones:
+				zone_rows.append({"label": String((z as Dictionary).get("zone", "")), "value": "%s · 地价 %.0f" % [String((z as Dictionary).get("type_name", "")), float((z as Dictionary).get("land_price", 0.0))]})
+			sections.append(_section("功能区", zone_rows))
+	var d: Dictionary = e.get("developer", {}) if e.get("developer", null) is Dictionary else {}
+	if not d.is_empty():
+		sections.append(_section("房地产", [
+			{"label": "公司", "value": String(d.get("name", ""))},
+			{"label": "现金", "value": str(int(d.get("cash", 0)))},
+			{"label": "负债", "value": str(int(d.get("debt", 0)))},
+		]))
+	return sections
 
 static func services(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

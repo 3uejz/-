@@ -87,6 +87,7 @@ func run_tests() -> void:
 	_test_anomaly_commands()
 	_test_medical_commands()
 	_test_content_industry_commands()
+	_test_engineering_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -796,6 +797,36 @@ func _test_content_industry_commands() -> void:
 	_main.submit("作品下架 内容违规")
 	check(not sim._content_studio.is_empty(), "「开工作室」建立工作室")
 	check(not sim._content_work.is_empty(), "「立项作品」建立在研作品")
+
+func _test_engineering_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看工程")
+	_main.submit("办工程公司 一级 宏基建设")
+	_main.submit("承接工程 跨江大桥 50000000")
+	for _i in 6:
+		_main.submit("工程推进")
+	_main.submit("工程监理 80")
+	_main.submit("工程招标")
+	_main.submit("围标")
+	_main.submit("招标行贿 20000000")
+	_main.submit("偷工减料 50")
+	_main.submit("工程事故")
+	_main.submit("拖欠工程款 10000000")
+	_main.submit("三角债 10000000")
+	_main.submit("规划新城 云港 1200000")
+	_main.submit("变更用地 商业区")
+	_main.submit("城建交通 商业区")
+	_main.submit("规划腐败 20000000")
+	_main.submit("房屋拆迁 商业区 500000")
+	_main.submit("办地产公司 宏基地产")
+	_main.submit("楼盘预售 10")
+	_main.submit("楼盘施工 5000000")
+	_main.submit("楼盘烂尾")
+	check(not sim._eng_contractor.is_empty(), "「办工程公司」成立工程公司")
+	check(not sim._eng_project.is_empty(), "「承接工程」建立工程")
+	check(not sim._eng_city.is_empty(), "「规划新城」建立城市")
+	check(not sim._eng_developer.is_empty(), "「办地产公司」成立地产公司")
+
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

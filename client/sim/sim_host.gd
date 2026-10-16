@@ -63,6 +63,7 @@ const AnomalyScript = preload("res://sim/anomaly.gd")
 const MedicalScript = preload("res://sim/medical.gd")
 const MedTechScript = preload("res://sim/medtech.gd")
 const ContentIndustryScript = preload("res://sim/content_industry.gd")
+const EngineeringScript = preload("res://sim/engineering.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -215,6 +216,12 @@ var _content_work: Dictionary = {}         ## 当前在研作品，入档 sim_ru
 var _content_rival: Dictionary = {}        ## 对手工作室（挖角目标），入档 sim_runtime.content.rival
 var _content_ip_id: String = ""            ## 当前 IP 标识，入档 sim_runtime.content.ip_id
 var _content_seq: int = 0                  ## 作品序号，入档 sim_runtime.content.seq
+var engineering                     ## 建筑、工程与城市规划（EngineeringSystem）
+var _eng_contractor: Dictionary = {}       ## 玩家施工/工程公司，入档 sim_runtime.engineering.contractor
+var _eng_project: Dictionary = {}          ## 当前在建工程，入档 sim_runtime.engineering.project
+var _eng_city: Dictionary = {}             ## 当前城市（规划载体），入档 sim_runtime.engineering.city
+var _eng_developer: Dictionary = {}        ## 玩家地产开发商，入档 sim_runtime.engineering.developer
+var _eng_rivals: Array = []                ## 招标对手承包商（确定性生成，不入档）
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -306,6 +313,12 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_content_rival = content_industry.new_studio({"id": "studio.rival", "name": "竞品工作室", "money": 8000000})
 	content_industry.hire(_content_rival, "design", 2, {"skill": 0.8})
 	content_industry.hire(_content_rival, "engineering", 2, {"skill": 0.8})
+	engineering = EngineeringScript.new()
+	_eng_rivals = [
+		engineering.new_contractor({"id": "rival.a", "name": "宏图建设", "qualification": "first", "capital": 60000000, "workmanship": 0.7, "relationship": 0.6, "reputation": 0.7}),
+		engineering.new_contractor({"id": "rival.b", "name": "恒基工程", "qualification": "second", "capital": 20000000, "workmanship": 0.5, "relationship": 0.4, "reputation": 0.5}),
+		engineering.new_contractor({"id": "rival.c", "name": "远洋建工", "qualification": "special", "capital": 90000000, "workmanship": 0.8, "relationship": 0.3, "reputation": 0.8}),
+	]
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -584,6 +597,18 @@ func _ensure_world_geo() -> void:
 				_content_rival = content_industry.from_dict(ctd["rival"])
 			_content_ip_id = String(ctd.get("ip_id", ""))
 			_content_seq = int(ctd.get("seq", 0))
+		# 恢复建筑、工程与城市规划运行态（公司/在建工程/城市/开发商）。
+		var eg: Variant = (state.sim_runtime as Dictionary).get("engineering", {})
+		if eg is Dictionary and not (eg as Dictionary).is_empty():
+			var egd: Dictionary = eg
+			if egd.get("contractor", null) is Dictionary and not (egd["contractor"] as Dictionary).is_empty():
+				_eng_contractor = engineering.from_dict(egd["contractor"])
+			if egd.get("project", null) is Dictionary and not (egd["project"] as Dictionary).is_empty():
+				_eng_project = engineering.from_dict(egd["project"])
+			if egd.get("city", null) is Dictionary and not (egd["city"] as Dictionary).is_empty():
+				_eng_city = engineering.from_dict(egd["city"])
+			if egd.get("developer", null) is Dictionary and not (egd["developer"] as Dictionary).is_empty():
+				_eng_developer = engineering.from_dict(egd["developer"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5306,6 +5331,265 @@ func _persist_content() -> void:
 		"rival": content_industry.to_dict(_content_rival),
 		"ip_id": _content_ip_id,
 		"seq": _content_seq,
+	}
+
+
+# --- D47 建筑、工程与城市规划 ---
+
+func engineering_qualifications_catalog() -> Array:
+	var out: Array = []
+	for key in engineering.QUALIFICATIONS.keys():
+		out.append({"id": String(key), "name": String((engineering.QUALIFICATIONS[key] as Dictionary).get("name", key))})
+	return out
+
+func engineering_stages_catalog() -> Array:
+	var out: Array = []
+	for key in engineering.CHAIN:
+		var d: Dictionary = engineering.STAGES.get(key, {})
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func engineering_procurement_catalog() -> Array:
+	var out: Array = []
+	for key in engineering.PROCUREMENT_MODES.keys():
+		out.append({"id": String(key), "name": String((engineering.PROCUREMENT_MODES[key] as Dictionary).get("name", key))})
+	return out
+
+func engineering_zone_types_catalog() -> Array:
+	var out: Array = []
+	for key in engineering.ZONE_TYPES.keys():
+		out.append({"id": String(key), "name": String((engineering.ZONE_TYPES[key] as Dictionary).get("name", key))})
+	return out
+
+func engineering_contractor() -> Dictionary:
+	return _eng_contractor
+
+func eng_new_contractor(name: String = "", qualification: String = "second") -> Dictionary:
+	var nm: String = name if not name.is_empty() else "我的建设公司"
+	if not engineering.QUALIFICATIONS.has(qualification):
+		return {"ok": false, "reason": "unknown_qualification"}
+	_eng_contractor = engineering.new_contractor({
+		"id": "contractor.player", "name": nm, "qualification": qualification,
+		"capital": int((engineering.QUALIFICATIONS[qualification] as Dictionary)["min_capital"]),
+		"workmanship": 0.7, "relationship": 0.5, "reputation": 0.6,
+	})
+	_persist_engineering()
+	return {"ok": true, "name": String(_eng_contractor.get("name", nm)), "qualification": qualification}
+
+func eng_take_project(name: String = "", scale: int = 50000000) -> Dictionary:
+	if _eng_contractor.is_empty():
+		return {"ok": false, "reason": "no_contractor"}
+	_eng_project = engineering.new_project({"name": name if not name.is_empty() else "承接工程", "scale": maxi(1, scale), "budget": maxi(1, scale)})
+	_persist_engineering()
+	return {
+		"ok": true, "name": String(_eng_project.get("name", "")),
+		"required_qualification": String(_eng_project.get("required_qualification", "")),
+	}
+
+func eng_advance() -> Dictionary:
+	if _eng_project.is_empty() or _eng_contractor.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var before: int = int(_eng_project.get("stage_index", 0))
+	var r: Dictionary = engineering.advance_stage(_eng_project, _eng_contractor, {}, rng)
+	if bool(r.get("ok", false)):
+		r["stage"] = String(engineering.CHAIN[before]) if before < engineering.CHAIN.size() else ""
+		r["next"] = String(_eng_project.get("stage", ""))
+	_persist_engineering()
+	return r
+
+func eng_supervise(strength: float = 0.5) -> Dictionary:
+	if _eng_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = engineering.supervise(_eng_project, {"supervision_strength": clampf(strength, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_engineering()
+	return r
+
+func eng_tender() -> Dictionary:
+	if _eng_project.is_empty() or _eng_contractor.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var bidders: Array = _eng_bidders()
+	var r: Dictionary = engineering.tender(_eng_project, bidders, {"roll": -1.0}, rng)
+	if bool(r.get("ok", false)) and String(r.get("winner", "")) == "contractor.player":
+		r["won"] = true
+	_persist_engineering()
+	return r
+
+func _eng_bidders() -> Array:
+	var out: Array = []
+	var budget: int = maxi(1, int(_eng_project.get("budget", 1)))
+	if not _eng_contractor.is_empty():
+		out.append({
+			"id": "contractor.player", "qualification": String(_eng_contractor.get("qualification", "second")),
+			"price": int(round(float(budget) * 0.95)), "relationship": float(_eng_contractor.get("relationship", 0.5)),
+			"reputation": float(_eng_contractor.get("reputation", 0.6)),
+		})
+	for rv in _eng_rivals:
+		var c: Dictionary = rv
+		out.append({
+			"id": String(c.get("id", "")), "qualification": String(c.get("qualification", "second")),
+			"price": int(round(float(budget) * (0.9 + float(c.get("reputation", 0.5)) * 0.15))),
+			"relationship": float(c.get("relationship", 0.4)), "reputation": float(c.get("reputation", 0.5)),
+		})
+	return out
+
+func eng_rig() -> Dictionary:
+	if _eng_project.is_empty() or _eng_contractor.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = engineering.rig_bids(_eng_bidders(), "contractor.player", {"collusion_bonus": 0.5, "accomplice_price_mult": 1.25})
+	_persist_engineering()
+	return r
+
+func eng_bribe(amount: int = 5000000) -> Dictionary:
+	if _eng_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = engineering.tender_corruption(_eng_project, {"bribe": maxi(0, amount), "roll": -1.0}, rng)
+	_persist_engineering()
+	return r
+
+func eng_cut_corners(degree: float = 0.3) -> Dictionary:
+	if _eng_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = engineering.cut_corners(_eng_project, clampf(degree, 0.0, 1.0), {})
+	_persist_engineering()
+	return r
+
+func eng_accident() -> Dictionary:
+	if _eng_project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = engineering.engineering_accident(_eng_project, {"roll": -1.0}, rng)
+	_persist_engineering()
+	return r
+
+func eng_arrears(amount: int = 10000000) -> Dictionary:
+	if _eng_contractor.is_empty():
+		return {"ok": false, "reason": "no_contractor"}
+	var r: Dictionary = engineering.arrears(_eng_contractor, maxi(0, amount), {})
+	_persist_engineering()
+	return r
+
+func eng_debt_chain(amount: int = 10000000) -> Dictionary:
+	var r: Dictionary = engineering.debt_chain(["业主", "总包", "分包"], maxi(0, amount), {"start_default": 0, "contagion": 0.6})
+	return r
+
+func eng_new_city(name: String = "", population: int = 1000000) -> Dictionary:
+	_eng_city = engineering.new_city({"name": name if not name.is_empty() else "我的城市", "population": maxi(0, population)})
+	_persist_engineering()
+	return {"ok": true, "name": String(_eng_city.get("name", ""))}
+
+func eng_rezone(zone_id: String, zone_type: String) -> Dictionary:
+	if _eng_city.is_empty():
+		return {"ok": false, "reason": "no_city"}
+	var r: Dictionary = engineering.rezone(_eng_city, zone_id, zone_type, {"migration_rate": 0.05})
+	if bool(r.get("ok", false)):
+		_persist_engineering()
+	return r
+
+func eng_transport(zone_id: String) -> Dictionary:
+	if _eng_city.is_empty():
+		return {"ok": false, "reason": "no_city"}
+	var r: Dictionary = engineering.transport_project(_eng_city, zone_id, {"improvement": 0.2})
+	_persist_engineering()
+	return r
+
+func eng_planning_corruption(bribe: int = 10000000) -> Dictionary:
+	if _eng_city.is_empty():
+		return {"ok": false, "reason": "no_city"}
+	var r: Dictionary = engineering.planning_corruption(_eng_city, {"bribe": maxi(0, bribe), "roll": -1.0}, rng)
+	_persist_engineering()
+	return r
+
+func eng_demolition(zone_id: String, residents: int = 1000, compensation: int = 300000) -> Dictionary:
+	if _eng_city.is_empty():
+		return {"ok": false, "reason": "no_city"}
+	var r: Dictionary = engineering.demolition(_eng_city, zone_id, {"residents": maxi(0, residents), "compensation_per": maxi(0, compensation)})
+	if bool(r.get("ok", false)):
+		_persist_engineering()
+	return r
+
+func eng_new_developer(name: String = "", cash: int = 50000000) -> Dictionary:
+	_eng_developer = engineering.new_developer({"name": name if not name.is_empty() else "我的地产公司", "cash": maxi(0, cash)})
+	_persist_engineering()
+	return {"ok": true, "name": String(_eng_developer.get("name", ""))}
+
+func eng_pre_sale(units: int = 10, unit_price: int = 1000000) -> Dictionary:
+	if _eng_developer.is_empty():
+		return {"ok": false, "reason": "no_developer"}
+	if _eng_project.is_empty():
+		_eng_project = engineering.new_project({"name": "楼盘", "scale": maxi(1, units * maxi(1, unit_price)), "budget": maxi(1, units * maxi(1, unit_price))})
+	_eng_project["unit_price"] = maxi(0, unit_price)
+	_eng_project["remaining_cost"] = int(round(float(units) * float(maxi(1, unit_price)) * 0.7))
+	var r: Dictionary = engineering.pre_sale(_eng_developer, _eng_project, maxi(0, units), maxi(0, unit_price), {})
+	_persist_engineering()
+	return r
+
+func eng_develop(cost: int = 5000000) -> Dictionary:
+	if _eng_developer.is_empty() or _eng_project.is_empty():
+		return {"ok": false, "reason": "no_developer"}
+	var r: Dictionary = engineering.develop_project(_eng_developer, _eng_project, maxi(0, cost), {"pace": 0.2})
+	_persist_engineering()
+	return r
+
+func eng_unfinished() -> Dictionary:
+	if _eng_developer.is_empty() or _eng_project.is_empty():
+		return {"ok": false, "reason": "no_developer"}
+	var r: Dictionary = engineering.unfinished(_eng_developer, _eng_project, {})
+	_persist_engineering()
+	return r
+
+func engineering_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _eng_contractor.is_empty():
+		out["contractor"] = {
+			"name": String(_eng_contractor.get("name", "")),
+			"qualification": String(_eng_contractor.get("qualification", "")),
+			"capital": int(_eng_contractor.get("capital", 0)),
+			"workmanship": float(_eng_contractor.get("workmanship", 0.0)),
+			"reputation": float(_eng_contractor.get("reputation", 0.0)),
+		}
+	if not _eng_project.is_empty():
+		out["project"] = {
+			"name": String(_eng_project.get("name", "")),
+			"stage": String(_eng_project.get("stage", "")),
+			"stage_name": String((engineering.STAGES.get(String(_eng_project.get("stage", "")), {}) as Dictionary).get("name", _eng_project.get("stage", ""))),
+			"progress": float(_eng_project.get("progress", 0.0)),
+			"quality": float(_eng_project.get("quality", 0.0)),
+			"budget": int(_eng_project.get("budget", 0)),
+			"accepted": bool(_eng_project.get("accepted", false)),
+			"accident": bool(_eng_project.get("accident", false)),
+		}
+	if not _eng_city.is_empty():
+		var zones: Array = []
+		for zid in (_eng_city.get("zones", {}) as Dictionary).keys():
+			var z: Dictionary = _eng_city["zones"][zid]
+			zones.append({
+				"zone": String(zid),
+				"type": String(z.get("type", "")),
+				"type_name": String((engineering.ZONE_TYPES.get(String(z.get("type", "")), {}) as Dictionary).get("name", z.get("type", ""))),
+				"land_price": float(z.get("land_price", 0.0)),
+			})
+		out["city"] = {
+			"name": String(_eng_city.get("name", "")),
+			"population": int(_eng_city.get("population", 0)),
+			"land_price": float(_eng_city.get("land_price", 0.0)),
+			"traffic": float(_eng_city.get("traffic", 0.0)),
+			"zones": zones,
+		}
+	if not _eng_developer.is_empty():
+		out["developer"] = {
+			"name": String(_eng_developer.get("name", "")),
+			"cash": int(_eng_developer.get("cash", 0)),
+			"debt": int(_eng_developer.get("debt", 0)),
+		}
+	return out
+
+func _persist_engineering() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["engineering"] = {
+		"contractor": engineering.to_dict(_eng_contractor),
+		"project": engineering.to_dict(_eng_project),
+		"city": engineering.to_dict(_eng_city),
+		"developer": engineering.to_dict(_eng_developer),
 	}
 
 
