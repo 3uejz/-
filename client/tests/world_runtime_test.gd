@@ -59,6 +59,7 @@ func run_tests() -> void:
 	_test_environment_runtime()
 	_test_municipal_runtime()
 	_test_debt_runtime()
+	_test_consumer_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1158,4 +1159,46 @@ func _test_debt_runtime() -> void:
 	check(not (reloaded.debt_state().get("loan", {}) as Dictionary).is_empty(), "读档恢复借入贷款")
 	check(not (reloaded.debt_state().get("lend", {}) as Dictionary).is_empty(), "读档恢复放出贷款")
 	check(not reloaded.debt_panel_data().is_empty(), "债务面板数据非空")
+
+
+func _test_consumer_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(141)
+	var host = SimHostScript.new(state, 141)
+	host.bind(state)
+	check(host.consumer_channels_catalog().size() >= 6, "维权渠道表含协商/平台/12315等")
+	check(host.consumer_incident_kinds_catalog().size() >= 2, "事故类型含食安/质量")
+	# 下单与退换（质量原因不受窗口限制）。
+	host.consumer_new_order(100000, "electronics", true, false)
+	var ret: Dictionary = host.consumer_return(100, "quality")
+	check(bool(ret.get("ok", false)) and bool(ret.get("accepted", false)), "质量问题退货受理")
+	# 三包。
+	host.consumer_new_order(200000, "appliance", true, false)
+	check(bool(host.consumer_three_guarantee(2).get("eligible", false)), "三包退换成立")
+	# 保修。
+	host.consumer_new_product(500000, 365)
+	check(bool(host.consumer_warranty(30).get("covered", false)), "质保期内保修免费")
+	check(not bool(host.consumer_warranty(1000).get("covered", true)), "超保修期收费")
+	# 举证责任倒置。
+	host.consumer_new_order(300000, "appliance", true, false)
+	check(String(host.consumer_burden(30).get("bearer", "")) == "merchant", "耐用商品举证责任在商家")
+	# 维权路径与集体维权。
+	check(bool(host.consumer_dispute("platform", 0.9).get("ok", false)), "平台投诉受理")
+	check(bool(host.consumer_class_action(0.9).get("ok", false)), "集体维权受理")
+	# 监管事故与召回。
+	var inc: Dictionary = host.consumer_incident("food_safety", 0.9, 5)
+	check(bool(inc.get("ok", false)) and bool(inc.get("delisted", false)), "食安事故下架")
+	check(bool(host.consumer_recall(100).get("ok", false)), "召回结算")
+	# 职业打假与恶意索赔。
+	host.consumer_new_order(100000, "general", true, false)
+	check(bool(host.consumer_professional_fraud().get("ok", false)), "职业打假结算")
+	host.consumer_new_order(100000, "general", false, false)
+	check(bool(host.consumer_malicious_claim().get("malicious", false)), "恶意索赔标记")
+	# 持久化与读档恢复。
+	host._persist_consumer()
+	check(state.sim_runtime.get("consumer", null) is Dictionary, "消费者运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 141)
+	reloaded.bind(state)
+	check(not (reloaded.consumer_state().get("order", {}) as Dictionary).is_empty(), "读档恢复消费订单")
+	check(not reloaded.consumer_panel_data().is_empty(), "消费者面板数据非空")
 

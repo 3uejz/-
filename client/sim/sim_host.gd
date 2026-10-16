@@ -55,6 +55,7 @@ const EmergencyScript = preload("res://sim/emergency.gd")
 const EnvironmentScript = preload("res://sim/environment.gd")
 const MunicipalScript = preload("res://sim/municipal.gd")
 const DebtServiceScript = preload("res://sim/debt_service.gd")
+const ConsumerProtectionScript = preload("res://sim/consumer_protection.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -178,6 +179,10 @@ var _debt_lender: Dictionary = {}    ## 玩家作为放贷人，入档 sim_runti
 var _debt_loan: Dictionary = {}      ## 玩家作为借款人的贷款，入档 sim_runtime.debt.loan
 var _debt_lend: Dictionary = {}      ## 玩家放出的贷款（供催收），入档 sim_runtime.debt.lend
 var _debt_pawns: Array = []          ## 典当物，入档 sim_runtime.debt.pawns
+var consumer                     ## 消费者保护与产品质量（ConsumerProtectionSystem）
+var _consumer_order: Dictionary = {}    ## 当前消费订单，入档 sim_runtime.consumer.order
+var _consumer_product: Dictionary = {}  ## 当前商品，入档 sim_runtime.consumer.product
+var _consumer_merchant: Dictionary = {} ## 涉事商家，入档 sim_runtime.consumer.merchant
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -250,6 +255,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_postal_hub = municipal.new_postal_hub()
 	debt = DebtServiceScript.new()
 	_debt_lender = debt.new_lender("player", {"name": "本人", "license": true})
+	consumer = ConsumerProtectionScript.new()
+	_consumer_merchant = {"id": "merchant", "name": "商家", "reputation": 0.5, "sales": 1.0, "fines": 0, "compensation_paid": 0}
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -458,6 +465,16 @@ func _ensure_world_geo() -> void:
 			if dbd.get("lend", null) is Dictionary and not (dbd["lend"] as Dictionary).is_empty():
 				_debt_lend = debt.from_dict(dbd["lend"])
 			_debt_pawns = (dbd.get("pawns", []) as Array).duplicate(true)
+		# 恢复消费者保护运行时（订单/商品/商家）。
+		var cs: Variant = (state.sim_runtime as Dictionary).get("consumer", {})
+		if cs is Dictionary and not (cs as Dictionary).is_empty():
+			var csd: Dictionary = cs
+			if csd.get("order", null) is Dictionary and not (csd["order"] as Dictionary).is_empty():
+				_consumer_order = consumer.from_dict(csd["order"])
+			if csd.get("product", null) is Dictionary and not (csd["product"] as Dictionary).is_empty():
+				_consumer_product = consumer.from_dict(csd["product"])
+			if csd.get("merchant", null) is Dictionary and not (csd["merchant"] as Dictionary).is_empty():
+				_consumer_merchant = (csd["merchant"] as Dictionary).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -3927,6 +3944,138 @@ func _persist_debt() -> void:
 		"loan": debt.to_dict(_debt_loan),
 		"lend": debt.to_dict(_debt_lend),
 		"pawns": _debt_pawns.duplicate(true),
+	}
+
+
+
+# --- D40 消费者保护与产品质量 ---
+
+func consumer_state() -> Dictionary:
+	return {"order": _consumer_order, "product": _consumer_product, "merchant": _consumer_merchant}
+
+func consumer_channels_catalog() -> Array:
+	var names: Dictionary = consumer.channel_names()
+	var out: Array = []
+	for key in consumer.channel_keys():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func consumer_incident_kinds_catalog() -> Array:
+	var out: Array = []
+	for key in consumer.incident_kinds():
+		out.append({"id": String(key), "name": "食品安全事故" if String(key) == "food_safety" else "质量事故"})
+	return out
+
+func consumer_new_order(amount: int, category: String, defective: bool, fake: bool) -> Dictionary:
+	_consumer_order = consumer.new_order("order-%d" % Time.get_ticks_msec(), "merchant", amount, {
+		"category": category, "defective": defective, "fake": fake,
+	})
+	_persist_consumer()
+	return {"ok": true, "order": _consumer_order}
+
+func consumer_new_product(price: int, warranty_days: int) -> Dictionary:
+	_consumer_product = consumer.new_product("商品", {"merchant": "merchant", "price": price, "warranty_days": warranty_days})
+	_persist_consumer()
+	return {"ok": true, "product": _consumer_product}
+
+func consumer_return(days_since: int, reason: String) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = consumer.request_return(_consumer_order, days_since, reason)
+	_persist_consumer()
+	return r
+
+func consumer_three_guarantee(repairs: int) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = consumer.three_guarantee(_consumer_order, repairs)
+	_persist_consumer()
+	return r
+
+func consumer_warranty(days_used: int) -> Dictionary:
+	if _consumer_product.is_empty():
+		return {"ok": false, "reason": "no_product"}
+	return consumer.warranty_claim(_consumer_product, days_used)
+
+func consumer_burden(days_since: int) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	return consumer.burden_of_proof(_consumer_order, days_since)
+
+func consumer_dispute(channel: String, evidence: float) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	if channel == "platform":
+		consumer.file_complaint(_consumer_order, "platform", {"evidence": evidence})
+	var r: Dictionary = consumer.resolve_dispute(_consumer_order, _consumer_merchant, {"channel": channel, "evidence": evidence}, rng)
+	_persist_consumer()
+	return r
+
+func consumer_class_action(evidence: float) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = consumer.class_action([_consumer_order], _consumer_merchant, {}, rng)
+	_persist_consumer()
+	return r
+
+func consumer_incident(kind: String, severity: float, victims: int) -> Dictionary:
+	var r: Dictionary = consumer.regulate_incident(_consumer_merchant, kind, {"severity": severity, "victims": victims})
+	_persist_consumer()
+	return r
+
+func consumer_recall(affected: int) -> Dictionary:
+	if _consumer_product.is_empty():
+		_consumer_product = consumer.new_product("商品", {"merchant": "merchant"})
+	var r: Dictionary = consumer.recall(_consumer_product, affected)
+	_persist_consumer()
+	return r
+
+func consumer_professional_fraud() -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	return consumer.professional_fraud(_consumer_order)
+
+func consumer_malicious_claim() -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	return consumer.malicious_claim(_consumer_order, _consumer_merchant, {}, rng)
+
+func consumer_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _consumer_order.is_empty():
+		out["order"] = {
+			"amount": int(_consumer_order.get("amount", 0)),
+			"category": String(_consumer_order.get("category", "general")),
+			"defective": bool(_consumer_order.get("defective", false)),
+			"fake": bool(_consumer_order.get("fake", false)),
+			"status": String(_consumer_order.get("status", "")),
+			"refunded": int(_consumer_order.get("refunded", 0)),
+			"complaints": (_consumer_order.get("complaints", []) as Array).size(),
+		}
+	if not _consumer_product.is_empty():
+		out["product"] = {
+			"name": String(_consumer_product.get("name", "")),
+			"price": int(_consumer_product.get("price", 0)),
+			"warranty_days": int(_consumer_product.get("warranty_days", 0)),
+			"recalled": bool(_consumer_product.get("recalled", false)),
+		}
+	out["merchant"] = {
+		"name": String(_consumer_merchant.get("name", "")),
+		"reputation": float(_consumer_merchant.get("reputation", 0.0)),
+		"sales": float(_consumer_merchant.get("sales", 0.0)),
+		"fines": int(_consumer_merchant.get("fines", 0)),
+		"compensation_paid": int(_consumer_merchant.get("compensation_paid", 0)),
+		"delisted": bool(_consumer_merchant.get("delisted", false)),
+	}
+	return out
+
+func _persist_consumer() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["consumer"] = {
+		"order": consumer.to_dict(_consumer_order),
+		"product": consumer.to_dict(_consumer_product),
+		"merchant": _consumer_merchant.duplicate(true),
 	}
 
 

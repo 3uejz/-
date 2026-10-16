@@ -505,6 +505,34 @@ func _dispatch(intent) -> Dictionary:
 			return _debt_fundraise(intent)
 		"跑路":
 			return _debt_abscond(intent)
+		"消费订单":
+			return _consumer_order(intent)
+		"商品退换":
+			return _consumer_return(intent)
+		"三包退换":
+			return _consumer_three(intent)
+		"商品保修":
+			return _consumer_warranty(intent)
+		"消费举证":
+			return _consumer_burden(intent)
+		"消费协商":
+			return _consumer_dispute_negotiate(intent)
+		"平台投诉":
+			return _consumer_platform(intent)
+		"消协调解":
+			return _consumer_association(intent)
+		"集体维权":
+			return _consumer_class_action(intent)
+		"质量事故":
+			return _consumer_incident_quality(intent)
+		"食安事故":
+			return _consumer_incident_food(intent)
+		"商品召回":
+			return _consumer_recall(intent)
+		"职业打假":
+			return _consumer_fraud(intent)
+		"恶意索赔":
+			return _consumer_malicious(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -2526,6 +2554,109 @@ func _debt_abscond(intent) -> Dictionary:
 		return _fail("无法跑路（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你跑路了，%s。" % ("仍被追回" if bool(r.get("recovered", false)) else "暂未被追回")], 0, "")
 
+func _consumer_order(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 100000))
+	var category := String(intent.params.get("method", "general"))
+	var r: Dictionary = host.consumer_new_order(amount, category, false, false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法下单（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["消费订单已登记，金额 %d。" % amount], 0, "")
+
+func _consumer_return(intent) -> Dictionary:
+	var days: int = int(_param_number(intent, "number", 1))
+	var r: Dictionary = host.consumer_return(days, "no_reason")
+	if not bool(r.get("ok", false)):
+		return _fail("无法退货（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("accepted", false)):
+		return _fail("退货被拒（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["退货受理，退款 %d。" % int(r.get("refund", 0))], 0, "")
+
+func _consumer_three(intent) -> Dictionary:
+	var repairs: int = int(_param_number(intent, "number", 2))
+	var r: Dictionary = host.consumer_three_guarantee(repairs)
+	if not bool(r.get("ok", false)):
+		return _fail("无法三包（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("eligible", false)):
+		return _fail("三包不成立（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["三包退换成立，退款 %d。" % int(r.get("refund", 0))], 0, "")
+
+func _consumer_warranty(intent) -> Dictionary:
+	var days: int = int(_param_number(intent, "number", 30))
+	var r: Dictionary = host.consumer_warranty(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法保修（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("covered", false)):
+		return _ok(["质保期内免费维修。"], 0, "")
+	return _ok(["超出质保，维修费 %d。" % int(r.get("fee", 0))], 0, "")
+
+func _consumer_burden(intent) -> Dictionary:
+	var days: int = int(_param_number(intent, "number", 30))
+	var r: Dictionary = host.consumer_burden(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法举证（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["举证责任在%s。" % ("商家" if String(r.get("bearer", "")) == "merchant" else "消费者")], 0, "")
+
+func _consumer_dispute_negotiate(intent) -> Dictionary:
+	return _consumer_dispute(intent, "negotiate", 0.3)
+
+func _consumer_platform(intent) -> Dictionary:
+	return _consumer_dispute(intent, "platform", 0.4)
+
+func _consumer_association(intent) -> Dictionary:
+	return _consumer_dispute(intent, "consumer_association", 0.5)
+
+func _consumer_dispute(intent, channel: String, evidence: float) -> Dictionary:
+	var r: Dictionary = host.consumer_dispute(channel, evidence)
+	if not bool(r.get("ok", false)):
+		return _fail("无法维权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("success", false)):
+		return _ok(["维权成功，获赔 %d。" % int(r.get("compensation", 0))], 0, "")
+	return _fail("维权未获支持。")
+
+func _consumer_class_action(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_class_action(0.5)
+	if not bool(r.get("ok", false)):
+		return _fail("无法集体维权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("success", false)):
+		return _ok(["集体维权成功，合并赔偿 %d。" % int(r.get("compensation", 0))], 0, "")
+	return _fail("集体维权未获支持。")
+
+func _consumer_incident_quality(intent) -> Dictionary:
+	return _consumer_incident(intent, "quality")
+
+func _consumer_incident_food(intent) -> Dictionary:
+	return _consumer_incident(intent, "food_safety")
+
+func _consumer_incident(intent, kind: String) -> Dictionary:
+	var severity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.consumer_incident(kind, severity, 3)
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理事故（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["监管处罚 %d，赔偿 %d%s。" % [int(r.get("fine", 0)), int(r.get("compensation", 0)), "，产品下架" if bool(r.get("delisted", false)) else ""]], 0, "")
+
+func _consumer_recall(intent) -> Dictionary:
+	var affected: int = int(_param_number(intent, "number", 100))
+	var r: Dictionary = host.consumer_recall(affected)
+	if not bool(r.get("ok", false)):
+		return _fail("无法召回（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["召回 %d 件，成本 %d。" % [int(r.get("affected", 0)), int(r.get("cost", 0))]], 0, "")
+
+func _consumer_fraud(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_professional_fraud()
+	if not bool(r.get("ok", false)):
+		return _fail("无法打假（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("success", false)):
+		return _fail("打假未获支持（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["打假成功，获赔 %d。" % int(r.get("compensation", 0))], 0, "")
+
+func _consumer_malicious(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_malicious_claim()
+	if not bool(r.get("ok", false)):
+		return _fail("无法索赔（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("malicious", false)):
+		return _fail("恶意索赔%s。" % ("被识别驳回" if bool(r.get("detected", false)) else "成立"))
+	return _ok(["索赔属正当维权。"], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -2798,6 +2929,10 @@ func _reason_cn(reason: String) -> String:
 			return "贷款状态不允许此操作"
 		"credit_below_line":
 			return "信用不达标"
+		"no_order":
+			return "尚无消费订单"
+		"no_product":
+			return "尚无商品"
 		_:
 			return reason if reason != "" else "未知原因"
 

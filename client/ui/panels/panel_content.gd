@@ -1061,10 +1061,44 @@ static func debt(player: Dictionary, context: Dictionary, name_resolver: Callabl
 static func consumer(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("维权与消费", "尚未生成角色数据")
+	var cs: Dictionary = context.get("consumer", {})
+	var sections: Array = []
+	if not cs.is_empty():
+		if cs.has("order"):
+			var o: Dictionary = cs["order"]
+			sections.append(_section("消费订单", [
+				{"label": "金额", "value": _money(int(o.get("amount", 0)))},
+				{"label": "类别", "value": String(o.get("category", ""))},
+				{"label": "缺陷", "value": _yes_no(bool(o.get("defective", false)))},
+				{"label": "假货", "value": _yes_no(bool(o.get("fake", false)))},
+				{"label": "状态", "value": String(o.get("status", ""))},
+				{"label": "已退款", "value": _money(int(o.get("refunded", 0)))},
+				{"label": "投诉次数", "value": str(int(o.get("complaints", 0)))},
+			]))
+		if cs.has("product"):
+			var pr: Dictionary = cs["product"]
+			sections.append(_section("商品", [
+				{"label": "名称", "value": String(pr.get("name", ""))},
+				{"label": "价格", "value": _money(int(pr.get("price", 0)))},
+				{"label": "质保天数", "value": str(int(pr.get("warranty_days", 0)))},
+				{"label": "已召回", "value": _yes_no(bool(pr.get("recalled", false)))},
+			]))
+		if cs.has("merchant"):
+			var m: Dictionary = cs["merchant"]
+			sections.append(_section("涉事商家", [
+				{"label": "名称", "value": String(m.get("name", ""))},
+				{"label": "声誉", "value": "%.2f" % float(m.get("reputation", 0.0))},
+				{"label": "销量", "value": "%.2f" % float(m.get("sales", 0.0))},
+				{"label": "罚款", "value": _money(int(m.get("fines", 0)))},
+				{"label": "累计赔偿", "value": _money(int(m.get("compensation_paid", 0)))},
+				{"label": "已下架", "value": _yes_no(bool(m.get("delisted", false)))},
+			]))
 	var cases: Array = _items_of(player.get("cases", []))
-	if cases.is_empty():
+	if not cases.is_empty():
+		sections.append(_section("投诉与维权", _rows_from(cases, ["type", "stage", "status"], name_resolver)))
+	if sections.is_empty():
 		return _empty("维权与消费", "暂无投诉；遇到消费纠纷可投诉、举证并申请调解或仲裁")
-	return _ok([_section("投诉与维权", _rows_from(cases, ["type", "stage", "status"], name_resolver))])
+	return _ok(sections)
 
 static func welfare(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

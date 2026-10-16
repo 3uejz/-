@@ -55,6 +55,7 @@ func run_tests() -> void:
 	_test_environment_panel()
 	_test_municipal_panel()
 	_test_debt_panel()
+	_test_consumer_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -514,6 +515,18 @@ func _test_debt_panel() -> void:
 	check(_find_section(d, "我放出的贷款").get("rows", []).size() >= 1, "我放出的贷款分区有行")
 	check(_find_section(d, "放贷人").get("rows", []).size() >= 1, "放贷人分区有行")
 	check(_find_section(d, "典当物").get("rows", []).size() >= 1, "典当物分区有行")
+
+func _test_consumer_panel() -> void:
+	var ctx: Dictionary = {"consumer": {
+		"order": {"amount": 100000, "category": "electronics", "defective": true, "fake": false, "status": "resolved", "refunded": 100000, "complaints": 1},
+		"product": {"name": "商品", "price": 500000, "warranty_days": 365, "recalled": false},
+		"merchant": {"name": "商家", "reputation": 0.3, "sales": 0.8, "fines": 200000, "compensation_paid": 50000, "delisted": false},
+	}}
+	var d: Dictionary = PanelContentScript.build("consumer", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有消费者上下文非空")
+	check(_find_section(d, "消费订单").get("rows", []).size() >= 1, "消费订单分区有行")
+	check(_find_section(d, "商品").get("rows", []).size() >= 1, "商品分区有行")
+	check(_find_section(d, "涉事商家").get("rows", []).size() >= 1, "涉事商家分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):

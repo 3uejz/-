@@ -17,7 +17,7 @@
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
 8. **后端权威边界未逐域标注（中）**：碳市场、区域医疗、城市规划、交通基建、灾害等同时改区域与宏观，未声明权威归属与合并锚点。
-9. **测试点系统性缺失（中）**：D40/D41/D42/D43/D46 无专属测试；多为域无边界的测试。
+9. **测试点系统性缺失（中）**：D41/D42/D43/D46 无专属测试；多为域无边界的测试。
 10. **硬冲突（高）**：
     - D20 语言等级 0..100 与技能 0..20 矛盾（已决议：语言独立类型）。
     - `npc.schema.json` 的 `relations` 引用单个 relation，而 `player.relations` 是数组。
@@ -159,7 +159,8 @@
 - **待办**：多笔贷款与征信档案的完整台账由后端权威、跨机构征信共享、催收致自杀的法律接口细化待补。
 
 ### D40 消费者保护与产品质量
-- 三包/质保/召回/举证/维权成功率无模型；订单/投诉/召回无 schema；缺陷/召回/维权内容缺失；缺召回/索赔/集体维权动词；D40↔D9/D12/D30 接口未定。
+- **已接线**：`ConsumerProtectionSystem`（`consumer_protection.gd`）退换货/三包/保修（`new_order()`/`new_product()`/`request_return()`（七日无理由，质量原因不受窗口限制）/`three_guarantee()`（多次维修）/`warranty_claim()`（质保期内免费，逾期按比例））；举证责任（`burden_of_proof()`，耐用商品六个月瑕疵倒置）；投诉渠道（`CHANNELS` = 协商→平台→12315→消协→诉讼→集体维权，渠道权重真源 `consumer_protection.json`，`file_complaint()` 含平台推诿判定）；维权路径（`resolve_dispute()` 按渠道权重+证据+举证责任判定，假货/缺陷适用惩罚性赔偿，联动商家声誉与销量，`class_action()` 合并多笔订单）；监管（`regulate_incident()` 食安/质量事故罚款赔偿与下架、`recall()` 召回成本与品牌损伤、`merchant_effects()` 商家影响）；职业打假与边界（`professional_fraud()` 滥用阈值、`malicious_claim()` 可识别驳回、`platform_buck_pass()`）。运行时经 `GameState.sim_runtime.consumer`（`order`/`product`/`merchant`）持久化。`SimHost` 接线 `consumer_channels_catalog()`/`consumer_incident_kinds_catalog()`/`consumer_new_order()`/`consumer_new_product()`/`consumer_return()`/`consumer_three_guarantee()`/`consumer_warranty()`/`consumer_burden()`/`consumer_dispute()`/`consumer_class_action()`/`consumer_incident()`/`consumer_recall()`/`consumer_professional_fraud()`/`consumer_malicious_claim()`/`consumer_panel_data()`。UI：扩展「维权与消费」面板在原有投诉外渲染消费订单/商品/涉事商家分区（`context["consumer"]`）；指令 `消费订单 <金额>`/`商品退换 [天数]`/`三包退换 [维修次数]`/`商品保修 [使用天数]`/`消费举证 [天数]`/`消费协商`/`平台投诉`/`消协调解`/`集体维权`/`质量事故 [严重度]`/`食安事故 [严重度]`/`商品召回 [数量]`/`职业打假`/`恶意索赔`；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `consumer_protection_test` 覆盖）。
+- **待办**：具体诉讼程序委托 `CivilSystem`（D12）、召回批次与供应链溯源、平台/12315 真实对接模拟与商家反诉敲诈的程序细化待补。
 
 ### D41 收养、寄养与社会救助
 - 收养资格评分/匹配/低保线/救助金额/慈善透明无模型；收养/寄养/监护/救助/慈善无 schema；救助项目内容缺失；缺寄养/低保申请动词与面板。

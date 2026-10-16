@@ -80,6 +80,7 @@ func run_tests() -> void:
 	_test_environment_commands()
 	_test_municipal_commands()
 	_test_debt_commands()
+	_test_consumer_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -634,6 +635,26 @@ func _test_debt_commands() -> void:
 	_main.submit("套路贷 300000")
 	_main.submit("非法集资 500000")
 	_main.submit("跑路")
+
+func _test_consumer_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看维权")
+	check(_main.has_panel("consumer"), "「看维权」打开维权面板")
+	_main.submit("消费订单 100000")
+	check(not (sim.consumer_state().get("order", {}) as Dictionary).is_empty(), "「消费订单」登记")
+	_main.submit("商品退换 1")
+	_main.submit("三包退换 2")
+	_main.submit("商品保修 30")
+	_main.submit("消费举证 30")
+	_main.submit("消费协商")
+	_main.submit("平台投诉")
+	_main.submit("消协调解")
+	_main.submit("集体维权")
+	_main.submit("质量事故 80")
+	_main.submit("食安事故 90")
+	_main.submit("商品召回 100")
+	_main.submit("职业打假")
+	_main.submit("恶意索赔")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

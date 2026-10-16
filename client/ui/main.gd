@@ -820,6 +820,9 @@ func _panel_context() -> Dictionary:
 		var dbp: Dictionary = _sim.debt_panel_data()
 		if not dbp.is_empty():
 			context["debt"] = dbp
+		var csp: Dictionary = _sim.consumer_panel_data()
+		if not csp.is_empty():
+			context["consumer"] = csp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context
