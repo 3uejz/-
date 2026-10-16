@@ -625,6 +625,30 @@ func _dispatch(intent) -> Dictionary:
 			return _meta_collude(intent)
 		"真假难辨":
 			return _meta_blur(intent)
+		"开启门闩":
+			return _anomaly_open_gate(intent)
+		"天赋觉醒":
+			return _anomaly_rare_talent(intent)
+		"查阅条目":
+			return _anomaly_encounter(intent)
+		"使用能力":
+			return _anomaly_use_ability(intent)
+		"权限晋升":
+			return _anomaly_clearance(intent)
+		"加入阵营":
+			return _anomaly_join_faction(intent)
+		"接受任务":
+			return _anomaly_accept_mission(intent)
+		"完成任务":
+			return _anomaly_complete_mission(intent)
+		"服用记忆删除":
+			return _anomaly_amnestics(intent)
+		"认知对抗":
+			return _anomaly_combat(intent)
+		"收容失效":
+			return _anomaly_breach(intent)
+		"身份设定":
+			return _anomaly_identity(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3068,6 +3092,97 @@ func _meta_blur(intent) -> Dictionary:
 		return _fail("无法判断。")
 	return _ok(["外观%s，%s。" % ["不可区分", String(r.get("label", "普通从业者"))]], 0, "")
 
+func _anomaly_open_gate(intent) -> Dictionary:
+	var path: String = _object_id(intent, "anomaly_gate")
+	if path.is_empty():
+		return _fail("请指明门闩途径。")
+	var r: Dictionary = host.anomaly_open_gate(path)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开启（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已开启「%s」，异常世界向你敞开。" % String(r.get("gate", ""))], 0, "")
+
+func _anomaly_rare_talent(intent) -> Dictionary:
+	var r: Dictionary = host.anomaly_rare_talent()
+	if bool(r.get("born_with_talent", false)):
+		return _ok(["天赋觉醒：你生来便感知常人不可见之物。"], 0, "")
+	return _ok(["并未觉醒异常天赋。"], 0, "")
+
+func _anomaly_encounter(intent) -> Dictionary:
+	var eid: String = _object_id(intent, "anomaly_entry")
+	if eid.is_empty():
+		return _fail("请指明异常条目。")
+	var r: Dictionary = host.anomaly_encounter(eid)
+	if not bool(r.get("ok", false)):
+		return _fail("无法查阅（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var e: Dictionary = r.get("entry", {})
+	return _ok(["已收录「%s」，威胁 %s，暴露值 %d。" % [String(e.get("name", eid)), String(e.get("threat", "")), int(round(float(r.get("exposure", 0.0))))]], 0, "")
+
+func _anomaly_use_ability(intent) -> Dictionary:
+	var line: String = _object_id(intent, "anomaly_ability")
+	if line.is_empty():
+		return _fail("请指明能力线。")
+	var r: Dictionary = host.anomaly_use_ability(line)
+	if not bool(r.get("ok", false)):
+		return _fail("无法施展（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["施展%s，等级 %d，效果强度 %d%%。" % [String(r.get("name", line)), int(r.get("level", 0)), int(round(float(r.get("effect_strength", 0.0)) * 100.0))]], 0, "")
+
+func _anomaly_clearance(intent) -> Dictionary:
+	var level: int = int(_param_number(intent, "number", 1))
+	var r: Dictionary = host.anomaly_set_clearance(level)
+	return _ok(["权限提升至 Level %d。" % int(r.get("clearance", 0))], 0, "")
+
+func _anomaly_join_faction(intent) -> Dictionary:
+	var fid: String = _object_id(intent, "anomaly_faction")
+	if fid.is_empty():
+		return _fail("请指明阵营。")
+	var r: Dictionary = host.anomaly_join_faction(fid)
+	if not bool(r.get("ok", false)):
+		return _fail("无法加入（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已加入%s。" % String(r.get("name", fid))], 0, "")
+
+func _anomaly_accept_mission(intent) -> Dictionary:
+	var fid: String = _object_id(intent, "anomaly_faction")
+	if fid.is_empty():
+		return _fail("请指明阵营。")
+	var mid: String = String(intent.params.get("method", "mission_1"))
+	var r: Dictionary = host.anomaly_accept_mission(mid, fid)
+	if not bool(r.get("ok", false)):
+		return _fail("无法接受任务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已接下任务「%s」。" % mid], 0, "")
+
+func _anomaly_complete_mission(intent) -> Dictionary:
+	var mid: String = String(intent.params.get("method", "mission_1"))
+	var r: Dictionary = host.anomaly_complete_mission(mid, true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法完成任务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["任务完成，阵营声望 %d。" % int(round(float(r.get("reputation", 0.0))))], 0, "")
+
+func _anomaly_amnestics(intent) -> Dictionary:
+	var dose: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.anomaly_amnestics(dose)
+	if not bool(r.get("ok", false)):
+		return _fail("无法施用记忆删除剂（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["记忆删除剂（剂量%d%%）：清除污染 %d，记忆缺口 %d，使用 %d/%d。" % [int(round(dose * 100.0)), int(round(float(r.get("cleared", 0.0)))), int(r.get("memory_gaps", 0)), int(r.get("uses", 0)), int(r.get("max", 0))]], 0, "")
+
+func _anomaly_combat(intent) -> Dictionary:
+	var r: Dictionary = host.anomaly_combat()
+	if bool(r.get("attacker_wins", false)):
+		return _ok(["认知对抗胜出（胜率%d%%）。" % int(round(float(r.get("win_probability", 0.0)) * 100.0))], 0, "")
+	return _ok(["认知对抗落败（胜率%d%%）。" % int(round(float(r.get("win_probability", 0.0)) * 100.0))], 0, "")
+
+func _anomaly_breach(intent) -> Dictionary:
+	var r: Dictionary = host.anomaly_breach()
+	return _ok(["收容失效，暴露 +%d，当前暴露 %d。" % [int(round(float(r.get("exposure_gain", 0.0)))), int(round(float(r.get("exposure", 0.0))))]], 0, "")
+
+func _anomaly_identity(intent) -> Dictionary:
+	var ident: String = _object_id(intent, "anomaly_identity")
+	if ident.is_empty():
+		return _fail("请指明身份。")
+	var r: Dictionary = host.anomaly_set_identity(ident)
+	if not bool(r.get("ok", false)):
+		return _fail("无法设定身份（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["身份设定为%s。" % String(r.get("name", ident))], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -3380,6 +3495,30 @@ func _reason_cn(reason: String) -> String:
 			return "未知民俗活动"
 		"no_business":
 			return "尚未开办玄学业务"
+		"unknown_gate":
+			return "未知门闩途径"
+		"unknown_identity":
+			return "未知身份"
+		"unknown_faction":
+			return "未知阵营"
+		"unknown_ability":
+			return "未知能力线"
+		"unknown_entry":
+			return "未知异常条目"
+		"unknown_hazard":
+			return "未知危害类型"
+		"unknown_anomaly_mission":
+			return "未知异常任务"
+		"insufficient_clearance":
+			return "权限不足"
+		"insufficient_mana":
+			return "灵力不足"
+		"insufficient_spirit":
+			return "精神不足"
+		"insufficient_sanity":
+			return "理智不足"
+		"limit_reached":
+			return "已达记忆删除剂使用上限"
 		_:
 			return reason if reason != "" else "未知原因"
 

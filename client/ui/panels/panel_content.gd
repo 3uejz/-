@@ -1939,10 +1939,61 @@ static func weather(player: Dictionary, context: Dictionary, name_resolver: Call
 static func anomaly(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("异常图鉴", "尚未生成角色数据")
+	var a: Dictionary = context.get("anomaly", {})
+	if not a.is_empty() and bool(a.get("can_enter", false)):
+		return _ok(_anomaly_sections(a))
+	# 回退：世界事件层异常条目。
 	var items: Array = _items_of(_world(context).get("anomalies", []))
 	if items.is_empty():
 		return _empty("异常图鉴", "未接触异常收容对象")
 	return _ok([_section("异常条目", _rows_from(items, ["class", "containment", "faction", "status"], name_resolver))])
+
+static func _anomaly_sections(a: Dictionary) -> Array:
+	var tier_names: Dictionary = {
+		"contamination": "认知污染", "hunt": "猎杀", "containment": "收容",
+		"ban": "封禁", "breakdown": "精神崩溃",
+	}
+	var tier: String = String(a.get("tier", ""))
+	var sections: Array = []
+	sections.append(_section("暴露与状态", [
+		{"label": "暴露值", "value": str(int(round(float(a.get("exposure", 0.0)))))},
+		{"label": "反噬阈值", "value": String(tier_names.get(tier, "未触发"))},
+		{"label": "异常世界", "value": "已激活" if bool(a.get("active", false)) else "门闩未启"},
+		{"label": "隔离", "value": "隐藏" if bool(a.get("hidden", true)) else "暴露"},
+		{"label": "结局", "value": String(a.get("ending", "")) if not String(a.get("ending", "")).is_empty() else "无"},
+	]))
+	sections.append(_section("权限与阵营", [
+		{"label": "权限", "value": "Level %d" % int(a.get("clearance", 0))},
+		{"label": "身份", "value": String(a.get("identity_name", "")) if not String(a.get("identity_name", "")).is_empty() else "未定"},
+		{"label": "阵营", "value": String(a.get("faction_name", "")) if not String(a.get("faction_name", "")).is_empty() else "无"},
+		{"label": "D 级人员", "value": "是" if bool(a.get("is_d_class", false)) else "否"},
+	]))
+	var ability_rows: Array = []
+	for row in _items_of(a.get("abilities", [])):
+		ability_rows.append({"label": String((row as Dictionary).get("name", "")), "value": "Lv %d" % int((row as Dictionary).get("level", 0))})
+	if not ability_rows.is_empty():
+		sections.append(_section("能力线", ability_rows))
+	var res: Dictionary = a.get("resources", {})
+	sections.append(_section("资源", [
+		{"label": "灵力", "value": str(int(round(float(res.get("mana", 0.0)))))},
+		{"label": "精神", "value": str(int(round(float(res.get("spirit", 0.0)))))},
+		{"label": "理智", "value": str(int(round(float(res.get("sanity", 0.0)))))},
+	]))
+	var cont: Dictionary = a.get("contamination", {})
+	var am: Dictionary = a.get("amnestics", {})
+	sections.append(_section("认知污染", [
+		{"label": "模因", "value": str(int(round(float(cont.get("meme", 0.0)))))},
+		{"label": "认知", "value": str(int(round(float(cont.get("cognition", 0.0)))))},
+		{"label": "信息", "value": str(int(round(float(cont.get("info", 0.0)))))},
+		{"label": "合计", "value": str(int(round(float(a.get("contamination_total", 0.0)))))},
+		{"label": "记忆删除剂", "value": "%d/%d" % [int(am.get("uses", 0)), int(am.get("max", 0))]},
+		{"label": "记忆缺口", "value": str(int(am.get("memory_gaps", 0)))},
+		{"label": "成瘾", "value": "%d%%" % int(round(float(am.get("addiction", 0.0)) * 100.0))},
+	]))
+	sections.append(_section("图鉴", [
+		{"label": "已收录", "value": "%d 条" % int(a.get("known_count", 0))},
+	]))
+	return sections
 
 static func goldfinger(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

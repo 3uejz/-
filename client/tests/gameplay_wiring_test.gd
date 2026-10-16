@@ -84,6 +84,7 @@ func run_tests() -> void:
 	_test_welfare_commands()
 	_test_funeral_commands()
 	_test_metaphysics_commands()
+	_test_anomaly_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -729,6 +730,24 @@ func _test_metaphysics_commands() -> void:
 	_main.submit("勾结灰产")
 	_main.submit("真假难辨")
 	check(not (sim.metaphysics_state().get("business", {}) as Dictionary).is_empty(), "「开玄学馆」建立经营体")
+
+func _test_anomaly_commands() -> void:
+	var sim = _main._sim
+	_main.submit("开启门闩 血脉传承")
+	check(sim.anomaly_revealed(), "「开启门闩」激活异常世界")
+	_main.submit("看异常")
+	_main.submit("天赋觉醒")
+	_main.submit("权限晋升 3")
+	_main.submit("查阅条目 镜中人")
+	_main.submit("使用能力 修炼与异能")
+	_main.submit("加入阵营 基金会")
+	_main.submit("接受任务 基金会 清理任务")
+	_main.submit("完成任务 清理任务")
+	_main.submit("服用记忆删除 50")
+	_main.submit("认知对抗")
+	_main.submit("收容失效")
+	_main.submit("身份设定 基金会人员")
+	check(not (sim.anomaly_state().get("known_entries", {}) as Dictionary).is_empty(), "「查阅条目」收录异常图鉴")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

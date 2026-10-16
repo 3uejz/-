@@ -59,6 +59,8 @@ func run_tests() -> void:
 	_test_welfare_panel()
 	_test_funeral_panel()
 	_test_metaphysics_panel()
+	_test_anomaly_panel()
+	_test_hidden_anomaly_panel_empty()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -104,6 +106,27 @@ func _test_metaphysics_panel() -> void:
 	check(_find_section(d, "求测状态").get("rows", []).size() >= 1, "求测状态分区有行")
 	check(_find_section(d, "从业者").get("rows", []).size() >= 1, "从业者分区有行")
 	check(_find_section(d, "玄学经营").get("rows", []).size() >= 1, "玄学经营分区有行")
+
+func _test_anomaly_panel() -> void:
+	var ctx: Dictionary = {"anomaly": {
+		"hidden": false, "active": true, "can_enter": true, "exposure": 55.0, "tier": "hunt", "ending": "",
+		"clearance": 3, "is_d_class": false, "identity_name": "基金会人员", "faction_name": "基金会",
+		"abilities": [{"line": "precognition", "name": "预知与气运", "level": 5, "exp": 50.0}],
+		"resources": {"mana": 80.0, "spirit": 70.0, "sanity": 60.0},
+		"contamination": {"meme": 10.0, "cognition": 5.0, "info": 0.0}, "contamination_total": 15.0,
+		"amnestics": {"uses": 1, "max": 3, "memory_gaps": 5, "addiction": 0.5},
+		"known_count": 3,
+	}}
+	var d: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有异常上下文非空")
+	check(_find_section(d, "暴露与状态").get("rows", []).size() >= 1, "暴露与状态分区有行")
+	check(_find_section(d, "能力线").get("rows", []).size() >= 1, "能力线分区有行")
+	check(_find_section(d, "认知污染").get("rows", []).size() >= 1, "认知污染分区有行")
+	check(_find_section(d, "图鉴").get("rows", []).size() >= 1, "图鉴分区有行")
+
+func _test_hidden_anomaly_panel_empty() -> void:
+	var d: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player(), Callable(), {})
+	check(bool(d.get("empty", false)), "无异常接触时面板为空态")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

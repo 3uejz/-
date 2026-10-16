@@ -59,6 +59,7 @@ const ConsumerProtectionScript = preload("res://sim/consumer_protection.gd")
 const SocialWelfareScript = preload("res://sim/social_welfare.gd")
 const FuneralScript = preload("res://sim/funeral.gd")
 const MetaphysicsScript = preload("res://sim/metaphysics.gd")
+const AnomalyScript = preload("res://sim/anomaly.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -199,6 +200,8 @@ var metaphysics                    ## 玄学、命理与民俗信仰（Metaphysi
 var _meta_client: Dictionary = {}          ## 求测者心理状态，入档 sim_runtime.metaphysics.client
 var _meta_practitioner: Dictionary = {}    ## 从业者（大师）人设，入档 sim_runtime.metaphysics.practitioner
 var _meta_business: Dictionary = {}        ## 玄学经营体，入档 sim_runtime.metaphysics.business
+var anomaly                       ## 隐秘异常收容体系（AnomalySystem）
+var _anomaly_state: Dictionary = {}        ## 异常隔离状态树（默认 hidden），入档 sim_runtime.anomaly
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -280,6 +283,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	metaphysics = MetaphysicsScript.new()
 	_meta_client = metaphysics.new_client()
 	_meta_practitioner = metaphysics.new_practitioner("player", {"name": "本人"})
+	anomaly = AnomalyScript.new()
+	_anomaly_state = anomaly.new_state()["anomaly"]
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -530,6 +535,10 @@ func _ensure_world_geo() -> void:
 				_meta_practitioner = metaphysics.from_dict(mtd["practitioner"])
 			if mtd.get("business", null) is Dictionary and not (mtd["business"] as Dictionary).is_empty():
 				_meta_business = metaphysics.from_dict(mtd["business"])
+		# 恢复异常隔离状态树（默认 hidden，不入常规结算）。
+		var an: Variant = (state.sim_runtime as Dictionary).get("anomaly", {})
+		if an is Dictionary and not (an as Dictionary).is_empty():
+			_anomaly_state = anomaly.from_dict(an)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -4639,6 +4648,155 @@ func _persist_metaphysics() -> void:
 		"business": metaphysics.to_dict(_meta_business),
 	}
 
+
+# --- D44 隐秘异常收容体系 ---
+
+func anomaly_state() -> Dictionary:
+	return _anomaly_state
+
+## 异常图鉴仅在存在门闩/激活后可见（默认隐藏，普通玩法不受影响）。
+func anomaly_revealed() -> bool:
+	return anomaly.can_enter(_anomaly_state)
+
+func anomaly_gate_catalog() -> Array:
+	var names: Dictionary = {
+		"rare_talent": "稀有天赋", "hidden_event_chain": "隐藏事件链",
+		"bloodline": "血脉传承", "special_place": "特殊地点", "special_item": "特殊物品",
+	}
+	var out: Array = []
+	for key in anomaly.gate_keys():
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func anomaly_entry_catalog() -> Array:
+	var out: Array = []
+	for e in anomaly.core_entries().values():
+		out.append({"id": String(e.get("id", "")), "name": String(e.get("name", ""))})
+	return out
+
+func anomaly_ability_catalog() -> Array:
+	var out: Array = []
+	for key in anomaly.ability_keys():
+		out.append({"id": String(key), "name": anomaly.ability_name(String(key))})
+	return out
+
+func anomaly_faction_catalog() -> Array:
+	var out: Array = []
+	for key in anomaly.factions():
+		out.append({"id": String(key), "name": anomaly.faction_name(String(key))})
+	return out
+
+func anomaly_identity_catalog() -> Array:
+	var out: Array = []
+	for key in anomaly.identities():
+		out.append({"id": String(key), "name": anomaly.identity_name(String(key))})
+	return out
+
+func anomaly_open_gate(path: String) -> Dictionary:
+	var r: Dictionary = anomaly.open_gate(_anomaly_state, path)
+	_persist_anomaly()
+	return r
+
+func anomaly_rare_talent(roll: float = -1.0) -> Dictionary:
+	var effective: float = roll if roll >= 0.0 else rng.next_float()
+	var r: Dictionary = anomaly.rare_talent_check(_anomaly_state, effective)
+	_persist_anomaly()
+	return r
+
+func anomaly_set_clearance(level: int) -> Dictionary:
+	var r: Dictionary = anomaly.set_clearance(_anomaly_state, level)
+	_persist_anomaly()
+	return r
+
+func anomaly_set_identity(identity: String) -> Dictionary:
+	var r: Dictionary = anomaly.set_identity(_anomaly_state, identity)
+	_persist_anomaly()
+	return r
+
+func anomaly_join_faction(faction: String) -> Dictionary:
+	var r: Dictionary = anomaly.join_faction(_anomaly_state, faction)
+	_persist_anomaly()
+	return r
+
+func anomaly_accept_mission(mission_id: String, faction: String) -> Dictionary:
+	var r: Dictionary = anomaly.accept_mission(_anomaly_state, mission_id, faction)
+	_persist_anomaly()
+	return r
+
+func anomaly_complete_mission(mission_id: String, success: bool = true) -> Dictionary:
+	var r: Dictionary = anomaly.complete_mission(_anomaly_state, mission_id, {"success": success})
+	_persist_anomaly()
+	return r
+
+func anomaly_use_ability(line: String) -> Dictionary:
+	var r: Dictionary = anomaly.use_ability(_anomaly_state, line, {}, rng)
+	_persist_anomaly()
+	return r
+
+func anomaly_gain_exp(line: String, amount: float) -> Dictionary:
+	var r: Dictionary = anomaly.gain_exp(_anomaly_state, line, amount)
+	_persist_anomaly()
+	return r
+
+func anomaly_encounter(entry_id: String) -> Dictionary:
+	var r: Dictionary = anomaly.encounter(_anomaly_state, entry_id)
+	_persist_anomaly()
+	return r
+
+func anomaly_amnestics(dose: float = 0.5) -> Dictionary:
+	var r: Dictionary = anomaly.amnestics(_anomaly_state, dose, {}, rng)
+	_persist_anomaly()
+	return r
+
+## 认知对抗：与同种子确定性生成的对手依能力/法器/气运/抗性判定。
+func anomaly_combat() -> Dictionary:
+	var rival: Dictionary = anomaly.new_state()["anomaly"]
+	for line in anomaly.ability_keys():
+		(rival["abilities"] as Dictionary)[line]["level"] = 3
+	var r: Dictionary = anomaly.resolve_combat(_anomaly_state, rival, {"contest_type": "rival", "roll": -1.0}, rng)
+	_persist_anomaly()
+	return r
+
+func anomaly_breach() -> Dictionary:
+	var r: Dictionary = anomaly.trigger_containment_breach(_anomaly_state)
+	_persist_anomaly()
+	return r
+
+func anomaly_panel_data() -> Dictionary:
+	var a: Dictionary = _anomaly_state
+	var abilities: Array = []
+	for key in anomaly.ability_keys():
+		var line: String = String(key)
+		abilities.append({
+			"line": line, "name": anomaly.ability_name(line),
+			"level": anomaly.ability_level(a, line), "exp": anomaly.ability_exp(a, line),
+		})
+	return {
+		"hidden": anomaly.is_hidden(a),
+		"active": anomaly.is_active(a),
+		"can_enter": anomaly.can_enter(a),
+		"exposure": anomaly.exposure(a),
+		"tier": anomaly.exposure_tier(a),
+		"ending": anomaly.ending(a),
+		"clearance": anomaly.clearance_level(a),
+		"is_d_class": anomaly.is_d_class(a),
+		"identity": String(a.get("identity", "")),
+		"identity_name": anomaly.identity_name(String(a.get("identity", ""))),
+		"faction": String(a.get("faction", "")),
+		"faction_name": anomaly.faction_name(String(a.get("faction", ""))),
+		"abilities": abilities,
+		"resources": (a.get("resources", {}) as Dictionary).duplicate(true),
+		"contamination": anomaly.contamination(a),
+		"contamination_total": anomaly.contamination_total(a),
+		"amnestics": anomaly.amnestic_status(a),
+		"known_count": anomaly.known_entries(a).size(),
+		"known": anomaly.known_entries(a),
+	}
+
+func _persist_anomaly() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["anomaly"] = anomaly.to_dict(_anomaly_state)
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

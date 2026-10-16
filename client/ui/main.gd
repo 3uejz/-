@@ -469,6 +469,11 @@ func _catalogs() -> Dictionary:
 		"meta_service": _sim.metaphysics_services_catalog(),
 		"meta_mode": _sim.metaphysics_modes_catalog(),
 		"folk_practice": _sim.metaphysics_folk_practices_catalog(),
+		"anomaly_gate": _sim.anomaly_gate_catalog(),
+		"anomaly_entry": _sim.anomaly_entry_catalog(),
+		"anomaly_ability": _sim.anomaly_ability_catalog(),
+		"anomaly_faction": _sim.anomaly_faction_catalog(),
+		"anomaly_identity": _sim.anomaly_identity_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -503,10 +508,11 @@ func _build_actions() -> void:
 
 # --- 侧边抽屉面板（任务 47/51） ---
 
-## 面板条件可见：目前仅常驻面板；异常/金手指面板待对应状态接入后开放。
+## 面板条件可见：常驻面板恒可见；异常图鉴随异常门闩/激活开放，金手指/结算待对应状态接入。
 func _panel_conditions() -> Dictionary:
 	return {
 		"dead": _sim != null and _sim.is_dead(),
+		"revealed_abnormal": _sim != null and _sim.anomaly_revealed(),
 	}
 
 func _ensure_drawer_row() -> void:
@@ -838,6 +844,7 @@ func _panel_context() -> Dictionary:
 		var mtp: Dictionary = _sim.metaphysics_panel_data()
 		if not mtp.is_empty():
 			context["metaphysics"] = mtp
+		context["anomaly"] = _sim.anomaly_panel_data()
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

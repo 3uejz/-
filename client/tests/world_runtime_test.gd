@@ -63,6 +63,7 @@ func run_tests() -> void:
 	_test_welfare_runtime()
 	_test_funeral_runtime()
 	_test_metaphysics_runtime()
+	_test_anomaly_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1342,4 +1343,61 @@ func _test_metaphysics_runtime() -> void:
 	reloaded.bind(state)
 	check(not (reloaded.metaphysics_state().get("business", {}) as Dictionary).is_empty(), "读档恢复玄学经营")
 	check(not reloaded.metaphysics_panel_data().is_empty(), "玄学面板数据非空")
+
+
+func _test_anomaly_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(181)
+	var host = SimHostScript.new(state, 181)
+	host.bind(state)
+	# 默认隔离：隐藏、不激活、不参与常规结算。
+	check(bool(host.anomaly_state().get("hidden", false)), "异常默认隐藏")
+	check(not host.anomaly_revealed(), "异常默认不可见")
+	check(host.anomaly.regular_effects(host.anomaly_state()).is_empty(), "隐藏时不产生常规结算影响")
+	# 分级与目录。
+	check(host.anomaly_gate_catalog().size() >= 5, "门闩途径≥5")
+	check(host.anomaly_entry_catalog().size() >= 13, "核心异常条目≥13")
+	check(host.anomaly_ability_catalog().size() >= 4, "能力线≥4")
+	check(host.anomaly_faction_catalog().size() >= 4, "阵营≥4")
+	check(host.anomaly_identity_catalog().size() >= 5, "身份≥5")
+	# 门闩与激活。
+	check(bool(host.anomaly_open_gate("bloodline").get("ok", false)), "开启血脉门闩")
+	check(bool(host.anomaly_state().get("active", true)) == true, "门闩开启后激活")
+	check(host.anomaly_revealed(), "异常世界可见")
+	# 权限与图鉴。
+	host.anomaly_set_clearance(2)
+	var enc: Dictionary = host.anomaly_encounter("异-002")
+	check(bool(enc.get("ok", false)), "按权限查阅条目")
+	check(bool(enc.get("known", false)), "查阅后写入图鉴")
+	# 能力使用。
+	check(bool(host.anomaly_use_ability("cultivation").get("ok", false)), "施展修炼能力")
+	# 暴露反噬。
+	host.anomaly.add_exposure(host.anomaly_state(), 80.0)
+	var bl: Dictionary = host.anomaly.check_backlash(host.anomaly_state())
+	check(bool(bl.get("triggered", false)), "暴露达阈值触发反噬")
+	check(not String(bl.get("type", "")).is_empty(), "反噬类型非空")
+	# 认知污染与记忆删除剂。
+	host.anomaly.contact_hazard(host.anomaly_state(), "meme", 20.0)
+	var am: Dictionary = host.anomaly_amnestics(0.5)
+	check(bool(am.get("ok", false)), "施用记忆删除剂")
+	check(int(am.get("memory_gaps", 0)) > 0, "记忆删除剂副作用（记忆缺口）")
+	# 对抗与收容失效。
+	var cb: Dictionary = host.anomaly_combat()
+	check(cb.has("attacker_wins"), "认知对抗结算")
+	var before_exp: float = float(host.anomaly.exposure(host.anomaly_state()))
+	host.anomaly_breach()
+	check(float(host.anomaly.exposure(host.anomaly_state())) > before_exp, "收容失效抬升暴露")
+	# 传承与社会事件交叉。
+	var heir: Dictionary = host.anomaly.new_state()["anomaly"]
+	check(bool(host.anomaly.inherit(host.anomaly_state(), heir).get("ok", false)), "异常传承结算")
+	var mj: Dictionary = host.anomaly.misjudged_as_crime(host.anomaly_state(), {"anomaly_caused": true})
+	check(String(mj.get("flag", "")) == "anomaly_override", "异常触发犯罪误判抑制标记")
+	# 持久化与读档恢复。
+	host._persist_anomaly()
+	check(state.sim_runtime.get("anomaly", null) is Dictionary, "异常运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 181)
+	reloaded.bind(state)
+	check(reloaded.anomaly_revealed(), "读档恢复异常可见性")
+	check(not (reloaded.anomaly_state().get("known_entries", {}) as Dictionary).is_empty(), "读档恢复异常图鉴")
+
 
