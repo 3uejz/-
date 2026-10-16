@@ -99,7 +99,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"municipal":
 			data = municipal(player, context, name_resolver)
 		"debt":
-			data = debt(player, name_resolver)
+			data = debt(player, context, name_resolver)
 		"consumer":
 			data = consumer(player, context, name_resolver)
 		"welfare":
@@ -996,14 +996,54 @@ static func municipal(player: Dictionary, context: Dictionary, name_resolver: Ca
 		return _empty("市政", "暂无市政事项；可从市政养护、邮政快递或特许经营入门")
 	return _ok(sections)
 
-static func debt(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func debt(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("债务与催收", "尚未生成角色数据")
 	var fin: Dictionary = player.get("finances", {})
 	var loans: Array = _items_of(fin.get("loans", []))
 	var leases: Array = _items_of(fin.get("leases", []))
 	var debt_amount: float = float(fin.get("debt", 0.0))
-	if loans.is_empty() and leases.is_empty() and debt_amount <= 0.0:
+	var db: Dictionary = context.get("debt", {})
+	var sections: Array = []
+	if not db.is_empty():
+		if db.has("loan"):
+			var ln: Dictionary = db["loan"]
+			sections.append(_section("我的借款", [
+				{"label": "业务", "value": String(ln.get("business", ""))},
+				{"label": "本金", "value": _money(int(ln.get("principal", 0)))},
+				{"label": "剩余", "value": _money(int(ln.get("outstanding", 0)))},
+				{"label": "年利率", "value": "%.2f" % float(ln.get("rate", 0.0))},
+				{"label": "状态", "value": String(ln.get("status", ""))},
+				{"label": "合规", "value": _yes_no(bool(ln.get("compliant", true)))},
+				{"label": "套路贷", "value": _yes_no(bool(ln.get("predatory", false)))},
+			]))
+		if db.has("lend"):
+			var le: Dictionary = db["lend"]
+			sections.append(_section("我放出的贷款", [
+				{"label": "业务", "value": String(le.get("business", ""))},
+				{"label": "本金", "value": _money(int(le.get("principal", 0)))},
+				{"label": "剩余", "value": _money(int(le.get("outstanding", 0)))},
+				{"label": "年利率", "value": "%.2f" % float(le.get("rate", 0.0))},
+				{"label": "状态", "value": String(le.get("status", ""))},
+				{"label": "合规", "value": _yes_no(bool(le.get("compliant", true)))},
+				{"label": "催收次数", "value": str(int(le.get("modes", 0)))},
+				{"label": "违法催收", "value": _yes_no(bool(le.get("illegal_collection", false)))},
+			]))
+		if db.has("lender"):
+			var ld: Dictionary = db["lender"]
+			sections.append(_section("放贷人", [
+				{"label": "牌照", "value": _yes_no(bool(ld.get("license", false)))},
+				{"label": "违规次数", "value": str(int(ld.get("violations", 0)))},
+				{"label": "声誉", "value": "%.2f" % float(ld.get("reputation", 0.0))},
+			]))
+		var pawns: Array = _items_of(db.get("pawns", []))
+		if not pawns.is_empty():
+			var prows: Array = []
+			for p in pawns:
+				var pd: Dictionary = p
+				prows.append({"label": String(pd.get("item", "?")), "value": _money(int(pd.get("amount", 0)))})
+			sections.append(_section("典当物", prows))
+	if loans.is_empty() and leases.is_empty() and debt_amount <= 0.0 and sections.is_empty():
 		return _empty("债务与催收", "暂无负债；当前可用信用额度 %s" % _money(fin.get("credit_limit", 0.0)))
 	var overview: Array = [
 		{"label": "负债总额", "value": _money(debt_amount)},
@@ -1011,7 +1051,7 @@ static func debt(player: Dictionary, name_resolver: Callable = Callable()) -> Di
 	]
 	if fin.has("credit_limit"):
 		overview.append({"label": "信用额度", "value": _money(fin.get("credit_limit", 0.0))})
-	var sections: Array = [_section("负债概览", overview)]
+	sections.push_front(_section("负债概览", overview))
 	if not loans.is_empty():
 		sections.append(_section("借款明细", _rows_from(loans, ["principal", "rate", "status", "due_minutes"], name_resolver)))
 	if not leases.is_empty():

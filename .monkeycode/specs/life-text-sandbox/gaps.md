@@ -155,7 +155,8 @@
 - **待办**：公用事业真值与跨区域市政预算由后端宏观承接、招投标与听证流程、公交/水务运营的完整财务报表待补。
 
 ### D39 债务服务、当铺与小贷
-- 利率上限/折当率/催收阈值/坏账/暴力催收无模型；`finances.debt` 无法表达多笔贷款/典当/抵押/信用分；借贷产品内容缺失；缺典当/赎回/众筹动词；灰色催收法律接口未定。
+- **已接线**：`DebtServiceSystem`（`debt_service.gd`）放贷业务（典当/民间借贷/小额信贷/消费金融/众筹/P2P，`BUSINESSES` 数值真源 `debt_service.json`，P2P `business_available()` 时代限定）；借款与放贷人（`new_lender()`/`new_loan()`/`add_collateral()`/`add_joint_guarantee()`）；合规监管（利率上限 `rate_compliant()`/牌照 `license_status()`/`compliance_status()`/`regulate()`）；风控放贷（`assess_credit()`/`disburse()`（砍头息）/`approve_loan()`/`default_loan()`（抵押与担保回收））；合法/灰色双路径催收（`collect()`，合法路径不违法且人身风险为 0，灰色路径产生违法标记与法律后果（行政→刑事），合规瑕疵作加重系数，致伤/致自杀由注入 roll 判定，`record_suicide_incident()`）；债务困境（`borrow_to_repay()`/`restructure()`/`personal_bankruptcy()` 时代门控）；边界（`abscond()` 跑路追偿/`predatory_loan()` 套路贷/`illegal_fundraising()` 非法集资）。运行时经 `GameState.sim_runtime.debt`（`lender`/`loan`/`lend`/`pawns`）持久化。`SimHost` 接线 `debt_businesses_catalog()`/`debt_collection_modes_catalog()`/`debt_pawn()`/`debt_redeem()`/`debt_borrow()`/`debt_lend()`/`debt_assess_credit()`/`debt_collect()`/`debt_restructure()`/`debt_bankruptcy()`/`debt_predatory()`/`debt_illegal_fundraising()`/`debt_abscond()`/`debt_panel_data()`。UI：重写「债务与催收」面板在原有负债概览/借款/租赁之外渲染我的借款/我放出的贷款/放贷人/典当物分区（`context["debt"]`）；指令 `典当 <物品> [金额]`/`赎回`/`借贷 <业务> [金额]`/`放贷 <业务> [金额]`/`信用评估`/`合法催收`/`暴力催收`/`债务重组`/`个人破产`/`套路贷 [虚增]`/`非法集资 [金额]`/`跑路`；测试 `world_runtime_test`/`gameplay_wiring_test`/`panel_content_test` 覆盖接线（模块纯逻辑由 `debt_service_test` 覆盖）。
+- **待办**：多笔贷款与征信档案的完整台账由后端权威、跨机构征信共享、催收致自杀的法律接口细化待补。
 
 ### D40 消费者保护与产品质量
 - 三包/质保/召回/举证/维权成功率无模型；订单/投诉/召回无 schema；缺陷/召回/维权内容缺失；缺召回/索赔/集体维权动词；D40↔D9/D12/D30 接口未定。

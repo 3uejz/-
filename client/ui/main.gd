@@ -462,6 +462,7 @@ func _catalogs() -> Dictionary:
 		"env_career": _sim.environment_careers_catalog(),
 		"municipal_facility": _sim.municipal_facilities_catalog(),
 		"franchise_service": _sim.municipal_franchise_catalog(),
+		"debt_business": _sim.debt_businesses_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -816,6 +817,9 @@ func _panel_context() -> Dictionary:
 		var mup: Dictionary = _sim.municipal_panel_data()
 		if not mup.is_empty():
 			context["municipal"] = mup
+		var dbp: Dictionary = _sim.debt_panel_data()
+		if not dbp.is_empty():
+			context["debt"] = dbp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

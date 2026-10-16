@@ -54,6 +54,7 @@ const CrimeScript = preload("res://sim/crime.gd")
 const EmergencyScript = preload("res://sim/emergency.gd")
 const EnvironmentScript = preload("res://sim/environment.gd")
 const MunicipalScript = preload("res://sim/municipal.gd")
+const DebtServiceScript = preload("res://sim/debt_service.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -172,6 +173,11 @@ var _city_municipal: Dictionary = {}  ## 城市市政状态，入档 sim_runtime
 var _postal_hub: Dictionary = {}      ## 邮政枢纽，入档 sim_runtime.municipal.hub
 var _courier: Dictionary = {}         ## 快递员职业，入档 sim_runtime.municipal.courier
 var _municipal_license: bool = false  ## 公用事业特许资质，入档 sim_runtime.municipal.license
+var debt                         ## 债务服务、当铺与小贷（DebtServiceSystem）
+var _debt_lender: Dictionary = {}    ## 玩家作为放贷人，入档 sim_runtime.debt.lender
+var _debt_loan: Dictionary = {}      ## 玩家作为借款人的贷款，入档 sim_runtime.debt.loan
+var _debt_lend: Dictionary = {}      ## 玩家放出的贷款（供催收），入档 sim_runtime.debt.lend
+var _debt_pawns: Array = []          ## 典当物，入档 sim_runtime.debt.pawns
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -242,6 +248,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	municipal = MunicipalScript.new()
 	_city_municipal = municipal.new_city(1000000)
 	_postal_hub = municipal.new_postal_hub()
+	debt = DebtServiceScript.new()
+	_debt_lender = debt.new_lender("player", {"name": "本人", "license": true})
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -439,6 +447,17 @@ func _ensure_world_geo() -> void:
 			if mud.get("courier", null) is Dictionary and not (mud["courier"] as Dictionary).is_empty():
 				_courier = (mud["courier"] as Dictionary).duplicate(true)
 			_municipal_license = bool(mud.get("license", false))
+		# 恢复债务服务运行时（放贷人/借入贷款/放出贷款/典当物）。
+		var db: Variant = (state.sim_runtime as Dictionary).get("debt", {})
+		if db is Dictionary and not (db as Dictionary).is_empty():
+			var dbd: Dictionary = db
+			if dbd.get("lender", null) is Dictionary and not (dbd["lender"] as Dictionary).is_empty():
+				_debt_lender = debt.from_dict(dbd["lender"])
+			if dbd.get("loan", null) is Dictionary and not (dbd["loan"] as Dictionary).is_empty():
+				_debt_loan = debt.from_dict(dbd["loan"])
+			if dbd.get("lend", null) is Dictionary and not (dbd["lend"] as Dictionary).is_empty():
+				_debt_lend = debt.from_dict(dbd["lend"])
+			_debt_pawns = (dbd.get("pawns", []) as Array).duplicate(true)
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -3744,6 +3763,170 @@ func _persist_municipal() -> void:
 		"hub": municipal.to_dict(_postal_hub),
 		"courier": _courier.duplicate(true),
 		"license": _municipal_license,
+	}
+
+
+
+# --- D39 债务服务、当铺与小贷 ---
+
+func debt_state() -> Dictionary:
+	return {"lender": _debt_lender, "loan": _debt_loan, "lend": _debt_lend, "pawns": _debt_pawns}
+
+func debt_businesses_catalog() -> Array:
+	var out: Array = []
+	for key in debt.business_keys():
+		var d: Dictionary = debt.business_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func debt_collection_modes_catalog() -> Array:
+	var out: Array = []
+	for key in debt.collection_mode_keys():
+		var d: Dictionary = debt.collection_mode_def(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func _current_year() -> int:
+	return int(GregorianScript.from_absolute_minutes(now_minutes()).get("year", 2000))
+
+func debt_pawn(item: String, amount: int, rate: float) -> Dictionary:
+	if item.is_empty():
+		return {"ok": false, "reason": "no_item"}
+	var loan: Dictionary = debt.new_loan("pawn-%d" % Time.get_ticks_msec(), "pawn", amount, {
+		"lender": "pawnshop", "borrower": "player", "rate": rate, "collateral": item, "collateral_value": amount,
+	})
+	_debt_loan = loan
+	_debt_pawns.append({"item": item, "amount": amount, "loan": String(loan.get("id", ""))})
+	_persist_debt()
+	return {"ok": true, "loan": loan}
+
+func debt_redeem() -> Dictionary:
+	if _debt_loan.is_empty():
+		return {"ok": false, "reason": "no_loan"}
+	_debt_loan["status"] = "repaid"
+	var item: String = String(_debt_loan.get("collateral", ""))
+	for i in range(_debt_pawns.size()):
+		if String((_debt_pawns[i] as Dictionary).get("loan", "")) == String(_debt_loan.get("id", "")):
+			_debt_pawns.remove_at(i)
+			break
+	var ledger: Dictionary = _debt_loan
+	_debt_loan = {}
+	_persist_debt()
+	return {"ok": true, "item": item, "loan": ledger}
+
+func debt_borrow(business: String, principal: int, rate: float) -> Dictionary:
+	if not debt.business_available(business, _current_year()):
+		return {"ok": false, "reason": "business_unavailable"}
+	var loan: Dictionary = debt.new_loan("loan-%d" % Time.get_ticks_msec(), business, principal, {
+		"lender": "market", "borrower": "player", "rate": rate,
+	})
+	var credit: Dictionary = debt.assess_credit(player(), loan)
+	if not bool(credit.get("approved", false)):
+		return {"ok": true, "approved": false, "credit": credit}
+	var disb: Dictionary = debt.disburse(loan, {"license": true})
+	_debt_loan = loan
+	_persist_debt()
+	return {"ok": true, "approved": true, "credit": credit, "disbursement": disb, "loan": loan}
+
+func debt_lend(business: String, principal: int, rate: float) -> Dictionary:
+	if not debt.business_available(business, _current_year()):
+		return {"ok": false, "reason": "business_unavailable"}
+	var loan: Dictionary = debt.new_loan("lend-%d" % Time.get_ticks_msec(), business, principal, {
+		"lender": "player", "borrower": "borrower", "rate": rate,
+	})
+	var reg: Dictionary = debt.regulate(loan, _debt_lender)
+	_debt_lend = loan
+	_persist_debt()
+	return {"ok": true, "loan": loan, "regulation": reg}
+
+func debt_assess_credit() -> Dictionary:
+	var loan: Dictionary = _debt_loan if not _debt_loan.is_empty() else debt.new_loan("probe", "micro_loan", 500000, {"rate": 0.12})
+	return debt.assess_credit(player(), loan)
+
+func debt_collect(mode: String) -> Dictionary:
+	if _debt_lend.is_empty():
+		return {"ok": false, "reason": "no_lend"}
+	var r: Dictionary = debt.collect(_debt_lend, mode, _debt_lender, {}, rng)
+	_persist_debt()
+	return r
+
+func debt_restructure() -> Dictionary:
+	if _debt_loan.is_empty():
+		return {"ok": false, "reason": "no_loan"}
+	var r: Dictionary = debt.restructure(_debt_loan, {})
+	_persist_debt()
+	return r
+
+func debt_bankruptcy() -> Dictionary:
+	if _debt_loan.is_empty():
+		return {"ok": false, "reason": "no_loan"}
+	var loans: Array = [_debt_loan]
+	var p: Dictionary = player()
+	var r: Dictionary = debt.personal_bankruptcy(p, loans, _current_year())
+	if bool(r.get("ok", false)):
+		_debt_loan = loans[0]
+		_persist_debt()
+	return r
+
+func debt_predatory(amount: int) -> Dictionary:
+	var loan: Dictionary = _debt_loan if not _debt_loan.is_empty() else debt.new_loan("predatory", "private_lending", amount, {"rate": 0.5, "cut_interest": int(amount * 0.1), "service_fee": int(amount * 0.1)})
+	var r: Dictionary = debt.predatory_loan(loan, {"inflated_debt": amount})
+	_debt_loan = loan
+	_persist_debt()
+	return r
+
+func debt_illegal_fundraising(amount: int) -> Dictionary:
+	var r: Dictionary = debt.illegal_fundraising(_debt_lender, amount, {})
+	_persist_debt()
+	return r
+
+func debt_abscond() -> Dictionary:
+	if _debt_loan.is_empty():
+		return {"ok": false, "reason": "no_loan"}
+	var r: Dictionary = debt.abscond(_debt_loan, {}, rng)
+	_persist_debt()
+	return r
+
+func debt_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _debt_loan.is_empty():
+		out["loan"] = {
+			"business": String(_debt_loan.get("business", "")),
+			"principal": int(_debt_loan.get("principal", 0)),
+			"outstanding": int(_debt_loan.get("outstanding", 0)),
+			"rate": float(_debt_loan.get("rate", 0.0)),
+			"status": String(_debt_loan.get("status", "")),
+			"predatory": bool(_debt_loan.get("predatory", false)),
+			"compliant": bool(_debt_loan.get("compliant", true)),
+		}
+	if not _debt_lend.is_empty():
+		var comp: Dictionary = debt.compliance_status(_debt_lend, _debt_lender)
+		out["lend"] = {
+			"business": String(_debt_lend.get("business", "")),
+			"principal": int(_debt_lend.get("principal", 0)),
+			"outstanding": int(_debt_lend.get("outstanding", 0)),
+			"rate": float(_debt_lend.get("rate", 0.0)),
+			"status": String(_debt_lend.get("status", "")),
+			"compliant": bool(comp.get("compliant", true)),
+			"illegal_collection": bool(_debt_lend.get("illegal_collection", false)),
+			"modes": (_debt_lend.get("collection_modes", []) as Array).size(),
+		}
+	out["lender"] = {
+		"license": bool(_debt_lender.get("license", false)),
+		"violations": int(_debt_lender.get("violations", 0)),
+		"reputation": float(_debt_lender.get("reputation", 0.0)),
+	}
+	out["pawns"] = _debt_pawns.duplicate(true)
+	return out
+
+func _persist_debt() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["debt"] = {
+		"lender": debt.to_dict(_debt_lender),
+		"loan": debt.to_dict(_debt_loan),
+		"lend": debt.to_dict(_debt_lend),
+		"pawns": _debt_pawns.duplicate(true),
 	}
 
 

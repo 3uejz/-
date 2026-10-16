@@ -79,6 +79,7 @@ func run_tests() -> void:
 	_test_emergency_commands()
 	_test_environment_commands()
 	_test_municipal_commands()
+	_test_debt_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -611,6 +612,28 @@ func _test_municipal_commands() -> void:
 	check((sim.municipal_state().get("city", {}) as Dictionary).get("franchises", []).size() >= 1, "「特许经营」登记合同")
 	_main.submit("服务考核 90")
 	_main.submit("政府购买 公园养护 800000")
+
+func _test_debt_commands() -> void:
+	var sim = _main._sim
+	sim.player()["income"] = 10000000
+	sim.player()["credit_history"] = 1.0
+	_main.submit("看债务")
+	check(_main.has_panel("debt"), "「看债务」打开债务面板")
+	_main.submit("典当 手表 500000")
+	check(not (sim.debt_state().get("loan", {}) as Dictionary).is_empty(), "「典当」登记借款")
+	_main.submit("赎回")
+	_main.submit("借贷 小额信贷 100000")
+	check(String((sim.debt_state().get("loan", {}) as Dictionary).get("status", "")) == "active", "「借贷」获批在贷")
+	_main.submit("放贷 民间借贷 500000")
+	check(not (sim.debt_state().get("lend", {}) as Dictionary).is_empty(), "「放贷」登记")
+	_main.submit("信用评估")
+	_main.submit("合法催收")
+	_main.submit("暴力催收")
+	check(bool((sim.debt_state().get("lend", {}) as Dictionary).get("illegal_collection", false)), "「暴力催收」标记违法")
+	_main.submit("债务重组")
+	_main.submit("套路贷 300000")
+	_main.submit("非法集资 500000")
+	_main.submit("跑路")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

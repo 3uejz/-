@@ -481,6 +481,30 @@ func _dispatch(intent) -> Dictionary:
 			return _municipal_quality(intent)
 		"政府购买":
 			return _municipal_purchase(intent)
+		"典当":
+			return _debt_pawn(intent)
+		"赎回":
+			return _debt_redeem(intent)
+		"借贷":
+			return _debt_borrow(intent)
+		"放贷":
+			return _debt_lend(intent)
+		"信用评估":
+			return _debt_credit(intent)
+		"合法催收":
+			return _debt_collect_legal(intent)
+		"暴力催收":
+			return _debt_collect_violence(intent)
+		"债务重组":
+			return _debt_restructure(intent)
+		"个人破产":
+			return _debt_bankruptcy(intent)
+		"套路贷":
+			return _debt_predatory(intent)
+		"非法集资":
+			return _debt_fundraise(intent)
+		"跑路":
+			return _debt_abscond(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -2409,6 +2433,99 @@ func _municipal_purchase(intent) -> Dictionary:
 		return _fail("无法政府购买（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["政府购买服务完成，预算 %d。" % int(r.get("budget", 0))], 0, "")
 
+func _debt_pawn(intent) -> Dictionary:
+	var item := String(intent.params.get("method", ""))
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.debt_pawn(item, amount, 0.12)
+	if not bool(r.get("ok", false)):
+		return _fail("无法典当（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["典当「%s」得 %d。" % [item, amount]], 0, "")
+
+func _debt_redeem(intent) -> Dictionary:
+	var r: Dictionary = host.debt_redeem()
+	if not bool(r.get("ok", false)):
+		return _fail("无法赎回（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["赎回「%s」完成。" % String(r.get("item", ""))], 0, "")
+
+func _debt_borrow(intent) -> Dictionary:
+	var business := _object_id(intent, "debt_business")
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.debt_borrow(business, amount, 0.12)
+	if not bool(r.get("ok", false)):
+		return _fail("无法借贷（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("approved", false)):
+		return _fail("借贷被拒（%s）。" % _reason_cn("credit_below_line"))
+	var disb: Dictionary = r.get("disbursement", {})
+	return _ok(["借贷获批，放款 %d。" % int(disb.get("amount", 0))], 0, "")
+
+func _debt_lend(intent) -> Dictionary:
+	var business := _object_id(intent, "debt_business")
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.debt_lend(business, amount, 0.12)
+	if not bool(r.get("ok", false)):
+		return _fail("无法放贷（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var reg: Dictionary = r.get("regulation", {})
+	if bool(reg.get("illegal", false)):
+		return _ok(["放贷登记，但存在合规问题：%s。" % "、".join(PackedStringArray(reg.get("violations", [])))], 0, "")
+	return _ok(["放贷登记完成。"], 0, "")
+
+func _debt_credit(intent) -> Dictionary:
+	var r: Dictionary = host.debt_assess_credit()
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估信用（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["信用评估得分 %.0f，%s。" % [float(r.get("score", 0.0)), ("通过" if bool(r.get("approved", false)) else "不通过")]], 0, "")
+
+func _debt_collect_legal(intent) -> Dictionary:
+	return _debt_collect(intent, "reminder")
+
+func _debt_collect_violence(intent) -> Dictionary:
+	return _debt_collect(intent, "violence")
+
+func _debt_collect(intent, mode: String) -> Dictionary:
+	var r: Dictionary = host.debt_collect(mode)
+	if not bool(r.get("ok", false)):
+		return _fail("无法催收（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("illegal", false)):
+		return _ok(["合法催收完成，可追偿 %d。" % int(r.get("recoverable", 0))], 0, "")
+	var harm := String(r.get("victim_harm", "none"))
+	return _fail("灰色催收违法（%s），法律后果：%s。" % [harm, String(r.get("legal_consequence", ""))])
+
+func _debt_restructure(intent) -> Dictionary:
+	var r: Dictionary = host.debt_restructure()
+	if not bool(r.get("ok", false)):
+		return _fail("无法重组（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["债务重组完成，剩余本金 %d。" % int(r.get("outstanding", 0))], 0, "")
+
+func _debt_bankruptcy(intent) -> Dictionary:
+	var r: Dictionary = host.debt_bankruptcy()
+	if not bool(r.get("ok", false)):
+		return _fail("无法破产（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["个人破产生效，核销 %d。" % int(r.get("discharged", 0))], 0, "")
+
+func _debt_predatory(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.debt_predatory(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法办理套路贷（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("predatory", false)):
+		return _ok(["不构成套路贷。"], 0, "")
+	return _fail("套路贷成立，虚增后债务 %d。" % int(r.get("outstanding", 0)))
+
+func _debt_fundraise(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.debt_illegal_fundraising(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法集资（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("illegal", false)):
+		return _fail("非法集资成立，构成刑事违法。")
+	return _ok(["集资合规。"], 0, "")
+
+func _debt_abscond(intent) -> Dictionary:
+	var r: Dictionary = host.debt_abscond()
+	if not bool(r.get("ok", false)):
+		return _fail("无法跑路（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你跑路了，%s。" % ("仍被追回" if bool(r.get("recovered", false)) else "暂未被追回")], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -2665,6 +2782,22 @@ func _reason_cn(reason: String) -> String:
 			return "缺少公用事业特许资质"
 		"no_franchise":
 			return "尚无特许经营合同"
+		"no_item":
+			return "缺少典当物品"
+		"no_loan":
+			return "尚无有效借款"
+		"no_lend":
+			return "尚无放出的贷款"
+		"business_unavailable":
+			return "该业务在当前时代不可用"
+		"era_not_allowed":
+			return "当前时代不允许个人破产"
+		"already_repaid":
+			return "该贷款已还清"
+		"bad_status":
+			return "贷款状态不允许此操作"
+		"credit_below_line":
+			return "信用不达标"
 		_:
 			return reason if reason != "" else "未知原因"
 

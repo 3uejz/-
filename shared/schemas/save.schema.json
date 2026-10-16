@@ -44,7 +44,8 @@
         "police": { "type": "object", "additionalProperties": true },
         "emergency": { "type": "object", "additionalProperties": true },
         "environment": { "type": "object", "additionalProperties": true },
-        "municipal": { "type": "object", "additionalProperties": true }
+        "municipal": { "type": "object", "additionalProperties": true },
+        "debt": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

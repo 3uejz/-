@@ -58,6 +58,7 @@ func run_tests() -> void:
 	_test_emergency_runtime()
 	_test_environment_runtime()
 	_test_municipal_runtime()
+	_test_debt_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1117,4 +1118,44 @@ func _test_municipal_runtime() -> void:
 	check(not (reloaded.municipal_state().get("hub", {}) as Dictionary).is_empty(), "读档恢复邮政枢纽")
 	check(not (reloaded.municipal_state().get("courier", {}) as Dictionary).is_empty(), "读档恢复快递员")
 	check(not reloaded.municipal_panel_data().is_empty(), "市政面板数据非空")
+
+
+func _test_debt_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(131)
+	var host = SimHostScript.new(state, 131)
+	host.bind(state)
+	check(host.debt_businesses_catalog().size() >= 6, "放贷业务表含典当/民间借贷等")
+	check(host.debt_collection_modes_catalog().size() >= 5, "催收方式表含合法/灰色")
+	# 典当与赎回。
+	check(bool(host.debt_pawn("手表", 500000, 0.12).get("ok", false)), "典当成功")
+	check(bool(host.debt_redeem().get("ok", false)), "赎回成功")
+	# 借贷（抬高收入与信用以通过审批）。
+	host.player()["income"] = 10000000
+	host.player()["credit_history"] = 1.0
+	var b: Dictionary = host.debt_borrow("micro_loan", 100000, 0.12)
+	check(bool(b.get("ok", false)) and bool(b.get("approved", false)), "借贷获批")
+	check(bool(host.debt_assess_credit().get("approved", false)), "信用评估通过")
+	# 放贷与双路径催收。
+	check(bool(host.debt_lend("private_lending", 500000, 0.12).get("ok", false)), "放贷登记")
+	var legal: Dictionary = host.debt_collect("reminder")
+	check(bool(legal.get("ok", false)) and not bool(legal.get("illegal", false)), "合法催收不违法")
+	var gray: Dictionary = host.debt_collect("violence")
+	check(bool(gray.get("ok", false)) and bool(gray.get("illegal", false)), "暴力催收违法")
+	# 债务困境与边界。
+	check(bool(host.debt_restructure().get("ok", false)), "债务重组完成")
+	check(bool(host.debt_predatory(300000).get("ok", false)), "套路贷办理")
+	host._debt_lender["license"] = false
+	check(bool(host.debt_illegal_fundraising(1000000).get("illegal", false)), "无牌集资违法")
+	check(bool(host.debt_abscond().get("ok", false)), "跑路结算")
+	var bk: Dictionary = host.debt_bankruptcy()
+	check(not bool(bk.get("ok", false)) and String(bk.get("reason", "")) == "era_not_allowed", "早期时代禁止个人破产")
+	# 持久化与读档恢复。
+	host._persist_debt()
+	check(state.sim_runtime.get("debt", null) is Dictionary, "债务运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 131)
+	reloaded.bind(state)
+	check(not (reloaded.debt_state().get("loan", {}) as Dictionary).is_empty(), "读档恢复借入贷款")
+	check(not (reloaded.debt_state().get("lend", {}) as Dictionary).is_empty(), "读档恢复放出贷款")
+	check(not reloaded.debt_panel_data().is_empty(), "债务面板数据非空")
 

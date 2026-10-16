@@ -54,6 +54,7 @@ func run_tests() -> void:
 	_test_emergency_panel()
 	_test_environment_panel()
 	_test_municipal_panel()
+	_test_debt_panel()
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
@@ -498,6 +499,21 @@ func _test_municipal_panel() -> void:
 	check(_find_section(d, "通行与扰民").get("rows", []).size() >= 1, "通行与扰民分区有行")
 	check(_find_section(d, "邮政枢纽").get("rows", []).size() >= 1, "邮政枢纽分区有行")
 	check(_find_section(d, "快递员").get("rows", []).size() >= 1, "快递员分区有行")
+
+func _test_debt_panel() -> void:
+	var ctx: Dictionary = {"debt": {
+		"loan": {"business": "micro_loan", "principal": 100000, "outstanding": 90000, "rate": 0.12, "status": "active", "predatory": false, "compliant": true},
+		"lend": {"business": "private_lending", "principal": 500000, "outstanding": 500000, "rate": 0.12, "status": "active", "compliant": true, "illegal_collection": true, "modes": 2},
+		"lender": {"license": false, "violations": 1, "reputation": 0.4},
+		"pawns": [{"item": "手表", "amount": 500000, "loan": "pawn-1"}],
+	}}
+	var d: Dictionary = PanelContentScript.build("debt", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有债务上下文非空")
+	check(_find_section(d, "负债概览").get("rows", []).size() >= 1, "负债概览分区有行")
+	check(_find_section(d, "我的借款").get("rows", []).size() >= 1, "我的借款分区有行")
+	check(_find_section(d, "我放出的贷款").get("rows", []).size() >= 1, "我放出的贷款分区有行")
+	check(_find_section(d, "放贷人").get("rows", []).size() >= 1, "放贷人分区有行")
+	check(_find_section(d, "典当物").get("rows", []).size() >= 1, "典当物分区有行")
 
 func _find_section(data: Dictionary, title: String) -> Dictionary:
 	for s in data.get("sections", []):
