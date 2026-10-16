@@ -495,6 +495,8 @@ func _catalogs() -> Dictionary:
 		"engineering_zone": _sim.engineering_zone_types_catalog(),
 		"prof_practice": _sim.prof_practice_types_catalog(),
 		"prof_cert": _sim.prof_qualifications_catalog(),
+		"life_service_category": _sim.life_service_categories_catalog(),
+		"life_pet_stage": _sim.life_pet_service_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -876,6 +878,9 @@ func _panel_context() -> Dictionary:
 		var pfp: Dictionary = _sim.professional_panel_data()
 		if not pfp.is_empty():
 			context["professional"] = pfp
+		var lsp: Dictionary = _sim.life_services_panel_data()
+		if not lsp.is_empty():
+			context["life_services"] = lsp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

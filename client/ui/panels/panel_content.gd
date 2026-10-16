@@ -1816,6 +1816,7 @@ static func services(player: Dictionary, context: Dictionary, name_resolver: Cal
 		return _empty("专业与生活服务", "尚未生成角色数据")
 	var sections: Array = []
 	sections.append_array(_professional_runtime_sections(context.get("professional", {})))
+	sections.append_array(_life_service_runtime_sections(context.get("life_services", {})))
 	var orders: Array = _items_of(player.get("orders", []))
 	if not orders.is_empty():
 		sections.append(_section("服务单", _rows_from(orders, ["type", "status", "amount", "rating"], name_resolver)))
@@ -1847,6 +1848,30 @@ static func _professional_runtime_sections(p: Dictionary) -> Array:
 			{"label": "费用", "value": str(int(pj.get("fee", 0)))},
 			{"label": "状态", "value": String(pj.get("status", ""))},
 			{"label": "发现", "value": str(int(pj.get("findings", 0)))},
+		]))
+	return sections
+
+static func _life_service_runtime_sections(p: Dictionary) -> Array:
+	if p.is_empty():
+		return []
+	var sections: Array = []
+	var pr: Dictionary = p.get("provider", {}) if p.get("provider", null) is Dictionary else {}
+	if not pr.is_empty():
+		sections.append(_section("生活服务者", [
+			{"label": "名称", "value": String(pr.get("name", ""))},
+			{"label": "类别", "value": String(pr.get("category_name", pr.get("category", "")))},
+			{"label": "评分", "value": "%.0f%%" % (float(pr.get("rating", 0.0)) * 100.0)},
+			{"label": "信任", "value": "%.0f%%" % (float(pr.get("trust", 0.0)) * 100.0)},
+			{"label": "背景", "value": String(pr.get("background", "unknown"))},
+			{"label": "订单", "value": str(int(pr.get("orders", 0)))},
+			{"label": "纠纷", "value": str(int(pr.get("disputes", 0)))},
+		]))
+	var od: Dictionary = p.get("order", {}) if p.get("order", null) is Dictionary else {}
+	if not od.is_empty():
+		sections.append(_section("服务单", [
+			{"label": "服务", "value": String(od.get("service", ""))},
+			{"label": "价格", "value": str(int(od.get("price", 0)))},
+			{"label": "状态", "value": String(od.get("status", ""))},
 		]))
 	return sections
 

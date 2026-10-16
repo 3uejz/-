@@ -89,6 +89,7 @@ func run_tests() -> void:
 	_test_content_industry_commands()
 	_test_engineering_commands()
 	_test_professional_commands()
+	_test_life_services_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -848,6 +849,25 @@ func _test_professional_commands() -> void:
 	_main.submit("客户流失")
 	check(not sim._prof_firm.is_empty(), "「开事务所」成立事务所")
 	check(not sim._prof_project.is_empty(), "「立项项目」建立项目")
+
+
+func _test_life_services_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看服务")
+	_main.submit("注册服务者 家政保洁 王阿姨")
+	_main.submit("背景核查")
+	_main.submit("预约服务 家政保洁 2000")
+	_main.submit("相亲婚介")
+	_main.submit("婚礼策划 50000")
+	_main.submit("家政保洁")
+	_main.submit("月嫂照料")
+	_main.submit("宠物寄养 寄养")
+	_main.submit("服务事故 50")
+	_main.submit("纠纷处理 10000")
+	_main.submit("平台抽成 10000")
+	_main.submit("服务标准化 100000")
+	check(not sim._life_provider.is_empty(), "「注册服务者」登记服务者")
+	check(not sim._life_order.is_empty(), "「预约服务」生成服务单")
 
 
 func _test_save_writes_file() -> void:

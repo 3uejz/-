@@ -68,6 +68,7 @@ func run_tests() -> void:
 	_test_content_industry_runtime()
 	_test_engineering_runtime()
 	_test_professional_runtime()
+	_test_life_services_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1597,6 +1598,37 @@ func _test_professional_runtime() -> void:
 	reloaded.bind(state)
 	check(String(reloaded._prof_firm.get("name", "")) == "恒信事务所", "读档恢复事务所")
 	check(not reloaded.professional_panel_data().is_empty(), "专业服务面板数据非空")
+
+
+func _test_life_services_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(231)
+	var host = SimHostScript.new(state, 231)
+	host.bind(state)
+	check(host.life_service_categories_catalog().size() >= 8, "服务类别≥8")
+	check(host.life_pet_service_catalog().size() >= 5, "宠物服务链≥5")
+	check(bool(host.life_new_provider("王阿姨", "housekeeping").get("ok", false)), "登记服务者")
+	check(not host._life_provider.is_empty(), "服务者非空")
+	check(bool(host.life_new_provider("甲", "nope").get("reason", "") == "unknown_category"), "未知类别被拒")
+	check(bool(host.life_background_check().has("flagged")), "背景核查")
+	check(bool(host.life_new_order("housekeeping", 2000).get("ok", false)), "预约服务")
+	check(not host._life_order.is_empty(), "服务单非空")
+	check(bool(host.life_housekeeping().get("ok", false)), "家政服务")
+	check(bool(host.life_wedding(50000, 0.6).get("ok", false)), "婚礼策划")
+	check(bool(host.life_matchmaking().get("ok", false)), "相亲婚介")
+	host._life_order["service"] = "boarding"
+	check(bool(host.life_pet_service("boarding").get("ok", false)), "宠物服务")
+	check(bool(host.life_pet_service("nope").get("reason", "") == "unknown_pet_stage"), "未知宠物环节被拒")
+	check(bool(host.life_incident(0.5).has("occurred")), "服务事故结算")
+	check(bool(host.life_resolve_dispute(10000, 0.5).get("ok", false)), "纠纷处理")
+	check(bool(host.life_commission(10000).has("commission")), "平台抽成")
+	check(bool(host.life_standardize(100000, 0.5).get("ok", false)), "服务标准化")
+	host._persist_life_services()
+	check(state.sim_runtime.get("life_services", null) is Dictionary, "生活服务运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 231)
+	reloaded.bind(state)
+	check(String(reloaded._life_provider.get("name", "")) == "王阿姨", "读档恢复服务者")
+	check(not reloaded.life_services_panel_data().is_empty(), "生活服务面板数据非空")
 
 
 

@@ -65,6 +65,7 @@ const MedTechScript = preload("res://sim/medtech.gd")
 const ContentIndustryScript = preload("res://sim/content_industry.gd")
 const EngineeringScript = preload("res://sim/engineering.gd")
 const ProfessionalServicesScript = preload("res://sim/professional_services.gd")
+const LifeServicesScript = preload("res://sim/life_services.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -226,6 +227,9 @@ var _eng_rivals: Array = []                ## 招标对手承包商（确定性�
 var professional                    ## 专业服务业（ProfessionalServicesSystem）
 var _prof_firm: Dictionary = {}            ## 玩家专业事务所，入档 sim_runtime.professional.firm
 var _prof_project: Dictionary = {}         ## 当前项目，入档 sim_runtime.professional.project
+var life_services                 ## 家庭与生活服务业（LifeServicesSystem）
+var _life_provider: Dictionary = {}        ## 玩家服务者，入档 sim_runtime.life_services.provider
+var _life_order: Dictionary = {}           ## 当前服务单，入档 sim_runtime.life_services.order
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -324,6 +328,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 		engineering.new_contractor({"id": "rival.c", "name": "远洋建工", "qualification": "special", "capital": 90000000, "workmanship": 0.8, "relationship": 0.3, "reputation": 0.8}),
 	]
 	professional = ProfessionalServicesScript.new()
+	life_services = LifeServicesScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -622,6 +627,14 @@ func _ensure_world_geo() -> void:
 				_prof_firm = professional.from_dict(pfd["firm"])
 			if pfd.get("project", null) is Dictionary and not (pfd["project"] as Dictionary).is_empty():
 				_prof_project = professional.from_dict(pfd["project"])
+		# 恢复家庭与生活服务业运行态（服务者/服务单）。
+		var lf: Variant = (state.sim_runtime as Dictionary).get("life_services", {})
+		if lf is Dictionary and not (lf as Dictionary).is_empty():
+			var lfd: Dictionary = lf
+			if lfd.get("provider", null) is Dictionary and not (lfd["provider"] as Dictionary).is_empty():
+				_life_provider = life_services.from_dict(lfd["provider"])
+			if lfd.get("order", null) is Dictionary and not (lfd["order"] as Dictionary).is_empty():
+				_life_order = life_services.from_dict(lfd["order"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5751,6 +5764,138 @@ func _persist_professional() -> void:
 	(state.sim_runtime as Dictionary)["professional"] = {
 		"firm": professional.to_dict(_prof_firm),
 		"project": professional.to_dict(_prof_project),
+	}
+
+
+# --- 家庭与生活服务业（D49 / R93） ---
+
+func life_service_categories_catalog() -> Array:
+	var out: Array = []
+	for key in life_services.SERVICE_CATEGORIES.keys():
+		out.append({"id": String(key), "name": String((life_services.SERVICE_CATEGORIES[key] as Dictionary).get("name", key))})
+	return out
+
+func life_pet_service_catalog() -> Array:
+	var out: Array = []
+	for key in life_services.PET_CHAIN.keys():
+		out.append({"id": String(key), "name": String((life_services.PET_CHAIN[key] as Dictionary).get("name", key))})
+	return out
+
+func life_provider() -> Dictionary:
+	return _life_provider
+
+func life_new_provider(name: String = "", category: String = "housekeeping") -> Dictionary:
+	if not life_services.SERVICE_CATEGORIES.has(category):
+		return {"ok": false, "reason": "unknown_category"}
+	var nm: String = name if not name.is_empty() else "服务者"
+	_life_provider = life_services.new_provider({"id": "provider.player", "name": nm, "category": category})
+	_life_order = {}
+	_persist_life_services()
+	return {"ok": true, "name": String(_life_provider.get("name", nm)), "category": category}
+
+func life_background_check() -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	var r: Dictionary = life_services.background_check(_life_provider, {"roll": -1.0}, rng)
+	_persist_life_services()
+	return r
+
+func life_new_order(service: String = "", price: int = 1000) -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	var svc: String = service if not service.is_empty() else String(_life_provider.get("category", "housekeeping"))
+	var r: Dictionary = life_services.new_order(_life_provider, {"service": svc, "price": maxi(0, price)})
+	if bool(r.get("ok", false)):
+		_life_order = r["order"]
+	_persist_life_services()
+	return r
+
+func life_matchmaking() -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	var candidates: Array = [
+		{"id": "cand.1", "name": "林小姐", "compatibility": 0.70, "wealth": 0.30},
+		{"id": "cand.2", "name": "赵先生", "compatibility": 0.50, "wealth": 0.60},
+		{"id": "cand.3", "name": "周女士", "compatibility": 0.80, "wealth": 0.20},
+	]
+	return life_services.matchmaking(_life_provider, candidates, {"roll": -1.0}, rng)
+
+func life_wedding(budget: int = 50000, quality: float = 0.6) -> Dictionary:
+	if _life_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = life_services.wedding_plan(_life_provider, _life_order, {"budget": maxi(0, budget), "quality": clampf(quality, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_life_services()
+	return r
+
+func life_housekeeping() -> Dictionary:
+	if _life_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = life_services.housekeeping_order(_life_provider, _life_order, {"roll": -1.0}, rng)
+	_persist_life_services()
+	return r
+
+func life_pet_service(service: String) -> Dictionary:
+	if _life_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	if not life_services.PET_CHAIN.has(service):
+		return {"ok": false, "reason": "unknown_pet_stage"}
+	_life_order["service"] = service
+	var r: Dictionary = life_services.pet_service_order(_life_provider, _life_order, {"roll": -1.0}, rng)
+	_persist_life_services()
+	return r
+
+func life_incident(severity: float = 0.5) -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	var r: Dictionary = life_services.service_incident(_life_provider, _life_order, {"severity": clampf(severity, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_life_services()
+	return r
+
+func life_resolve_dispute(claim: int = 0, severity: float = 0.5) -> Dictionary:
+	if _life_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = life_services.resolve_dispute(_life_provider, _life_order, {"claim": maxi(0, claim), "severity": clampf(severity, 0.0, 1.0)})
+	_persist_life_services()
+	return r
+
+func life_commission(price: int = 1000) -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	return life_services.platform_commission(maxi(0, price), String(_life_provider.get("category", "housekeeping")))
+
+func life_standardize(invest: int = 100000, level: float = 0.5) -> Dictionary:
+	if _life_provider.is_empty():
+		return {"ok": false, "reason": "no_provider"}
+	return life_services.standardization(String(_life_provider.get("category", "housekeeping")), {"invest": maxi(0, invest), "level": clampf(level, 0.0, 1.0)})
+
+func life_services_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _life_provider.is_empty():
+		out["provider"] = {
+			"name": String(_life_provider.get("name", "")),
+			"category": String(_life_provider.get("category", "")),
+			"category_name": String((life_services.SERVICE_CATEGORIES.get(String(_life_provider.get("category", "")), {}) as Dictionary).get("name", _life_provider.get("category", ""))),
+			"rating": float(_life_provider.get("rating", 0.0)),
+			"trust": float(_life_provider.get("trust", 0.0)),
+			"background": String(_life_provider.get("background", "unknown")),
+			"orders": (_life_provider.get("orders", []) as Array).size(),
+			"disputes": (_life_provider.get("disputes", []) as Array).size(),
+		}
+	if not _life_order.is_empty():
+		out["order"] = {
+			"id": String(_life_order.get("id", "")),
+			"service": String(_life_order.get("service", "")),
+			"price": int(_life_order.get("price", 0)),
+			"status": String(_life_order.get("status", "")),
+		}
+	return out
+
+func _persist_life_services() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["life_services"] = {
+		"provider": life_services.to_dict(_life_provider),
+		"order": life_services.to_dict(_life_order),
 	}
 
 

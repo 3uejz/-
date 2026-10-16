@@ -789,6 +789,30 @@ func _dispatch(intent) -> Dictionary:
 			return _prof_non_compete(intent)
 		"客户流失":
 			return _prof_churn(intent)
+		"注册服务者":
+			return _life_new_provider(intent)
+		"背景核查":
+			return _life_background(intent)
+		"预约服务":
+			return _life_new_order(intent)
+		"相亲婚介":
+			return _life_matchmaking(intent)
+		"婚礼策划":
+			return _life_wedding(intent)
+		"家政保洁":
+			return _life_housekeeping(intent)
+		"月嫂照料":
+			return _life_maternity(intent)
+		"宠物寄养":
+			return _life_pet(intent)
+		"服务事故":
+			return _life_incident(intent)
+		"纠纷处理":
+			return _life_dispute(intent)
+		"平台抽成":
+			return _life_commission(intent)
+		"服务标准化":
+			return _life_standardize(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3949,6 +3973,134 @@ func _prof_churn(intent) -> Dictionary:
 		return _fail("无法结算流失（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["客户流失 %d 名。" % int(r.get("lost", 0))], 0, "")
 
+func _life_new_provider(intent) -> Dictionary:
+	var category: String = _object_id(intent, "life_service_category")
+	if category.is_empty():
+		category = "housekeeping"
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.life_new_provider(nm, category)
+	if not bool(r.get("ok", false)):
+		return _fail("无法登记服务者（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["登记服务者「%s」，类别 %s。" % [String(r.get("name", "")), _catalog_name(host.life_service_categories_catalog(), category)]], 0, "")
+
+func _life_background(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var r: Dictionary = host.life_background_check()
+	if not bool(r.get("ok", false)):
+		return _fail("无法核查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("flagged", false)):
+		return _ok(["背景核查发现不良记录，信任下降。"], 0, "")
+	return _ok(["背景核查清白，信任提升。"], 0, "")
+
+func _life_new_order(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var service: String = String(intent.params.get("method", "")).strip_edges()
+	var price: int = maxi(0, _param_number(intent, "number", 1000))
+	var r: Dictionary = host.life_new_order(service, price)
+	if not bool(r.get("ok", false)):
+		return _fail("无法下单（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var o: Dictionary = r.get("order", {})
+	return _ok(["预约服务单「%s」，价格 %d。" % [String(o.get("service", "")), int(o.get("price", 0))]], 0, "")
+
+func _life_matchmaking(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var r: Dictionary = host.life_matchmaking()
+	if not bool(r.get("ok", false)):
+		return _fail("无法相亲（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("matched", false)):
+		return _ok(["相亲未配对。"], 0, "")
+	var m: Dictionary = r.get("match", {})
+	return _ok(["相亲配对成功：%s。" % String(m.get("name", ""))], 0, "")
+
+func _life_wedding(intent) -> Dictionary:
+	if host._life_order.is_empty():
+		return _fail("尚无服务单。")
+	var budget: int = maxi(0, _param_number(intent, "number", 50000))
+	var r: Dictionary = host.life_wedding(budget, 0.6)
+	if not bool(r.get("ok", false)):
+		return _fail("无法策划（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("accident", false)):
+		return _ok(["婚礼策划出现事故，成本 %d。" % int(r.get("cost", 0))], 0, "")
+	return _ok(["婚礼策划完成，成本 %d。" % int(r.get("cost", 0))], 0, "")
+
+func _life_housekeeping(intent) -> Dictionary:
+	if host._life_order.is_empty():
+		return _fail("尚无服务单。")
+	var r: Dictionary = host.life_housekeeping()
+	if not bool(r.get("ok", false)):
+		return _fail("无法服务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var incident: String = String(r.get("incident", ""))
+	if incident == "theft":
+		return _ok(["家政服务发生盗窃。"], 0, "")
+	if incident == "negligence":
+		return _ok(["家政服务出现失职。"], 0, "")
+	return _ok(["家政服务完成。"], 0, "")
+
+func _life_maternity(intent) -> Dictionary:
+	if host._life_order.is_empty():
+		return _fail("尚无服务单。")
+	host._life_order["service"] = "maternity"
+	var r: Dictionary = host.life_housekeeping()
+	if not bool(r.get("ok", false)):
+		return _fail("无法照料（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var incident: String = String(r.get("incident", ""))
+	var tail: String = "（发生盗窃）" if incident == "theft" else ("（出现失职）" if incident == "negligence" else "")
+	return _ok(["月嫂照料完成%s。" % tail], 0, "")
+
+func _life_pet(intent) -> Dictionary:
+	if host._life_order.is_empty():
+		return _fail("尚无服务单。")
+	var stage: String = _object_id(intent, "life_pet_stage")
+	if stage.is_empty():
+		return _fail("请指明宠物服务环节。")
+	var r: Dictionary = host.life_pet_service(stage)
+	if not bool(r.get("ok", false)):
+		return _fail("无法服务（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["宠物%s%s。" % [_catalog_name(host.life_pet_service_catalog(), stage), "完成" if bool(r.get("completed", false)) else "出现事故"]], 0, "")
+
+func _life_incident(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var sev: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.life_incident(sev)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("occurred", false)):
+		return _ok(["发生服务事故，严重度 %.0f%%。" % (float(r.get("severity", 0.0)) * 100.0)], 0, "")
+	return _ok(["未发生服务事故。"], 0, "")
+
+func _life_dispute(intent) -> Dictionary:
+	if host._life_order.is_empty():
+		return _fail("尚无服务单。")
+	var claim: int = maxi(0, _param_number(intent, "number", 0))
+	var r: Dictionary = host.life_resolve_dispute(claim, 0.5)
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("legal", false)):
+		return _ok(["纠纷上升为法律后果，赔偿 %d。" % int(r.get("compensation", 0))], 0, "")
+	return _ok(["纠纷投诉处理，赔偿 %d。" % int(r.get("compensation", 0))], 0, "")
+
+func _life_commission(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var price: int = maxi(0, _param_number(intent, "number", 1000))
+	var r: Dictionary = host.life_commission(price)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["平台抽成 %d，服务者实收 %d。" % [int(r.get("commission", 0)), int(r.get("provider_received", 0))]], 0, "")
+
+func _life_standardize(intent) -> Dictionary:
+	if host.life_provider().is_empty():
+		return _fail("尚未登记服务者。")
+	var invest: int = maxi(0, _param_number(intent, "number", 100000))
+	var r: Dictionary = host.life_standardize(invest, 0.5)
+	if not bool(r.get("ok", false)):
+		return _fail("无法标准化（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["服务标准化投入 %d。" % int(r.get("invest", 0))], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -4267,6 +4419,14 @@ func _reason_cn(reason: String) -> String:
 			return "查无此合伙人"
 		"bad_partner":
 			return "合伙人姓名无效"
+		"no_provider":
+			return "尚未登记服务者"
+		"unknown_category":
+			return "未知服务类别"
+		"unknown_pet_stage":
+			return "未知宠物服务环节"
+		"no_candidates":
+			return "暂无相亲候选"
 		"unknown_practice":
 			return "未知民俗活动"
 		"no_business":
@@ -4558,6 +4718,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.prof_practice_types_catalog(), text)
 		"prof_cert":
 			return _find_catalog_by_name(host.prof_qualifications_catalog(), text)
+		"life_service_category":
+			return _find_catalog_by_name(host.life_service_categories_catalog(), text)
+		"life_pet_stage":
+			return _find_catalog_by_name(host.life_pet_service_catalog(), text)
 		_:
 			return ""
 

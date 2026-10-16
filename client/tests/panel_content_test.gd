@@ -65,6 +65,7 @@ func run_tests() -> void:
 	_test_content_industry_panel()
 	_test_engineering_panel()
 	_test_professional_panel()
+	_test_life_services_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -190,6 +191,16 @@ func _test_professional_panel() -> void:
 	check(not bool(d.get("empty", true)), "有专业服务上下文非空")
 	check(_find_section(d, "专业事务所").get("rows", []).size() >= 1, "专业事务所分区有行")
 	check(_find_section(d, "立项项目").get("rows", []).size() >= 1, "立项项目分区有行")
+
+func _test_life_services_panel() -> void:
+	var ctx: Dictionary = {"life_services": {
+		"provider": {"name": "王阿姨", "category": "housekeeping", "category_name": "家政保洁", "rating": 0.6, "trust": 0.5, "background": "clean", "orders": 2, "disputes": 0},
+		"order": {"id": "order.1", "service": "housekeeping", "price": 2000, "status": "open"},
+	}}
+	var d: Dictionary = PanelContentScript.build("services", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有生活服务上下文非空")
+	check(_find_section(d, "生活服务者").get("rows", []).size() >= 1, "生活服务者分区有行")
+	check(_find_section(d, "服务单").get("rows", []).size() >= 1, "服务单分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()
