@@ -1688,13 +1688,68 @@ static func _crisis_name(key: String) -> String:
 	}
 	return String(NAMES.get(key, key))
 
-static func content_industry(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func content_industry(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("文娱", "尚未生成角色数据")
+	var sections: Array = []
+	var c: Dictionary = context.get("content", {})
+	sections.append_array(_content_runtime_sections(c))
 	var ips: Array = _items_of(_world(context).get("ips", []))
-	if ips.is_empty():
-		return _empty("文娱", "尚无作品；可创作、授权、发行并查看分成")
-	return _ok([_section("作品与版权", _rows_from(ips, ["type", "status", "royalty", "rating"], name_resolver))])
+	if not ips.is_empty():
+		sections.append(_section("作品与版权", _rows_from(ips, ["type", "status", "royalty", "rating"], name_resolver)))
+	if sections.is_empty():
+		return _empty("文娱", "尚无作品；可开办工作室、立项创作并发行变现")
+	return _ok(sections)
+
+static func _content_runtime_sections(c: Dictionary) -> Array:
+	if c.is_empty():
+		return []
+	var sections: Array = []
+	var studio: Dictionary = c.get("studio", {})
+	var stage: String = String(studio.get("financing_stage", ""))
+	sections.append(_section("工作室", [
+		{"label": "名称", "value": String(studio.get("name", ""))},
+		{"label": "资金", "value": str(int(studio.get("money", 0)))},
+		{"label": "声誉", "value": "%.0f%%" % (float(studio.get("reputation", 0.0)) * 100.0)},
+		{"label": "团队", "value": "%d 人" % int(studio.get("team_size", 0))},
+		{"label": "融资", "value": stage if not stage.is_empty() else "未融资"},
+	]))
+	var team: Array = _items_of(c.get("team", []))
+	if not team.is_empty():
+		var team_rows: Array = []
+		for t in team:
+			team_rows.append({"label": String((t as Dictionary).get("name", "")), "value": "%d 人 · 技能 %.0f%%" % [int((t as Dictionary).get("count", 0)), float((t as Dictionary).get("skill", 0.0)) * 100.0]})
+		sections.append(_section("创作团队", team_rows))
+	if c.get("work", null) is Dictionary:
+		var w: Dictionary = c.get("work", {})
+		sections.append(_section("在研作品", [
+			{"label": "标题", "value": String(w.get("title", ""))},
+			{"label": "类型", "value": String(w.get("type_name", ""))},
+			{"label": "进度", "value": "%.0f/%.0f" % [float(w.get("progress", 0.0)), float(w.get("required", 1.0))]},
+			{"label": "质量", "value": "%.0f%%" % (float(w.get("quality", 0.0)) * 100.0)},
+			{"label": "状态", "value": String(w.get("status", ""))},
+			{"label": "收入", "value": str(int(w.get("revenue", 0)))},
+			{"label": "争议", "value": "%.0f%%" % (float(w.get("controversy", 0.0)) * 100.0)},
+		]))
+	var works: Array = _items_of(c.get("works", []))
+	if not works.is_empty():
+		var work_rows: Array = []
+		for wk in works:
+			work_rows.append({"label": String((wk as Dictionary).get("title", "")), "value": "质量 %.0f%% · 表现 %.0f%%" % [float((wk as Dictionary).get("quality", 0.0)) * 100.0, float((wk as Dictionary).get("performance", 0.0)) * 100.0]})
+		sections.append(_section("发行作品", work_rows))
+	var ip_list: Array = _items_of(c.get("ips", []))
+	if not ip_list.is_empty():
+		var ip_rows: Array = []
+		for ip in ip_list:
+			ip_rows.append({"label": String((ip as Dictionary).get("title", "")), "value": "势能 %.0f%% · 改编 %d" % [float((ip as Dictionary).get("power", 0.0)) * 100.0, int((ip as Dictionary).get("adaptations", 0))]})
+		sections.append(_section("IP 库", ip_rows))
+	var fan: Dictionary = c.get("fandom", {})
+	if not fan.is_empty():
+		sections.append(_section("粉丝文化", [
+			{"label": "粉丝规模", "value": str(int(fan.get("size", 0)))},
+			{"label": "毒性", "value": "%.0f%%" % (float(fan.get("toxicity", 0.0)) * 100.0)},
+		]))
+	return sections
 
 static func engineering(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

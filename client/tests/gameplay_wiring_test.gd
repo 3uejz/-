@@ -86,6 +86,7 @@ func run_tests() -> void:
 	_test_metaphysics_commands()
 	_test_anomaly_commands()
 	_test_medical_commands()
+	_test_content_industry_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -770,6 +771,31 @@ func _test_medical_commands() -> void:
 	_main.submit("医疗保险欺诈 100000")
 	_main.submit("试验丑闻 药A")
 	check(not sim._pharma_company.is_empty(), "「医药立项」建立医药公司")
+
+func _test_content_industry_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看文娱")
+	_main.submit("开工作室 星火")
+	_main.submit("招募团队 程序 2")
+	_main.submit("招募团队 美术 1")
+	_main.submit("立项作品 游戏 星河传说")
+	_main.submit("项目管理 80")
+	_main.submit("推进创作 600")
+	_main.submit("作品发行")
+	_main.submit("渠道分成 平台分成")
+	_main.submit("作品版权")
+	_main.submit("IP改编 动漫")
+	_main.submit("IP运营 周边 1000000")
+	_main.submit("查重抄袭 50")
+	_main.submit("内容审查 30")
+	_main.submit("艺人翻车 60")
+	_main.submit("工作室融资 种子轮")
+	_main.submit("挖角团队 策划")
+	_main.submit("版号审批 游戏")
+	_main.submit("粉丝运营 30")
+	_main.submit("作品下架 内容违规")
+	check(not sim._content_studio.is_empty(), "「开工作室」建立工作室")
+	check(not sim._content_work.is_empty(), "「立项作品」建立在研作品")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

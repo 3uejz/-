@@ -62,6 +62,7 @@ func run_tests() -> void:
 	_test_anomaly_panel()
 	_test_hidden_anomaly_panel_empty()
 	_test_medical_panel()
+	_test_content_industry_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -144,6 +145,24 @@ func _test_medical_panel() -> void:
 	check(_find_section(d, "区域医疗").get("rows", []).size() >= 1, "区域医疗分区有行")
 	check(_find_section(d, "高阶医疗").get("rows", []).size() >= 1, "高阶医疗分区有行")
 	check(_find_section(d, "医药产业").get("rows", []).size() >= 1, "医药产业分区有行")
+
+func _test_content_industry_panel() -> void:
+	var ctx: Dictionary = {"content": {
+		"studio": {"name": "星火", "money": 8000000, "reputation": 0.6, "team_size": 3, "financing_stage": "seed"},
+		"team": [{"name": "程序", "count": 2, "skill": 0.8}],
+		"work": {"title": "星河传说", "type_name": "游戏研发", "progress": 240.0, "required": 240.0, "quality": 0.75, "status": "ready", "revenue": 0, "controversy": 0.0},
+		"works": [{"title": "旧作", "quality": 0.6, "performance": 0.7}],
+		"ips": [{"title": "星河传说", "power": 0.75, "universe": "", "adaptations": 1}],
+		"fandom": {"size": 120000, "toxicity": 0.1},
+	}}
+	var d: Dictionary = PanelContentScript.build("content_industry", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有文娱上下文非空")
+	check(_find_section(d, "工作室").get("rows", []).size() >= 1, "工作室分区有行")
+	check(_find_section(d, "创作团队").get("rows", []).size() >= 1, "创作团队分区有行")
+	check(_find_section(d, "在研作品").get("rows", []).size() >= 1, "在研作品分区有行")
+	check(_find_section(d, "发行作品").get("rows", []).size() >= 1, "发行作品分区有行")
+	check(_find_section(d, "IP 库").get("rows", []).size() >= 1, "IP 库分区有行")
+	check(_find_section(d, "粉丝文化").get("rows", []).size() >= 1, "粉丝文化分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

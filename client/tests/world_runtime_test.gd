@@ -65,6 +65,7 @@ func run_tests() -> void:
 	_test_metaphysics_runtime()
 	_test_anomaly_runtime()
 	_test_medical_runtime()
+	_test_content_industry_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1448,6 +1449,55 @@ func _test_medical_runtime() -> void:
 	reloaded.bind(state)
 	check(String(reloaded._pharma_company.get("name", "")) != "", "读档恢复医药公司")
 	check(not reloaded.medical_panel_data().is_empty(), "医疗面板数据非空")
+
+
+func _test_content_industry_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(201)
+	var host = SimHostScript.new(state, 201)
+	host.bind(state)
+	check(host.content_types_catalog().size() >= 6, "内容类型≥6")
+	check(host.content_roles_catalog().size() >= 6, "创作角色≥6")
+	check(host.content_channels_catalog().size() >= 5, "变现渠道≥5")
+	check(host.content_ip_operations_catalog().size() >= 4, "IP 运营方式≥4")
+	check(host.content_funding_stages_catalog().size() >= 5, "融资轮次≥5")
+	# 工作室与团队。
+	check(bool(host.content_new_studio("星火").get("ok", false)), "开办工作室")
+	check(bool(host.content_hire("engineering", 2).get("ok", false)), "招募程序")
+	check(bool(host.content_hire("art", 1).get("ok", false)), "招募美术")
+	check(host._content_studio["team"].has("engineering"), "团队含程序")
+	# 作品创作。
+	check(bool(host.content_new_work("game", "星河传说").get("ok", false)), "立项游戏")
+	check(not host._content_work.is_empty(), "在研作品非空")
+	host.content_manage(0.8)
+	var adv: Dictionary = host.content_advance(600.0)
+	check(bool(adv.get("ready", false)), "推进后可发行")
+	# 发行与变现。
+	check(bool(host.content_release().get("ok", false)), "作品发行")
+	check(bool(host.content_monetize("platform_share").get("ok", false)), "平台分成")
+	# IP 运营。
+	check(bool(host.content_register_ip().get("ok", false)), "登记版权")
+	check(bool(host.content_adapt("anime").get("ok", false)), "IP 改编")
+	check(bool(host.content_operate_ip("merchandise", 1000000.0).get("ok", false)), "IP 运营")
+	# 风险。
+	check(host.content_plagiarism(0.9, 0.9).has("exposed"), "抄袭检测结算")
+	check(host.content_compliance(0.9, 0.9).has("approved"), "内容合规结算")
+	check(host.content_scandal(0.9, 0.9).has("occurred"), "翻车事件结算")
+	# 经营边界。
+	check(bool(host.content_funding("seed").get("ok", false)), "种子轮融资")
+	check(host.content_fandom(0.3).has("fandom_size"), "粉丝演化结算")
+	check(host.content_approval("game").has("approved"), "版号审批结算")
+	check(bool(host.content_poach("design", 3.0).get("ok", false)), "挖角结算")
+	# 下架。
+	check(bool(host.content_takedown("content_violation", 0.7).get("ok", false)), "作品下架")
+	# 持久化与读档恢复。
+	host._persist_content()
+	check(state.sim_runtime.get("content", null) is Dictionary, "文娱运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 201)
+	reloaded.bind(state)
+	check(String(reloaded._content_studio.get("name", "")) == "星火", "读档恢复工作室")
+	check(not reloaded.content_panel_data().is_empty(), "文娱面板数据非空")
+	check(not reloaded._content_work.is_empty(), "读档恢复在研作品")
 
 
 

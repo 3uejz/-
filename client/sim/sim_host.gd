@@ -62,6 +62,7 @@ const MetaphysicsScript = preload("res://sim/metaphysics.gd")
 const AnomalyScript = preload("res://sim/anomaly.gd")
 const MedicalScript = preload("res://sim/medical.gd")
 const MedTechScript = preload("res://sim/medtech.gd")
+const ContentIndustryScript = preload("res://sim/content_industry.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -208,6 +209,12 @@ var medical                       ## 疾病库与就医流程（MedicalSystem）
 var medtech                       ## 医疗、生命科技与医药产业（MedTechSystem）
 var _medical_region: Dictionary = {}       ## 区域医疗资源，入档 sim_runtime.medical.region
 var _pharma_company: Dictionary = {}       ## 医药公司管线，入档 sim_runtime.medical.pharma
+var content_industry                ## 文娱内容产业（ContentIndustrySystem）
+var _content_studio: Dictionary = {}       ## 玩家文娱工作室，入档 sim_runtime.content.studio
+var _content_work: Dictionary = {}         ## 当前在研作品，入档 sim_runtime.content.work
+var _content_rival: Dictionary = {}        ## 对手工作室（挖角目标），入档 sim_runtime.content.rival
+var _content_ip_id: String = ""            ## 当前 IP 标识，入档 sim_runtime.content.ip_id
+var _content_seq: int = 0                  ## 作品序号，入档 sim_runtime.content.seq
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -295,6 +302,10 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	medtech = MedTechScript.new()
 	_medical_region = medtech.new_region(1000000, {"medical_level": 1.5})
 	medtech.region_metrics(_medical_region)
+	content_industry = ContentIndustryScript.new()
+	_content_rival = content_industry.new_studio({"id": "studio.rival", "name": "竞品工作室", "money": 8000000})
+	content_industry.hire(_content_rival, "design", 2, {"skill": 0.8})
+	content_industry.hire(_content_rival, "engineering", 2, {"skill": 0.8})
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -561,6 +572,18 @@ func _ensure_world_geo() -> void:
 				_medical_region = medtech.from_dict(mdd["region"])
 			if mdd.get("pharma", null) is Dictionary and not (mdd["pharma"] as Dictionary).is_empty():
 				_pharma_company = medtech.from_dict(mdd["pharma"])
+		# 恢复文娱内容产业运行态（工作室/在研作品/对手/当前 IP）。
+		var ct: Variant = (state.sim_runtime as Dictionary).get("content", {})
+		if ct is Dictionary and not (ct as Dictionary).is_empty():
+			var ctd: Dictionary = ct
+			if ctd.get("studio", null) is Dictionary:
+				_content_studio = content_industry.from_dict(ctd["studio"])
+			if ctd.get("work", null) is Dictionary:
+				_content_work = content_industry.from_dict(ctd["work"])
+			if ctd.get("rival", null) is Dictionary and not (ctd["rival"] as Dictionary).is_empty():
+				_content_rival = content_industry.from_dict(ctd["rival"])
+			_content_ip_id = String(ctd.get("ip_id", ""))
+			_content_seq = int(ctd.get("seq", 0))
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5007,6 +5030,282 @@ func _persist_medical() -> void:
 		"surgeries": medical._surgeries.duplicate(true),
 		"region": medtech.to_dict(_medical_region),
 		"pharma": medtech.to_dict(_pharma_company),
+	}
+
+
+# --- D46 文娱内容产业 ---
+
+const CONTENT_FUNDING_NAMES: Dictionary = {"seed": "种子轮", "angel": "天使轮", "a": "A 轮", "b": "B 轮", "c": "C 轮"}
+
+func content_types_catalog() -> Array:
+	var labels: Dictionary = {"game": "游戏", "anime": "动漫", "webnovel": "网文", "film": "影视", "variety": "综艺", "music": "音乐"}
+	var aliases: Dictionary = {"game": ["游戏研发"], "anime": ["动漫制作"], "webnovel": ["网络文学"], "film": [], "variety": [], "music": ["音乐制作"]}
+	var out: Array = []
+	for key in content_industry.CONTENT_TYPES.keys():
+		var k: String = String(key)
+		out.append({"id": k, "name": String(labels.get(k, k)), "aliases": (aliases.get(k, []) as Array).duplicate()})
+	return out
+
+func content_roles_catalog() -> Array:
+	var out: Array = []
+	for key in content_industry.CREATION_ROLES.keys():
+		out.append({"id": String(key), "name": String((content_industry.CREATION_ROLES[key] as Dictionary).get("name", key))})
+	return out
+
+func content_channels_catalog() -> Array:
+	var out: Array = []
+	for key in content_industry.CHANNELS.keys():
+		out.append({"id": String(key), "name": String((content_industry.CHANNELS[key] as Dictionary).get("name", key))})
+	return out
+
+func content_platforms_catalog() -> Array:
+	var out: Array = []
+	for key in content_industry.PLATFORMS.keys():
+		out.append({"id": String(key), "name": String((content_industry.PLATFORMS[key] as Dictionary).get("name", key))})
+	return out
+
+func content_ip_operations_catalog() -> Array:
+	var out: Array = []
+	for key in content_industry.IP_OPERATIONS.keys():
+		out.append({"id": String(key), "name": String((content_industry.IP_OPERATIONS[key] as Dictionary).get("name", key))})
+	return out
+
+func content_funding_stages_catalog() -> Array:
+	var out: Array = []
+	for s in content_industry.FUNDING_STAGES:
+		out.append({"id": String(s), "name": String(CONTENT_FUNDING_NAMES.get(String(s), String(s)))})
+	return out
+
+func content_studio() -> Dictionary:
+	return _content_studio
+
+func content_new_studio(name: String = "") -> Dictionary:
+	var nm: String = name if not name.is_empty() else "文娱工作室"
+	_content_studio = content_industry.new_studio({"id": "studio.player", "name": nm, "money": 10000000})
+	_content_work = {}
+	_content_ip_id = ""
+	_persist_content()
+	return {"ok": true, "name": String(_content_studio.get("name", nm))}
+
+func content_hire(role: String, count: int) -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var r: Dictionary = content_industry.hire(_content_studio, role, count)
+	_persist_content()
+	return r
+
+func content_fire(role: String, count: int) -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var r: Dictionary = content_industry.fire(_content_studio, role, count)
+	_persist_content()
+	return r
+
+func content_new_work(content_type: String, title: String = "") -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	_content_seq += 1
+	var wid: String = "work.%d" % _content_seq
+	var ttl: String = title if not title.is_empty() else content_industry.content_type_name(content_type)
+	var r: Dictionary = content_industry.new_work(wid, content_type, {"title": ttl})
+	if not bool(r.get("ok", false)):
+		return r
+	_content_work = r["work"]
+	_persist_content()
+	return {"ok": true, "work_id": wid, "name": String(_content_work.get("title", wid))}
+
+func content_manage(management: float = 0.5) -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.project_management(_content_work, {"management": management})
+	_persist_content()
+	return r
+
+func content_advance(days: float = 30.0) -> Dictionary:
+	if _content_work.is_empty() or _content_studio.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.advance_project(_content_work, _content_studio, days, {"roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_release() -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.release_work(_content_studio, _content_work, {"roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_monetize(channel: String, platform: String = "") -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.monetize(_content_work, channel, {"platform": platform})
+	_persist_content()
+	return r
+
+func content_register_ip() -> Dictionary:
+	if _content_studio.is_empty() or _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.register_ip(_content_studio, _content_work, {"id": "ip.%s" % String(_content_work.get("id", "w"))})
+	if bool(r.get("ok", false)):
+		_content_ip_id = String((r["ip"] as Dictionary).get("id", ""))
+	_persist_content()
+	return r
+
+func _content_ip() -> Dictionary:
+	if _content_ip_id.is_empty() or _content_studio.is_empty():
+		return {}
+	return (_content_studio.get("ip_library", {}) as Dictionary).get(_content_ip_id, {})
+
+func content_adapt(target_type: String) -> Dictionary:
+	var ip: Dictionary = _content_ip()
+	if ip.is_empty():
+		return {"ok": false, "reason": "no_ip"}
+	var r: Dictionary = content_industry.adapt(ip, target_type)
+	_persist_content()
+	return r
+
+func content_operate_ip(operation: String, scale: float = 1000000.0) -> Dictionary:
+	var ip: Dictionary = _content_ip()
+	if ip.is_empty():
+		return {"ok": false, "reason": "no_ip"}
+	var r: Dictionary = content_industry.operate_ip(ip, operation, scale, {"roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_ip_universe() -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var ips: Array = (_content_studio.get("ip_library", {}) as Dictionary).values()
+	var r: Dictionary = content_industry.build_ip_universe(ips)
+	_persist_content()
+	return r
+
+func content_plagiarism(similarity: float = 0.5, detect: float = 0.5) -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.plagiarism_check(_content_work, {"similarity": similarity, "detect_prob": detect, "roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_compliance(risk: float = 0.3, strictness: float = 0.5) -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.content_compliance(_content_work, {"risk": risk, "strictness": strictness})
+	_persist_content()
+	return r
+
+func content_takedown(reason: String = "content_violation", severity: float = 0.6) -> Dictionary:
+	if _content_work.is_empty():
+		return {"ok": false, "reason": "no_work"}
+	var r: Dictionary = content_industry.take_down(_content_studio, _content_work, reason, {"severity": severity})
+	_persist_content()
+	return r
+
+func content_scandal(severity: float = 0.6, exposure: float = 0.6) -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var r: Dictionary = content_industry.scandal_event(_content_studio, {"severity": severity, "exposure": exposure, "roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_funding(stage: String = "seed") -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	if not content_industry.FUNDING_STAGES.has(stage):
+		return {"ok": false, "reason": "unknown_stage"}
+	var r: Dictionary = content_industry.raise_funding(_content_studio, stage, {}, rng)
+	_persist_content()
+	return r
+
+func content_poach(role: String, offer: float = 1.5) -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var r: Dictionary = content_industry.poach_team(_content_studio, _content_rival, role, {"offer_mult": offer, "roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_approval(content_type: String, strictness: float = 0.5) -> Dictionary:
+	var r: Dictionary = content_industry.approval_delay(content_type, {"base_days": 30.0, "strictness": strictness, "roll": -1.0}, rng)
+	return r
+
+func content_fandom(growth: float = 0.1) -> Dictionary:
+	if _content_studio.is_empty():
+		return {"ok": false, "reason": "no_studio"}
+	var r: Dictionary = content_industry.fandom_dynamics(_content_studio, {"growth": growth, "roll": -1.0}, rng)
+	_persist_content()
+	return r
+
+func content_panel_data() -> Dictionary:
+	if _content_studio.is_empty():
+		return {}
+	var out: Dictionary = {
+		"studio": {
+			"name": String(_content_studio.get("name", "")),
+			"money": int(_content_studio.get("money", 0)),
+			"reputation": float(_content_studio.get("reputation", 0.0)),
+			"team_size": 0,
+			"financing_stage": String((_content_studio.get("financing", {}) as Dictionary).get("stage", "")),
+		},
+		"team": [],
+		"works": [],
+		"ips": [],
+		"fandom": {
+			"size": int((_content_studio.get("fandom", {}) as Dictionary).get("size", 0)),
+			"toxicity": float((_content_studio.get("fandom", {}) as Dictionary).get("toxicity", 0.0)),
+		},
+	}
+	var team_size: int = 0
+	for role in (_content_studio.get("team", {}) as Dictionary).keys():
+		var e: Dictionary = _content_studio["team"][role]
+		var cnt: int = int(e.get("count", 0))
+		if cnt <= 0:
+			continue
+		team_size += cnt
+		out["team"].append({
+			"role": String(role),
+			"name": String((content_industry.CREATION_ROLES.get(role, {}) as Dictionary).get("name", role)),
+			"count": cnt,
+			"skill": float(e.get("skill", 0.0)),
+		})
+	out["studio"]["team_size"] = team_size
+	if not _content_work.is_empty():
+		out["work"] = {
+			"title": String(_content_work.get("title", "")),
+			"type": String(_content_work.get("type", "")),
+			"type_name": content_industry.content_type_name(String(_content_work.get("type", ""))),
+			"progress": float(_content_work.get("progress", 0.0)),
+			"required": float(_content_work.get("required_progress", 1.0)),
+			"quality": float(_content_work.get("quality", 0.0)),
+			"status": String(_content_work.get("status", "")),
+			"revenue": int(_content_work.get("revenue", 0)),
+			"controversy": float(_content_work.get("controversy", 0.0)),
+		}
+	for w in _content_studio.get("catalog", []):
+		out["works"].append({
+			"title": String((w as Dictionary).get("title", "")),
+			"type": String((w as Dictionary).get("type", "")),
+			"quality": float((w as Dictionary).get("quality", 0.0)),
+			"performance": float((w as Dictionary).get("performance", 0.0)),
+		})
+	for key in (_content_studio.get("ip_library", {}) as Dictionary).keys():
+		var ip: Dictionary = _content_studio["ip_library"][key]
+		out["ips"].append({
+			"title": String(ip.get("title", "")),
+			"power": float(ip.get("power", 0.0)),
+			"universe": String(ip.get("universe", "")),
+			"adaptations": (ip.get("adaptations", []) as Array).size(),
+		})
+	return out
+
+func _persist_content() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["content"] = {
+		"studio": content_industry.to_dict(_content_studio),
+		"work": content_industry.to_dict(_content_work),
+		"rival": content_industry.to_dict(_content_rival),
+		"ip_id": _content_ip_id,
+		"seq": _content_seq,
 	}
 
 

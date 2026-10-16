@@ -681,6 +681,46 @@ func _dispatch(intent) -> Dictionary:
 			return _medical_fraud(intent)
 		"试验丑闻":
 			return _medical_scandal(intent)
+		"开工作室":
+			return _content_new_studio(intent)
+		"招募团队":
+			return _content_hire(intent)
+		"裁撤团队":
+			return _content_fire(intent)
+		"立项作品":
+			return _content_new_work(intent)
+		"项目管理":
+			return _content_manage(intent)
+		"推进创作":
+			return _content_advance(intent)
+		"作品发行":
+			return _content_release(intent)
+		"渠道分成":
+			return _content_monetize(intent)
+		"作品版权":
+			return _content_register_ip(intent)
+		"IP改编":
+			return _content_adapt(intent)
+		"IP运营":
+			return _content_operate(intent)
+		"IP宇宙":
+			return _content_ip_universe(intent)
+		"查重抄袭":
+			return _content_plagiarism(intent)
+		"内容审查":
+			return _content_compliance(intent)
+		"作品下架":
+			return _content_takedown(intent)
+		"艺人翻车":
+			return _content_scandal(intent)
+		"工作室融资":
+			return _content_funding(intent)
+		"挖角团队":
+			return _content_poach(intent)
+		"版号审批":
+			return _content_approval(intent)
+		"粉丝运营":
+			return _content_fandom(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3348,6 +3388,185 @@ func _medical_scandal(intent) -> Dictionary:
 		return _fail("试验丑闻曝光，罚款 %d，合规下降。" % int(r.get("fine", 0)))
 	return _ok(["试验争议未被曝光。"], 0, "")
 
+func _catalog_name(items: Array, id: String) -> String:
+	for it in items:
+		if it is Dictionary and String((it as Dictionary).get("id", "")) == id:
+			return String((it as Dictionary).get("name", id))
+	return id
+
+func _content_new_studio(intent) -> Dictionary:
+	var nm: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.content_new_studio(nm)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开办工作室（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["开办文娱工作室「%s」，可开始招募团队。" % String(r.get("name", "工作室"))], 0, "")
+
+func _content_hire(intent) -> Dictionary:
+	var role: String = _object_id(intent, "content_role")
+	if role.is_empty():
+		return _fail("请指明团队角色。")
+	var count: int = maxi(1, _param_number(intent, "number", 1))
+	var r: Dictionary = host.content_hire(role, count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法招募（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["招募 %d 名%s，耗费 %d，团队技能 %.0f%%。" % [count, _catalog_name(host.content_roles_catalog(), role), int(r.get("cost", 0)), float(r.get("skill", 0.0)) * 100.0]], 0, "")
+
+func _content_fire(intent) -> Dictionary:
+	var role: String = _object_id(intent, "content_role")
+	if role.is_empty():
+		return _fail("请指明团队角色。")
+	var count: int = maxi(1, _param_number(intent, "number", 1))
+	var r: Dictionary = host.content_fire(role, count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法裁撤（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["裁撤%s，现有 %d 人。" % [_catalog_name(host.content_roles_catalog(), role), int(r.get("count", 0))]], 0, "")
+
+func _content_new_work(intent) -> Dictionary:
+	var ctype: String = _object_id(intent, "content_type")
+	if ctype.is_empty():
+		return _fail("请指明作品类型。")
+	var title: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.content_new_work(ctype, title)
+	if not bool(r.get("ok", false)):
+		return _fail("无法立项（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["立项《%s》。" % String(r.get("name", title))], 0, "")
+
+func _content_manage(intent) -> Dictionary:
+	var mgmt: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.content_manage(mgmt)
+	if not bool(r.get("ok", false)):
+		return _fail("无法调整项目管理（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["项目管理效率调整，进度倍率 %.2f。" % float(r.get("speed_mult", 1.0))], 0, "")
+
+func _content_advance(intent) -> Dictionary:
+	var days: float = float(maxi(1, _param_number(intent, "number", 30)))
+	var r: Dictionary = host.content_advance(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进创作（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra: String = "，已完成可发行" if bool(r.get("ready", false)) else ""
+	return _ok(["推进创作 %d 日，进度 %.0f/%.0f，质量 %.0f%%%s。" % [int(days), float(r.get("progress", 0.0)), float(r.get("required", 1.0)), float(r.get("quality", 0.0)) * 100.0, extra]], 0, "")
+
+func _content_release(intent) -> Dictionary:
+	var r: Dictionary = host.content_release()
+	if not bool(r.get("ok", false)):
+		return _fail("无法发行（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var label: String = "爆款" if bool(r.get("hit", false)) else ("扑街" if bool(r.get("flop", false)) else "平平")
+	return _ok(["作品发行完毕，判定为%s，表现 %.0f%%。" % [label, float(r.get("performance", 0.0)) * 100.0]], 0, "")
+
+func _content_monetize(intent) -> Dictionary:
+	var channel: String = _object_id(intent, "content_channel")
+	if channel.is_empty():
+		return _fail("请指明变现渠道。")
+	var r: Dictionary = host.content_monetize(channel)
+	if not bool(r.get("ok", false)):
+		return _fail("无法变现（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["渠道变现收入 %d。" % int(r.get("revenue", 0))], 0, "")
+
+func _content_register_ip(intent) -> Dictionary:
+	var r: Dictionary = host.content_register_ip()
+	if not bool(r.get("ok", false)):
+		return _fail("无法登记版权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["登记作品版权，IP 势能 %.0f%%。" % (float((r.get("ip", {}) as Dictionary).get("power", 0.0)) * 100.0)], 0, "")
+
+func _content_adapt(intent) -> Dictionary:
+	var ttype: String = _object_id(intent, "content_type")
+	if ttype.is_empty():
+		return _fail("请指明改编类型。")
+	var r: Dictionary = host.content_adapt(ttype)
+	if not bool(r.get("ok", false)):
+		return _fail("无法改编（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["改编为%s，质量 %.0f%%。" % [_catalog_name(host.content_types_catalog(), ttype), float(r.get("quality", 0.0)) * 100.0]], 0, "")
+
+func _content_operate(intent) -> Dictionary:
+	var op: String = _object_id(intent, "ip_operation")
+	if op.is_empty():
+		return _fail("请指明 IP 运营方式。")
+	var scale: float = float(maxi(1, _param_number(intent, "number", 1000000)))
+	var r: Dictionary = host.content_operate_ip(op, scale)
+	if not bool(r.get("ok", false)):
+		return _fail("无法运营 IP（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["IP %s 收入 %d。" % [_catalog_name(host.content_ip_operations_catalog(), op), int(r.get("revenue", 0))]], 0, "")
+
+func _content_ip_universe(intent) -> Dictionary:
+	var r: Dictionary = host.content_ip_universe()
+	if not bool(r.get("ok", false)):
+		return _fail("无法构建 IP 宇宙（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("universe", false)):
+		return _ok(["IP 不足两部，暂无法构建宇宙。"], 0, "")
+	return _ok(["构建 IP 宇宙，加成 %.0f%%。" % (float(r.get("bonus", 0.0)) * 100.0)], 0, "")
+
+func _content_plagiarism(intent) -> Dictionary:
+	var similarity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.content_plagiarism(similarity, 0.6)
+	if not bool(r.get("ok", false)):
+		return _fail("无法查重（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exposed", false)):
+		return _ok(["查重发现抄袭，争议上升。"], 0, "")
+	return _ok(["查重未发现明显抄袭。"], 0, "")
+
+func _content_compliance(intent) -> Dictionary:
+	var risk: float = clampf(float(_param_number(intent, "number", 30)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.content_compliance(risk)
+	if not bool(r.get("ok", false)):
+		return _fail("无法审查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["内容审查%s。" % ("通过" if bool(r.get("approved", false)) else "未通过，记录违规")], 0, "")
+
+func _content_takedown(intent) -> Dictionary:
+	var reason: String = String(intent.params.get("method", "content_violation"))
+	var r: Dictionary = host.content_takedown(reason, 0.7)
+	if not bool(r.get("ok", false)):
+		return _fail("无法下架（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["作品已下架，罚款 %d，声誉受损。" % int(r.get("penalty", 0))], 0, "")
+
+func _content_scandal(intent) -> Dictionary:
+	var severity: float = clampf(float(_param_number(intent, "number", 60)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.content_scandal(severity, 0.7)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算翻车（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("occurred", false)):
+		return _ok(["本次未发生翻车事件。"], 0, "")
+	return _ok(["艺人翻车曝光，声誉下降。"], 0, "")
+
+func _content_funding(intent) -> Dictionary:
+	var stage: String = _object_id(intent, "funding_stage")
+	if stage.is_empty():
+		stage = String(intent.params.get("method", "seed")).strip_edges()
+	if not host.content_industry.FUNDING_STAGES.has(stage):
+		return _fail("未知融资轮次。")
+	var r: Dictionary = host.content_funding(stage)
+	if not bool(r.get("ok", false)):
+		return _fail("无法融资（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["完成%s融资，估值 %d，到账 %d。" % [_catalog_name(host.content_funding_stages_catalog(), stage), int(r.get("valuation", 0)), int(r.get("investment", 0))]], 0, "")
+
+func _content_poach(intent) -> Dictionary:
+	var role: String = _object_id(intent, "content_role")
+	if role.is_empty():
+		return _fail("请指明挖角角色。")
+	var r: Dictionary = host.content_poach(role, 2.0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法挖角（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("success", false)):
+		return _ok(["挖角失败。"], 0, "")
+	return _ok(["挖角成功，耗费 %d。" % int(r.get("cost", 0))], 0, "")
+
+func _content_approval(intent) -> Dictionary:
+	var ctype: String = _object_id(intent, "content_type")
+	if ctype.is_empty():
+		return _fail("请指明内容类型。")
+	var r: Dictionary = host.content_approval(ctype, 0.5)
+	if not bool(r.get("ok", false)):
+		return _fail("无法送审（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra: String = "获批" if bool(r.get("approved", false)) else "未获批"
+	return _ok(["版号审批%s，延误 %d 日。" % [extra, int(round(float(r.get("delay_days", 0.0))))]], 0, "")
+
+func _content_fandom(intent) -> Dictionary:
+	var growth: float = clampf(float(_param_number(intent, "number", 10)) / 100.0, -1.0, 3.0)
+	var r: Dictionary = host.content_fandom(growth)
+	if not bool(r.get("ok", false)):
+		return _fail("无法运营粉丝（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra: String = "，出现粉丝反噬" if bool(r.get("backlash", false)) else ""
+	return _ok(["粉丝规模 %d，毒性 %.0f%%%s。" % [int(r.get("fandom_size", 0)), float(r.get("toxicity", 0.0)) * 100.0, extra]], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -3722,6 +3941,28 @@ func _reason_cn(reason: String) -> String:
 			return "尚未上市销售"
 		"already_exists":
 			return "已存在同名项目"
+		"no_studio":
+			return "尚未开办文娱工作室"
+		"no_work":
+			return "尚无在研作品"
+		"no_ip":
+			return "尚无可用 IP"
+		"unknown_role":
+			return "未知团队角色"
+		"bad_count":
+			return "人数无效"
+		"unknown_content_type":
+			return "未知内容类型"
+		"channel_inapplicable":
+			return "该渠道不适用此内容类型"
+		"not_ready":
+			return "作品尚未开发完成"
+		"already_released":
+			return "作品已发行"
+		"unknown_operation":
+			return "未知运营方式"
+		"no_target":
+			return "对手无此角色可挖"
 		_:
 			return reason if reason != "" else "未知原因"
 
@@ -3895,6 +4136,18 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.fashion_marketing_catalog(), text)
 		"season":
 			return _find_catalog_by_name(host.fashion_seasons_catalog(), text)
+		"content_role":
+			return _find_catalog_by_name(host.content_roles_catalog(), text)
+		"content_type":
+			return _find_catalog_by_name(host.content_types_catalog(), text)
+		"content_channel":
+			return _find_catalog_by_name(host.content_channels_catalog(), text)
+		"content_platform":
+			return _find_catalog_by_name(host.content_platforms_catalog(), text)
+		"ip_operation":
+			return _find_catalog_by_name(host.content_ip_operations_catalog(), text)
+		"funding_stage":
+			return _find_funding_stage_by_name(text)
 		_:
 			return ""
 
@@ -3909,6 +4162,21 @@ func _find_catalog_by_name(items: Array, text: String) -> String:
 	for it in items:
 		if it is Dictionary and String((it as Dictionary).get("name", "")).find(needle) >= 0:
 			return String((it as Dictionary).get("id", ""))
+	return ""
+
+## 融资轮次名回退：支持英文 id 与中文轮次名。
+func _find_funding_stage_by_name(text: String) -> String:
+	var needle := text.strip_edges()
+	if needle.is_empty():
+		return ""
+	if host.content_industry.FUNDING_STAGES.has(needle):
+		return needle
+	var names := {"种子": "seed", "种子轮": "seed", "天使": "angel", "天使轮": "angel", "a": "a", "a轮": "a", "b": "b", "b轮": "b", "c": "c", "c轮": "c"}
+	var low := needle.to_lower()
+	if names.has(low):
+		return String(names[low])
+	if names.has(needle):
+		return String(names[needle])
 	return ""
 
 ## 辅具名回退：按辅具 id 或显示名匹配。

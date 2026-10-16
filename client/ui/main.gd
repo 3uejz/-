@@ -482,6 +482,12 @@ func _catalogs() -> Dictionary:
 		"medical_exam": _sim.medtech_exams_catalog(),
 		"high_end_procedure": _sim.medtech_high_end_catalog(),
 		"organ_source": _sim.medtech_organ_source_catalog(),
+		"content_role": _sim.content_roles_catalog(),
+		"content_type": _sim.content_types_catalog(),
+		"content_channel": _sim.content_channels_catalog(),
+		"content_platform": _sim.content_platforms_catalog(),
+		"ip_operation": _sim.content_ip_operations_catalog(),
+		"funding_stage": _sim.content_funding_stages_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -854,6 +860,9 @@ func _panel_context() -> Dictionary:
 			context["metaphysics"] = mtp
 		context["anomaly"] = _sim.anomaly_panel_data()
 		context["medical"] = _sim.medical_panel_data()
+		var ctp: Dictionary = _sim.content_panel_data()
+		if not ctp.is_empty():
+			context["content"] = ctp
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context
