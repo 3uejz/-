@@ -109,7 +109,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"metaphysics":
 			data = metaphysics(player, context, name_resolver)
 		"medical":
-			data = medical(player, name_resolver)
+			data = medical(player, context, name_resolver)
 		"mental":
 			data = mental(player, context, name_resolver)
 		"spirit":
@@ -1299,11 +1299,13 @@ static func _metaphysics_sections(mt: Dictionary) -> Array:
 		]))
 	return sections
 
-static func medical(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func medical(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("医疗", "尚未生成角色数据")
 	var health: Dictionary = player.get("health", {})
 	var sections: Array = []
+	var m: Dictionary = context.get("medical", {})
+	sections.append_array(_medical_runtime_sections(m))
 	var spec: Array = [
 		["diseases", "疾病"], ["mental", "心理"], ["addictions", "成瘾"],
 		["treatments", "治疗"], ["injuries", "外伤"],
@@ -1318,6 +1320,44 @@ static func medical(player: Dictionary, name_resolver: Callable = Callable()) ->
 	if sections.is_empty():
 		return _empty("医疗", "无病历；建议定期体检并保持良好作息")
 	return _ok(sections)
+
+static func _medical_runtime_sections(m: Dictionary) -> Array:
+	if m.is_empty():
+		return []
+	var sections: Array = []
+	var active: Array = m.get("active", [])
+	var disease_rows: Array = [{"label": "疾病库", "value": "%d 种" % int(m.get("disease_count", 0))}]
+	if active.is_empty():
+		disease_rows.append({"label": "现行病程", "value": "无"})
+	else:
+		for name in active:
+			disease_rows.append({"label": "病程", "value": String(name)})
+	sections.append(_section("疾病与病程", disease_rows))
+	var level_rows: Array = []
+	for cl in _items_of(m.get("care_levels", [])):
+		level_rows.append({"label": String((cl as Dictionary).get("name", "")), "value": String((cl as Dictionary).get("id", ""))})
+	if not level_rows.is_empty():
+		sections.append(_section("分级诊疗", level_rows))
+	var region: Dictionary = m.get("region", {})
+	sections.append(_section("区域医疗", [
+		{"label": "医疗水平", "value": "%.2f" % float(region.get("medical_level", 0.0))},
+		{"label": "治愈率", "value": "%d%%" % int(round(float(region.get("cure_rate", 0.0)) * 100.0))},
+		{"label": "人均预期寿命", "value": "%.1f 岁" % float(region.get("life_expectancy", 0.0))},
+	]))
+	var high: Array = []
+	for h in _items_of(m.get("high_end", [])):
+		high.append({"label": String((h as Dictionary).get("name", "")), "value": "可开展"})
+	if not high.is_empty():
+		sections.append(_section("高阶医疗", high))
+	if m.get("pharma", null) is Dictionary:
+		var ph: Dictionary = m.get("pharma", {})
+		sections.append(_section("医药产业", [
+			{"label": "公司", "value": String(ph.get("name", ""))},
+			{"label": "资金", "value": str(int(ph.get("money", 0)))},
+			{"label": "在研药物", "value": str(int(ph.get("drugs", 0)))},
+			{"label": "丑闻", "value": "有" if bool(ph.get("scandal", false)) else "无"},
+		]))
+	return sections
 
 static func mental(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

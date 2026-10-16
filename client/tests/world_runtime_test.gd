@@ -64,6 +64,7 @@ func run_tests() -> void:
 	_test_funeral_runtime()
 	_test_metaphysics_runtime()
 	_test_anomaly_runtime()
+	_test_medical_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1399,5 +1400,54 @@ func _test_anomaly_runtime() -> void:
 	reloaded.bind(state)
 	check(reloaded.anomaly_revealed(), "读档恢复异常可见性")
 	check(not (reloaded.anomaly_state().get("known_entries", {}) as Dictionary).is_empty(), "读档恢复异常图鉴")
+
+
+func _test_medical_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(191)
+	var host = SimHostScript.new(state, 191)
+	host.bind(state)
+	check(host.medical_diseases_catalog().size() >= 25, "疾病库≥25")
+	check(host.medical_facilities_catalog().size() >= 4, "医疗机构≥4")
+	check(host.medtech_care_levels_catalog().size() >= 3, "分级诊疗≥3")
+	check(host.medtech_departments_catalog().size() >= 10, "科室≥10")
+	check(host.medtech_exams_catalog().size() >= 4, "检查项目≥4")
+	check(host.medtech_high_end_catalog().size() >= 6, "高阶医疗≥6")
+	check(host.medtech_organ_source_catalog().size() >= 4, "器官来源≥4")
+	# 就医与治疗。
+	check(bool(host.medical_visit("hospital", "register").get("ok", false)), "挂号结算")
+	host.medical.trigger("cold", 0)
+	check(bool(host.medical_treat("cold", "medicine").get("ok", false)), "治疗感冒")
+	# 分级诊疗与检查。
+	check(bool(host.medtech_register("secondary", "surgery").get("ok", false)), "二级挂号外科")
+	check(bool(host.medtech_register("primary", "surgery").get("referral_needed", false)), "基层外科需转诊")
+	check(bool(host.medtech_examine("tertiary", "pathology").get("ok", false)), "三级病理检查")
+	# 高阶医疗与伦理法律门。
+	check(bool(host.medtech_high_end("organ_transplant", "voluntary_donation").get("ok", false)), "合法器官移植")
+	var illegal: Dictionary = host.medtech.high_end_procedure("organ_transplant", {"ethics_cleared": true, "legal_cleared": true, "organ_source": "black_market", "roll": 0.5})
+	check(String(illegal.get("reason", "")) == "illegal_organ_source", "黑市器官来源被拒")
+	check(bool(host.medtech_review_ethics("gene_edit", 0.8).get("approved", false)), "伦理审查通过")
+	# 医药产业。
+	check(bool(host.medtech_pharma_new("恒瑞").get("ok", false)), "开办医药公司")
+	check(bool(host.medtech_pharma_start("药A").get("ok", false)), "新药立项")
+	check(host.medtech_pharma_advance("药A").has("advanced"), "推进管线结算")
+	(host._pharma_company["pipeline"]["药A"] as Dictionary)["stage"] = "production"
+	check(bool(host.medtech_pharma_produce("药A", 2.0).get("ok", false)), "药品生产")
+	(host._pharma_company["pipeline"]["药A"] as Dictionary)["stage"] = "sales"
+	check(int(host.medtech_pharma_sell("药A", 100.0, 1000).get("revenue", 0)) > 0, "药品销售营收")
+	check(bool(host.medtech_medical_rep("药A", 0.2).get("ok", false)), "医药代表推广")
+	# 风险与边界。
+	check(host.medtech_counterfeit(0.5).has("seized"), "假药查缉结算")
+	check(host.medtech_over_treatment(100000).has("excess_cost"), "过度医疗结算")
+	check(host.medtech_insurance_fraud(100000).has("detected"), "医保欺诈结算")
+	check(bool(host.medtech_trial_scandal("药A").get("ok", false)), "试验丑闻结算")
+	# 持久化与读档恢复。
+	host._persist_medical()
+	check(state.sim_runtime.get("medical", null) is Dictionary, "医疗运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 191)
+	reloaded.bind(state)
+	check(String(reloaded._pharma_company.get("name", "")) != "", "读档恢复医药公司")
+	check(not reloaded.medical_panel_data().is_empty(), "医疗面板数据非空")
+
 
 

@@ -85,6 +85,7 @@ func run_tests() -> void:
 	_test_funeral_commands()
 	_test_metaphysics_commands()
 	_test_anomaly_commands()
+	_test_medical_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -748,6 +749,27 @@ func _test_anomaly_commands() -> void:
 	_main.submit("收容失效")
 	_main.submit("身份设定 基金会人员")
 	check(not (sim.anomaly_state().get("known_entries", {}) as Dictionary).is_empty(), "「查阅条目」收录异常图鉴")
+
+func _test_medical_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看医疗")
+	_main.submit("就医挂号 二级 外科")
+	_main.submit("医学检查 化验")
+	_main.submit("疾病治疗 感冒")
+	_main.submit("就医手术")
+	_main.submit("高阶医疗 器官移植 自愿捐献")
+	_main.submit("医疗伦理 基因编辑 80")
+	_main.submit("医药立项 药A")
+	_main.submit("医药推进 药A")
+	_main.submit("医药生产 药A 2")
+	_main.submit("医药销售 药A 100")
+	_main.submit("医药代表 药A 20")
+	_main.submit("假药查缉 50")
+	_main.submit("医疗纠纷 50")
+	_main.submit("过度医疗 100000")
+	_main.submit("医疗保险欺诈 100000")
+	_main.submit("试验丑闻 药A")
+	check(not sim._pharma_company.is_empty(), "「医药立项」建立医药公司")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

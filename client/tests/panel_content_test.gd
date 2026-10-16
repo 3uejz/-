@@ -61,6 +61,7 @@ func run_tests() -> void:
 	_test_metaphysics_panel()
 	_test_anomaly_panel()
 	_test_hidden_anomaly_panel_empty()
+	_test_medical_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -127,6 +128,22 @@ func _test_anomaly_panel() -> void:
 func _test_hidden_anomaly_panel_empty() -> void:
 	var d: Dictionary = PanelContentScript.build("anomaly", GameStateScript.default_player(), Callable(), {})
 	check(bool(d.get("empty", false)), "无异常接触时面板为空态")
+
+func _test_medical_panel() -> void:
+	var ctx: Dictionary = {"medical": {
+		"disease_count": 25, "active": ["感冒"],
+		"care_levels": [{"id": "secondary", "name": "二级"}],
+		"high_end": [{"id": "organ_transplant", "name": "器官移植"}],
+		"region": {"medical_level": 1.5, "cure_rate": 0.72, "life_expectancy": 79.0},
+		"pharma": {"name": "恒瑞", "money": 1000, "drugs": 1, "scandal": false},
+	}}
+	var d: Dictionary = PanelContentScript.build("medical", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有医疗上下文非空")
+	check(_find_section(d, "疾病与病程").get("rows", []).size() >= 1, "疾病与病程分区有行")
+	check(_find_section(d, "分级诊疗").get("rows", []).size() >= 1, "分级诊疗分区有行")
+	check(_find_section(d, "区域医疗").get("rows", []).size() >= 1, "区域医疗分区有行")
+	check(_find_section(d, "高阶医疗").get("rows", []).size() >= 1, "高阶医疗分区有行")
+	check(_find_section(d, "医药产业").get("rows", []).size() >= 1, "医药产业分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

@@ -60,6 +60,8 @@ const SocialWelfareScript = preload("res://sim/social_welfare.gd")
 const FuneralScript = preload("res://sim/funeral.gd")
 const MetaphysicsScript = preload("res://sim/metaphysics.gd")
 const AnomalyScript = preload("res://sim/anomaly.gd")
+const MedicalScript = preload("res://sim/medical.gd")
+const MedTechScript = preload("res://sim/medtech.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -202,6 +204,10 @@ var _meta_practitioner: Dictionary = {}    ## 从业者（大师）人设，入�
 var _meta_business: Dictionary = {}        ## 玄学经营体，入档 sim_runtime.metaphysics.business
 var anomaly                       ## 隐秘异常收容体系（AnomalySystem）
 var _anomaly_state: Dictionary = {}        ## 异常隔离状态树（默认 hidden），入档 sim_runtime.anomaly
+var medical                       ## 疾病库与就医流程（MedicalSystem）
+var medtech                       ## 医疗、生命科技与医药产业（MedTechSystem）
+var _medical_region: Dictionary = {}       ## 区域医疗资源，入档 sim_runtime.medical.region
+var _pharma_company: Dictionary = {}       ## 医药公司管线，入档 sim_runtime.medical.pharma
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -285,6 +291,10 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_meta_practitioner = metaphysics.new_practitioner("player", {"name": "本人"})
 	anomaly = AnomalyScript.new()
 	_anomaly_state = anomaly.new_state()["anomaly"]
+	medical = MedicalScript.new(seed)
+	medtech = MedTechScript.new()
+	_medical_region = medtech.new_region(1000000, {"medical_level": 1.5})
+	medtech.region_metrics(_medical_region)
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -539,6 +549,18 @@ func _ensure_world_geo() -> void:
 		var an: Variant = (state.sim_runtime as Dictionary).get("anomaly", {})
 		if an is Dictionary and not (an as Dictionary).is_empty():
 			_anomaly_state = anomaly.from_dict(an)
+		# 恢复医疗与医药运行时（病程/手术/区域医疗/医药管线）。
+		var md: Variant = (state.sim_runtime as Dictionary).get("medical", {})
+		if md is Dictionary and not (md as Dictionary).is_empty():
+			var mdd: Dictionary = md
+			if mdd.get("cases", null) is Dictionary:
+				medical._cases = (mdd["cases"] as Dictionary).duplicate(true)
+			if mdd.get("surgeries", null) is Array:
+				medical._surgeries = (mdd["surgeries"] as Array).duplicate(true)
+			if mdd.get("region", null) is Dictionary and not (mdd["region"] as Dictionary).is_empty():
+				_medical_region = medtech.from_dict(mdd["region"])
+			if mdd.get("pharma", null) is Dictionary and not (mdd["pharma"] as Dictionary).is_empty():
+				_pharma_company = medtech.from_dict(mdd["pharma"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -4797,6 +4819,195 @@ func _persist_anomaly() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["anomaly"] = anomaly.to_dict(_anomaly_state)
+
+
+# --- D45 医疗、生命科技与医药产业 ---
+
+func medical_diseases_catalog() -> Array:
+	var out: Array = []
+	for key in medical.DISEASES.keys():
+		out.append({"id": String(key), "name": String((medical.DISEASES[key] as Dictionary).get("name", key))})
+	return out
+
+func medical_facilities_catalog() -> Array:
+	var out: Array = []
+	for key in medical.FACILITIES.keys():
+		out.append({"id": String(key), "name": String((medical.FACILITIES[key] as Dictionary).get("name", key))})
+	return out
+
+func medical_services_catalog() -> Array:
+	var names: Dictionary = {
+		"register": "挂号", "consult": "门诊", "medicine": "买药", "dental": "牙科",
+		"therapy": "心理治疗", "admit": "住院", "surgery": "手术", "checkup": "体检",
+	}
+	var out: Array = []
+	for key in names.keys():
+		out.append({"id": String(key), "name": String(names[key])})
+	return out
+
+func medtech_care_levels_catalog() -> Array:
+	var out: Array = []
+	for key in medtech.care_level_keys():
+		out.append({"id": String(key), "name": String(medtech.care_level_def(String(key)).get("name", key))})
+	return out
+
+func medtech_departments_catalog() -> Array:
+	var out: Array = []
+	for key in medtech.department_keys():
+		out.append({"id": String(key), "name": medtech.department_name(String(key))})
+	return out
+
+func medtech_exams_catalog() -> Array:
+	var out: Array = []
+	for key in medtech.exam_keys():
+		out.append({"id": String(key), "name": String(medtech.exam_def(String(key)).get("name", key))})
+	return out
+
+func medtech_high_end_catalog() -> Array:
+	var out: Array = []
+	for key in medtech.high_end_keys():
+		out.append({"id": String(key), "name": String(medtech.high_end_def(String(key)).get("name", key))})
+	return out
+
+func medtech_organ_source_catalog() -> Array:
+	var names: Dictionary = {
+		"voluntary_donation": "自愿捐献", "living_related": "亲属活体",
+		"compensated": "有偿交易", "black_market": "黑市",
+	}
+	var out: Array = []
+	for key in names.keys():
+		out.append({"id": String(key), "name": String(names[key])})
+	return out
+
+func medical_visit(facility: String, service: String, disease: String = "") -> Dictionary:
+	var r: Dictionary = medical.visit(facility, service, disease, now_minutes(), rng)
+	_persist_medical()
+	return r
+
+func medical_treat(disease: String, method: String) -> Dictionary:
+	var r: Dictionary = medical.treat(disease, method)
+	_persist_medical()
+	return r
+
+func medtech_register(care_level: String, department: String) -> Dictionary:
+	var r: Dictionary = medtech.register(_medical_region, care_level, department)
+	_persist_medical()
+	return r
+
+func medtech_examine(care_level: String, exam: String) -> Dictionary:
+	var r: Dictionary = medtech.examine(_medical_region, care_level, exam)
+	_persist_medical()
+	return r
+
+func medtech_high_end(kind: String, source: String = "") -> Dictionary:
+	var ctx: Dictionary = {"ethics_cleared": true, "legal_cleared": true, "roll": -1.0}
+	if not source.is_empty():
+		ctx["organ_source"] = source
+	var r: Dictionary = medtech.high_end_procedure(kind, ctx, rng)
+	_persist_medical()
+	return r
+
+func medtech_review_ethics(kind: String, score: float = 0.7) -> Dictionary:
+	return medtech.review_ethics(kind, score)
+
+func medtech_pharma_new(name: String = "医药公司") -> Dictionary:
+	_pharma_company = medtech.new_pharma_company({"name": name, "money": 10000000})
+	_persist_medical()
+	return {"ok": true, "company": _pharma_company}
+
+func medtech_pharma_start(drug_id: String) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.start_drug(_pharma_company, drug_id)
+	_persist_medical()
+	return r
+
+func medtech_pharma_advance(drug_id: String) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.pharma_advance(_pharma_company, drug_id, {"roll": -1.0}, rng)
+	_persist_medical()
+	return r
+
+func medtech_pharma_produce(drug_id: String, batches: float = 1.0) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.pharma_produce(_pharma_company, drug_id, batches)
+	_persist_medical()
+	return r
+
+func medtech_pharma_sell(drug_id: String, units: float = 100.0, unit_price: int = 1000) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.pharma_sell(_pharma_company, drug_id, units, unit_price)
+	_persist_medical()
+	return r
+
+func medtech_medical_rep(drug_id: String, effort: float = 0.5) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.medical_rep(_pharma_company, drug_id, effort, {"roll": -1.0}, rng)
+	_persist_medical()
+	return r
+
+func medtech_counterfeit(scale: float = 0.5) -> Dictionary:
+	var r: Dictionary = medtech.counterfeit_drug({"scale": scale, "roll": -1.0}, rng)
+	_persist_medical()
+	return r
+
+func medtech_dispute(severity: float = 0.5) -> Dictionary:
+	return medtech.doctor_patient_dispute(severity)
+
+func medtech_over_treatment(cost: int = 100000) -> Dictionary:
+	return medtech.over_treatment(cost)
+
+func medtech_insurance_fraud(claim: int = 100000) -> Dictionary:
+	var r: Dictionary = medtech.insurance_fraud(claim, {"roll": -1.0}, rng)
+	_persist_medical()
+	return r
+
+func medtech_trial_scandal(drug_id: String) -> Dictionary:
+	if _pharma_company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = medtech.trial_scandal(_pharma_company, drug_id, {"roll": -1.0}, rng)
+	_persist_medical()
+	return r
+
+func medical_panel_data() -> Dictionary:
+	var active: Array = []
+	for c in medical.active_cases():
+		var key: String = String((c as Dictionary).get("key", ""))
+		var d: Dictionary = medical.DISEASES.get(key, {})
+		active.append(String(d.get("name", key)))
+	var out: Dictionary = {
+		"disease_count": medical.diseases_count(),
+		"active": active,
+		"care_levels": medtech_care_levels_catalog(),
+		"high_end": medtech_high_end_catalog(),
+		"region": {
+			"medical_level": float(_medical_region.get("medical_level", 1.0)),
+			"cure_rate": float(_medical_region.get("cure_rate", 0.0)),
+			"life_expectancy": float(_medical_region.get("life_expectancy", 0.0)),
+		},
+	}
+	if not _pharma_company.is_empty():
+		out["pharma"] = {
+			"name": String(_pharma_company.get("name", "")),
+			"money": int(_pharma_company.get("money", 0)),
+			"drugs": (_pharma_company.get("pipeline", {}) as Dictionary).size(),
+			"scandal": bool(_pharma_company.get("scandal", false)),
+		}
+	return out
+
+func _persist_medical() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["medical"] = {
+		"cases": medical._cases.duplicate(true),
+		"surgeries": medical._surgeries.duplicate(true),
+		"region": medtech.to_dict(_medical_region),
+		"pharma": medtech.to_dict(_pharma_company),
+	}
 
 
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。

@@ -649,6 +649,38 @@ func _dispatch(intent) -> Dictionary:
 			return _anomaly_breach(intent)
 		"身份设定":
 			return _anomaly_identity(intent)
+		"就医挂号":
+			return _medical_register(intent)
+		"医学检查":
+			return _medical_examine(intent)
+		"疾病治疗":
+			return _medical_treat(intent)
+		"就医手术":
+			return _medical_surgery(intent)
+		"高阶医疗":
+			return _medical_high_end(intent)
+		"医疗伦理":
+			return _medical_ethics(intent)
+		"医药立项":
+			return _pharma_start(intent)
+		"医药推进":
+			return _pharma_advance(intent)
+		"医药生产":
+			return _pharma_produce(intent)
+		"医药销售":
+			return _pharma_sell(intent)
+		"医药代表":
+			return _pharma_rep(intent)
+		"假药查缉":
+			return _medical_counterfeit(intent)
+		"医疗纠纷":
+			return _medical_dispute(intent)
+		"过度医疗":
+			return _medical_over(intent)
+		"医疗保险欺诈":
+			return _medical_fraud(intent)
+		"试验丑闻":
+			return _medical_scandal(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -3183,6 +3215,139 @@ func _anomaly_identity(intent) -> Dictionary:
 		return _fail("无法设定身份（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["身份设定为%s。" % String(r.get("name", ident))], 0, "")
 
+func _medical_register(intent) -> Dictionary:
+	var care: String = _object_id(intent, "care_level")
+	if care.is_empty():
+		care = "secondary"
+	var dept: String = _object_id(intent, "department")
+	if dept.is_empty():
+		dept = "internal"
+	var r: Dictionary = host.medtech_register(care, dept)
+	if not bool(r.get("ok", false)):
+		return _fail("无法挂号（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var extra: String = "，需转诊上级" if bool(r.get("referral_needed", false)) else ""
+	return _ok(["挂号完成，费用 %d，自付 %d%s。" % [int(r.get("cost", 0)), int(r.get("self_pay", 0)), extra]], 0, "")
+
+func _medical_examine(intent) -> Dictionary:
+	var exam: String = _object_id(intent, "medical_exam")
+	if exam.is_empty():
+		return _fail("请指明检查项目。")
+	var r: Dictionary = host.medtech_examine("secondary", exam)
+	if not bool(r.get("ok", false)):
+		return _fail("无法检查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["完成检查，证据值 %d%%，费用 %d。" % [int(round(float(r.get("evidence", 0.0)) * 100.0)), int(r.get("cost", 0))]], 0, "")
+
+func _medical_treat(intent) -> Dictionary:
+	var disease: String = _object_id(intent, "disease")
+	if disease.is_empty():
+		return _fail("请指明病种。")
+	var method: String = String(intent.params.get("method", "medicine"))
+	var r: Dictionary = host.medical_treat(disease, method)
+	if not bool(r.get("ok", false)):
+		return _fail("无法治疗（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["治疗完成，剩余病程 %d 日。" % int(round(float(r.get("remaining_days", 0.0))))], 0, "")
+
+func _medical_surgery(intent) -> Dictionary:
+	var disease: String = _object_id(intent, "disease")
+	var r: Dictionary = host.medical_visit("hospital", "surgery", disease)
+	if not bool(r.get("ok", false)):
+		return _fail("无法安排手术（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已安排手术，费用 %d，自付 %d。" % [int(r.get("cost", 0)), int(r.get("self_pay", 0))]], 0, "")
+
+func _medical_high_end(intent) -> Dictionary:
+	var kind: String = _object_id(intent, "high_end_procedure")
+	if kind.is_empty():
+		return _fail("请指明高阶医疗类目。")
+	var source: String = _object_id(intent, "organ_source")
+	var r: Dictionary = host.medtech_high_end(kind, source)
+	if not bool(r.get("ok", false)):
+		return _fail("无法实施（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var outcome: String = "成功" if bool(r.get("success", false)) else "失败"
+	return _ok(["实施%s：%s，费用 %d，风险 %d%%。" % [String(r.get("name", kind)), outcome, int(r.get("cost", 0)), int(round(float(r.get("risk", 0.0)) * 100.0))]], 0, "")
+
+func _medical_ethics(intent) -> Dictionary:
+	var kind: String = _object_id(intent, "high_end_procedure")
+	if kind.is_empty():
+		return _fail("请指明审查类目。")
+	var score: float = clampf(float(_param_number(intent, "number", 70)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.medtech_review_ethics(kind, score)
+	if not bool(r.get("ok", false)):
+		return _fail("无法审查（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["伦理审查%s。" % ("通过" if bool(r.get("approved", false)) else "未通过")], 0, "")
+
+func _pharma_start(intent) -> Dictionary:
+	if host._pharma_company.is_empty():
+		host.medtech_pharma_new("医药公司")
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var r: Dictionary = host.medtech_pharma_start(drug)
+	if not bool(r.get("ok", false)):
+		return _fail("无法立项（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["新药「%s」立项，进入研发，启动经费 %d。" % [drug, int(r.get("cost", 0))]], 0, "")
+
+func _pharma_advance(intent) -> Dictionary:
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var r: Dictionary = host.medtech_pharma_advance(drug)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("advanced", false)):
+		return _ok(["管线推进至 %s。" % String(r.get("stage", ""))], 0, "")
+	return _ok(["本阶段未通过，停留于 %s。" % String(r.get("stage", ""))], 0, "")
+
+func _pharma_produce(intent) -> Dictionary:
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var batches: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.medtech_pharma_produce(drug, batches)
+	if not bool(r.get("ok", false)):
+		return _fail("无法生产（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["生产 %d 单位，库存 %d。" % [int(round(float(r.get("produced", 0.0)))), int(round(float(r.get("stock", 0.0))))]], 0, "")
+
+func _pharma_sell(intent) -> Dictionary:
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var units: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.medtech_pharma_sell(drug, units, 1000)
+	if not bool(r.get("ok", false)):
+		return _fail("无法销售（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["售出 %d 单位，营收 %d（专利溢价 ×%.1f）。" % [int(round(float(r.get("sold", 0.0)))), int(r.get("revenue", 0)), float(r.get("patent_premium", 1.0))]], 0, "")
+
+func _pharma_rep(intent) -> Dictionary:
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var effort: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.medtech_medical_rep(drug, effort)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推广（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["医药代表推广，销量提振 %d%s。" % [int(round(float(r.get("sales_boost", 0.0)))), "，涉嫌贿赂被曝光" if bool(r.get("bribery_exposed", false)) else ""]], 0, "")
+
+func _medical_counterfeit(intent) -> Dictionary:
+	var scale: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.medtech_counterfeit(scale)
+	if bool(r.get("seized", false)):
+		return _ok(["假药被查获，没收 %d，罚款 %d。" % [int(r.get("confiscated", 0)), int(r.get("fine", 0))]], 0, "")
+	return _ok(["假药暂未被查获。"], 0, "")
+
+func _medical_dispute(intent) -> Dictionary:
+	var severity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.medtech_dispute(severity)
+	return _ok(["医患纠纷等级 %d%%，%s。" % [int(round(float(r.get("conflict_level", 0.0)) * 100.0)), "已进入诉讼" if bool(r.get("litigation", false)) else "协商处理"]], 0, "")
+
+func _medical_over(intent) -> Dictionary:
+	var cost: int = int(_param_number(intent, "number", 100000))
+	var r: Dictionary = host.medtech_over_treatment(cost)
+	return _ok(["过度医疗虚增费用 %d，审计风险 %d%%。" % [int(r.get("excess_cost", 0)), int(round(float(r.get("audit_risk", 0.0)) * 100.0))]], 0, "")
+
+func _medical_fraud(intent) -> Dictionary:
+	var claim: int = int(_param_number(intent, "number", 100000))
+	var r: Dictionary = host.medtech_insurance_fraud(claim)
+	if bool(r.get("detected", false)):
+		return _fail("保险欺诈被审计发现，追缴并处罚 %d。" % int(r.get("penalty", 0)))
+	return _ok(["虚假理赔 %d，暂未被发现。" % int(r.get("fraudulent", 0))], 0, "")
+
+func _medical_scandal(intent) -> Dictionary:
+	var drug: String = String(intent.params.get("method", "新药A"))
+	var r: Dictionary = host.medtech_trial_scandal(drug)
+	if bool(r.get("exposed", false)):
+		return _fail("试验丑闻曝光，罚款 %d，合规下降。" % int(r.get("fine", 0)))
+	return _ok(["试验争议未被曝光。"], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -3519,6 +3684,44 @@ func _reason_cn(reason: String) -> String:
 			return "理智不足"
 		"limit_reached":
 			return "已达记忆删除剂使用上限"
+		"unknown_care_level":
+			return "未知诊疗层级"
+		"unknown_department":
+			return "未知科室"
+		"unknown_exam":
+			return "未知检查项目"
+		"unknown_procedure":
+			return "未知医疗类目"
+		"unknown_disease":
+			return "未知病种"
+		"unknown_medical_facility":
+			return "未知医疗机构"
+		"service_unavailable":
+			return "该机构不提供此项服务"
+		"ethics_denied":
+			return "未通过伦理审查"
+		"legal_denied":
+			return "未通过法律审查"
+		"no_organ_source":
+			return "缺少器官来源"
+		"illegal_organ_source":
+			return "器官来源不合法"
+		"no_medical_case":
+			return "无对应在案病情"
+		"unsupported":
+			return "该病种不支持此疗法"
+		"unknown_drug":
+			return "未知在研药物"
+		"no_company":
+			return "尚未成立医药公司"
+		"not_upward_referral":
+			return "非向上转诊"
+		"not_in_production":
+			return "尚未进入生产阶段"
+		"not_on_market":
+			return "尚未上市销售"
+		"already_exists":
+			return "已存在同名项目"
 		_:
 			return reason if reason != "" else "未知原因"
 

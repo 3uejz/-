@@ -50,7 +50,8 @@
         "welfare": { "type": "object", "additionalProperties": true },
         "funeral": { "type": "object", "additionalProperties": true },
         "metaphysics": { "type": "object", "additionalProperties": true },
-        "anomaly": { "type": "object", "additionalProperties": true }
+        "anomaly": { "type": "object", "additionalProperties": true },
+        "medical": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

@@ -474,6 +474,14 @@ func _catalogs() -> Dictionary:
 		"anomaly_ability": _sim.anomaly_ability_catalog(),
 		"anomaly_faction": _sim.anomaly_faction_catalog(),
 		"anomaly_identity": _sim.anomaly_identity_catalog(),
+		"disease": _sim.medical_diseases_catalog(),
+		"medical_facility": _sim.medical_facilities_catalog(),
+		"medical_service": _sim.medical_services_catalog(),
+		"care_level": _sim.medtech_care_levels_catalog(),
+		"department": _sim.medtech_departments_catalog(),
+		"medical_exam": _sim.medtech_exams_catalog(),
+		"high_end_procedure": _sim.medtech_high_end_catalog(),
+		"organ_source": _sim.medtech_organ_source_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -845,6 +853,7 @@ func _panel_context() -> Dictionary:
 		if not mtp.is_empty():
 			context["metaphysics"] = mtp
 		context["anomaly"] = _sim.anomaly_panel_data()
+		context["medical"] = _sim.medical_panel_data()
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context
