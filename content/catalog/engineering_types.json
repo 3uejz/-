@@ -1,10 +1,89 @@
 {
   "category": "engineering_types",
   "entries": [
-    {"content_key": "engineering.residential", "name": "住宅工程", "qualification": "second", "scale": 10000000},
-    {"content_key": "engineering.road", "name": "道路工程", "qualification": "first", "scale": 50000000},
-    {"content_key": "engineering.bridge", "name": "桥梁工程", "qualification": "first", "scale": 80000000},
-    {"content_key": "engineering.subway", "name": "地铁工程", "qualification": "special", "scale": 500000000},
-    {"content_key": "engineering.industrial_plant", "name": "工业厂房", "qualification": "first", "scale": 60000000}
+    {
+      "content_key": "engineering.residential",
+      "name": "住宅工程",
+      "qualification": "second",
+      "scale": 10000000
+    },
+    {
+      "content_key": "engineering.road",
+      "name": "道路工程",
+      "qualification": "first",
+      "scale": 50000000
+    },
+    {
+      "content_key": "engineering.bridge",
+      "name": "桥梁工程",
+      "qualification": "first",
+      "scale": 80000000
+    },
+    {
+      "content_key": "engineering.subway",
+      "name": "地铁工程",
+      "qualification": "special",
+      "scale": 500000000
+    },
+    {
+      "content_key": "engineering.industrial_plant",
+      "name": "工业厂房",
+      "qualification": "first",
+      "scale": 60000000
+    },
+    {
+      "content_key": "engineering.tunnel",
+      "name": "隧道工程",
+      "qualification": "special",
+      "scale": 300000000
+    },
+    {
+      "content_key": "engineering.port",
+      "name": "港口工程",
+      "qualification": "special",
+      "scale": 400000000
+    },
+    {
+      "content_key": "engineering.airport",
+      "name": "机场工程",
+      "qualification": "special",
+      "scale": 900000000
+    },
+    {
+      "content_key": "engineering.water",
+      "name": "水利工程",
+      "qualification": "first",
+      "scale": 200000000
+    },
+    {
+      "content_key": "engineering.power_station",
+      "name": "电站工程",
+      "qualification": "special",
+      "scale": 700000000
+    },
+    {
+      "content_key": "engineering.pipeline",
+      "name": "管线工程",
+      "qualification": "second",
+      "scale": 30000000
+    },
+    {
+      "content_key": "engineering.municipal",
+      "name": "市政工程",
+      "qualification": "second",
+      "scale": 40000000
+    },
+    {
+      "content_key": "engineering.renovation",
+      "name": "旧改工程",
+      "qualification": "third",
+      "scale": 8000000
+    },
+    {
+      "content_key": "engineering.landscape",
+      "name": "园林景观",
+      "qualification": "third",
+      "scale": 5000000
+    }
   ]
 }

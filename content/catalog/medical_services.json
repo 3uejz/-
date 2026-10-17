@@ -1,11 +1,101 @@
 {
   "category": "medical_services",
   "entries": [
-    {"content_key": "medical.general_surgery", "name": "普通外科", "department": "surgery", "base_success": 0.9},
-    {"content_key": "medical.cardiology", "name": "心血管内科", "department": "cardiology", "base_success": 0.85},
-    {"content_key": "medical.organ_transplant", "name": "器官移植", "department": "transplant", "base_success": 0.7},
-    {"content_key": "medical.ivf", "name": "辅助生殖", "department": "fertility", "base_success": 0.45},
-    {"content_key": "medical.gene_test", "name": "基因检测", "department": "genetics", "base_success": 0.95},
-    {"content_key": "medical.clinical_trial", "name": "临床试验", "department": "research", "base_success": 0.3}
+    {
+      "content_key": "medical.general_surgery",
+      "name": "普通外科",
+      "department": "surgery",
+      "base_success": 0.9
+    },
+    {
+      "content_key": "medical.cardiology",
+      "name": "心血管内科",
+      "department": "cardiology",
+      "base_success": 0.85
+    },
+    {
+      "content_key": "medical.organ_transplant",
+      "name": "器官移植",
+      "department": "transplant",
+      "base_success": 0.7
+    },
+    {
+      "content_key": "medical.ivf",
+      "name": "辅助生殖",
+      "department": "fertility",
+      "base_success": 0.45
+    },
+    {
+      "content_key": "medical.gene_test",
+      "name": "基因检测",
+      "department": "genetics",
+      "base_success": 0.95
+    },
+    {
+      "content_key": "medical.clinical_trial",
+      "name": "临床试验",
+      "department": "research",
+      "base_success": 0.3
+    },
+    {
+      "content_key": "medical.pediatrics",
+      "name": "儿科",
+      "department": "pediatrics",
+      "base_success": 0.88
+    },
+    {
+      "content_key": "medical.oncology",
+      "name": "肿瘤科",
+      "department": "oncology",
+      "base_success": 0.55
+    },
+    {
+      "content_key": "medical.orthopedics",
+      "name": "骨科",
+      "department": "orthopedics",
+      "base_success": 0.8
+    },
+    {
+      "content_key": "medical.neurology",
+      "name": "神经内科",
+      "department": "neurology",
+      "base_success": 0.65
+    },
+    {
+      "content_key": "medical.dermatology",
+      "name": "皮肤科",
+      "department": "dermatology",
+      "base_success": 0.85
+    },
+    {
+      "content_key": "medical.ophthalmology",
+      "name": "眼科",
+      "department": "ophthalmology",
+      "base_success": 0.9
+    },
+    {
+      "content_key": "medical.dentistry",
+      "name": "口腔科",
+      "department": "dentistry",
+      "base_success": 0.92
+    },
+    {
+      "content_key": "medical.psychiatry",
+      "name": "精神科",
+      "department": "psychiatry",
+      "base_success": 0.6
+    },
+    {
+      "content_key": "medical.emergency",
+      "name": "急诊科",
+      "department": "emergency",
+      "base_success": 0.75
+    },
+    {
+      "content_key": "medical.rehab",
+      "name": "康复科",
+      "department": "rehab",
+      "base_success": 0.7
+    }
   ]
 }

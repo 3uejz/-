@@ -1,11 +1,101 @@
 {
   "category": "rescue_ops",
   "entries": [
-    {"content_key": "rescue.fire", "name": "消防救援", "profession": "fire", "base_response": 10.0},
-    {"content_key": "rescue.ems", "name": "急救医疗", "profession": "ems", "base_response": 8.0},
-    {"content_key": "rescue.coast_guard", "name": "海警救援", "profession": "coast_guard", "base_response": 15.0},
-    {"content_key": "rescue.mountain", "name": "山地救援", "profession": "mountain_rescue", "base_response": 20.0},
-    {"content_key": "rescue.earthquake", "name": "地震救援", "profession": "earthquake_rescue", "base_response": 18.0},
-    {"content_key": "rescue.flood", "name": "洪涝救援", "profession": "flood_rescue", "base_response": 16.0}
+    {
+      "content_key": "rescue.fire",
+      "name": "消防救援",
+      "profession": "fire",
+      "base_response": 10.0
+    },
+    {
+      "content_key": "rescue.ems",
+      "name": "急救医疗",
+      "profession": "ems",
+      "base_response": 8.0
+    },
+    {
+      "content_key": "rescue.coast_guard",
+      "name": "海警救援",
+      "profession": "coast_guard",
+      "base_response": 15.0
+    },
+    {
+      "content_key": "rescue.mountain",
+      "name": "山地救援",
+      "profession": "mountain_rescue",
+      "base_response": 20.0
+    },
+    {
+      "content_key": "rescue.earthquake",
+      "name": "地震救援",
+      "profession": "earthquake_rescue",
+      "base_response": 18.0
+    },
+    {
+      "content_key": "rescue.flood",
+      "name": "洪涝救援",
+      "profession": "flood_rescue",
+      "base_response": 16.0
+    },
+    {
+      "content_key": "rescue.typhoon",
+      "name": "台风救援",
+      "profession": "typhoon_rescue",
+      "base_response": 14.0
+    },
+    {
+      "content_key": "rescue.landslide",
+      "name": "滑坡救援",
+      "profession": "landslide_rescue",
+      "base_response": 19.0
+    },
+    {
+      "content_key": "rescue.hazmat",
+      "name": "危化品处置",
+      "profession": "hazmat",
+      "base_response": 12.0
+    },
+    {
+      "content_key": "rescue.water",
+      "name": "水上救生",
+      "profession": "water_rescue",
+      "base_response": 9.0
+    },
+    {
+      "content_key": "rescue.mine",
+      "name": "矿山救护",
+      "profession": "mine_rescue",
+      "base_response": 22.0
+    },
+    {
+      "content_key": "rescue.air",
+      "name": "航空救援",
+      "profession": "air_rescue",
+      "base_response": 25.0
+    },
+    {
+      "content_key": "rescue.wildlife",
+      "name": "野生动物救助",
+      "profession": "wildlife",
+      "base_response": 30.0
+    },
+    {
+      "content_key": "rescue.epidemic",
+      "name": "防疫处置",
+      "profession": "epidemic",
+      "base_response": 11.0
+    },
+    {
+      "content_key": "rescue.traffic",
+      "name": "交通事故救援",
+      "profession": "traffic_rescue",
+      "base_response": 7.0
+    },
+    {
+      "content_key": "rescue.collapse",
+      "name": "建筑坍塌救援",
+      "profession": "collapse_rescue",
+      "base_response": 17.0
+    }
   ]
 }

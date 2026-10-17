@@ -1,11 +1,101 @@
 {
   "category": "metaphysics_services",
   "entries": [
-    {"content_key": "metaphysics.fortune", "name": "算命", "kind": "fortune", "base_success": 0.55},
-    {"content_key": "metaphysics.fengshui", "name": "风水", "kind": "fengshui", "base_success": 0.5},
-    {"content_key": "metaphysics.astrology", "name": "占星", "kind": "astrology", "base_success": 0.5},
-    {"content_key": "metaphysics.talisman", "name": "护身符", "kind": "talisman", "base_success": 0.4},
-    {"content_key": "metaphysics.wish", "name": "许愿", "kind": "wish", "base_success": 0.3},
-    {"content_key": "metaphysics.scam", "name": "神棍诈骗", "kind": "scam", "base_success": 0.6}
+    {
+      "content_key": "metaphysics.fortune",
+      "name": "算命",
+      "kind": "fortune",
+      "base_success": 0.55
+    },
+    {
+      "content_key": "metaphysics.fengshui",
+      "name": "风水",
+      "kind": "fengshui",
+      "base_success": 0.5
+    },
+    {
+      "content_key": "metaphysics.astrology",
+      "name": "占星",
+      "kind": "astrology",
+      "base_success": 0.5
+    },
+    {
+      "content_key": "metaphysics.talisman",
+      "name": "护身符",
+      "kind": "talisman",
+      "base_success": 0.4
+    },
+    {
+      "content_key": "metaphysics.wish",
+      "name": "许愿",
+      "kind": "wish",
+      "base_success": 0.3
+    },
+    {
+      "content_key": "metaphysics.scam",
+      "name": "神棍诈骗",
+      "kind": "scam",
+      "base_success": 0.6
+    },
+    {
+      "content_key": "metaphysics.tarot",
+      "name": "塔罗",
+      "kind": "tarot",
+      "base_success": 0.5
+    },
+    {
+      "content_key": "metaphysics.bazi",
+      "name": "八字",
+      "kind": "bazi",
+      "base_success": 0.55
+    },
+    {
+      "content_key": "metaphysics.palmistry",
+      "name": "看相",
+      "kind": "palmistry",
+      "base_success": 0.45
+    },
+    {
+      "content_key": "metaphysics.divination",
+      "name": "占卜",
+      "kind": "divination",
+      "base_success": 0.5
+    },
+    {
+      "content_key": "metaphysics.exorcism",
+      "name": "驱邪",
+      "kind": "exorcism",
+      "base_success": 0.35
+    },
+    {
+      "content_key": "metaphysics.name_change",
+      "name": "改名",
+      "kind": "name",
+      "base_success": 0.45
+    },
+    {
+      "content_key": "metaphysics.date_selection",
+      "name": "择日",
+      "kind": "date",
+      "base_success": 0.6
+    },
+    {
+      "content_key": "metaphysics.medium",
+      "name": "通灵",
+      "kind": "medium",
+      "base_success": 0.3
+    },
+    {
+      "content_key": "metaphysics.geomancy",
+      "name": "堪舆",
+      "kind": "geomancy",
+      "base_success": 0.5
+    },
+    {
+      "content_key": "metaphysics.curse",
+      "name": "诅咒",
+      "kind": "curse",
+      "base_success": 0.2
+    }
   ]
 }

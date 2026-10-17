@@ -1,11 +1,89 @@
 {
   "category": "content_works",
   "entries": [
-    {"content_key": "work.game", "name": "游戏", "medium": "game", "quality": 0.6},
-    {"content_key": "work.anime", "name": "动漫", "medium": "anime", "quality": 0.6},
-    {"content_key": "work.web_novel", "name": "网文", "medium": "novel", "quality": 0.55},
-    {"content_key": "work.film", "name": "影视", "medium": "film", "quality": 0.65},
-    {"content_key": "work.variety", "name": "综艺", "medium": "variety", "quality": 0.55},
-    {"content_key": "work.music", "name": "音乐", "medium": "music", "quality": 0.6}
+    {
+      "content_key": "work.game",
+      "name": "游戏",
+      "medium": "game",
+      "quality": 0.6
+    },
+    {
+      "content_key": "work.anime",
+      "name": "动漫",
+      "medium": "anime",
+      "quality": 0.6
+    },
+    {
+      "content_key": "work.web_novel",
+      "name": "网文",
+      "medium": "novel",
+      "quality": 0.55
+    },
+    {
+      "content_key": "work.film",
+      "name": "影视",
+      "medium": "film",
+      "quality": 0.65
+    },
+    {
+      "content_key": "work.variety",
+      "name": "综艺",
+      "medium": "variety",
+      "quality": 0.55
+    },
+    {
+      "content_key": "work.music",
+      "name": "音乐",
+      "medium": "music",
+      "quality": 0.6
+    },
+    {
+      "content_key": "work.comic",
+      "name": "漫画",
+      "medium": "comic",
+      "quality": 0.58
+    },
+    {
+      "content_key": "work.short_drama",
+      "name": "短剧",
+      "medium": "short_drama",
+      "quality": 0.5
+    },
+    {
+      "content_key": "work.documentary",
+      "name": "纪录片",
+      "medium": "documentary",
+      "quality": 0.62
+    },
+    {
+      "content_key": "work.podcast",
+      "name": "播客",
+      "medium": "podcast",
+      "quality": 0.52
+    },
+    {
+      "content_key": "work.esports",
+      "name": "电竞赛事",
+      "medium": "esports",
+      "quality": 0.68
+    },
+    {
+      "content_key": "work.stage_play",
+      "name": "舞台剧",
+      "medium": "stage",
+      "quality": 0.63
+    },
+    {
+      "content_key": "work.radio_drama",
+      "name": "广播剧",
+      "medium": "radio",
+      "quality": 0.54
+    },
+    {
+      "content_key": "work.virtual_idol",
+      "name": "虚拟偶像",
+      "medium": "virtual",
+      "quality": 0.57
+    }
   ]
 }

@@ -1,10 +1,89 @@
 {
   "category": "consumer_rights",
   "entries": [
-    {"content_key": "consumer.return", "name": "七日退货", "kind": "return", "remedy": "refund"},
-    {"content_key": "consumer.repair", "name": "三包维修", "kind": "repair", "remedy": "repair"},
-    {"content_key": "consumer.replace", "name": "换代", "kind": "replace", "remedy": "replace"},
-    {"content_key": "consumer.recall", "name": "缺陷召回", "kind": "recall", "remedy": "recall"},
-    {"content_key": "consumer.class_action", "name": "集体维权", "kind": "class_action", "remedy": "compensation"}
+    {
+      "content_key": "consumer.return",
+      "name": "七日退货",
+      "kind": "return",
+      "remedy": "refund"
+    },
+    {
+      "content_key": "consumer.repair",
+      "name": "三包维修",
+      "kind": "repair",
+      "remedy": "repair"
+    },
+    {
+      "content_key": "consumer.replace",
+      "name": "换代",
+      "kind": "replace",
+      "remedy": "replace"
+    },
+    {
+      "content_key": "consumer.recall",
+      "name": "缺陷召回",
+      "kind": "recall",
+      "remedy": "recall"
+    },
+    {
+      "content_key": "consumer.class_action",
+      "name": "集体维权",
+      "kind": "class_action",
+      "remedy": "compensation"
+    },
+    {
+      "content_key": "consumer.price_gouging",
+      "name": "价格欺诈",
+      "kind": "price",
+      "remedy": "refund"
+    },
+    {
+      "content_key": "consumer.false_ad",
+      "name": "虚假宣传",
+      "kind": "advertising",
+      "remedy": "compensation"
+    },
+    {
+      "content_key": "consumer.food_safety",
+      "name": "食品安全",
+      "kind": "food",
+      "remedy": "compensation"
+    },
+    {
+      "content_key": "consumer.deposit",
+      "name": "预付款退还",
+      "kind": "deposit",
+      "remedy": "refund"
+    },
+    {
+      "content_key": "consumer.travel_cancel",
+      "name": "旅游退团",
+      "kind": "travel",
+      "remedy": "refund"
+    },
+    {
+      "content_key": "consumer.prepaid_card",
+      "name": "预付卡跑路",
+      "kind": "prepaid",
+      "remedy": "compensation"
+    },
+    {
+      "content_key": "consumer.ecommerce",
+      "name": "网购纠纷",
+      "kind": "ecommerce",
+      "remedy": "replace"
+    },
+    {
+      "content_key": "consumer.medical_dispute",
+      "name": "医疗纠纷",
+      "kind": "medical",
+      "remedy": "compensation"
+    },
+    {
+      "content_key": "consumer.lemon_car",
+      "name": "汽车三包",
+      "kind": "auto",
+      "remedy": "replace"
+    }
   ]
 }

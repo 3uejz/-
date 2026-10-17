@@ -1,10 +1,89 @@
 {
   "category": "welfare_programs",
   "entries": [
-    {"content_key": "welfare.minimum_living", "name": "最低生活保障", "category": "poverty", "benefit": 120000},
-    {"content_key": "welfare.foster_care", "name": "寄养补助", "category": "child", "benefit": 150000},
-    {"content_key": "welfare.adoption_subsidy", "name": "收养补贴", "category": "child", "benefit": 200000},
-    {"content_key": "welfare.disability_allowance", "name": "残疾人补贴", "category": "disability", "benefit": 100000},
-    {"content_key": "welfare.charity_fund", "name": "慈善基金", "category": "charity", "benefit": 0}
+    {
+      "content_key": "welfare.minimum_living",
+      "name": "最低生活保障",
+      "category": "poverty",
+      "benefit": 120000
+    },
+    {
+      "content_key": "welfare.foster_care",
+      "name": "寄养补助",
+      "category": "child",
+      "benefit": 150000
+    },
+    {
+      "content_key": "welfare.adoption_subsidy",
+      "name": "收养补贴",
+      "category": "child",
+      "benefit": 200000
+    },
+    {
+      "content_key": "welfare.disability_allowance",
+      "name": "残疾人补贴",
+      "category": "disability",
+      "benefit": 100000
+    },
+    {
+      "content_key": "welfare.charity_fund",
+      "name": "慈善基金",
+      "category": "charity",
+      "benefit": 0
+    },
+    {
+      "content_key": "welfare.unemployment",
+      "name": "失业保险",
+      "category": "employment",
+      "benefit": 90000
+    },
+    {
+      "content_key": "welfare.maternity",
+      "name": "生育津贴",
+      "category": "child",
+      "benefit": 180000
+    },
+    {
+      "content_key": "welfare.housing",
+      "name": "住房救助",
+      "category": "housing",
+      "benefit": 240000
+    },
+    {
+      "content_key": "welfare.medical_aid",
+      "name": "医疗救助",
+      "category": "medical",
+      "benefit": 300000
+    },
+    {
+      "content_key": "welfare.education_aid",
+      "name": "教育救助",
+      "category": "education",
+      "benefit": 160000
+    },
+    {
+      "content_key": "welfare.elderly",
+      "name": "高龄津贴",
+      "category": "elderly",
+      "benefit": 60000
+    },
+    {
+      "content_key": "welfare.child_allowance",
+      "name": "育儿补贴",
+      "category": "child",
+      "benefit": 72000
+    },
+    {
+      "content_key": "welfare.disaster_relief",
+      "name": "灾害救助",
+      "category": "disaster",
+      "benefit": 200000
+    },
+    {
+      "content_key": "welfare.work_injury",
+      "name": "工伤保险",
+      "category": "employment",
+      "benefit": 150000
+    }
   ]
 }

@@ -242,6 +242,7 @@
 | D50 交通基建 | `infra_projects` | 公路/铁路/高铁/港口/机场/隧道/桥梁 | 12 条（现 15） |
 
 - 新增/扩展内容时先补 `categorySpecs` 字段与跨引用，再落内容文件；`scripts/test.sh` 与 CI 会对 `content/catalog` 全量硬阻断校验。
+- **D36–D47 附属服务表规模**：`rescue_ops` 16、`municipal_services` 16、`debt_products` 14、`consumer_rights` 14、`welfare_programs` 14、`funeral_services` 12、`metaphysics_services` 16、`medical_services` 16、`content_works` 14、`engineering_types` 14；D48 专业服务 18、D49 生活服务 26、D50 交通基建 15。
 
 ## 23. 内容规模与 R56 对齐（任务 50）
 
