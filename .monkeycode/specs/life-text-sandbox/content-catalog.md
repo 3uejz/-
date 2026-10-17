@@ -237,9 +237,9 @@
 | D45 医疗生命科技 | `medical_services` | 分科/移植/辅助生殖/基因/试验 | 疾病 80、证书 30 |
 | D46 文娱内容 | `content_works` | 游戏/动漫/网文/影视/综艺/音乐 | 图鉴 500、娱乐 100 |
 | D47 工程规划 | `engineering_types` | 住宅/道路/桥梁/地铁/厂房 | 随城市规划扩展 |
-| D48 专业服务 | `professional_firms` | 会计/审计/咨询/猎头/公关/认证 | 组织 30 |
-| D49 生活服务 | `life_services` | 相亲/保洁/搬家/维修/月嫂/宠物 | 娱乐 100 |
-| D50 交通基建 | `infra_projects` | 铁路/高速/港口/机场/地铁/物流 | 交通方式 12 |
+| D48 专业服务 | `professional_firms` | 会计审计/管理咨询/投行/猎头/公关广告/市场调研/检测认证/法律 | 12 条（现 18） |
+| D49 生活服务 | `life_services` | 婚介/婚礼/家政/月嫂/宠物全链/维修/搬家/跑腿 | 16 条（现 26） |
+| D50 交通基建 | `infra_projects` | 公路/铁路/高铁/港口/机场/隧道/桥梁 | 12 条（现 15） |
 
 - 新增/扩展内容时先补 `categorySpecs` 字段与跨引用，再落内容文件；`scripts/test.sh` 与 CI 会对 `content/catalog` 全量硬阻断校验。
 
@@ -270,6 +270,9 @@
 | 异常实体 `anomalies` | anomalies.json | 2000 | 2000 |
 | 大型活动类型 `activities` | activities.json | 20 | 20 |
 | 第一产业品类 `primary_industry` | primary_industry.json | 30 | 35 |
+| 专业服务机构 `professional_firms` | professional_firms.json | 12 | 18 |
+| 生活服务品类 `life_services` | life_services.json | 16 | 26 |
+| 交通基建类型 `infra_projects` | infra_projects.json | 12 | 15 |
 | 语言 `languages` | languages.json | ≥10 | 10 |
 | 节日 `festivals` | festivals.json | ≥10 | 10 |
 | 金手指 `goldfingers` | goldfingers.json | 60（长期 300） | 60 |

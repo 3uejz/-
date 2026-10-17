@@ -9,25 +9,28 @@ import (
 // r56Targets 是 R56 内容硬指标中可由内容目录直接度量的类别下限。
 // 数值型枚举（气候带/天气/灾害/时代/异常能力线）由数值基线保证，不在此列。
 var r56Targets = map[string]int{
-	"sites":            1000, // 地点
-	"place_types":      100,  // 场所类型
-	"jobs":             200,  // 职业岗位
-	"skills":           140,  // 技能
-	"items":            1000, // 物品种类
-	"diseases":         80,   // 疾病
-	"certificates":     30,   // 证书
-	"entertainment":    100,  // 娱乐活动
-	"events":           300,  // 随机事件
-	"achievements":     300,  // 成就
-	"codex":            500,  // 图鉴条目
-	"transport":        12,   // 交通方式
-	"finance":          40,   // 金融标的
-	"manufacturing":    50,   // 制造与贸易品类
-	"awards":           40,   // 奖项与荣誉
-	"organizations":    30,   // 组织与阵营
-	"anomalies":        2000, // 异常实体
-	"activities":       20,   // 大型活动类型
-	"primary_industry": 30,   // 第一产业品类
+	"sites":              1000, // 地点
+	"place_types":        100,  // 场所类型
+	"jobs":               200,  // 职业岗位
+	"skills":             140,  // 技能
+	"items":              1000, // 物品种类
+	"diseases":           80,   // 疾病
+	"certificates":       30,   // 证书
+	"entertainment":      100,  // 娱乐活动
+	"events":             300,  // 随机事件
+	"achievements":       300,  // 成就
+	"codex":              500,  // 图鉴条目
+	"transport":          12,   // 交通方式
+	"finance":            40,   // 金融标的
+	"manufacturing":      50,   // 制造与贸易品类
+	"awards":             40,   // 奖项与荣誉
+	"organizations":      30,   // 组织与阵营
+	"anomalies":          2000, // 异常实体
+	"activities":         20,   // 大型活动类型
+	"primary_industry":   30,   // 第一产业品类
+	"professional_firms": 12,   // 专业服务机构（D48）
+	"life_services":      16,   // 生活服务品类（D49）
+	"infra_projects":     12,   // 交通基建类型（D50）
 }
 
 // r56SubTargets 是需按字段值细分的子指标。

@@ -31,8 +31,10 @@ python3 -m venv .toolchain/meshgen-venv
 
 ## 产物与约定
 
-- 输出：`client/assets/models/place_groups/<group>.glb`（13 个 `residence`…`special`）。
+- 输出：`client/assets/models/place_groups/<group>.glb`（13 个 `residence`…`special`）与 `manifest.json`。
+  13 个模型已入库，`placeholder_place.tscn` 优先加载，缺失时回退程序化灰盒。
 - 该路径是**约定槽位**，留给真实/自建模型；生成器默认写入此处，真实模型按同名覆盖即替换。
+- `--out` 支持相对仓库根的路径（内部会解析为绝对路径再写清单）。
 - 参考样例另存 `tools/meshgen/samples/place_groups/`（供查看，不被 Godot 扫描，不参与运行时）。
 - 单位：1 单位 = 1 米，Y 轴向上，地面瓦片 20×20，低面数（约 48–1500 三角面），实时友好。
 - 确定性：形状固定、颜色由分组名稳定哈希决定，**重复运行产物字节一致**，可入库、可 diff。

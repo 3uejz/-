@@ -23,6 +23,7 @@ func run_tests() -> void:
 	_test_unregistered_place()
 	_test_place_bindings()
 	_test_placeholder_group_styles()
+	_test_place_models()
 	_test_presentation_root()
 
 
@@ -126,24 +127,44 @@ func _test_place_bindings() -> void:
 
 
 func _test_placeholder_group_styles() -> void:
-	# 13 组差异化风格齐备，关键分组形状不同。
+	# 13 组差异化风格齐备，关键分组形状不同（回退路径）。
 	check_eq(PlaceholderAssets.GROUP_STYLES.size(), 13, "13 组风格齐备")
 	check_eq(String(PlaceholderAssets.group_style("medical").get("prop", "")), "prism", "医疗道具为棱柱")
 	check_eq(String(PlaceholderAssets.group_style("nature").get("prop", "")), "sphere", "自然道具为球体")
 	check_eq(String(PlaceholderAssets.group_style("unknown").get("prop", "")), "prism", "未知分组回退 special")
-	# 场景管理器注入分组后生成差异化道具。
+	# 场景管理器注入分组后优先使用生成的 GLB 模型。
 	var mgr := _make_manager()
 	check_eq(PlaceBindings.register_all(mgr), 13, "注册 13 个分组")
 	check(mgr.switch_place("medical"), "医疗场景可加载")
 	var inst: Node = mgr.get_instance("medical")
-	check(inst != null and inst.get_node_or_null("Props") != null, "医疗场景含 Props 容器")
-	var props: Node = inst.get_node_or_null("Props")
-	check_eq(props.get_child_count(), int(PlaceholderAssets.group_style("medical").get("props", 0)), "医疗道具数量匹配")
-	mgr.switch_place("nature")
-	var inst2: Node = mgr.get_instance("nature")
-	var props2: Node = inst2.get_node_or_null("Props")
-	check_eq(props2.get_child_count(), int(PlaceholderAssets.group_style("nature").get("props", 0)), "自然道具数量匹配")
+	check(inst != null, "应实例化医疗场所")
+	check(inst.using_model_assets(), "医疗场所应使用生成的 GLB 模型")
+	check(inst.get_node_or_null("Model") != null, "模型节点存在")
+	var ground: MeshInstance3D = inst.get_node_or_null("Ground")
+	check(ground != null and not ground.visible, "使用模型时隐藏灰盒地面")
+	# 关闭模型后回退程序化灰盒，道具数量仍由风格表决定。
+	var fallback: Node3D = load("res://presentation/scenes/placeholder_place.tscn").instantiate()
+	fallback.model_enabled = false
+	root.add_child(fallback)
+	fallback.set_place_group("nature")
+	var props: Node = fallback.get_node_or_null("Props")
+	check(props != null and props.get_child_count() == int(PlaceholderAssets.group_style("nature").get("props", 0)), "回退灰盒道具数量匹配")
+	fallback.queue_free()
 	mgr.queue_free()
+
+
+func _test_place_models() -> void:
+	# meshgen 产物契约：13 个分组各有可导入的 GLB 与清单。
+	for g in PlaceBindings.GROUPS:
+		var path: String = "res://assets/models/place_groups/%s.glb" % g
+		check(ResourceLoader.exists(path), "场所模型存在：%s" % g)
+		var packed := load(path) as PackedScene
+		check(packed != null, "场所模型可加载：%s" % g)
+		if packed != null:
+			var node: Node = packed.instantiate()
+			check(node is Node3D, "场所模型根节点为 3D：%s" % g)
+			node.free()
+	check(FileAccess.file_exists("res://assets/models/place_groups/manifest.json"), "模型清单存在")
 
 
 func _test_presentation_root() -> void:

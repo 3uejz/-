@@ -130,8 +130,9 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 - **45 个面板**全部接入内容装配（`ui/panels/panel_content.gd`）：核心面板直接读玩家字典；
   领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。
 - **3D 表现层**：`place_bindings.gd` 把 13 个场所分组映射到场景；`presentation/scenes/placeholder_place.tscn`
-  按分组程序化生成差异化灰盒（`PlaceholderAssets.GROUP_STYLES`）。真实资产放入
-  `presentation/scenes/places/<group>.tscn` 即自动替换，零改代码（见 `assets/README.md`）。
+  优先加载 `assets/models/place_groups/<group>.glb`（`tools/meshgen` 确定性产物，已入库），
+  缺失或未导入时回退 `PlaceholderAssets.GROUP_STYLES` 程序化灰盒（`model_enabled=false` 可强制回退）。
+  真实资产放入 `presentation/scenes/places/<group>.tscn` 即自动替换，零改代码（见 `assets/README.md`）。
 
 ## 测试
 

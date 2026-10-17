@@ -1,11 +1,161 @@
 {
   "category": "life_services",
   "entries": [
-    {"content_key": "life.matchmaking", "name": "婚介相亲", "kind": "matchmaking", "price": 200000},
-    {"content_key": "life.cleaning", "name": "保洁", "kind": "cleaning", "price": 15000},
-    {"content_key": "life.moving", "name": "搬家", "kind": "moving", "price": 50000},
-    {"content_key": "life.repair", "name": "维修", "kind": "repair", "price": 20000},
-    {"content_key": "life.confinement_nanny", "name": "月嫂", "kind": "nanny", "price": 1500000},
-    {"content_key": "life.pet_grooming", "name": "宠物服务", "kind": "pet", "price": 30000}
+    {
+      "content_key": "life.matchmaking",
+      "name": "婚介相亲",
+      "kind": "matchmaking",
+      "price": 200000
+    },
+    {
+      "content_key": "life.matchmaking_premium",
+      "name": "高端婚恋",
+      "kind": "matchmaking",
+      "price": 1200000
+    },
+    {
+      "content_key": "life.matchmaking_remarry",
+      "name": "离异再婚介绍",
+      "kind": "matchmaking",
+      "price": 350000
+    },
+    {
+      "content_key": "life.wedding",
+      "name": "婚礼策划",
+      "kind": "wedding",
+      "price": 800000
+    },
+    {
+      "content_key": "life.wedding_photo",
+      "name": "婚纱摄影",
+      "kind": "wedding",
+      "price": 500000
+    },
+    {
+      "content_key": "life.wedding_honeymoon",
+      "name": "蜜月定制",
+      "kind": "wedding",
+      "price": 1500000
+    },
+    {
+      "content_key": "life.cleaning",
+      "name": "日常保洁",
+      "kind": "housekeeping",
+      "price": 15000
+    },
+    {
+      "content_key": "life.cleaning_deep",
+      "name": "深度保洁",
+      "kind": "housekeeping",
+      "price": 60000
+    },
+    {
+      "content_key": "life.nanny_live_in",
+      "name": "住家保姆",
+      "kind": "housekeeping",
+      "price": 900000
+    },
+    {
+      "content_key": "life.organizing",
+      "name": "收纳整理",
+      "kind": "housekeeping",
+      "price": 80000
+    },
+    {
+      "content_key": "life.confinement_nanny",
+      "name": "月嫂",
+      "kind": "maternity",
+      "price": 1500000
+    },
+    {
+      "content_key": "life.childcare_nanny",
+      "name": "育儿嫂",
+      "kind": "maternity",
+      "price": 1100000
+    },
+    {
+      "content_key": "life.postpartum_recovery",
+      "name": "产后康复",
+      "kind": "maternity",
+      "price": 600000
+    },
+    {
+      "content_key": "life.pet_boarding",
+      "name": "宠物寄养",
+      "kind": "pet",
+      "price": 30000
+    },
+    {
+      "content_key": "life.pet_grooming",
+      "name": "宠物美容",
+      "kind": "pet",
+      "price": 20000
+    },
+    {
+      "content_key": "life.pet_medical",
+      "name": "宠物医疗",
+      "kind": "pet",
+      "price": 80000
+    },
+    {
+      "content_key": "life.pet_training",
+      "name": "宠物训练",
+      "kind": "pet",
+      "price": 60000
+    },
+    {
+      "content_key": "life.pet_funeral",
+      "name": "宠物殡葬",
+      "kind": "pet",
+      "price": 120000
+    },
+    {
+      "content_key": "life.appliance_repair",
+      "name": "家电维修",
+      "kind": "repair",
+      "price": 20000
+    },
+    {
+      "content_key": "life.locksmith",
+      "name": "开锁换锁",
+      "kind": "repair",
+      "price": 18000
+    },
+    {
+      "content_key": "life.plumbing",
+      "name": "管道疏通",
+      "kind": "repair",
+      "price": 12000
+    },
+    {
+      "content_key": "life.moving",
+      "name": "居民搬家",
+      "kind": "moving",
+      "price": 50000
+    },
+    {
+      "content_key": "life.office_moving",
+      "name": "企业搬迁",
+      "kind": "moving",
+      "price": 300000
+    },
+    {
+      "content_key": "life.long_distance_moving",
+      "name": "长途搬家",
+      "kind": "moving",
+      "price": 260000
+    },
+    {
+      "content_key": "life.driving",
+      "name": "代驾",
+      "kind": "delivery",
+      "price": 8000
+    },
+    {
+      "content_key": "life.errand",
+      "name": "跑腿代办",
+      "kind": "delivery",
+      "price": 5000
+    }
   ]
 }

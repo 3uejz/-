@@ -1,11 +1,113 @@
 {
   "category": "professional_firms",
   "entries": [
-    {"content_key": "firm.accounting", "name": "会计师事务所", "sector": "accounting", "license": "cpa"},
-    {"content_key": "firm.audit", "name": "审计事务所", "sector": "audit", "license": "audit"},
-    {"content_key": "firm.consulting", "name": "咨询公司", "sector": "consulting", "license": "business"},
-    {"content_key": "firm.headhunting", "name": "猎头公司", "sector": "headhunting", "license": "hr"},
-    {"content_key": "firm.pr", "name": "公关公司", "sector": "pr", "license": "business"},
-    {"content_key": "firm.certification", "name": "认证机构", "sector": "certification", "license": "cma"}
+    {
+      "content_key": "firm.accounting",
+      "name": "会计师事务所",
+      "sector": "accounting_audit",
+      "license": "cpa"
+    },
+    {
+      "content_key": "firm.audit",
+      "name": "审计师事务所",
+      "sector": "accounting_audit",
+      "license": "cpa"
+    },
+    {
+      "content_key": "firm.tax",
+      "name": "税务师事务所",
+      "sector": "accounting_audit",
+      "license": "cpa"
+    },
+    {
+      "content_key": "firm.consulting",
+      "name": "管理咨询公司",
+      "sector": "consulting",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.strategy",
+      "name": "战略咨询公司",
+      "sector": "consulting",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.ibank",
+      "name": "投资银行",
+      "sector": "investment_banking",
+      "license": "cfa"
+    },
+    {
+      "content_key": "firm.ma",
+      "name": "并购顾问行",
+      "sector": "investment_banking",
+      "license": "cfa"
+    },
+    {
+      "content_key": "firm.headhunting",
+      "name": "猎头公司",
+      "sector": "headhunting",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.executive_search",
+      "name": "高管寻访机构",
+      "sector": "headhunting",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.pr",
+      "name": "公关公司",
+      "sector": "pr_advertising",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.advertising",
+      "name": "广告代理公司",
+      "sector": "pr_advertising",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.brand",
+      "name": "品牌顾问公司",
+      "sector": "pr_advertising",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.research",
+      "name": "市场调研公司",
+      "sector": "market_research",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.insight",
+      "name": "数据洞察公司",
+      "sector": "market_research",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.certification",
+      "name": "认证机构",
+      "sector": "certification",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.lab",
+      "name": "检测实验室",
+      "sector": "certification",
+      "license": "general"
+    },
+    {
+      "content_key": "firm.law",
+      "name": "律师事务所",
+      "sector": "legal",
+      "license": "lawyer"
+    },
+    {
+      "content_key": "firm.ip",
+      "name": "知识产权代理所",
+      "sector": "legal",
+      "license": "lawyer"
+    }
   ]
 }

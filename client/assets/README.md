@@ -31,11 +31,18 @@ presentation/
 
 ## 场所分组模型槽位
 
-约定槽位：`models/place_groups/<group>.glb`（`<group>` 为 13 个场所分组之一）。此槽位留给真实/自建模型，
-放入后由表现层按同名替换占位，无需改代码。
+约定槽位：`models/place_groups/<group>.glb`（`<group>` 为 13 个场所分组之一）。当前已入库 13 个
+确定性程序化模型与 `manifest.json`，由 `placeholder_place.tscn` 优先加载；缺失或未导入时回退
+`PlaceholderAssets.GROUP_STYLES` 程序化灰盒。
 
-如需程序化生成一版打底，可运行 `tools/meshgen/`（纯 CPU，详见 `tools/meshgen/README.md`），
-其默认输出即写入本槽位；参考样例另存于 `tools/meshgen/samples/place_groups/`。
+重新生成（纯 CPU，详见 `tools/meshgen/README.md`）：
+
+```bash
+# 生成全部 13 个分组并写清单
+.toolchain/meshgen-venv/bin/python tools/meshgen/meshgen.py --all --manifest --out client/assets/models/place_groups
+```
+
+真实/自建模型按同名覆盖即可替换，无需改代码；参考样例另存于 `tools/meshgen/samples/place_groups/`。
 
 ## LOD 约定
 

@@ -1,11 +1,95 @@
 {
   "category": "infra_projects",
   "entries": [
-    {"content_key": "infra.railway", "name": "铁路", "mode": "rail", "capacity": 1.0},
-    {"content_key": "infra.highway", "name": "高速公路", "mode": "road", "capacity": 0.9},
-    {"content_key": "infra.port", "name": "港口", "mode": "sea", "capacity": 1.2},
-    {"content_key": "infra.airport", "name": "机场", "mode": "air", "capacity": 1.5},
-    {"content_key": "infra.metro", "name": "地铁", "mode": "metro", "capacity": 1.3},
-    {"content_key": "infra.logistics_hub", "name": "物流枢纽", "mode": "logistics", "capacity": 1.1}
+    {
+      "content_key": "infra.highway",
+      "name": "高速公路",
+      "mode": "highway",
+      "capacity": 1.0
+    },
+    {
+      "content_key": "infra.highway_expand",
+      "name": "国道改扩建",
+      "mode": "highway",
+      "capacity": 0.8
+    },
+    {
+      "content_key": "infra.expressway_urban",
+      "name": "城市快速路",
+      "mode": "highway",
+      "capacity": 0.9
+    },
+    {
+      "content_key": "infra.railway",
+      "name": "普速铁路",
+      "mode": "railway",
+      "capacity": 2.0
+    },
+    {
+      "content_key": "infra.railway_freight",
+      "name": "货运专线",
+      "mode": "railway",
+      "capacity": 2.2
+    },
+    {
+      "content_key": "infra.highspeed_rail",
+      "name": "高速铁路",
+      "mode": "highspeed_rail",
+      "capacity": 3.0
+    },
+    {
+      "content_key": "infra.intercity_rail",
+      "name": "城际铁路",
+      "mode": "highspeed_rail",
+      "capacity": 2.4
+    },
+    {
+      "content_key": "infra.port_container",
+      "name": "集装箱港口",
+      "mode": "port",
+      "capacity": 3.0
+    },
+    {
+      "content_key": "infra.port_bulk",
+      "name": "散货码头",
+      "mode": "port",
+      "capacity": 2.4
+    },
+    {
+      "content_key": "infra.airport_civil",
+      "name": "民用机场",
+      "mode": "airport",
+      "capacity": 4.0
+    },
+    {
+      "content_key": "infra.airport_general",
+      "name": "通用机场",
+      "mode": "airport",
+      "capacity": 1.8
+    },
+    {
+      "content_key": "infra.tunnel_mountain",
+      "name": "山岭隧道",
+      "mode": "tunnel",
+      "capacity": 1.5
+    },
+    {
+      "content_key": "infra.tunnel_subsea",
+      "name": "海底隧道",
+      "mode": "tunnel",
+      "capacity": 1.7
+    },
+    {
+      "content_key": "infra.bridge_river",
+      "name": "跨江大桥",
+      "mode": "bridge",
+      "capacity": 1.5
+    },
+    {
+      "content_key": "infra.bridge_elevated",
+      "name": "高架桥",
+      "mode": "bridge",
+      "capacity": 1.3
+    }
   ]
 }

@@ -274,6 +274,14 @@ def build_group(group: str) -> trimesh.Scene:
     return GROUPS[group](group)
 
 
+def _display_path(path: Path) -> str:
+    """仓库内用相对路径展示，仓库外（如 /tmp 输出）保留绝对路径。"""
+    try:
+        return str(path.resolve().relative_to(ROOT))
+    except ValueError:
+        return str(path.resolve())
+
+
 def export_group(group: str, out_dir: Path) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     scene = build_group(group)
@@ -284,7 +292,7 @@ def export_group(group: str, out_dir: Path) -> dict:
     size = (bounds[1] - bounds[0]).tolist()
     return {
         "group": group,
-        "path": str(path.relative_to(ROOT)),
+        "path": _display_path(path),
         "bytes": len(data),
         "parts": len(scene.geometry),
         "size": [round(v, 3) for v in size],
@@ -307,7 +315,7 @@ def main(argv=None) -> int:
         ap.error("需指定 --all 或 --groups")
         return 2
 
-    out_dir = Path(args.out)
+    out_dir = Path(args.out).resolve()
     results = []
     for g in groups:
         info = export_group(g, out_dir)
@@ -317,7 +325,7 @@ def main(argv=None) -> int:
     if args.manifest:
         man = out_dir / "manifest.json"
         man.write_text(json.dumps({"generator": "meshgen", "groups": results}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"[meshgen] manifest -> {man.relative_to(ROOT)}")
+        print(f"[meshgen] manifest -> {_display_path(man)}")
     return 0
 
 
