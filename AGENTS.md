@@ -63,7 +63,7 @@ shared/         跨语言共享规格（JSON Schema、协议、一致性测试�
 content/        内容源（职业、技能、物品、事件、地图等）
 tools/          内容生产工具链（导入、校验、打包）、代码生成器（genbaseline）与程序化 3D 资产生成器（meshgen）
 deploy/         私有服务器部署（docker-compose、Dockerfile）
-scripts/        开发脚本（doctor、services、setup-engine、build-engine）
+scripts/        开发脚本（doctor、services、setup-engine、build-engine、setup-blender、blender）
 prototype/      历史 H5 原型，仅作移植参考，不参与构建、不进 CI、勿被目标工程引用
 .monkeycode/    规格与记忆
 ```

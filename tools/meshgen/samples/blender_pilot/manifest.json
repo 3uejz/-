@@ -1,0 +1,63 @@
+{
+  "generator": "blender_gen",
+  "blender": "4.5.14 LTS",
+  "groups": [
+    {
+      "group": "finance",
+      "path": "tools/meshgen/samples/blender_pilot/finance.glb",
+      "bytes": 119012,
+      "parts": 26,
+      "tris": 2192,
+      "size": [
+        20.0,
+        20.0,
+        19.8
+      ],
+      "center": [
+        0.0,
+        0.0,
+        9.7
+      ],
+      "radius": 17.263,
+      "render": "tools/meshgen/samples/blender_pilot/renders/finance.png"
+    },
+    {
+      "group": "culture",
+      "path": "tools/meshgen/samples/blender_pilot/culture.glb",
+      "bytes": 221572,
+      "parts": 34,
+      "tris": 4104,
+      "size": [
+        20.0,
+        20.0,
+        9.012
+      ],
+      "center": [
+        0.0,
+        0.0,
+        4.306
+      ],
+      "radius": 14.843,
+      "render": "tools/meshgen/samples/blender_pilot/renders/culture.png"
+    },
+    {
+      "group": "special",
+      "path": "tools/meshgen/samples/blender_pilot/special.glb",
+      "bytes": 249572,
+      "parts": 28,
+      "tris": 5622,
+      "size": [
+        20.0,
+        20.0,
+        16.0
+      ],
+      "center": [
+        0.0,
+        0.0,
+        7.8
+      ],
+      "radius": 16.248,
+      "render": "tools/meshgen/samples/blender_pilot/renders/special.png"
+    }
+  ]
+}

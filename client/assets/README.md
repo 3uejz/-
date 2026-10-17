@@ -35,14 +35,19 @@ presentation/
 确定性程序化模型与 `manifest.json`，由 `placeholder_place.tscn` 优先加载；缺失或未导入时回退
 `PlaceholderAssets.GROUP_STYLES` 程序化灰盒。
 
-重新生成（纯 CPU，详见 `tools/meshgen/README.md`）：
+重新生成（当前入库产物用 Blender 4.5 LTS headless，纯 CPU，详见 `tools/meshgen/README.md`）：
 
 ```bash
-# 生成全部 13 个分组并写清单
+# 主链路：Blender（首次先 bash scripts/setup-blender.sh）
+bash scripts/blender.sh --background --python tools/meshgen/blender_gen.py -- \
+  build --out client/assets/models/place_groups
+
+# 回退链路：trimesh（无 Blender 时）
 .toolchain/meshgen-venv/bin/python tools/meshgen/meshgen.py --all --manifest --out client/assets/models/place_groups
 ```
 
-真实/自建模型按同名覆盖即可替换，无需改代码；参考样例另存于 `tools/meshgen/samples/place_groups/`。
+真实/自建模型按同名覆盖即可替换，无需改代码；参考样例另存于 `tools/meshgen/samples/place_groups/`
+（trimesh）与 `tools/meshgen/samples/blender_v2/`（Blender 候选与渲染样张）。
 
 ## LOD 约定
 

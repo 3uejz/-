@@ -1,0 +1,253 @@
+{
+  "generator": "blender_gen",
+  "blender": "4.5.14 LTS",
+  "groups": [
+    {
+      "group": "residence",
+      "path": "tools/meshgen/samples/blender_v2/residence.glb",
+      "bytes": 318396,
+      "parts": 59,
+      "tris": 5716,
+      "size": [
+        20.0,
+        20.0,
+        4.335
+      ],
+      "center": [
+        0.0,
+        0.0,
+        1.967
+      ],
+      "radius": 14.307,
+      "render": "tools/meshgen/samples/blender_v2/renders/residence.png"
+    },
+    {
+      "group": "dining",
+      "path": "tools/meshgen/samples/blender_v2/dining.glb",
+      "bytes": 152988,
+      "parts": 28,
+      "tris": 2736,
+      "size": [
+        20.0,
+        20.0,
+        3.55
+      ],
+      "center": [
+        0.0,
+        0.0,
+        1.575
+      ],
+      "radius": 14.253,
+      "render": "tools/meshgen/samples/blender_v2/renders/dining.png"
+    },
+    {
+      "group": "retail",
+      "path": "tools/meshgen/samples/blender_v2/retail.glb",
+      "bytes": 104364,
+      "parts": 22,
+      "tris": 1368,
+      "size": [
+        20.0,
+        20.0,
+        4.1
+      ],
+      "center": [
+        0.0,
+        0.0,
+        1.85
+      ],
+      "radius": 14.29,
+      "render": "tools/meshgen/samples/blender_v2/renders/retail.png"
+    },
+    {
+      "group": "medical",
+      "path": "tools/meshgen/samples/blender_v2/medical.glb",
+      "bytes": 68076,
+      "parts": 17,
+      "tris": 1492,
+      "size": [
+        20.0,
+        20.0,
+        5.32
+      ],
+      "center": [
+        0.0,
+        0.0,
+        2.46
+      ],
+      "radius": 14.39,
+      "render": "tools/meshgen/samples/blender_v2/renders/medical.png"
+    },
+    {
+      "group": "education",
+      "path": "tools/meshgen/samples/blender_v2/education.glb",
+      "bytes": 102944,
+      "parts": 22,
+      "tris": 2286,
+      "size": [
+        20.0,
+        20.0,
+        9.9
+      ],
+      "center": [
+        0.0,
+        0.0,
+        4.75
+      ],
+      "radius": 14.983,
+      "render": "tools/meshgen/samples/blender_v2/renders/education.png"
+    },
+    {
+      "group": "government",
+      "path": "tools/meshgen/samples/blender_v2/government.glb",
+      "bytes": 119972,
+      "parts": 20,
+      "tris": 2268,
+      "size": [
+        20.0,
+        20.0,
+        8.2
+      ],
+      "center": [
+        0.0,
+        0.0,
+        3.9
+      ],
+      "radius": 14.724,
+      "render": "tools/meshgen/samples/blender_v2/renders/government.png"
+    },
+    {
+      "group": "transport",
+      "path": "tools/meshgen/samples/blender_v2/transport.glb",
+      "bytes": 102824,
+      "parts": 21,
+      "tris": 2004,
+      "size": [
+        20.0,
+        20.0,
+        4.5
+      ],
+      "center": [
+        0.0,
+        0.0,
+        2.05
+      ],
+      "radius": 14.32,
+      "render": "tools/meshgen/samples/blender_v2/renders/transport.png"
+    },
+    {
+      "group": "culture",
+      "path": "tools/meshgen/samples/blender_v2/culture.glb",
+      "bytes": 221572,
+      "parts": 34,
+      "tris": 4104,
+      "size": [
+        20.0,
+        20.0,
+        9.012
+      ],
+      "center": [
+        0.0,
+        0.0,
+        4.306
+      ],
+      "radius": 14.843,
+      "render": "tools/meshgen/samples/blender_v2/renders/culture.png"
+    },
+    {
+      "group": "religion",
+      "path": "tools/meshgen/samples/blender_v2/religion.glb",
+      "bytes": 147604,
+      "parts": 21,
+      "tris": 3994,
+      "size": [
+        20.0,
+        20.0,
+        11.2
+      ],
+      "center": [
+        0.0,
+        0.0,
+        5.4
+      ],
+      "radius": 15.211,
+      "render": "tools/meshgen/samples/blender_v2/renders/religion.png"
+    },
+    {
+      "group": "industry",
+      "path": "tools/meshgen/samples/blender_v2/industry.glb",
+      "bytes": 130988,
+      "parts": 25,
+      "tris": 2596,
+      "size": [
+        20.0,
+        20.0,
+        9.2
+      ],
+      "center": [
+        0.0,
+        0.0,
+        4.4
+      ],
+      "radius": 14.871,
+      "render": "tools/meshgen/samples/blender_v2/renders/industry.png"
+    },
+    {
+      "group": "finance",
+      "path": "tools/meshgen/samples/blender_v2/finance.glb",
+      "bytes": 119020,
+      "parts": 26,
+      "tris": 2192,
+      "size": [
+        20.0,
+        20.0,
+        19.8
+      ],
+      "center": [
+        0.0,
+        0.0,
+        9.7
+      ],
+      "radius": 17.263,
+      "render": "tools/meshgen/samples/blender_v2/renders/finance.png"
+    },
+    {
+      "group": "nature",
+      "path": "tools/meshgen/samples/blender_v2/nature.glb",
+      "bytes": 85848,
+      "parts": 24,
+      "tris": 1654,
+      "size": [
+        21.867,
+        20.0,
+        5.4
+      ],
+      "center": [
+        0.933,
+        0.0,
+        1.6
+      ],
+      "radius": 15.061,
+      "render": "tools/meshgen/samples/blender_v2/renders/nature.png"
+    },
+    {
+      "group": "special",
+      "path": "tools/meshgen/samples/blender_v2/special.glb",
+      "bytes": 249572,
+      "parts": 28,
+      "tris": 5622,
+      "size": [
+        20.0,
+        20.0,
+        16.0
+      ],
+      "center": [
+        0.0,
+        0.0,
+        7.8
+      ],
+      "radius": 16.248,
+      "render": "tools/meshgen/samples/blender_v2/renders/special.png"
+    }
+  ]
+}

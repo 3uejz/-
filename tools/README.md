@@ -9,10 +9,19 @@
 
 ## meshgen/
 
-程序化 3D 资产生成器（Python，纯 CPU）。把 13 个场所分组编译为确定性 `.glb`，输出到
-`client/assets/models/place_groups/`。依赖装在隔离环境 `.toolchain/meshgen-venv`。详见 `meshgen/README.md`。
+程序化 3D 资产生成器。把 13 个场所分组编译为确定性 `.glb`，输出到
+`client/assets/models/place_groups/`。当前入库产物由 Blender 4.5 LTS headless 生成，
+trimesh 链路保留为无 Blender 环境的回退基线。详见 `meshgen/README.md`。
 
 ```bash
+# 安装 Blender 到 .toolchain（首次）
+bash scripts/setup-blender.sh
+
+# 主链路：Blender 生成
+bash scripts/blender.sh --background --python tools/meshgen/blender_gen.py -- \
+  build --out client/assets/models/place_groups
+
+# 回退链路：trimesh
 .toolchain/meshgen-venv/bin/python tools/meshgen/meshgen.py --all --manifest
 ```
 
