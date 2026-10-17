@@ -1878,10 +1878,49 @@ static func _life_service_runtime_sections(p: Dictionary) -> Array:
 static func transport_infra(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("交通基建", "尚未生成角色数据")
+	var sections: Array = []
+	sections.append_array(_transport_infra_runtime_sections(context.get("transport_infra", {})))
 	var trips: Array = _items_of(player.get("itineraries", [])) + _items_of(_world(context).get("itineraries", []))
-	if trips.is_empty():
-		return _empty("交通基建", "暂无线路权限；可只读查看路网与时刻表")
-	return _ok([_section("行程与线路", _rows_from(trips, ["type", "status", "amount", "arrive_minutes"], name_resolver))])
+	if not trips.is_empty():
+		sections.append(_section("行程与线路", _rows_from(trips, ["type", "status", "amount", "arrive_minutes"], name_resolver)))
+	if sections.is_empty():
+		return _empty("交通基建", "暂无线路权限；可立项公路/铁路/港口并运营")
+	return _ok(sections)
+
+static func _transport_infra_runtime_sections(t: Dictionary) -> Array:
+	if t.is_empty():
+		return []
+	var sections: Array = []
+	var p: Dictionary = t.get("project", {}) if t.get("project", null) is Dictionary else {}
+	if not p.is_empty():
+		sections.append(_section("基建项目", [
+			{"label": "类型", "value": String(p.get("type_name", p.get("type", "")))},
+			{"label": "预算", "value": str(int(p.get("cost_estimate", 0)))},
+			{"label": "已投入", "value": str(int(p.get("spent", 0)))},
+			{"label": "进度", "value": "%.0f%%" % (float(p.get("progress", 0.0)) * 100.0)},
+			{"label": "工期", "value": "%.0f 天" % (float(p.get("days_total", 0.0)) + float(p.get("delayed_days", 0.0)))},
+			{"label": "状态", "value": String(p.get("status", ""))},
+			{"label": "补贴", "value": str(int(p.get("subsidy", 0)))},
+			{"label": "事故", "value": "有" if bool(p.get("accident", false)) else "无"},
+		]))
+	var r: Dictionary = t.get("route", {}) if t.get("route", null) is Dictionary else {}
+	if not r.is_empty():
+		sections.append(_section("运营线路", [
+			{"label": "模式", "value": String(r.get("mode_name", r.get("mode", "")))},
+			{"label": "票价", "value": "%.0f" % float(r.get("fare", 0.0))},
+			{"label": "盈亏", "value": str(int(r.get("profit", 0)))},
+			{"label": "准点率", "value": "%.0f%%" % (float(r.get("on_time_rate", 0.0)) * 100.0)},
+			{"label": "状态", "value": "中断" if bool(r.get("suspended", false)) else "正常"},
+		]))
+	var rg: Dictionary = t.get("region", {}) if t.get("region", null) is Dictionary else {}
+	if not rg.is_empty():
+		sections.append(_section("区域影响", [
+			{"label": "可达性", "value": "%.0f%%" % (float(rg.get("accessibility", 0.0)) * 100.0)},
+			{"label": "地价", "value": "%.0f" % float(rg.get("land_price", 0.0))},
+			{"label": "GDP", "value": "%.0f" % float(rg.get("gdp", 0.0))},
+			{"label": "人口", "value": "%.0f" % float(rg.get("population", 0.0))},
+		]))
+	return sections
 
 static func household(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

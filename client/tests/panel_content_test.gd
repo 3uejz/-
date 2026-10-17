@@ -66,6 +66,7 @@ func run_tests() -> void:
 	_test_engineering_panel()
 	_test_professional_panel()
 	_test_life_services_panel()
+	_test_transport_infra_panel()
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {
@@ -201,6 +202,18 @@ func _test_life_services_panel() -> void:
 	check(not bool(d.get("empty", true)), "有生活服务上下文非空")
 	check(_find_section(d, "生活服务者").get("rows", []).size() >= 1, "生活服务者分区有行")
 	check(_find_section(d, "服务单").get("rows", []).size() >= 1, "服务单分区有行")
+
+func _test_transport_infra_panel() -> void:
+	var ctx: Dictionary = {"transport_infra": {
+		"project": {"id": "infra.1", "type": "highway", "type_name": "公路", "cost_estimate": 50000000, "spent": 2000000, "progress": 0.5, "days_total": 180.0, "delayed_days": 10.0, "status": "building", "subsidy": 10000000, "accident": false},
+		"route": {"mode": "logistics", "mode_name": "物流", "fare": 50.0, "profit": 120000, "on_time_rate": 0.9, "suspended": false},
+		"region": {"accessibility": 0.6, "land_price": 12000.0, "gdp": 1500000.0, "population": 110000.0},
+	}}
+	var d: Dictionary = PanelContentScript.build("transport_infra", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有交通基建上下文非空")
+	check(_find_section(d, "基建项目").get("rows", []).size() >= 1, "基建项目分区有行")
+	check(_find_section(d, "运营线路").get("rows", []).size() >= 1, "运营线路分区有行")
+	check(_find_section(d, "区域影响").get("rows", []).size() >= 1, "区域影响分区有行")
 
 func _test_domain_panels_render() -> void:
 	var player: Dictionary = GameStateScript.default_player()

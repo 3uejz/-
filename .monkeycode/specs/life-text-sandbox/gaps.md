@@ -17,7 +17,7 @@
 6. **跨域接口只标注无契约（中）**：天气/中断/罢工 modifier 字典、数据泄露→案件、能源价格→宏观、荣誉→传承、跨境海关等。
 7. **休眠唤醒补算契约已定义并接入运行时（收敛，中）**：`client/sim/domain_wake.gd`（`DomainWake`）已定义案件、灾害、在建工程、逾期催收、异常暴露、手术/试验的确定性离线演化（时间守恒 + 幂等，测试见 `cross_domain_test.gd`）；`RegionManager` 注入 `domain_wake` 并在 `SimHost` 运行时随游戏内时钟推进活动区域、写回 `world_delta.regions`（读档恢复），`SimHost.advance()` 亦调用 `domain_wake.advance_to(clock)` 推动已注册领域实体（`SimHost.domain_register()`）。**尚余**：各玩法系统在产生案件/工程/催收等实体时向 `DomainWake` 注册条目；领域实体状态暂未落档。
 8. **后端权威边界未逐域标注（中）**：碳市场、区域医疗、城市规划、交通基建、灾害等同时改区域与宏观，未声明权威归属与合并锚点。
-9. **测试点系统性缺失（中）**：D50 无专属测试；多为域无边界的测试。
+9. **测试点系统性缺失（已收敛）**：D48/D49/D50 专属接线测试已补齐（每域 3 套：world_runtime 运行时、gameplay_wiring 指令、panel_content 面板）。
 10. **硬冲突（高）**：
     - D20 语言等级 0..100 与技能 0..20 矛盾（已决议：语言独立类型）。
     - `npc.schema.json` 的 `relations` 引用单个 relation，而 `player.relations` 是数组。
@@ -199,7 +199,8 @@
 - **残留待办**：服务者/订单/纠纷的独立 schema（当前以 `sim_runtime.life_services` 内联字典承载）；与 D11 婚育/宠物、D9 区域权威的深接入仍为最小实现。
 
 ### D50 交通基建与航运
-- 建设周期/成本/安全/票价/班期/准点/盈亏/补贴/区域修正无模型；基建项目/线路/班次/物流网络无 schema；工程与班期内容缺失；缺航线/班期/物流经营动词与面板；基建→宏观权威边界未定。
+- **已收敛**：`sim/transport_infra.gd` `TransportInfraSystem` 覆盖基建类型 7（基准成本/工期/运力/公益性）、建设（`new_infra_project` 规模缩放、`tender_infra` 加权定标、`build` 超支/延期/建成）、运营（`operate` 票价/需求/运力→盈亏与准点率）、区域影响（`regional_impact` 可达性/地价/GDP/人口、`network_effect` 换乘与物流）、结算与风险（`subsidy`/`settle`/`infra_accident`/`monopoly_regulation`/`international_disruption`）；`SimHost` 公开 `tin_*()` 与 `_persist_transport_infra()`、11 条指令与「交通基建」面板、`sim_runtime.transport_infra` 白名单、4 套接线测试齐备。
+- **残留待办**：基建项目/线路/网络的独立 schema（当前以 `sim_runtime.transport_infra` 内联字典承载）；与 D9 区域权威、D47 工程招投标的深接入仍为最小实现（区域影响以最小字典承载）。
 
 ## 3. 修复路线（横切优先）
 

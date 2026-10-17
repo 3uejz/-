@@ -69,6 +69,7 @@ func run_tests() -> void:
 	_test_engineering_runtime()
 	_test_professional_runtime()
 	_test_life_services_runtime()
+	_test_transport_infra_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -1629,6 +1630,36 @@ func _test_life_services_runtime() -> void:
 	reloaded.bind(state)
 	check(String(reloaded._life_provider.get("name", "")) == "王阿姨", "读档恢复服务者")
 	check(not reloaded.life_services_panel_data().is_empty(), "生活服务面板数据非空")
+
+
+func _test_transport_infra_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(241)
+	var host = SimHostScript.new(state, 241)
+	host.bind(state)
+	check(host.tin_infra_types_catalog().size() >= 7, "基建类型≥7")
+	check(host.tin_modes_catalog().size() >= 3, "运营模式≥3")
+	check(bool(host.tin_new_project("highway", 1.0).get("ok", false)), "基建立项")
+	check(not host._tin_project.is_empty(), "基建项目非空")
+	check(bool(host.tin_new_project("railway", 1.0).get("ok", false)), "铁路立项")
+	check(bool(host.tin_tender().has("winner")), "基建招标定标")
+	check(bool(host.tin_build(0.5).get("ok", false)), "基建推进")
+	check(bool(host.tin_operate("logistics", 50.0).get("ok", false)), "线路运营")
+	check(not host._tin_route.is_empty(), "运营线路非空")
+	check(bool(host.tin_operate("nope").get("reason", "") == "unknown_tin_mode"), "未知模式被拒")
+	check(bool(host.tin_regional_impact().has("population_delta")), "区域影响")
+	check(bool(host.tin_network().has("connectivity")), "路网效应")
+	check(bool(host.tin_subsidy(-1).has("granted")), "线路补贴")
+	check(bool(host.tin_settle().has("construction_days")), "基建结算")
+	check(bool(host.tin_accident(0.5).has("occurred")), "基建事故结算")
+	check(bool(host.tin_monopoly(0.8, 100.0).get("action", "") == "price_cap"), "定价监管触发")
+	check(bool(host.tin_disruption(0.5).has("disrupted")), "国际扰动结算")
+	host._persist_transport_infra()
+	check(state.sim_runtime.get("transport_infra", null) is Dictionary, "交通基建运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 241)
+	reloaded.bind(state)
+	check(String(reloaded._tin_project.get("type", "")) == "railway", "读档恢复基建项目")
+	check(not reloaded.tin_panel_data().is_empty(), "交通基建面板数据非空")
 
 
 

@@ -90,6 +90,7 @@ func run_tests() -> void:
 	_test_engineering_commands()
 	_test_professional_commands()
 	_test_life_services_commands()
+	_test_transport_infra_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -868,6 +869,24 @@ func _test_life_services_commands() -> void:
 	_main.submit("服务标准化 100000")
 	check(not sim._life_provider.is_empty(), "「注册服务者」登记服务者")
 	check(not sim._life_order.is_empty(), "「预约服务」生成服务单")
+
+
+func _test_transport_infra_commands() -> void:
+	var sim = _main._sim
+	_main.submit("看交通")
+	_main.submit("基建立项 公路 100")
+	_main.submit("基建招标")
+	_main.submit("基建推进 50")
+	_main.submit("线路运营 物流 50")
+	_main.submit("区域影响")
+	_main.submit("路网效应")
+	_main.submit("线路补贴 0")
+	_main.submit("基建结算")
+	_main.submit("基建事故 50")
+	_main.submit("定价监管 80")
+	_main.submit("国际扰动 50")
+	check(not sim._tin_project.is_empty(), "「基建立项」建立基建项目")
+	check(not sim._tin_route.is_empty(), "「线路运营」建立线路")
 
 
 func _test_save_writes_file() -> void:

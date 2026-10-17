@@ -66,6 +66,7 @@ const ContentIndustryScript = preload("res://sim/content_industry.gd")
 const EngineeringScript = preload("res://sim/engineering.gd")
 const ProfessionalServicesScript = preload("res://sim/professional_services.gd")
 const LifeServicesScript = preload("res://sim/life_services.gd")
+const TransportInfraScript = preload("res://sim/transport_infra.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -230,6 +231,10 @@ var _prof_project: Dictionary = {}         ## 当前项目，入档 sim_runtime.
 var life_services                 ## 家庭与生活服务业（LifeServicesSystem）
 var _life_provider: Dictionary = {}        ## 玩家服务者，入档 sim_runtime.life_services.provider
 var _life_order: Dictionary = {}           ## 当前服务单，入档 sim_runtime.life_services.order
+var transport_infra                ## 交通基建与航运（TransportInfraSystem）
+var _tin_project: Dictionary = {}          ## 当前基建项目，入档 sim_runtime.transport_infra.project
+var _tin_route: Dictionary = {}            ## 当前运营线路，入档 sim_runtime.transport_infra.route
+var _tin_region: Dictionary = {}           ## 受影响区域（最小实现），入档 sim_runtime.transport_infra.region
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -329,6 +334,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	]
 	professional = ProfessionalServicesScript.new()
 	life_services = LifeServicesScript.new()
+	transport_infra = TransportInfraScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -635,6 +641,16 @@ func _ensure_world_geo() -> void:
 				_life_provider = life_services.from_dict(lfd["provider"])
 			if lfd.get("order", null) is Dictionary and not (lfd["order"] as Dictionary).is_empty():
 				_life_order = life_services.from_dict(lfd["order"])
+		# 恢复交通基建运行态（项目/线路/区域）。
+		var ti: Variant = (state.sim_runtime as Dictionary).get("transport_infra", {})
+		if ti is Dictionary and not (ti as Dictionary).is_empty():
+			var tid: Dictionary = ti
+			if tid.get("project", null) is Dictionary and not (tid["project"] as Dictionary).is_empty():
+				_tin_project = transport_infra.from_dict(tid["project"])
+			if tid.get("route", null) is Dictionary and not (tid["route"] as Dictionary).is_empty():
+				_tin_route = transport_infra.from_dict(tid["route"])
+			if tid.get("region", null) is Dictionary and not (tid["region"] as Dictionary).is_empty():
+				_tin_region = transport_infra.from_dict(tid["region"])
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5896,6 +5912,153 @@ func _persist_life_services() -> void:
 	(state.sim_runtime as Dictionary)["life_services"] = {
 		"provider": life_services.to_dict(_life_provider),
 		"order": life_services.to_dict(_life_order),
+	}
+
+
+# --- 交通基建与航运（D50 / R94） ---
+
+func tin_infra_types_catalog() -> Array:
+	var out: Array = []
+	for key in transport_infra.INFRA_TYPES.keys():
+		out.append({"id": String(key), "name": String((transport_infra.INFRA_TYPES[key] as Dictionary).get("name", key))})
+	return out
+
+func tin_modes_catalog() -> Array:
+	var out: Array = []
+	for key in transport_infra.MODES.keys():
+		out.append({"id": String(key), "name": String((transport_infra.MODES[key] as Dictionary).get("name", key))})
+	return out
+
+func tin_project() -> Dictionary:
+	return _tin_project
+
+func _tin_default_region() -> Dictionary:
+	return {"region": "home", "accessibility": 0.5, "land_price": 10000.0, "gdp": 1000000.0, "population": 100000.0}
+
+func tin_new_project(type: String = "highway", scale: float = 1.0) -> Dictionary:
+	if _tin_region.is_empty():
+		_tin_region = _tin_default_region()
+	_tin_project = transport_infra.new_infra_project({"type": type, "scale": clampf(scale, 0.1, 10.0), "region": String(_tin_region.get("region", "home"))})
+	_tin_route = {}
+	_persist_transport_infra()
+	return {"ok": true, "project": _tin_project}
+
+func tin_tender() -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	var bids: Array = [
+		{"id": "bid.a", "price": float(_tin_project.get("cost_estimate", 0)) * 1.02, "qualification_score": 0.70, "relationship": 0.2},
+		{"id": "bid.b", "price": float(_tin_project.get("cost_estimate", 0)) * 0.98, "qualification_score": 0.60, "relationship": 0.1},
+		{"id": "bid.c", "price": float(_tin_project.get("cost_estimate", 0)) * 1.08, "qualification_score": 0.85, "relationship": 0.0},
+	]
+	var r: Dictionary = transport_infra.tender_infra(_tin_project, bids, {}, rng)
+	_persist_transport_infra()
+	return r
+
+func tin_build(pace: float = 0.5) -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	var r: Dictionary = transport_infra.build(_tin_project, {"pace": clampf(pace, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_transport_infra()
+	return r
+
+func tin_operate(mode: String = "logistics", fare: float = 50.0) -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	if not transport_infra.MODES.has(mode):
+		return {"ok": false, "reason": "unknown_tin_mode"}
+	var r: Dictionary = transport_infra.operate(_tin_project, {"mode": mode, "fare": maxf(0.0, fare), "roll": -1.0}, rng)
+	_tin_route = {"mode": mode, "fare": fare, "profit": int(r.get("profit", 0)), "on_time_rate": float(r.get("on_time_rate", 0.0)), "suspended": false}
+	_persist_transport_infra()
+	return r
+
+func tin_regional_impact() -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	if _tin_region.is_empty():
+		_tin_region = _tin_default_region()
+	var r: Dictionary = transport_infra.regional_impact(_tin_project, _tin_region, {"migration": 1.0})
+	_persist_transport_infra()
+	return r
+
+func tin_network() -> Dictionary:
+	var nodes: Array = [{"hub": true}, {"hub": false}, {"hub": true}, {"hub": false}]
+	var routes: Array = [{"a": 0, "b": 1}, {"a": 1, "b": 2}, {"a": 2, "b": 3}]
+	return transport_infra.network_effect(nodes, routes, {})
+
+func tin_subsidy(amount: int = -1) -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	var opts: Dictionary = {}
+	if amount >= 0:
+		opts["amount"] = amount
+	var r: Dictionary = transport_infra.subsidy(_tin_project, opts)
+	_persist_transport_infra()
+	return r
+
+func tin_settle(operating_profit: int = 0) -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	return transport_infra.settle(_tin_project, {"operating_profit": operating_profit})
+
+func tin_accident(cut_corners: float = 0.0) -> Dictionary:
+	if _tin_project.is_empty():
+		return {"ok": false, "reason": "no_infra"}
+	var r: Dictionary = transport_infra.infra_accident(_tin_project, {"cut_corners": clampf(cut_corners, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_transport_infra()
+	return r
+
+func tin_monopoly(market_share: float = 0.5, price: float = 100.0) -> Dictionary:
+	return transport_infra.monopoly_regulation({"market_share": clampf(market_share, 0.0, 1.0), "price": maxf(0.0, price)})
+
+func tin_disruption(sensitivity: float = 0.5) -> Dictionary:
+	if _tin_route.is_empty():
+		return {"ok": false, "reason": "no_route"}
+	var r: Dictionary = transport_infra.international_disruption(_tin_route, {"sensitivity": clampf(sensitivity, 0.0, 1.0), "roll": -1.0}, rng)
+	_persist_transport_infra()
+	return r
+
+func tin_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _tin_project.is_empty():
+		out["project"] = {
+			"id": String(_tin_project.get("id", "")),
+			"type": String(_tin_project.get("type", "")),
+			"type_name": String((transport_infra.INFRA_TYPES.get(String(_tin_project.get("type", "")), {}) as Dictionary).get("name", _tin_project.get("type", ""))),
+			"cost_estimate": int(_tin_project.get("cost_estimate", 0)),
+			"spent": int(_tin_project.get("spent", 0)),
+			"progress": float(_tin_project.get("progress", 0.0)),
+			"days_total": float(_tin_project.get("days_total", 0.0)),
+			"delayed_days": float(_tin_project.get("delayed_days", 0.0)),
+			"status": String(_tin_project.get("status", "")),
+			"subsidy": int(_tin_project.get("subsidy", 0)),
+			"accident": bool(_tin_project.get("accident", false)),
+		}
+	if not _tin_route.is_empty():
+		out["route"] = {
+			"mode": String(_tin_route.get("mode", "")),
+			"mode_name": String((transport_infra.MODES.get(String(_tin_route.get("mode", "")), {}) as Dictionary).get("name", _tin_route.get("mode", ""))),
+			"fare": float(_tin_route.get("fare", 0.0)),
+			"profit": int(_tin_route.get("profit", 0)),
+			"on_time_rate": float(_tin_route.get("on_time_rate", 0.0)),
+			"suspended": bool(_tin_route.get("suspended", false)),
+		}
+	if not _tin_region.is_empty():
+		out["region"] = {
+			"accessibility": float(_tin_region.get("accessibility", 0.0)),
+			"land_price": float(_tin_region.get("land_price", 0.0)),
+			"gdp": float(_tin_region.get("gdp", 0.0)),
+			"population": float(_tin_region.get("population", 0.0)),
+		}
+	return out
+
+func _persist_transport_infra() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["transport_infra"] = {
+		"project": transport_infra.to_dict(_tin_project),
+		"route": transport_infra.to_dict(_tin_route),
+		"region": transport_infra.to_dict(_tin_region),
 	}
 
 

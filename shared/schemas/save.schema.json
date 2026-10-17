@@ -55,7 +55,8 @@
         "content": { "type": "object", "additionalProperties": true },
         "engineering": { "type": "object", "additionalProperties": true },
         "professional": { "type": "object", "additionalProperties": true },
-        "life_services": { "type": "object", "additionalProperties": true }
+        "life_services": { "type": "object", "additionalProperties": true },
+        "transport_infra": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

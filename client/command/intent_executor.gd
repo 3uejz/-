@@ -813,6 +813,28 @@ func _dispatch(intent) -> Dictionary:
 			return _life_commission(intent)
 		"服务标准化":
 			return _life_standardize(intent)
+		"基建立项":
+			return _tin_new_project(intent)
+		"基建招标":
+			return _tin_tender(intent)
+		"基建推进":
+			return _tin_build(intent)
+		"线路运营":
+			return _tin_operate(intent)
+		"区域影响":
+			return _tin_regional(intent)
+		"路网效应":
+			return _tin_network(intent)
+		"线路补贴":
+			return _tin_subsidy(intent)
+		"基建结算":
+			return _tin_settle(intent)
+		"基建事故":
+			return _tin_accident(intent)
+		"定价监管":
+			return _tin_monopoly(intent)
+		"国际扰动":
+			return _tin_disruption(intent)
 		# 元指令（交 UI 处理）
 		"存档":
 			return _action("save", "已请求存档。")
@@ -4101,6 +4123,100 @@ func _life_standardize(intent) -> Dictionary:
 		return _fail("无法标准化（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["服务标准化投入 %d。" % int(r.get("invest", 0))], 0, "")
 
+func _tin_new_project(intent) -> Dictionary:
+	var type: String = _object_id(intent, "tin_infra_type")
+	if type.is_empty():
+		type = "highway"
+	var scale: float = maxf(0.1, float(_param_number(intent, "number", 100)) / 100.0)
+	var r: Dictionary = host.tin_new_project(type, scale)
+	var p: Dictionary = r.get("project", {})
+	return _ok(["立项%s，预算 %d。" % [_catalog_name(host.tin_infra_types_catalog(), type), int(p.get("cost_estimate", 0))]], 0, "")
+
+func _tin_tender(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var r: Dictionary = host.tin_tender()
+	if not bool(r.get("ok", false)):
+		return _fail("无法招标（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["基建招标定标：%s。" % String(r.get("winner", ""))], 0, "")
+
+func _tin_build(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var pace: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.tin_build(pace)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["基建推进，进度 %.0f%%，超支 %d。" % [float(r.get("progress", 0.0)) * 100.0, int(r.get("overrun", 0))]], 0, "")
+
+func _tin_operate(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var mode: String = _object_id(intent, "tin_mode")
+	if mode.is_empty():
+		mode = "logistics"
+	var fare: float = float(_param_number(intent, "number", 50))
+	var r: Dictionary = host.tin_operate(mode, fare)
+	if not bool(r.get("ok", false)):
+		return _fail("无法运营（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["线路运营一期，盈亏 %d，准点率 %.0f%%。" % [int(r.get("profit", 0)), float(r.get("on_time_rate", 0.0)) * 100.0]], 0, "")
+
+func _tin_regional(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var r: Dictionary = host.tin_regional_impact()
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["区域影响：可达性 %.0f%%，地价 +%.0f%%。" % [float(r.get("accessibility", 0.0)) * 100.0, float(r.get("land_delta", 0.0)) * 100.0]], 0, "")
+
+func _tin_network(intent) -> Dictionary:
+	var r: Dictionary = host.tin_network()
+	return _ok(["路网效应：连通度 %.0f%%，换乘效率 %.0f%%。" % [float(r.get("connectivity", 0.0)) * 100.0, float(r.get("transfer_efficiency", 0.0)) * 100.0]], 0, "")
+
+func _tin_subsidy(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var amount: int = _param_number(intent, "number", -1)
+	var r: Dictionary = host.tin_subsidy(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法补贴（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["补贴 %d。" % int(r.get("granted", 0))], 0, "")
+
+func _tin_settle(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var r: Dictionary = host.tin_settle()
+	return _ok(["基建结算：工期 %.0f 天，成本 %d，安全 %.0f%%。" % [float(r.get("construction_days", 0.0)), int(r.get("cost", 0)), float(r.get("safety", 0.0)) * 100.0]], 0, "")
+
+func _tin_accident(intent) -> Dictionary:
+	if host._tin_project.is_empty():
+		return _fail("尚无基建项目。")
+	var cut: float = clampf(float(_param_number(intent, "number", 0)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.tin_accident(cut)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("occurred", false)):
+		return _ok(["基建重大事故，损失 %d，死亡 %d。" % [int(r.get("loss", 0)), int(r.get("deaths", 0))]], 0, "")
+	return _ok(["基建安全无事故。"], 0, "")
+
+func _tin_monopoly(intent) -> Dictionary:
+	var share: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.tin_monopoly(share, 100.0)
+	if String(r.get("action", "none")) == "price_cap":
+		return _ok(["触发限价监管，罚款 %d。" % int(r.get("fine", 0))], 0, "")
+	return _ok(["未触发定价监管。"], 0, "")
+
+func _tin_disruption(intent) -> Dictionary:
+	if host._tin_route.is_empty():
+		return _fail("尚无运营线路。")
+	var sens: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.tin_disruption(sens)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("disrupted", false)):
+		return _ok(["国际扰动致航线中断，损失 %d。" % int(r.get("loss", 0))], 0, "")
+	return _ok(["国际局势平稳，航线正常。"], 0, "")
+
 func _reason_cn(reason: String) -> String:
 	match reason:
 		"not_listed", "unavailable":
@@ -4427,6 +4543,14 @@ func _reason_cn(reason: String) -> String:
 			return "未知宠物服务环节"
 		"no_candidates":
 			return "暂无相亲候选"
+		"no_infra":
+			return "尚无基建项目"
+		"unknown_tin_mode":
+			return "未知运营模式"
+		"no_route":
+			return "尚无运营线路"
+		"no_bids":
+			return "无有效投标"
 		"unknown_practice":
 			return "未知民俗活动"
 		"no_business":
@@ -4722,6 +4846,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.life_service_categories_catalog(), text)
 		"life_pet_stage":
 			return _find_catalog_by_name(host.life_pet_service_catalog(), text)
+		"tin_infra_type":
+			return _find_catalog_by_name(host.tin_infra_types_catalog(), text)
+		"tin_mode":
+			return _find_catalog_by_name(host.tin_modes_catalog(), text)
 		_:
 			return ""
 

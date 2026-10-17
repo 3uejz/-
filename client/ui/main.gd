@@ -497,6 +497,8 @@ func _catalogs() -> Dictionary:
 		"prof_cert": _sim.prof_qualifications_catalog(),
 		"life_service_category": _sim.life_service_categories_catalog(),
 		"life_pet_stage": _sim.life_pet_service_catalog(),
+		"tin_infra_type": _sim.tin_infra_types_catalog(),
+		"tin_mode": _sim.tin_modes_catalog(),
 	}
 
 ## 熟人目录：供解析器把「聊天/求婚 <人物>」链接到 NPC id。
@@ -881,6 +883,9 @@ func _panel_context() -> Dictionary:
 		var lsp: Dictionary = _sim.life_services_panel_data()
 		if not lsp.is_empty():
 			context["life_services"] = lsp
+		var tip: Dictionary = _sim.tin_panel_data()
+		if not tip.is_empty():
+			context["transport_infra"] = tip
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context
