@@ -211,10 +211,14 @@ func _test_local_3d_view() -> void:
 
 	var sun: DirectionalLight3D = view.world_3d().get_node_or_null("Sun")
 	check(sun != null, "存在太阳光")
+	var lamps: Node3D = view.world_3d().get_node_or_null("Lamps")
+	check(lamps != null and lamps.get_child_count() >= 12, "街灯由灯杆、灯头与光源组成")
 	view.set_atmosphere(720, "clear", 0.0)
 	var noon_energy: float = sun.light_energy
+	var noon_lamp: float = (lamps.get_node("Light0") as OmniLight3D).light_energy
 	view.set_atmosphere(0, "clear", 0.0)
 	check(sun.light_energy < noon_energy, "夜间太阳光更弱")
+	check((lamps.get_node("Light0") as OmniLight3D).light_energy > noon_lamp, "夜间街灯点亮")
 	view.set_atmosphere(720, "heavy_rain", 12.0)
 	var precip: CPUParticles3D = view.world_3d().get_node_or_null("Precipitation")
 	check(precip != null and precip.mesh is BoxMesh, "雨天使用雨丝粒子")

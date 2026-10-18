@@ -52,6 +52,8 @@ var _moving: bool = false
 var _skin_color := Color(0.82, 0.66, 0.54)
 var _hair_color := Color(0.15, 0.12, 0.10)
 var _outfit_color := Color(0.24, 0.36, 0.50)
+var _lamps: Array[OmniLight3D] = []
+var _lamp_material: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -80,6 +82,7 @@ func _build() -> void:
 	_build_environment()
 	_build_ground()
 	_build_actor()
+	_build_street_lamps()
 	_build_npcs()
 	_build_precipitation()
 
@@ -161,6 +164,34 @@ func _build_actor() -> void:
 	_add_part(_actor, "ShoeL", _box(Vector3(0.16, 0.09, 0.28)), Vector3(-0.11, 0.05, 0.04))
 	_add_part(_actor, "ShoeR", _box(Vector3(0.16, 0.09, 0.28)), Vector3(0.11, 0.05, 0.04))
 	set_appearance({})
+
+## 街灯：黄昏后自动点亮，为夜间与雾雨场景提供近景暖光。
+func _build_street_lamps() -> void:
+	var root := Node3D.new()
+	root.name = "Lamps"
+	_world.add_child(root)
+	_lamp_material = StandardMaterial3D.new()
+	_lamp_material.albedo_color = Color(0.22, 0.20, 0.16)
+	_lamp_material.emission_enabled = true
+	_lamp_material.emission = Color(1.0, 0.82, 0.55)
+	_lamp_material.emission_energy_multiplier = 0.2
+	var positions: Array = [Vector3(-8.5, 0.0, -4.0), Vector3(8.5, 0.0, -4.0), Vector3(-8.5, 0.0, 6.0), Vector3(8.5, 0.0, 6.0), Vector3(-3.0, 0.0, -10.0), Vector3(3.0, 0.0, -10.0)]
+	for i in positions.size():
+		var pos: Vector3 = positions[i]
+		var pole := _add_part(root, "Pole%d" % i, _capsule(0.07, 4.2), pos + Vector3(0.0, 2.1, 0.0))
+		pole.material_override = _flat_material(Color(0.16, 0.17, 0.18))
+		var head := _add_part(root, "Head%d" % i, _box(Vector3(0.46, 0.14, 0.46)), pos + Vector3(0.0, 4.18, 0.0))
+		head.material_override = _lamp_material
+		var light := OmniLight3D.new()
+		light.name = "Light%d" % i
+		light.position = pos + Vector3(0.0, 3.95, 0.0)
+		light.omni_range = 12.0
+		light.omni_attenuation = 1.1
+		light.light_color = Color(1.0, 0.86, 0.64)
+		light.light_energy = 0.0
+		light.shadow_enabled = false
+		root.add_child(light)
+		_lamps.append(light)
 
 func _add_part(parent: Node3D, part_name: String, mesh: Mesh, pos: Vector3) -> MeshInstance3D:
 	var part := MeshInstance3D.new()
@@ -478,6 +509,12 @@ func set_atmosphere(minute_of_day: int, condition: String = "clear", precipitati
 	_environment_resource.fog_density = float(weather["fog"])
 	_environment_resource.ambient_light_energy = 0.18 + daylight * 0.8
 	_environment_resource.tonemap_exposure = 0.85 + daylight * 0.35
+	var night: float = 1.0 - clampf(daylight * 1.5, 0.0, 1.0)
+	var lamp_energy: float = night * (1.15 + weather["mix"] * 0.8)
+	for lamp in _lamps:
+		lamp.light_energy = lamp_energy
+	if _lamp_material != null:
+		_lamp_material.emission_energy_multiplier = 0.15 + night * 2.6
 
 
 func _process(delta: float) -> void:
