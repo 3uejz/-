@@ -30,6 +30,9 @@ func run_tests() -> void:
 	_test_mfg_trade_and_research_bindings()
 	_test_consumer_civil_bindings()
 	_test_appearance_aesthetics_bindings()
+	_test_military_bindings()
+	_test_workplace_bindings()
+	_test_company_financing_bindings()
 	_test_acquaintances_and_marriage()
 	_test_property_market_and_purchase()
 	_test_inheritance_settles()
@@ -394,6 +397,89 @@ func _test_appearance_aesthetics_bindings() -> void:
 	var panel2: Dictionary = host2.appearance_panel_data()
 	check(not (panel2.get("profile", {}) as Dictionary).is_empty(), "读档恢复形象档案")
 	check_eq(String((host2._civil.get("claim", {}) as Dictionary).get("type", "")), "tort", "读档恢复医美诉讼")
+
+func _test_military_bindings() -> void:
+	var host = _setup(31)
+	var p: Dictionary = host.player()
+	p["birth_minutes"] = host.now_minutes() - int(21.0 * SimHostScript.MINUTES_PER_YEAR)
+	p["education"] = [{"content_key": "edu.high_school", "status": "graduated"}]
+	p["attrs"]["physiological"]["health"] = 100.0
+	p["skills"] = [{"content_key": "skill.physique", "level": 10}, {"content_key": "skill.technical", "level": 10}]
+	var er: Dictionary = host.military_enlist("army")
+	check(bool(er.get("ok", false)), "符合条件可参军: %s" % str(er.get("missing", [])))
+	check(bool(host.military_panel_data().get("enlisted", false)), "军籍面板生效")
+	check(bool(host.military_train(10.0).get("ok", false)), "军训成功")
+	p["military"]["merits"] = 6.0
+	p["military"]["rank_started_minutes"] = host.now_minutes() - int(3.0 * SimHostScript.MINUTES_PER_YEAR)
+	var pr: Dictionary = host.military_promote()
+	check(bool(pr.get("ok", false)), "满足年限与军功可晋升")
+	check_eq(String(pr.get("rank_name", "")), "上等兵", "晋升到上等兵")
+	check(host.military_restricts("辞职"), "服役期间限制民事指令")
+	var cash0: int = int(host.economy.cash(host.account_id()))
+	p["military"]["enlisted_minutes"] = host.now_minutes() - int(4.0 * SimHostScript.MINUTES_PER_YEAR)
+	var dis: Dictionary = host.military_discharge()
+	check(bool(dis.get("ok", false)), "可退伍")
+	check(int(dis.get("severance", 0)) > 0, "退伍发放退役金")
+	check(int(host.economy.cash(host.account_id())) > cash0, "退役金入账")
+	check(String(p["military"]["status"]) == "discharged", "军籍状态转为退伍")
+	var host2 = SimHostScript.new(host.state, 31)
+	check_eq(String((host2.player().get("military", {}) as Dictionary).get("status", "")), "discharged", "读档恢复军籍")
+	host2.player()["military"]["status"] = "serving"
+	var de: Dictionary = host2.military_desert()
+	check(bool(de.get("ok", false)), "可当逃兵")
+	check_eq(String((host2.player().get("military", {}) as Dictionary).get("status", "")), "deserter", "逃兵状态落档")
+
+
+func _test_workplace_bindings() -> void:
+	var host = _setup(32)
+	host.player()["job"] = {
+		"content_key": "job.engineer", "title": "工程师", "industry": "it",
+		"salary": 9000, "performance": 60.0, "internal_reputation": 55.0, "status": "regular",
+	}
+	check(bool(host.workplace_join("reform").get("ok", false)), "可加入改革派")
+	check(bool(host.workplace_found_faction("技术派").get("ok", false)), "可自立派系")
+	check(bool(host.workplace_stay_neutral().get("ok", false)), "可保持中立")
+	var pol: Dictionary = host.workplace_politics("credit_grab")
+	check(pol.has("event") or pol.has("ok"), "办公室政治返回事件")
+	var panel: Dictionary = host.workplace_panel_data()
+	check(not panel.is_empty(), "职场面板有数据")
+	check((panel.get("factions", {}) as Dictionary).size() >= 2, "职场面板含派系")
+	var host2 = SimHostScript.new(host.state, 32)
+	var panel2: Dictionary = host2.workplace_panel_data()
+	check(not panel2.is_empty(), "读档恢复职场状态")
+	check((panel2.get("factions", {}) as Dictionary).size() >= 2, "读档恢复派系")
+
+
+func _test_company_financing_bindings() -> void:
+	var host = _setup(33)
+	host.economy.add_money(host.account_id(), 200000000, "test_company")
+	var reg: Dictionary = host.company_register("sole_proprietor", "测试小店", 1000000)
+	check(bool(reg.get("ok", false)), "注册个体户成功")
+	check(bool(host.company_choose_site(60.0, 120000).get("ok", false)), "选址成功")
+	check(bool(host.company_set_status(true).get("ok", false)), "开业成功")
+	check(bool(host.company_stock("item.apple", 500, 500).get("ok", false)), "进货成功")
+	check(bool(host.company_set_price("item.apple", 900).get("ok", false)), "定价成功")
+	check(bool(host.company_hire(300000).get("ok", false)), "雇人成功")
+	var finance: Dictionary = host.company_finance_raise("seed")
+	check(bool(finance.get("ok", false)), "种子轮融资成功")
+	check(float(finance.get("founder_equity", 0.0)) > 0.0, "融资后创始人有股权")
+	var day0: int = host.day_index()
+	host.advance(SimHostScript.MINUTES_PER_DAY)
+	check(host.day_index() > day0, "时间推进一天")
+	var panel: Dictionary = host.company_panel_data()
+	check(not panel.is_empty(), "公司面板有数据")
+	check(not (panel.get("products", []) as Array).is_empty(), "面板列出商品")
+	check(bool(host.company_expand(1000000).get("ok", false)), "扩张成功")
+	check(bool(host.company_tax().get("ok", false)), "纳税结算成功")
+	var vam: Dictionary = host.company_settle_vam(100000)
+	check(vam.has("passed"), "对赌结算返回结果")
+	var ex: Dictionary = host.company_exit("ipo")
+	check(bool(ex.get("ok", false)), "IPO 退出成功")
+	var host2 = SimHostScript.new(host.state, 33)
+	var panel2: Dictionary = host2.company_panel_data()
+	check(not panel2.is_empty(), "读档恢复公司")
+	check(bool((panel2.get("cap_table", {}) as Dictionary).get("exited", false)), "读档恢复退出状态")
+
 
 func _test_acquaintances_and_marriage() -> void:
 	var state = GameStateScript.new()

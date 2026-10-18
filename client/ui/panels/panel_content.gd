@@ -75,7 +75,9 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"skills":
 			data = skills(player, name_resolver)
 		"career":
-			data = career(player, name_resolver)
+			data = career(player, name_resolver, context)
+		"company":
+			data = company(player, context, name_resolver)
 		"finance":
 			data = finance(player, name_resolver)
 		"relations":
@@ -147,7 +149,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"epidemic":
 			data = epidemic(player, context, name_resolver)
 		"war":
-			data = war(player, name_resolver)
+			data = war(player, name_resolver, context)
 		"market":
 			data = market(player, context)
 		"weather":
@@ -275,7 +277,7 @@ static func skills(player: Dictionary, name_resolver: Callable = Callable()) -> 
 
 # --- 工作与职业 ---
 
-static func career(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func career(player: Dictionary, name_resolver: Callable = Callable(), context: Dictionary = {}) -> Dictionary:
 	if player.is_empty():
 		return _empty("工作与职业", "尚未生成角色数据")
 	var job: Dictionary = player.get("job", {})
@@ -303,7 +305,33 @@ static func career(player: Dictionary, name_resolver: Callable = Callable()) -> 
 		sections.append({"title": "学历", "rows": _credential_rows(education, name_resolver)})
 	if not licenses.is_empty():
 		sections.append({"title": "执照", "rows": _credential_rows(licenses, name_resolver)})
-	return {"empty": false, "empty_hint": "", "sections": sections}
+	var wp: Variant = context.get("workplace", {})
+	if wp is Dictionary and not (wp as Dictionary).is_empty():
+		var w: Dictionary = wp
+		var wp_rows: Array = []
+		if w.has("job_title"):
+			wp_rows.append({"label": "岗位", "value": String(w["job_title"])})
+		for pair in [["supervisor_favor", "上级好感"], ["colleague_support", "同事支持"],
+				["performance", "绩效"], ["internal_reputation", "内部声望"],
+				["industry_reputation", "行业口碑"], ["deterioration_risk", "关系恶化风险"]]:
+			if w.has(String(pair[0])):
+				wp_rows.append({"label": String(pair[1]), "value": _num(w[pair[0]])})
+		if not wp_rows.is_empty():
+			sections.append({"title": "职场关系", "rows": wp_rows})
+		var factions: Variant = w.get("factions", [])
+		var f_rows: Array = []
+		if factions is Dictionary:
+			for key in (factions as Dictionary).keys():
+				var f: Dictionary = (factions as Dictionary)[key]
+				f_rows.append({"label": String(f.get("name", key)), "value": "势力 %s · %s" % [_num(f.get("power", 0.0)), String(f.get("alignment", ""))]})
+		elif factions is Array:
+			for f in factions:
+				f_rows.append({"label": String(f.get("name", "?")), "value": "势力 %s · %s" % [_num(f.get("power", 0.0)), String(f.get("alignment", ""))]})
+		if not f_rows.is_empty():
+			sections.append({"title": "派系", "rows": f_rows})
+		if not String(w.get("player_faction", "")).is_empty():
+			sections.append({"title": "立场", "rows": [{"label": "所属派系", "value": String(w["player_faction"])}]})
+	return _ok(sections)
 
 static func _credential_rows(items: Array, name_resolver: Callable) -> Array:
 	var rows: Array = []
@@ -2223,12 +2251,31 @@ static func epidemic(player: Dictionary, context: Dictionary, name_resolver: Cal
 		return _empty("疫情与公共卫生", "当前无疫情；可接种、检测并保持常态监测")
 	return _ok(sections)
 
-static func war(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func war(player: Dictionary, name_resolver: Callable = Callable(), context: Dictionary = {}) -> Dictionary:
 	if player.is_empty():
 		return _empty("战争与军旅", "尚未生成角色数据")
 	var mil: Dictionary = player.get("military", {})
 	if mil.is_empty() or String(mil.get("status", "")) == "":
 		return _empty("战争与军旅", "无军籍；可查看征兵条件并参军、请战、晋升或退伍")
+	var info: Variant = context.get("military", {})
+	if info is Dictionary and bool((info as Dictionary).get("enlisted", false)):
+		var m: Dictionary = info
+		var rows: Array = [
+			{"label": "状态", "value": String(m.get("status", ""))},
+			{"label": "兵种", "value": String(m.get("branch_name", m.get("branch", "")))},
+			{"label": "军衔", "value": "%s（%s）" % [String(m.get("rank_name", "")), String(m.get("rank_grade", ""))]},
+			{"label": "军功", "value": _num(m.get("merits", 0.0))},
+			{"label": "月薪", "value": _money(m.get("pay", 0))},
+			{"label": "伤病", "value": str(int(m.get("casualties", 0)))},
+		]
+		if m.has("next_rank_name"):
+			rows.append({"label": "下一军衔", "value": "%s（需军功 %s）" % [String(m["next_rank_name"]), _num(m.get("next_merit_required", 0.0))]})
+		rows.append({"label": "可晋升", "value": _yes_no(m.get("eligible", false))})
+		var sections: Array = [_section("军籍", rows)]
+		var restricted: Array = m.get("restricted_verbs", [])
+		if not restricted.is_empty():
+			sections.append(_section("服役限制", [{"label": "受限指令", "value": "、".join(restricted)}]))
+		return _ok(sections)
 	var rows: Array = []
 	for pair in [["status", "状态"], ["branch", "军种"], ["rank", "军衔"], ["unit", "部队"]]:
 		if mil.has(String(pair[0])):
@@ -2238,6 +2285,40 @@ static func war(player: Dictionary, name_resolver: Callable = Callable()) -> Dic
 	rows.append({"label": "勋章", "value": str(_items_of(mil.get("decorations", [])).size())})
 	rows.append({"label": "征兵入伍", "value": _yes_no(mil.get("conscripted", false))})
 	return _ok([_section("军籍", rows)])
+
+static func company(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("公司与融资", "尚未生成角色数据")
+	var data: Variant = context.get("company", {})
+	if not (data is Dictionary) or (data as Dictionary).is_empty():
+		return _empty("公司与融资", "尚未注册公司；可注册个体户或公司、选址、开业、进货定价与融资")
+	var d: Dictionary = data
+	var co: Dictionary = d.get("company", {})
+	var rows: Array = [
+		{"label": "名称", "value": String(co.get("name", "?"))},
+		{"label": "状态", "value": String(co.get("status", ""))},
+		{"label": "现金", "value": _money(d.get("cash", 0))},
+		{"label": "净资产", "value": _money(d.get("net_worth", 0))},
+		{"label": "员工", "value": str((d.get("employees", []) as Array).size())},
+		{"label": "门店", "value": str((co.get("shops", []) as Array).size())},
+	]
+	if bool(d.get("insolvent", false)):
+		rows.append({"label": "警示", "value": "资不抵债，随时可能破产"})
+	var sections: Array = [_section("公司", rows)]
+	var products: Array = d.get("products", [])
+	if not products.is_empty():
+		var p_rows: Array = []
+		for item in products:
+			p_rows.append({"label": String(item.get("good", "?")), "value": "库存 %d · 成本 %s · 售价 %s" % [
+				int(item.get("qty", 0)), _money(item.get("unit_cost", 0)), _money(item.get("price", 0))]})
+		sections.append(_section("商品", p_rows))
+	var cap: Dictionary = d.get("cap_table", {})
+	if not cap.is_empty():
+		var c_rows: Array = [{"label": "估值", "value": _money(cap.get("valuation", 0))}]
+		for h in cap.get("holders", []):
+			c_rows.append({"label": String(h.get("name", h.get("id", "?"))), "value": "%.1f%%" % (float(h.get("equity", 0.0)) * 100.0)})
+		sections.append(_section("股权与融资", c_rows))
+	return _ok(sections)
 
 static func market(player: Dictionary, context: Dictionary) -> Dictionary:
 	var w: Dictionary = _world(context)

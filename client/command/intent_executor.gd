@@ -32,6 +32,8 @@ func execute(intent) -> Dictionary:
 		return _fail(intent.error if String(intent.error) != "" else "无法执行该指令")
 	if String(intent.verb) == "然后":
 		return _compound(intent)
+	if host.military_restricts(String(intent.verb)):
+		return _fail("服役期间不得执行「%s」；可先退伍。" % String(intent.verb))
 	var result: Dictionary = _dispatch(intent)
 	if not panels.is_empty():
 		result["panel"] = panels.back()
@@ -87,6 +89,54 @@ func _dispatch(intent) -> Dictionary:
 			return _job_apply(intent)
 		"辞职":
 			return _job_resign(intent)
+		# 军旅与职场（D7）
+		"参军":
+			return _military_enlist(intent)
+		"军训":
+			return _military_train(intent)
+		"军务任务":
+			return _military_mission(intent)
+		"军衔晋升":
+			return _military_promote(intent)
+		"退伍":
+			return _military_discharge(intent)
+		"逃兵":
+			return _military_desert(intent)
+		"办公室政治":
+			return _workplace_politics(intent)
+		"站队":
+			return _workplace_join(intent)
+		"骑墙":
+			return _workplace_neutral(intent)
+		"自组派系":
+			return _workplace_found(intent)
+		"职场晋升":
+			return _workplace_promote(intent)
+		# 公司与融资（D7）
+		"注册公司":
+			return _company_register(intent)
+		"公司选址":
+			return _company_site(intent)
+		"开业":
+			return _company_open(intent)
+		"打烊":
+			return _company_close(intent)
+		"进货":
+			return _company_stock(intent)
+		"定价":
+			return _company_price(intent)
+		"雇人":
+			return _company_hire(intent)
+		"扩张":
+			return _company_expand(intent)
+		"公司纳税":
+			return _company_tax(intent)
+		"公司融资":
+			return _company_finance(intent)
+		"融资对赌":
+			return _company_vam(intent)
+		"公司退出":
+			return _company_exit(intent)
 		# 社交
 		"聊天":
 			return _interact(intent, "chat")
@@ -3492,6 +3542,244 @@ func _anomaly_identity(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法设定身份（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["身份设定为%s。" % String(r.get("name", ident))], 0, "")
+
+const MILITARY_BRANCH_NAMES: Dictionary = {
+	"陆军": "army", "海军": "navy", "空军": "air", "火箭军": "rocket",
+	"后勤": "logistics", "通信": "signal", "特种": "special",
+}
+const WORK_EVENT_NAMES: Dictionary = {
+	"抢功": "credit_grab", "甩锅": "blame", "站队": "take_sides", "举报": "report",
+}
+const FINANCE_STAGE_NAMES: Dictionary = {
+	"种子": "seed", "天使": "angel", "A轮": "series_a", "B轮": "series_b", "C轮": "series_c",
+}
+
+
+func _military_enlist(intent) -> Dictionary:
+	var raw: String = _object_id(intent, "military_branch")
+	if raw.is_empty():
+		raw = String(intent.params.get("method", "")).strip_edges()
+	var branch: String = String(MILITARY_BRANCH_NAMES.get(raw, raw))
+	var r: Dictionary = host.military_enlist(branch)
+	if not bool(r.get("ok", false)):
+		var missing: Array = r.get("missing", [])
+		var labels: Dictionary = {
+			"already_serving": "已在役", "age": "年龄不符", "health": "健康不达标",
+			"education": "学历不足", "political_review": "政审未过", "branch_not_found": "兵种不存在",
+		}
+		var lines: Array = []
+		for m in missing:
+			var key: String = String(m)
+			lines.append(String(labels.get(key, "技能不足：" + key.trim_prefix("skill:"))))
+		return _fail("入伍条件不符（%s）。" % "、".join(lines))
+	return _ok(["你已加入%s，授予列兵军衔。" % String((host.military_sys.BRANCHES[branch] as Dictionary).get("name", branch))], 0, "")
+
+
+func _military_train(intent) -> Dictionary:
+	var days: float = clampf(float(_param_number(intent, "number", 7)), 1.0, 365.0)
+	var r: Dictionary = host.military_train(days)
+	if not bool(r.get("ok", false)):
+		return _fail("训练失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["完成 %.0f 天训练，累计军功 %.1f。" % [days, float(r.get("merits", 0.0))]], int(days * DAY), "")
+
+
+func _military_mission(intent) -> Dictionary:
+	var difficulty: float = clampf(float(_param_number(intent, "number", 100)) / 100.0, 0.5, 3.0)
+	var r: Dictionary = host.military_mission(difficulty)
+	if not bool(r.get("ok", false)):
+		return _fail("任务失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var lines: Array = ["军功 +%.1f，累计 %.1f。" % [float(r.get("merits_gained", 0.0)), float(r.get("merits", 0.0))]]
+	if bool(r.get("kia", false)):
+		lines.append("你在任务中阵亡。")
+	elif bool(r.get("casualty", false)):
+		lines.append("你负伤退役治疗，健康受损。")
+	return _ok(lines, DAY, "")
+
+
+func _military_promote(intent) -> Dictionary:
+	var r: Dictionary = host.military_promote()
+	if not bool(r.get("ok", false)):
+		return _fail("晋升考核未通过（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["晋升为%s。" % String(r.get("rank_name", ""))], 0, "")
+
+
+func _military_discharge(intent) -> Dictionary:
+	var r: Dictionary = host.military_discharge()
+	if not bool(r.get("ok", false)):
+		return _fail("退伍失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你已退伍，领取退役金 %d，服务 %.1f 年。" % [int(r.get("severance", 0)), float(r.get("years", 0.0))]], 0, "")
+
+
+func _military_desert(intent) -> Dictionary:
+	var r: Dictionary = host.military_desert()
+	if not bool(r.get("ok", false)):
+		return _fail("无法离队（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你成了逃兵，通缉等级升至 %d。" % int(r.get("wanted_level", 0))], 0, "")
+
+
+func _workplace_politics(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var event: String = String(WORK_EVENT_NAMES.get(raw, ""))
+	var r: Dictionary = host.workplace_politics(event)
+	if not bool(r.get("ok", false)):
+		return _fail("职场事件未发生（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var names: Dictionary = {"credit_grab": "抢功", "blame": "甩锅", "take_sides": "站队", "report": "举报"}
+	return _ok(["办公室政治：%s，%s。" % [String(names.get(String(r.get("event", "")), "事件")), "你占了上风" if bool(r.get("success", false)) else "你吃了亏"]], 0, "")
+
+
+func _workplace_join(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var fid: String = raw
+	if raw == "改革派":
+		fid = "reform"
+	elif raw == "保守派":
+		fid = "status_quo"
+	var r: Dictionary = host.workplace_join(fid)
+	if not bool(r.get("ok", false)):
+		return _fail("站队失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你加入了%s派系。" % raw], 0, "")
+
+
+func _workplace_neutral(intent) -> Dictionary:
+	var r: Dictionary = host.workplace_stay_neutral()
+	if not bool(r.get("ok", false)):
+		return _fail("无法保持中立（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你选择骑墙，暂不站队。"], 0, "")
+
+
+func _workplace_found(intent) -> Dictionary:
+	var name: String = String(intent.params.get("method", "")).strip_edges()
+	if name.is_empty():
+		name = "自立派"
+	var r: Dictionary = host.workplace_found_faction(name)
+	if not bool(r.get("ok", false)):
+		return _fail("自组派系失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你组建了「%s」。" % name], 0, "")
+
+
+func _workplace_promote(intent) -> Dictionary:
+	var r: Dictionary = host.workplace_promote()
+	if not bool(r.get("ok", false)):
+		return _fail("晋升未通过（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你晋升为%s。" % String(r.get("title", r.get("content_key", "")))], 0, "")
+
+
+func _company_register(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var kind: String = "sole_proprietor"
+	if raw.contains("公司"):
+		kind = "company"
+	var name: String = raw
+	if name.is_empty() or name == "个体户" or name == "公司":
+		name = "我的公司"
+	var capital: int = int(_param_number(intent, "number", 100000)) * 100
+	var r: Dictionary = host.company_register(kind, name, capital)
+	if not bool(r.get("ok", false)):
+		return _fail("注册失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已注册「%s」，实缴资本 %d。" % [name, capital]], 0, "")
+
+
+func _company_site(intent) -> Dictionary:
+	var area: float = clampf(float(_param_number(intent, "number", 80)), 10.0, 10000.0)
+	var rent: int = int(area * 2000.0)
+	var r: Dictionary = host.company_choose_site(area, rent)
+	if not bool(r.get("ok", false)):
+		return _fail("选址失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已选定 %.0f 平方米店面，月租 %d。" % [area, rent]], 0, "")
+
+
+func _company_open(intent) -> Dictionary:
+	var r: Dictionary = host.company_set_status(true)
+	if not bool(r.get("ok", false)):
+		return _fail("开业失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["门店已开始营业。"], 0, "")
+
+
+func _company_close(intent) -> Dictionary:
+	var r: Dictionary = host.company_set_status(false)
+	if not bool(r.get("ok", false)):
+		return _fail("打烊失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["门店已打烊。"], 0, "")
+
+
+func _company_stock(intent) -> Dictionary:
+	var good: String = _object_id(intent, "item")
+	if good.is_empty():
+		good = String(intent.params.get("method", "")).strip_edges()
+	if good.is_empty():
+		return _fail("未指定进货商品。")
+	var qty: int = maxi(1, int(_param_number(intent, "number", 10)))
+	var def: Dictionary = host.items.get_def(good)
+	var unit_cost: int = int(round(float(def.get("base_price", 10.0)) * 100.0)) if not def.is_empty() else 1000
+	var r: Dictionary = host.company_stock(good, qty, unit_cost)
+	if not bool(r.get("ok", false)):
+		return _fail("进货失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["进货 %s × %d，花费 %d。" % [String(def.get("name", good)), qty, int(r.get("cost", 0))]], 0, "")
+
+
+func _company_price(intent) -> Dictionary:
+	var good: String = _object_id(intent, "item")
+	if good.is_empty():
+		good = String(intent.params.get("method", "")).strip_edges()
+	if good.is_empty():
+		return _fail("未指定定价商品。")
+	var price: int = maxi(0, int(_param_number(intent, "number", 20)) * 100)
+	var r: Dictionary = host.company_set_price(good, price)
+	if not bool(r.get("ok", false)):
+		return _fail("定价失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已将 %s 定价为 %d。" % [good, price]], 0, "")
+
+
+func _company_hire(intent) -> Dictionary:
+	var wage: int = maxi(1, int(_param_number(intent, "number", 3000))) * 100
+	var r: Dictionary = host.company_hire(wage)
+	if not bool(r.get("ok", false)):
+		return _fail("雇人失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已雇佣一名员工，月薪 %d。" % wage], 0, "")
+
+
+func _company_expand(intent) -> Dictionary:
+	var cost: int = maxi(1, int(_param_number(intent, "number", 100000))) * 100
+	var r: Dictionary = host.company_expand(cost)
+	if not bool(r.get("ok", false)):
+		return _fail("扩张失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["门店已扩张，分支 %d 家。" % int(r.get("branches", 0))], 0, "")
+
+
+func _company_tax(intent) -> Dictionary:
+	var r: Dictionary = host.company_tax()
+	if not bool(r.get("ok", false)):
+		return _fail("纳税失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["缴纳税款 %d。" % int(r.get("tax", 0))], 0, "")
+
+
+func _company_finance(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var stage: String = String(FINANCE_STAGE_NAMES.get(raw, ""))
+	var r: Dictionary = host.company_finance_raise(stage)
+	if not bool(r.get("ok", false)):
+		return _fail("融资失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["完成%s轮融资，估值 %d，融资 %d，创始人持股 %.1f%%。" % [
+		String(r.get("stage", "")), int(r.get("valuation", 0)), int(r.get("investment", 0)),
+		float(r.get("founder_equity", 0.0)) * 100.0]], 0, "")
+
+
+func _company_vam(intent) -> Dictionary:
+	var target: int = maxi(1, int(_param_number(intent, "number", 1000000))) * 100
+	var r: Dictionary = host.company_settle_vam(target)
+	if not bool(r.get("ok", false)):
+		return _fail("对赌结算失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["对赌结算：%s。" % ("达标" if not bool(r.get("triggered", false)) else "未达标触发补偿")], 0, "")
+
+
+func _company_exit(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var kind: String = "ipo" if raw.contains("上市") or raw.contains("IPO") else "merger"
+	var r: Dictionary = host.company_exit(kind)
+	if not bool(r.get("ok", false)):
+		return _fail("退出失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["公司以%s方式退出，你获得 %d。" % ["上市" if kind == "ipo" else "并购", int(r.get("proceeds", 0))]], 0, "")
+
 
 const CARE_NAME_MAP: Dictionary = {
 	"理发": "haircut", "发型": "haircut", "化妆": "makeup", "妆容": "makeup",

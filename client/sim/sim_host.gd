@@ -71,6 +71,10 @@ const ResearchScript = preload("res://sim/research.gd")
 const CivilScript = preload("res://sim/civil.gd")
 const AppearanceScript = preload("res://sim/appearance.gd")
 const AestheticScript = preload("res://sim/aesthetics.gd")
+const MilitaryScript = preload("res://sim/military.gd")
+const WorkplaceScript = preload("res://sim/workplace.gd")
+const CompanyScript = preload("res://sim/company.gd")
+const FinancingScript = preload("res://sim/financing.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -247,6 +251,13 @@ var appearance_sys               ## 形象属性与魅力（AppearanceSystem）
 var aesthetic_sys                ## 医美项目与风险（AestheticSystem）
 var _appearance: Dictionary = {}     ## 形象档案（外貌/气质/体型等），入档 sim_runtime.appearance.profile
 var _aesthetic: Dictionary = {}      ## 医美运行态（项目记录/僵硬/证件照），入档 sim_runtime.appearance.aesthetics
+var military_sys                 ## 军旅生涯（MilitarySystem）
+var workplace_sys                ## 职场关系与派系（WorkplaceSystem）
+var company_sys                  ## 创业经营（CompanySystem）
+var financing_sys                ## 创业融资（FinancingSystem）
+var _workplace: Dictionary = {}      ## 职场状态（关系/派系/事件），入档 sim_runtime.workplace
+var _company: Dictionary = {}        ## 玩家公司，入档 sim_runtime.company.company
+var _cap_table: Dictionary = {}      ## 股权结构，入档 sim_runtime.company.cap_table
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -351,6 +362,10 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	civil_sys = CivilScript.new()
 	appearance_sys = AppearanceScript.new()
 	aesthetic_sys = AestheticScript.new()
+	military_sys = MilitaryScript.new()
+	workplace_sys = WorkplaceScript.new()
+	company_sys = CompanyScript.new()
+	financing_sys = FinancingScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -461,6 +476,17 @@ func _ensure_world_geo() -> void:
 		var cv: Variant = (state.sim_runtime as Dictionary).get("civil", {})
 		if cv is Dictionary and not (cv as Dictionary).is_empty():
 			_civil = (cv as Dictionary).duplicate(true)
+		# 恢复职场状态与公司/股权。
+		var wp: Variant = (state.sim_runtime as Dictionary).get("workplace", {})
+		if wp is Dictionary and not (wp as Dictionary).is_empty():
+			_workplace = (wp as Dictionary).duplicate(true)
+		var co: Variant = (state.sim_runtime as Dictionary).get("company", {})
+		if co is Dictionary and not (co as Dictionary).is_empty():
+			var cod: Dictionary = co
+			if cod.get("company", null) is Dictionary:
+				_company = (cod["company"] as Dictionary).duplicate(true)
+			if cod.get("cap_table", null) is Dictionary:
+				_cap_table = (cod["cap_table"] as Dictionary).duplicate(true)
 		# 恢复形象档案与医美运行态。
 		var ap: Variant = (state.sim_runtime as Dictionary).get("appearance", {})
 		if ap is Dictionary and not (ap as Dictionary).is_empty():
@@ -4570,6 +4596,357 @@ func _persist_civil() -> void:
 	(state.sim_runtime as Dictionary)["civil"] = _civil.duplicate(true)
 
 
+# --- D7 军旅、职场与融资 ---
+
+## 入伍：校验年龄/健康/学历/政审/兵种技能，成功后军籍写入 player.military。
+func military_enlist(branch: String) -> Dictionary:
+	var r: Dictionary = military_sys.enlist(player(), branch, now_minutes())
+	if bool(r.get("ok", false)):
+		sync_finances()
+	return r
+
+
+func military_train(days: float) -> Dictionary:
+	return military_sys.train(player(), days)
+
+
+func military_mission(difficulty: float = 1.0) -> Dictionary:
+	return military_sys.mission(player(), rng, {"difficulty": difficulty})
+
+
+func military_promote() -> Dictionary:
+	return military_sys.promote(player(), now_minutes())
+
+
+func military_discharge() -> Dictionary:
+	var r: Dictionary = military_sys.discharge(player(), now_minutes())
+	if bool(r.get("ok", false)):
+		var severance: int = int(r.get("severance", 0))
+		if severance > 0:
+			economy.issue_money(account_id(), severance, "military_severance")
+			sync_finances()
+	return r
+
+
+func military_desert() -> Dictionary:
+	return military_sys.desert(player(), now_minutes())
+
+
+func military_restricts(verb: String) -> bool:
+	return military_sys.restricts_civil(player(), verb)
+
+
+func military_panel_data() -> Dictionary:
+	var state: Dictionary = military_sys.military_state(player())
+	if state.is_empty():
+		return {"enlisted": false, "branches": military_sys.BRANCHES.duplicate(true)}
+	var idx: int = int(state.get("rank_index", 0))
+	var current: Dictionary = military_sys.rank(idx)
+	var next: Dictionary = military_sys.rank(idx + 1)
+	var out: Dictionary = {
+		"enlisted": true,
+		"status": String(state.get("status", "")),
+		"branch": String(state.get("branch", "")),
+		"branch_name": String(state.get("branch_name", "")),
+		"rank_name": String(current.get("name", "")),
+		"rank_grade": String(current.get("grade", "")),
+		"merits": float(state.get("merits", 0.0)),
+		"casualties": int(state.get("casualties", 0)),
+		"pay": military_sys.monthly_pay(player()),
+		"restricted_verbs": military_sys.restricted_verbs(player()),
+	}
+	if not next.is_empty():
+		out["next_rank_name"] = String(next.get("name", ""))
+		out["next_merit_required"] = float(next.get("merit_required", 0.0))
+	out["eligible"] = military_sys.evaluate_promotion(player(), now_minutes())
+	return out
+
+
+## 军旅薪酬按月发放（外部财政注入）。
+func _military_tick(before_minutes: int, after_minutes: int) -> void:
+	if not military_sys.is_serving(player()):
+		return
+	var months: int = _month_ordinal(after_minutes) - _month_ordinal(before_minutes)
+	if months <= 0:
+		return
+	var pay: int = military_sys.monthly_pay(player()) * months
+	if pay > 0:
+		economy.issue_money(account_id(), pay, "military_pay")
+		sync_finances()
+
+
+## 惰性建立职场状态；从当前岗位同步绩效与声望。
+func _ensure_workplace() -> void:
+	var job: Dictionary = jobs.current_job(player())
+	if job.is_empty():
+		return
+	var company_id: String = String(job.get("content_key", job.get("industry", "company")))
+	if _workplace.is_empty() or String(_workplace.get("company_id", "")) != company_id:
+		var colleagues: Array = []
+		for npc in _acquaintances.slice(0, 3):
+			colleagues.append(String((npc as Dictionary).get("id", "")))
+		var supervisor: String = String((_acquaintances[0] as Dictionary).get("id", "boss")) if not _acquaintances.is_empty() else "boss"
+		_workplace = workplace_sys.init_workplace(company_id, supervisor, colleagues)
+		workplace_sys.add_faction(_workplace, "reform", "改革派", 35.0, "reform")
+		workplace_sys.add_faction(_workplace, "status_quo", "保守派", 40.0, "conservative")
+	_workplace["performance"] = float(job.get("performance", _workplace.get("performance", 50.0)))
+	_workplace["internal_reputation"] = float(job.get("internal_reputation", _workplace.get("internal_reputation", 50.0)))
+
+
+func workplace_politics(event: String = "") -> Dictionary:
+	_ensure_workplace()
+	if _workplace.is_empty():
+		return {"ok": false, "reason": "unemployed"}
+	var opts: Dictionary = {"check_repercussion": true}
+	if not event.is_empty():
+		opts["event"] = event
+	var r: Dictionary = workplace_sys.office_politics(_workplace, player(), relations, rng, opts)
+	var action: String = String(workplace_sys.apply_repercussion(_workplace, player(), rng).get("action", "none"))
+	var job: Dictionary = jobs.current_job(player())
+	if not job.is_empty():
+		job["performance"] = clampf(float(_workplace.get("performance", 50.0)), 0.0, 100.0)
+		job["internal_reputation"] = clampf(float(_workplace.get("internal_reputation", 50.0)), 0.0, 100.0)
+		player()["job"] = job
+	if action == "fire":
+		jobs.resign(player(), now_minutes())
+		_workplace = {}
+	_persist_workplace()
+	return r
+
+
+func workplace_join(faction_id: String) -> Dictionary:
+	_ensure_workplace()
+	if _workplace.is_empty():
+		return {"ok": false, "reason": "unemployed"}
+	var r: Dictionary = workplace_sys.join_faction(_workplace, faction_id)
+	_persist_workplace()
+	return r
+
+
+func workplace_stay_neutral() -> Dictionary:
+	_ensure_workplace()
+	if _workplace.is_empty():
+		return {"ok": false, "reason": "unemployed"}
+	var r: Dictionary = workplace_sys.stay_neutral(_workplace)
+	_persist_workplace()
+	return r
+
+
+func workplace_found_faction(name: String) -> Dictionary:
+	_ensure_workplace()
+	if _workplace.is_empty():
+		return {"ok": false, "reason": "unemployed"}
+	var fid: String = "player.%d" % _workplace.get("factions", {}).size()
+	var r: Dictionary = workplace_sys.found_faction(_workplace, fid, name)
+	_persist_workplace()
+	return r
+
+
+func workplace_promote() -> Dictionary:
+	_ensure_workplace()
+	if _workplace.is_empty():
+		return {"ok": false, "reason": "unemployed"}
+	if not jobs.eligible_promotion(player()):
+		return {"ok": false, "reason": "not_eligible"}
+	if workplace_sys.should_promote(_workplace, player(), relations, rng):
+		var r: Dictionary = jobs.promote(player(), now_minutes())
+		if bool(r.get("ok", false)):
+			_workplace["performance"] = clampf(float(_workplace.get("performance", 50.0)) + 5.0, 0.0, 100.0)
+			_persist_workplace()
+		return r
+	return {"ok": false, "reason": "not_eligible"}
+
+
+func workplace_panel_data() -> Dictionary:
+	var job: Dictionary = jobs.current_job(player())
+	if job.is_empty() and _workplace.is_empty():
+		return {}
+	_ensure_workplace()
+	var out: Dictionary = _workplace.duplicate(true)
+	out["job_title"] = String(job.get("title", job.get("content_key", "")))
+	out["deterioration_risk"] = workplace_sys.deterioration_risk(_workplace)
+	return out
+
+
+## 职场按月推进：派系力量回归并漂移。
+func _workplace_tick(before_minutes: int, after_minutes: int) -> void:
+	if _workplace.is_empty():
+		return
+	if _month_ordinal(after_minutes) - _month_ordinal(before_minutes) <= 0:
+		return
+	workplace_sys.settle_factions(_workplace, rng)
+	_persist_workplace()
+
+
+func _persist_workplace() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["workplace"] = _workplace.duplicate(true)
+
+
+# --- 公司与融资 ---
+
+## 注册个体户/公司，本金从业主账户划入公司账户。
+func company_register(kind: String, name: String, capital: int) -> Dictionary:
+	if not _company.is_empty():
+		return {"ok": false, "reason": "already_registered"}
+	var r: Dictionary = company_sys.register_company(economy, account_id(), {
+		"kind": kind, "name": name, "capital": capital, "day": day_index(),
+	})
+	if bool(r.get("ok", false)):
+		_company = r["company"]
+		_cap_table = financing_sys.new_cap_table(String(_company.get("id", "")))
+		_persist_company()
+		sync_finances()
+	return r
+
+
+func company_choose_site(area_sqm: float, monthly_rent: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.choose_site(_company, current_region_id(), area_sqm, monthly_rent)
+	_persist_company()
+	return r
+
+
+func company_set_status(open_shop: bool) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.open_shop(_company) if open_shop else company_sys.close_shop(_company)
+	_persist_company()
+	return r
+
+
+func company_stock(good_key: String, qty: int, unit_cost: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.stock(_company, economy, good_key, qty, unit_cost)
+	_persist_company()
+	return r
+
+
+func company_set_price(good_key: String, price: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.set_price(_company, good_key, price)
+	_persist_company()
+	return r
+
+
+func company_hire(monthly_wage: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var eid: String = "emp.%d" % (int(_company.get("employees", []).size()) + 1)
+	var r: Dictionary = company_sys.hire(_company, eid, monthly_wage)
+	_persist_company()
+	return r
+
+
+func company_fire(employee_id: String) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.fire(_company, employee_id)
+	_persist_company()
+	return r
+
+
+func company_expand(cost: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = company_sys.expand(_company, economy, cost)
+	_persist_company()
+	return r
+
+
+func company_tax() -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var history: Array = _company.get("revenue_history", [])
+	var profit: int = 0
+	for rec in history.slice(-company_sys.MONTH_DAYS if history.size() > company_sys.MONTH_DAYS else 0):
+		profit += int((rec as Dictionary).get("profit", 0))
+	var r: Dictionary = company_sys.settle_tax(_company, economy, "government", profit)
+	_persist_company()
+	return r
+
+
+func company_finance_raise(stage: String = "", equity_pct: float = -1.0) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var opts: Dictionary = {}
+	if not stage.is_empty():
+		opts["stage"] = stage
+	if equity_pct > 0.0:
+		opts["equity_pct"] = equity_pct
+	var r: Dictionary = financing_sys.raise_round(_cap_table, _company, economy, opts)
+	_persist_company()
+	return r
+
+
+func company_settle_vam(target_revenue: int) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var history: Array = _company.get("revenue_history", [])
+	var actual: int = 0
+	for rec in history.slice(-30 if history.size() > 30 else 0):
+		actual += int((rec as Dictionary).get("revenue", 0))
+	var r: Dictionary = financing_sys.settle_vam(_cap_table, _company, economy, target_revenue, actual)
+	_persist_company()
+	return r
+
+
+func company_exit(kind: String) -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	var r: Dictionary = financing_sys.exit(_cap_table, _company, economy, kind)
+	_persist_company()
+	return r
+
+
+func company_panel_data() -> Dictionary:
+	if _company.is_empty():
+		return {}
+	var cap: Dictionary = _cap_table.duplicate(true)
+	var products: Array = []
+	for key in (_company.get("inventory", {}) as Dictionary).keys():
+		var entry: Dictionary = _company["inventory"][key]
+		products.append({"good": String(key), "qty": int(entry.get("qty", 0)), "unit_cost": int(entry.get("unit_cost", 0)), "price": int((_company.get("prices", {}) as Dictionary).get(key, 0))})
+	return {
+		"company": _company.duplicate(true),
+		"cap_table": cap,
+		"products": products,
+		"employees": (_company.get("employees", []) as Array).duplicate(true),
+		"cash": int(economy.liquid(String(_company.get("account", "")))) if economy.has_account(String(_company.get("account", ""))) else 0,
+		"net_worth": company_sys.net_worth(_company, economy),
+		"insolvent": company_sys.is_insolvent(_company, economy),
+	}
+
+
+## 公司按日结算（仅营业中），资不抵债触发破产。
+func _company_tick(before_minutes: int, after_minutes: int) -> void:
+	if _company.is_empty() or String(_company.get("status", "")) != company_sys.STATUS_OPEN:
+		return
+	var days: int = after_minutes / MINUTES_PER_DAY - before_minutes / MINUTES_PER_DAY
+	if days <= 0:
+		return
+	for i in mini(days, 366):
+		var day: int = after_minutes / MINUTES_PER_DAY - days + i
+		var r: Dictionary = company_sys.tick_day(_company, economy, day, rng)
+		if bool(r.get("bankrupt", false)):
+			company_sys.bankrupt(_company, economy)
+			break
+	_persist_company()
+
+
+func _persist_company() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["company"] = {
+		"company": _company.duplicate(true),
+		"cap_table": _cap_table.duplicate(true),
+	}
+
+
 # --- D6 形象与医美 ---
 
 const CARE_COSTS: Dictionary = {"haircut": 5000, "makeup": 3000, "outfit": 20000, "fitness": 2000}
@@ -7541,6 +7918,8 @@ func weather_now() -> Dictionary:
 	var minute: int = WeatherScript.minute_of_day(now)
 	var out: Dictionary = {
 		"condition": st.condition_name,
+		"condition_key": st.condition,
+		"precipitation_mm": st.precipitation_mm,
 		"temperature": "%d°C" % int(round(st.temperature_c)),
 		"humidity": "%d%%" % int(round(st.humidity_pct)),
 		"wind": "%.1f m/s" % st.wind_ms,
@@ -7633,6 +8012,11 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_mfg_tick(before_minutes, now_minutes())
 		# 形象：年龄/健康折减、医美效果到期回收并同步魅力。
 		_appearance_tick(minutes)
+		# 军旅薪酬按月发放。
+		_military_tick(before_minutes, now_minutes())
+		# 公司与职场按月推进（营业/工资/派系博弈）。
+		_company_tick(before_minutes, now_minutes())
+		_workplace_tick(before_minutes, now_minutes())
 		# 子女成长（年度属性结算/成年独立）与早夭。
 		events.append_array(_grow_children())
 		events.append_array(_check_child_mortality(minutes))

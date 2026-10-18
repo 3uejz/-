@@ -11,6 +11,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
 	"weather", "anomaly", "goldfinger", "mental", "spirit", "language", "disability", "appearance",
+	"company",
 ]
 
 func _suite_name() -> String:
@@ -68,6 +69,49 @@ func run_tests() -> void:
 	_test_life_services_panel()
 	_test_transport_infra_panel()
 	_test_appearance_panel()
+	_test_company_panel()
+	_test_workplace_military_panels()
+
+func _test_company_panel() -> void:
+	var ctx: Dictionary = {"company": {
+		"company": {"name": "测试小店", "status": "open", "shops": [{}]},
+		"cash": 5000000, "net_worth": 8000000, "insolvent": false,
+		"employees": [{"id": "emp.1"}],
+		"products": [{"good": "item.apple", "qty": 20, "unit_cost": 500, "price": 900}],
+		"cap_table": {"valuation": 20000000, "holders": [{"id": "founder", "name": "创始人", "equity": 0.7}]},
+	}}
+	var d: Dictionary = PanelContentScript.build("company", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有公司上下文非空")
+	check(_find_section(d, "公司").get("rows", []).size() >= 5, "公司分区有行")
+	check(_find_section(d, "商品").get("rows", []).size() >= 1, "商品分区有行")
+	check(_find_section(d, "股权与融资").get("rows", []).size() >= 2, "股权分区有行")
+
+func _test_workplace_military_panels() -> void:
+	var player: Dictionary = GameStateScript.default_player()
+	player["job"] = {"title": "工程师", "industry": "it", "salary": 9000}
+	player["military"] = {"status": "serving", "branch": "army", "rank": "private", "unit": "unit.army"}
+	var ctx: Dictionary = {
+		"workplace": {
+			"job_title": "工程师", "performance": 60.0, "internal_reputation": 55.0,
+			"supervisor_favor": 40.0, "colleague_support": 50.0, "industry_reputation": 45.0,
+			"deterioration_risk": 0.2, "player_faction": "改革派",
+			"factions": {"reform": {"name": "改革派", "power": 35.0, "alignment": "reform"}},
+		},
+		"military": {
+			"enlisted": true, "status": "serving", "branch": "army", "branch_name": "陆军",
+			"rank_name": "列兵", "rank_grade": "soldier", "merits": 6.0, "casualties": 0,
+			"pay": 600000, "eligible": true, "next_rank_name": "上等兵", "next_merit_required": 5.0,
+			"restricted_verbs": ["辞职", "注册公司"],
+		},
+	}
+	var career: Dictionary = PanelContentScript.build("career", player, Callable(), ctx)
+	check(not bool(career.get("empty", true)), "有职场上下文非空")
+	check(_find_section(career, "职场关系").get("rows", []).size() >= 4, "职场关系分区有行")
+	check(_find_section(career, "派系").get("rows", []).size() >= 1, "派系分区有行")
+	var war: Dictionary = PanelContentScript.build("war", player, Callable(), ctx)
+	check(not bool(war.get("empty", true)), "有军旅上下文非空")
+	check(_find_section(war, "军籍").get("rows", []).size() >= 6, "军籍分区含军功薪酬")
+	check(_find_section(war, "服役限制").get("rows", []).size() == 1, "服役限制分区有行")
 
 func _test_appearance_panel() -> void:
 	var ctx: Dictionary = {"appearance": {

@@ -92,6 +92,9 @@ func run_tests() -> void:
 	_test_life_services_commands()
 	_test_transport_infra_commands()
 	_test_appearance_commands()
+	_test_military_commands()
+	_test_workplace_commands()
+	_test_company_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -903,6 +906,60 @@ func _test_appearance_commands() -> void:
 	check(not sim._appearance.is_empty(), "「形象护理」建立形象档案")
 	check(not sim._aesthetic.is_empty(), "「医美」建立医美运行态")
 	check_eq(String((sim._civil.get("claim", {}) as Dictionary).get("type", "")), "tort", "「医美维权」立案成功")
+
+func _test_military_commands() -> void:
+	var sim = _main._sim
+	var p: Dictionary = sim.player()
+	p["birth_minutes"] = sim.now_minutes() - int(21.0 * sim.MINUTES_PER_YEAR)
+	p["education"] = [{"content_key": "edu.high_school", "status": "graduated"}]
+	p["attrs"]["physiological"]["health"] = 100.0
+	p["skills"] = [{"content_key": "skill.physique", "level": 10}]
+	_main.submit("参军 陆军")
+	check_eq(String(sim.player()["military"].get("status", "")), "serving", "「参军」入伍")
+	_main.submit("军训 10")
+	check(float(sim.player()["military"].get("merits", 0.0)) > 0.0, "「军训」积累军功")
+	_main.submit("辞职")
+	_main.submit("军务任务 100")
+	_main.submit("军衔晋升")
+	_main.submit("退伍")
+	check_eq(String(sim.player()["military"].get("status", "")), "discharged", "「退伍」转为退伍")
+	sim.player()["military"]["status"] = "serving"
+	_main.submit("逃兵")
+	check_eq(String(sim.player()["military"].get("status", "")), "deserter", "「逃兵」记录逃兵")
+
+func _test_workplace_commands() -> void:
+	var sim = _main._sim
+	sim.player()["military"] = {"status": "discharged"}
+	sim.player()["job"] = {
+		"content_key": "job.engineer", "title": "工程师", "industry": "it",
+		"salary": 9000, "performance": 60.0, "internal_reputation": 55.0, "status": "regular",
+	}
+	_main.submit("办公室政治 抢功")
+	_main.submit("站队 改革派")
+	_main.submit("骑墙")
+	_main.submit("自组派系 技术派")
+	_main.submit("职场晋升")
+	check(not sim._workplace.is_empty(), "职场指令建立运行态")
+	check((sim._workplace.get("factions", {}) as Dictionary).size() >= 3, "「自组派系」新增派系")
+
+func _test_company_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 500000000, "test_company")
+	_main.submit("注册公司 测试公司")
+	check(not sim._company.is_empty(), "「注册公司」建立公司")
+	_main.submit("公司选址 60")
+	_main.submit("开业")
+	_main.submit("进货 苹果 200")
+	_main.submit("定价 苹果 30")
+	_main.submit("雇人 3000")
+	_main.submit("扩张 20000")
+	_main.submit("公司纳税")
+	_main.submit("公司融资 种子")
+	_main.submit("融资对赌 1000000")
+	_main.submit("公司退出 上市")
+	check(not (sim._company.get("inventory", {}) as Dictionary).is_empty(), "「进货」写入库存")
+	check(bool((sim._cap_table).get("exited", false)), "「公司退出」标记退出")
+
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

@@ -6,7 +6,7 @@
 
 - 桌面端单人自用，Godot 4 + GDScript。
 - 视觉方向：**水墨国风**插画；暗色为默认，提供亮色主题；键鼠优先，手柄后置。
-- 首发做满：全量 token 主题系统、45 个侧边抽屉面板、8 类关键弹窗、系统托盘与桌面通知、全套无障碍。
+- 首发做满：全量 token 主题系统、47 个侧边抽屉面板、8 类关键弹窗、系统托盘与桌面通知、全套无障碍。
 - 面板均以**侧边抽屉**滑出，可多开并排，不遮挡叙事流主体。
 
 ## 2. 设计 token 与主题系统
@@ -59,7 +59,7 @@
 - 快捷动作面板将常用动作做成按钮；文字、按钮、快捷键统一生成同一 `CommandIntent`（意图同源）。
 - 面板层级：叙事流 < 侧边抽屉 < 模态弹窗 < 系统通知。
 
-## 4. 面板规格（46 项）
+## 4. 面板规格（47 项）
 
 | 面板 | 主要内容 | 关键交互 | 空态/错误态 |
 |------|----------|----------|------------|
@@ -69,7 +69,8 @@
 | 背包与装备 | 物品分类、数量、品质、使用/装备/丢弃 | 使用、装备、丢弃、批量选择 | 背包为空提示可获取途径 |
 | 关系与人脉 | 五维关系、NPC 详情、记忆、互动 | 查看详情、发起互动、标记亲疏 | 无关系时引导结识 |
 | 地图 | 六级地理、缩放、地点导航、行程 | 缩放、点选地点、规划路线、开始旅行 | 未到访区域显示灰态 |
-| 工作与职业 | 当前岗位、简历、求职、晋升、同事 | 求职、申请晋升、跳槽、查看绩效 | 无业时显示求职入口 |
+| 工作与职业 | 当前岗位、简历、求职、晋升、同事、职场关系与派系 | 求职、申请晋升、跳槽、查看绩效、办公室政治、站队/骑墙/自组派系 | 无业时显示求职入口 |
+| 公司与融资 | 公司概况、商品库存与定价、员工、股权结构与估值 | 注册公司、选址、开业/打烊、进货、定价、雇人、扩张、纳税、融资、对赌、退出 | 未注册时引导创业 |
 | 资产与财务 | 现金、银行、投资、房产、负债 | 存取、转账、买卖、查看流水 | 无资产时引导工作 |
 | 成就与图鉴 | 成就、图鉴、人生愿望 | 查看进度、领取、设为愿望 | 未达成显示进度条 |
 | 家族史与传承 | 族谱、历代传说、世界记忆 | 浏览、回放关键事件、查看传承影响 | 首代显示始祖 |
@@ -111,7 +112,7 @@
 | 设置 | 字号、缩放、对比、色盲配色、主题色、键位、朗读、倍速、遥测、存档 | 实时预览、恢复默认、导入导出 | 保存失败给明确原因 |
 
 - 异常图鉴、金手指与人生结算属条件可见面板，未满足条件时不出现入口。
-- 全量面板按域覆盖 D1–D50；46 个面板均已接入内容装配（`panel_content.gd`），
+- 全量面板按域覆盖 D1–D50；47 个面板均已接入内容装配（`panel_content.gd`），
   无数据时以「引导性空态」呈现，不阻塞入口与导航；数据字段随各域模拟逐步填充。
 - 所有面板支持快捷键、按钮栏与中文指令三种打开方式。
 
@@ -142,6 +143,10 @@
 ## 7. 地图与旅行交互
 
 - 2D 可缩放地图承担跨场所导航；进入具体场所切换到局部 3D 探索（切换加载，非无缝开放世界）。
+- 主壳提供「四处走走」入口：打开全屏 3D 叠层（`presentation/local_3d_view.gd`），WASD 移动、左键拖动旋转、滚轮缩放、Esc 或返回按钮回到文字界面；顶部显示场所名，底部显示时刻与天气；地图面板内「进入3D」复用同一视图。
+- 局部 3D 以当前场所分组加载 `assets/models/place_groups/<group>.glb`；主角为分件低多边形人形（头/发/眼/躯干/四肢/鞋），走姿摆臂并随 D6 形象档案调整身高、体型、肤色、发色与服装；路人为 `MultiMeshInstance3D` 批量绘制，后续可零改代码替换真实模型。
+- 光照随游戏内时刻与天气变化：程序化天空、太阳角度/色温、环境光、ACES 色调映射、SSAO、雾密度与雨雪粒子均由 `weather_now()` 驱动。
+- 地面按场所切换 CC0 贴图（Poly Haven 沥青/草地，`assets/textures/`），缺失时回退程序化噪声，保证离线可运行。
 - 六级地理层级：世界 → 国家 → 区域 → 城市 → 街区 → 场所。
 - 行程：选择起点终点后展示路径、耗时、费用与换乘，确认后推进时间并结算。
 - 地图与面板一致支持无障碍配色与非颜色线索。
@@ -179,7 +184,7 @@ client/ui/
 ├── theme/            # token 定义、Theme 资源、主题切换器
 ├── components/       # 通用控件（抽屉、弹窗、表格、语义标签、插画框）
 ├── layout/           # 状态栏、叙事流、指令区、快捷动作、帧结构
-├── panels/           # 46 个面板
+├── panels/           # 47 个面板
 ├── dialogs/          # 8 类弹窗
 ├── map/              # 地图与旅行交互
 ├── settings/         # 设置与无障碍
@@ -190,9 +195,9 @@ client/ui/
 - 视图与模拟解耦，headless 下可加载 UI 壳。
 - 主题 token 与 `shared/consistency/vectors/baseline.json` 无关；纯视觉常量走主题资源。
 
-已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（45 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
+已落地的纯逻辑基座（任务 47）：`theme/theme_tokens.gd`（token 真源与三套配色 × 亮暗）、`theme/theme_builder.gd`（token→Theme 资源与缩放/字号档）、`theme/theme_lint.gd`（无硬编码检查）、`components/panel_registry.gd`（47 面板开合/条件可见/焦点）、`components/dialog_registry.gd`（8 弹窗互斥/二次确认）、`layout/typewriter.gd`、`notifications/notification_prefs.gd`、`settings/settings_model.gd`（键位/TTS）、`settings/accessibility_palette.gd`（对比度与非颜色线索）。对应测试 `client/tests/theme_test.gd`、`ui_behavior_test.gd`。
 
-主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通全部 46 个面板的内容装配：十个常驻核心面板（角色与属性、形象与医美、背包与装备、技能树、工作与职业、资产与财务、关系与人脉、成就与图鉴、家族史与传承、地图、设置，设置面板含切主题/配色/主色的实时预览控件），以及 35 个领域摘要面板（经营、组织、案件与法律、救援与灾害、环保与碳市场、市政、债务与催收、维权与消费、救助与福利、殡葬、玄学、医疗、精神健康、精神追求、语言与文化、残障与养老、农业与乡土、文娱、工程与基建、专业与生活服务、交通基建、家庭与宠物、体育、活动与展会、奖项与荣誉、数字与平台、后期科技、知识产权与媒体、疫情与公共卫生、战争与军旅、宏观行情、天气预报）与条件可见面板（异常图鉴、金手指）；领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。`ui/main.gd` 另经 `command/intent_executor.gd` 与 `sim/flavor.gd` 为高频动作生成确定性、时段场景化的叙事变体。名称解析可注入内容注册表 Callable，离线回退 content_key。关键弹窗经 `DialogRegistry` 接入主壳 `DialogLayer`（遮罩 + 居中面板，层级高于抽屉）：模态互斥、危险弹窗二次确认、不可关闭弹窗禁用关闭按钮；`open_dialog/confirm_dialog/close_dialog` 为对外接口。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`、`intent_executor_test.gd`、`flavor_test.gd`。`ui/main.gd._process()` 另经 `sim/time_driver.gd`（`TimeDriver`）按「现实增量 × 倍速」实时推进游戏内时钟与生理（挂机实时世界，R1/M0）：快进目标到达即停并回落 1 倍速、玩家死亡暂停；headless（测试/CI）下自动关闭以保证确定性，可用 `set_auto_time()`/`auto_time_enabled()` 显式开关。对应测试 `client/tests/time_driver_test.gd`。
+主壳端到端切片（任务 47.4）：`theme/theme_manager.gd`（运行时主题切换并 `apply_to` UI 根）、`panels/panel_content.gd`（把 GameState 玩家字典装配为面板行数据，与视图解耦）。`ui/main.gd` 在 `_ready` 应用主题、创建 `Root/Drawers` 抽屉容器与面板入口按钮；`open_panel/close_panel/toggle` 支持多开并排；快捷动词经 `VERB_PANELS` 与文字指令同源打开面板。已打通全部 47 个面板的内容装配：十个常驻核心面板（角色与属性、形象与医美、背包与装备、技能树、工作与职业、资产与财务、关系与人脉、成就与图鉴、家族史与传承、地图、设置，设置面板含切主题/配色/主色的实时预览控件），以及 36 个领域摘要面板（经营、组织、案件与法律、救援与灾害、环保与碳市场、市政、债务与催收、维权与消费、救助与福利、殡葬、玄学、医疗、精神健康、精神追求、语言与文化、残障与养老、农业与乡土、文娱、工程与基建、专业与生活服务、交通基建、家庭与宠物、体育、活动与展会、奖项与荣誉、数字与平台、后期科技、知识产权与媒体、疫情与公共卫生、战争与军旅、公司与融资、宏观行情、天气预报）与条件可见面板（异常图鉴、金手指）；领域面板经 `context` 读取 `world_delta`/`macro`/`epidemic`/`weather`，数据缺失时给引导性空态。`ui/main.gd` 另经 `command/intent_executor.gd` 与 `sim/flavor.gd` 为高频动作生成确定性、时段场景化的叙事变体。名称解析可注入内容注册表 Callable，离线回退 content_key。关键弹窗经 `DialogRegistry` 接入主壳 `DialogLayer`（遮罩 + 居中面板，层级高于抽屉）：模态互斥、危险弹窗二次确认、不可关闭弹窗禁用关闭按钮；`open_dialog/confirm_dialog/close_dialog` 为对外接口。对应测试 `client/tests/panel_content_test.gd`、`ui_shell_test.gd`、`intent_executor_test.gd`、`flavor_test.gd`。`ui/main.gd._process()` 另经 `sim/time_driver.gd`（`TimeDriver`）按「现实增量 × 倍速」实时推进游戏内时钟与生理（挂机实时世界，R1/M0）：快进目标到达即停并回落 1 倍速、玩家死亡暂停；headless（测试/CI）下自动关闭以保证确定性，可用 `set_auto_time()`/`auto_time_enabled()` 显式开关。对应测试 `client/tests/time_driver_test.gd`。
 
 已落地的纯逻辑基座（任务 47 收尾）：`layout/history_view.gd`（历史窗口化视图模型：按滚动位置计算可见窗口，超长会话分段加载）、`components/illustration.gd`（内联水墨插画键解析，缺资源回退占位留白）、`notifications/notification_center.gd`（组合通知偏好与系统投递回调，未聚焦排队、聚焦排空、托盘常驻推进世界）。`ui/main.gd` 在叙事流接入窗口化渲染（超过 `VIRTUAL_THRESHOLD` 行改用可见窗口 + 上下占位块），并提供 `append_illustration/notify/set_focused/set_tray_enabled` 对外接口。对应测试 `client/tests/ui_narrative_test.gd`。
 
@@ -200,7 +205,7 @@ client/ui/
 
 - 主题：亮/暗与三套无障碍配色的对比度校验通过；切换幂等；token 无硬编码遗漏。
 - 缩放：各缩放档与字号档下布局不溢出、不遮挡。
-- 面板：46 个面板可开合、互不干扰（可多开）、空态与错误态正常。
+- 面板：47 个面板可开合、互不干扰（可多开）、空态与错误态正常。
 - 弹窗：8 类流程可完成，键盘焦点可达，危险操作二次确认生效。
 - 叙事：打字机开关、跳过、实体点击跳转正确。
 - 无障碍：键位重映射冲突检测、TTS 开关、减少动态生效。
