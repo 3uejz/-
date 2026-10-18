@@ -23,6 +23,7 @@
       "properties": {
         "survival": { "type": "object", "additionalProperties": true },
         "mental": { "type": "object", "additionalProperties": true },
+        "appearance": { "type": "object", "additionalProperties": true },
         "spirituality": { "type": "object", "additionalProperties": true },
         "organizations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
         "language": { "type": "object", "additionalProperties": true },

@@ -10,7 +10,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"debt", "consumer", "welfare", "funeral", "metaphysics", "medical",
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
-	"weather", "anomaly", "goldfinger", "mental", "spirit", "language", "disability",
+	"weather", "anomaly", "goldfinger", "mental", "spirit", "language", "disability", "appearance",
 ]
 
 func _suite_name() -> String:
@@ -67,6 +67,28 @@ func run_tests() -> void:
 	_test_professional_panel()
 	_test_life_services_panel()
 	_test_transport_infra_panel()
+	_test_appearance_panel()
+
+func _test_appearance_panel() -> void:
+	var ctx: Dictionary = {"appearance": {
+		"profile": {"height_cm": 175.0, "weight_kg": 68.0, "bmi": 22.2, "appearance_score": 72.0,
+			"temperament": 65.0, "outfit": 80.0, "hairstyle": 70.0, "posture": 60.0,
+			"body_fat": 18.0, "muscle": 55.0, "odor": 60.0},
+		"charm": 71.5, "body_modifier": 2.0, "voice_modifier": 1.0,
+		"count": 2, "stiffness": 0.0, "addicted": false, "recovery_remaining": 120,
+		"id_match": false, "id_diff": 42.0, "id_tolerance": 25.0,
+		"projects": [{"name": "注射微整", "cost": 300000, "recovery_minutes": 720,
+			"success": 0.94, "complication": 0.06, "repeatable": true}],
+		"procedures": [{"project": "injection", "outcome": "success", "minute": 60, "cost": 300000}],
+	}}
+	var d: Dictionary = PanelContentScript.build("appearance", GameStateScript.default_player(), Callable(), ctx)
+	check(not bool(d.get("empty", true)), "有形象上下文非空")
+	check(_find_section(d, "魅力").get("rows", []).size() >= 4, "魅力分区有行")
+	check(_find_section(d, "体型与仪容").get("rows", []).size() >= 6, "体型分区有行")
+	check(_find_section(d, "医美状态").get("rows", []).size() >= 3, "医美状态分区有行")
+	check(_find_section(d, "证件核验").get("rows", []).size() >= 2, "证件分区有行")
+	check(_find_section(d, "医美项目").get("rows", []).size() >= 1, "项目表有行")
+	check(_find_section(d, "医美记录").get("rows", []).size() >= 1, "记录有行")
 
 func _test_welfare_panel() -> void:
 	var ctx: Dictionary = {"welfare": {

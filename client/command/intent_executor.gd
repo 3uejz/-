@@ -133,6 +133,17 @@ func _dispatch(intent) -> Dictionary:
 			return _mental_treat(intent, "crisis_intervention")
 		"放松":
 			return _relax(intent)
+		# 形象与医美（D6）
+		"形象护理":
+			return _appearance_care(intent)
+		"医美":
+			return _aesthetic_perform(intent)
+		"医美维权":
+			return _aesthetic_claim(intent)
+		"证件核验":
+			return _appearance_verify(intent)
+		"重办证件":
+			return _appearance_reissue(intent)
 		# 精神追求与信仰（D15）
 		"修持":
 			return _pursue_spirit(intent)
@@ -1415,6 +1426,18 @@ func _org_reason(reason: String) -> String:
 			return "该组织已经解散"
 		"insufficient_funds":
 			return "资金不足"
+		"recovering":
+			return "仍处于恢复期"
+		"already_done":
+			return "该项目不可重复进行"
+		"no_grounds":
+			return "没有可主张的维权事由"
+		"existing_claim":
+			return "已有未结民事案件"
+		"unknown_care":
+			return "未知护理方式"
+		"unknown_project":
+			return "未知医美项目"
 		"nothing_due":
 			return "当前没有欠缴会费"
 		"unknown_action":
@@ -3469,6 +3492,79 @@ func _anomaly_identity(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法设定身份（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["身份设定为%s。" % String(r.get("name", ident))], 0, "")
+
+const CARE_NAME_MAP: Dictionary = {
+	"理发": "haircut", "发型": "haircut", "化妆": "makeup", "妆容": "makeup",
+	"穿搭": "outfit", "着装": "outfit", "服装": "outfit", "健身": "fitness", "塑形": "fitness",
+}
+
+
+func _appearance_care(intent) -> Dictionary:
+	var raw: String = _object_id(intent, "care_kind")
+	if raw.is_empty():
+		raw = String(intent.params.get("method", "")).strip_edges()
+	var kind: String = String(CARE_NAME_MAP.get(raw, raw))
+	if kind.is_empty() or not CARE_NAME_MAP.values().has(kind):
+		return _fail("未指定护理方式；可选理发、化妆、穿搭或健身。")
+	var value: float = clampf(float(_param_number(intent, "number", 70)), 0.0, 100.0)
+	var r: Dictionary = host.appearance_care(kind, {"value": value})
+	if not bool(r.get("ok", false)):
+		return _fail("护理失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已完成%s，花费 %d，当前魅力 %.1f。" % [raw if not raw.is_empty() else kind, int(r.get("cost", 0)), float(r.get("charm", 0.0))]], 0, "")
+
+
+func _aesthetic_perform(intent) -> Dictionary:
+	var raw: String = _object_id(intent, "aesthetic_project")
+	if raw.is_empty():
+		raw = String(intent.params.get("method", "")).strip_edges()
+	var legal: bool = true
+	if raw.contains("非法") or raw.contains("黑诊所"):
+		legal = false
+		raw = raw.replace("非法", "").replace("黑诊所", "").strip_edges()
+	var project: String = raw
+	if not (host.aesthetic_sys.PROJECTS as Dictionary).has(project):
+		for key in (host.aesthetic_sys.PROJECTS as Dictionary).keys():
+			var def: Dictionary = host.aesthetic_sys.PROJECTS[key]
+			if String(def.get("name", "")) == raw:
+				project = String(key)
+				break
+	if not (host.aesthetic_sys.PROJECTS as Dictionary).has(project):
+		return _fail("未指定医美项目；可先用「看形象」查看项目表。")
+	var r: Dictionary = host.aesthetic_perform(project, legal)
+	if not bool(r.get("ok", false)):
+		return _fail("医美未完成（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var labels: Dictionary = {"success": "成功", "failure": "失败", "complication": "出现并发症"}
+	var name: String = String(((host.aesthetic_sys.PROJECTS[project]) as Dictionary).get("name", project))
+	var lines: Array = ["%s%s，花费 %d，%s。" % [
+		name, "（非法诊所）" if not legal else "", int(r.get("cost", 0)),
+		String(labels.get(String(r.get("outcome", "")), String(r.get("outcome", "")))),
+	]]
+	if int(r.get("health_loss", 0)) > 0:
+		lines.append("并发症造成健康损失 %.0f。" % float(r.get("health_loss", 0.0)))
+	lines.append("当前魅力 %.1f，恢复期 %d 分钟。" % [float(r.get("charm", 0.0)), int(r.get("remaining_minutes", 0))])
+	return _ok(lines, 0, "")
+
+
+func _aesthetic_claim(intent) -> Dictionary:
+	var r: Dictionary = host.aesthetic_claim()
+	if not bool(r.get("ok", false)):
+		return _fail("无法维权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已就医美失败提起侵权诉讼，标的 %d，可用「民事开庭」推进。" % int(r.get("amount", 0))], 0, "")
+
+
+func _appearance_verify(intent) -> Dictionary:
+	var r: Dictionary = host.appearance_verify_id()
+	if bool(r.get("matched", false)):
+		return _ok(["人像比对通过（偏离 %.1f，容差 %.1f）。" % [float(r.get("diff", 0.0)), float(r.get("tolerance", 0.0))]], 0, "")
+	return _ok(["人像比对未通过（偏离 %.1f > 容差 %.1f），需重办证件。" % [float(r.get("diff", 0.0)), float(r.get("tolerance", 0.0))]], 0, "")
+
+
+func _appearance_reissue(intent) -> Dictionary:
+	var r: Dictionary = host.appearance_reissue_id()
+	if not bool(r.get("ok", false)):
+		return _fail("重办证件失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["证件照已更新，花费 %d。" % int(r.get("cost", 0))], 0, "")
+
 
 func _medical_register(intent) -> Dictionary:
 	var care: String = _object_id(intent, "care_level")

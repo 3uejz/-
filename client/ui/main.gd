@@ -67,6 +67,7 @@ var _dialog_box: PanelContainer
 ## 快捷动词 -> 侧边面板映射，使按钮与文字指令同源打开面板（R35.5）。
 const VERB_PANELS: Dictionary = {
 	"看自己": "character", "看角色": "character", "属性": "character",
+	"看形象": "appearance", "形象": "appearance", "证件照": "appearance",
 	"看背包": "inventory", "背包": "inventory",
 	"看技能": "skills", "技能树": "skills",
 	"看关系": "relations", "人脉": "relations",
@@ -791,6 +792,9 @@ func _panel_context() -> Dictionary:
 		var m: Dictionary = _sim.mental_panel_data()
 		if not m.is_empty():
 			context["mental"] = m
+		var app: Dictionary = _sim.appearance_panel_data()
+		if not app.is_empty():
+			context["appearance"] = app
 		var sp: Dictionary = _sim.spirit_panel_data()
 		if not sp.is_empty():
 			context["spirit"] = sp

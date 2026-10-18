@@ -42,6 +42,37 @@ func default_appearance(gender: String = "male") -> Dictionary:
 	}
 
 
+## 由既有属性建立初始档案：魅力高者外貌/气质起点略高。
+func new_profile(player: Dictionary) -> Dictionary:
+	var gender: String = String(player.get("gender", "male"))
+	var profile: Dictionary = default_appearance(gender)
+	var ability: Dictionary = (player.get("attrs", {}) as Dictionary).get("ability", {})
+	var seed_charm: float = float(ability.get("charm", 50.0))
+	profile["appearance_score"] = _clamp100(50.0 + (seed_charm - 50.0) * 0.5)
+	profile["temperament"] = _clamp100(50.0 + (seed_charm - 50.0) * 0.3)
+	profile["voice"] = _clamp100(50.0 + (seed_charm - 50.0) * 0.2)
+	profile["bmi"] = bmi(float(profile["weight_kg"]), float(profile["height_cm"]))
+	return profile
+
+
+## 把魅力公式结果回写到玩家能力，供面试/社交/婚恋/准入直接使用。
+func sync_charm(profile: Dictionary, player: Dictionary) -> float:
+	var value: float = charm(profile)
+	var attrs: Dictionary = player.get("attrs", {})
+	var ability: Dictionary = attrs.get("ability", {})
+	ability["charm"] = value
+	attrs["ability"] = ability
+	player["attrs"] = attrs
+	return value
+
+
+## 形象偏离度（证件人像比对用）：外貌差 + 身高差×2。
+func photo_diff(profile: Dictionary, photo: Dictionary) -> float:
+	var diff: float = absf(float(profile.get("appearance_score", 50.0)) - float(photo.get("appearance_score", 50.0)))
+	diff += absf(float(profile.get("height_cm", TYPICAL_HEIGHT_M)) - float(photo.get("height_cm", TYPICAL_HEIGHT_M))) * 2.0
+	return diff
+
+
 ## 体型修正（design D6）。
 func body_type_modifier(profile: Dictionary) -> float:
 	var b: float = float(profile.get("bmi", bmi(float(profile.get("weight_kg", TYPICAL_WEIGHT_KG)), float(profile.get("height_cm", TYPICAL_HEIGHT_M)))))

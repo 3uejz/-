@@ -68,6 +68,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 	match id:
 		"character":
 			data = character(player)
+		"appearance":
+			data = appearance(player, context)
 		"inventory":
 			data = inventory(player, name_resolver)
 		"skills":
@@ -814,6 +816,65 @@ static func organizations(player: Dictionary, context: Dictionary, name_resolver
 			return _empty("组织", "尚未加入组织；可加入工会、协会、NGO、俱乐部或阵营")
 		sections.append(_section("组织", _rows_from(orgs, ["type", "members", "reputation", "rank"], name_resolver)))
 	return _ok(sections)
+
+## 形象与医美（D6）：魅力拆解、体型、医美状态、证件比对与项目表。
+static func appearance(player: Dictionary, context: Dictionary) -> Dictionary:
+	var app: Dictionary = context.get("appearance", {})
+	if app.is_empty():
+		return _empty("形象与医美", "尚无形象档案；创建角色后自动生成。")
+	var prof: Dictionary = app.get("profile", {})
+	var sections: Array = []
+	sections.append(_section("魅力", [
+		{"label": "当前魅力", "value": "%.1f" % float(app.get("charm", 0.0))},
+		{"label": "外貌", "value": "%.1f" % float(prof.get("appearance_score", 0.0))},
+		{"label": "气质", "value": "%.1f" % float(prof.get("temperament", 0.0))},
+		{"label": "着装", "value": "%.1f" % float(prof.get("outfit", 0.0))},
+		{"label": "体型修正", "value": "%+.1f" % float(app.get("body_modifier", 0.0))},
+		{"label": "声音修正", "value": "%+.1f" % float(app.get("voice_modifier", 0.0))},
+	]))
+	sections.append(_section("体型与仪容", [
+		{"label": "身高", "value": "%.0f cm" % float(prof.get("height_cm", 0.0))},
+		{"label": "体重", "value": "%.1f kg" % float(prof.get("weight_kg", 0.0))},
+		{"label": "BMI", "value": "%.1f" % float(prof.get("bmi", 0.0))},
+		{"label": "体脂", "value": "%.0f%%" % float(prof.get("body_fat", 0.0))},
+		{"label": "肌肉", "value": "%.0f" % float(prof.get("muscle", 0.0))},
+		{"label": "发型", "value": "%.0f" % float(prof.get("hairstyle", 0.0))},
+		{"label": "体态", "value": "%.0f" % float(prof.get("posture", 0.0))},
+		{"label": "体味", "value": "%.0f" % float(prof.get("odor", 0.0))},
+	]))
+	var recovery: int = int(app.get("recovery_remaining", 0))
+	var ast_rows: Array = [
+		{"label": "累计项目", "value": "%d 次" % int(app.get("count", 0))},
+		{"label": "面部僵硬", "value": "%.0f" % float(app.get("stiffness", 0.0))},
+		{"label": "医美成瘾", "value": _yes_no(bool(app.get("addicted", false)))},
+	]
+	if recovery > 0:
+		ast_rows.append({"label": "恢复期剩余", "value": "%d 分钟" % recovery})
+	sections.append(_section("医美状态", ast_rows))
+	sections.append(_section("证件核验", [
+		{"label": "人像匹配", "value": _yes_no(bool(app.get("id_match", true)))},
+		{"label": "偏离度", "value": "%.1f / %.1f" % [float(app.get("id_diff", 0.0)), float(app.get("id_tolerance", 0.0))]},
+	]))
+	var projects: Array = []
+	for p in (app.get("projects", []) as Array):
+		var pd: Dictionary = p
+		projects.append({"label": String(pd.get("name", "")), "value": "%s · 恢复 %d 分钟 · 成功 %.0f%% · 并发症 %.0f%%%s" % [
+			_money(int(pd.get("cost", 0))), int(pd.get("recovery_minutes", 0)),
+			float(pd.get("success", 0.0)) * 100.0, float(pd.get("complication", 0.0)) * 100.0,
+			"" if bool(pd.get("repeatable", false)) else " · 不可复做",
+		]})
+	if not projects.is_empty():
+		sections.append(_section("医美项目", projects))
+	var records: Array = []
+	for r in (app.get("procedures", []) as Array):
+		var rd: Dictionary = r
+		records.append({"label": String(rd.get("project", "")), "value": "%s · %s · %s" % [
+			String(rd.get("outcome", "")), _money(int(rd.get("cost", 0))), "%d 分钟" % int(rd.get("minute", 0)),
+		]})
+	if not records.is_empty():
+		sections.append(_section("医美记录", records))
+	return _ok(sections)
+
 
 static func legal(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

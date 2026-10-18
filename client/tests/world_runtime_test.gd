@@ -29,6 +29,7 @@ func run_tests() -> void:
 	_test_domain_wake_bindings()
 	_test_mfg_trade_and_research_bindings()
 	_test_consumer_civil_bindings()
+	_test_appearance_aesthetics_bindings()
 	_test_acquaintances_and_marriage()
 	_test_property_market_and_purchase()
 	_test_inheritance_settles()
@@ -359,6 +360,40 @@ func _test_consumer_civil_bindings() -> void:
 	check(bool(reloaded._civil.get("enforced", false)), "读档恢复执行状态")
 	check_eq(int(reloaded._civil.get("judgment", {}).get("award", 0)), int(host._civil.get("judgment", {}).get("award", 0)), "读档恢复判赔")
 
+
+func _test_appearance_aesthetics_bindings() -> void:
+	var host = _setup(11)
+	var panel: Dictionary = host.appearance_panel_data()
+	check(not (panel.get("profile", {}) as Dictionary).is_empty(), "形象面板有档案")
+	var charm0: float = float(panel.get("charm", 0.0))
+	check_near(float(host.player()["attrs"]["ability"]["charm"]), charm0, 1e-6, "魅力同步到能力")
+	host.economy.add_money(host.account_id(), 20000000, "test_appearance")
+	var cash0: int = int(host.economy.cash(host.account_id()))
+	var care: Dictionary = host.appearance_care("outfit", {"value": 90.0})
+	check(bool(care.get("ok", false)), "形象护理成功")
+	check(float(care.get("charm", 0.0)) > charm0, "穿搭提升魅力")
+	check(int(host.economy.cash(host.account_id())) < cash0, "形象护理扣费")
+	var cash1: int = int(host.economy.cash(host.account_id()))
+	var ast: Dictionary = host.aesthetic_perform("injection", true)
+	check(bool(ast.get("ok", false)), "医美成功立案")
+	check(int(ast.get("remaining_minutes", 0)) > 0, "进入恢复期")
+	check(int(host.economy.cash(host.account_id())) < cash1, "医美扣费")
+	check(not bool(host.aesthetic_perform("injection", true).get("ok", true)), "恢复期拦截再次医美")
+	host._aesthetic["last_failed_illegal"] = true
+	var claim: Dictionary = host.aesthetic_claim()
+	check(bool(claim.get("ok", false)), "医美失败可维权")
+	check_eq(String((host._civil.get("claim", {}) as Dictionary).get("type", "")), "tort", "医美维权立案为侵权")
+	var id0: Dictionary = host.appearance_verify_id()
+	check(bool(id0.get("matched", false)), "未整形前证件匹配")
+	host._appearance["height_cm"] = float(host._appearance.get("height_cm", 170.0)) + 20.0
+	check(not bool(host.appearance_verify_id().get("matched", true)), "形象变化后证件不匹配")
+	var re: Dictionary = host.appearance_reissue_id()
+	check(bool(re.get("ok", false)), "可重办证件")
+	check(bool(host.appearance_verify_id().get("matched", false)), "重办后证件匹配")
+	var host2 = SimHostScript.new(host.state)
+	var panel2: Dictionary = host2.appearance_panel_data()
+	check(not (panel2.get("profile", {}) as Dictionary).is_empty(), "读档恢复形象档案")
+	check_eq(String((host2._civil.get("claim", {}) as Dictionary).get("type", "")), "tort", "读档恢复医美诉讼")
 
 func _test_acquaintances_and_marriage() -> void:
 	var state = GameStateScript.new()

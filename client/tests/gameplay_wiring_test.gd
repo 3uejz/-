@@ -91,6 +91,7 @@ func run_tests() -> void:
 	_test_professional_commands()
 	_test_life_services_commands()
 	_test_transport_infra_commands()
+	_test_appearance_commands()
 	_test_save_writes_file()
 
 func _test_wait_advances_state_clock() -> void:
@@ -888,6 +889,20 @@ func _test_transport_infra_commands() -> void:
 	check(not sim._tin_project.is_empty(), "「基建立项」建立基建项目")
 	check(not sim._tin_route.is_empty(), "「线路运营」建立线路")
 
+
+func _test_appearance_commands() -> void:
+	var sim = _main._sim
+	sim.economy.add_money(sim.account_id(), 20000000, "test_appearance")
+	_main.submit("看形象")
+	_main.submit("形象护理 穿搭 85")
+	_main.submit("医美 注射微整")
+	_main.submit("证件核验")
+	_main.submit("重办证件")
+	sim._aesthetic["last_failed_illegal"] = true
+	_main.submit("医美维权")
+	check(not sim._appearance.is_empty(), "「形象护理」建立形象档案")
+	check(not sim._aesthetic.is_empty(), "「医美」建立医美运行态")
+	check_eq(String((sim._civil.get("claim", {}) as Dictionary).get("type", "")), "tort", "「医美维权」立案成功")
 
 func _test_save_writes_file() -> void:
 	_main.submit("存档")

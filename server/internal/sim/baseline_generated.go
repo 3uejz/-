@@ -10,10 +10,13 @@ const (
 	BaselineAddictionDependentMin                 = 20.0
 	BaselineAddictionSevereMin                    = 60.0
 	BaselineAddictionWithdrawalTriggerHours       = 12.0
+	BaselineAestheticsIdTolerance                 = 25.0
 	BaselineAestheticsIllegalComplicationMult     = 2.2
+	BaselineAestheticsIllegalCostMult             = 0.4
 	BaselineAestheticsIllegalSuccessMult          = 0.55
 	BaselineAestheticsMalpracticeCompensation     = 3000000
 	BaselineAestheticsOverMedicalizationThreshold = 5
+	BaselineAestheticsReissueCost                 = 20000
 	BaselineAestheticsStiffnessPerProcedure       = 8.0
 	BaselineAnomalyAbilityMaxLevel                = 20
 	BaselineAnomalyAmnesticClearPerDose           = 40.0
@@ -1338,10 +1341,13 @@ var (
 	BaselineWorkEventWeights  map[string]any            = map[string]any{"blame": 0.3, "credit_grab": 0.3, "report": 0.2, "take_sides": 0.2}
 	BaselineDomains           map[string]map[string]any = map[string]map[string]any{
 		"aesthetics": {
+			"AESTHETICS_ID_TOLERANCE":                  25.0,
 			"AESTHETICS_ILLEGAL_COMPLICATION_MULT":     2.2,
+			"AESTHETICS_ILLEGAL_COST_MULT":             0.4,
 			"AESTHETICS_ILLEGAL_SUCCESS_MULT":          0.55,
 			"AESTHETICS_MALPRACTICE_COMPENSATION":      3000000,
 			"AESTHETICS_OVER_MEDICALIZATION_THRESHOLD": 5,
+			"AESTHETICS_REISSUE_COST":                  20000,
 			"AESTHETICS_STIFFNESS_PER_PROCEDURE":       8.0,
 		},
 		"agriculture": {

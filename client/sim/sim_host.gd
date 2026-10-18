@@ -69,6 +69,8 @@ const LifeServicesScript = preload("res://sim/life_services.gd")
 const TransportInfraScript = preload("res://sim/transport_infra.gd")
 const ResearchScript = preload("res://sim/research.gd")
 const CivilScript = preload("res://sim/civil.gd")
+const AppearanceScript = preload("res://sim/appearance.gd")
+const AestheticScript = preload("res://sim/aesthetics.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -241,6 +243,10 @@ var research_sys                 ## 科研流程与成果转化（ResearchSystem
 var _research: Dictionary = {}       ## 科研运行时（项目/实验室资源/累计成果），入档 sim_runtime.research
 var civil_sys                    ## 民事纠纷与诉讼（CivilSystem）
 var _civil: Dictionary = {}          ## 民事案件运行时（纠纷/判决/执行），入档 sim_runtime.civil
+var appearance_sys               ## 形象属性与魅力（AppearanceSystem）
+var aesthetic_sys                ## 医美项目与风险（AestheticSystem）
+var _appearance: Dictionary = {}     ## 形象档案（外貌/气质/体型等），入档 sim_runtime.appearance.profile
+var _aesthetic: Dictionary = {}      ## 医美运行态（项目记录/僵硬/证件照），入档 sim_runtime.appearance.aesthetics
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -343,6 +349,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	transport_infra = TransportInfraScript.new()
 	research_sys = ResearchScript.new()
 	civil_sys = CivilScript.new()
+	appearance_sys = AppearanceScript.new()
+	aesthetic_sys = AestheticScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -453,6 +461,14 @@ func _ensure_world_geo() -> void:
 		var cv: Variant = (state.sim_runtime as Dictionary).get("civil", {})
 		if cv is Dictionary and not (cv as Dictionary).is_empty():
 			_civil = (cv as Dictionary).duplicate(true)
+		# 恢复形象档案与医美运行态。
+		var ap: Variant = (state.sim_runtime as Dictionary).get("appearance", {})
+		if ap is Dictionary and not (ap as Dictionary).is_empty():
+			var apd: Dictionary = ap
+			if apd.get("profile", null) is Dictionary and not (apd["profile"] as Dictionary).is_empty():
+				_appearance = (apd["profile"] as Dictionary).duplicate(true)
+			if apd.get("aesthetics", null) is Dictionary:
+				_aesthetic = (apd["aesthetics"] as Dictionary).duplicate(true)
 		# 恢复矿业/能源运行时（矿场/能源市场）。
 		var mn: Variant = (state.sim_runtime as Dictionary).get("mining", {})
 		if mn is Dictionary and not (mn as Dictionary).is_empty():
@@ -4478,9 +4494,10 @@ func civil_litigate(evidence: float = -1.0, lawyer_level: int = 0, opponent_lawy
 	var compensation: int = 0
 	if bool(judgment.get("won", false)):
 		compensation = int(judgment.get("award", 0))
-		_consumer_merchant["compensation_paid"] = int(_consumer_merchant.get("compensation_paid", 0)) + compensation
-		_consumer_merchant["reputation"] = clampf(float(_consumer_merchant.get("reputation", 0.5)) - 0.2, 0.0, 1.0)
-		_persist_consumer()
+		if String(claim.get("type", "")) == "consumer":
+			_consumer_merchant["compensation_paid"] = int(_consumer_merchant.get("compensation_paid", 0)) + compensation
+			_consumer_merchant["reputation"] = clampf(float(_consumer_merchant.get("reputation", 0.5)) - 0.2, 0.0, 1.0)
+			_persist_consumer()
 	_civil["judgment"] = judgment
 	_persist_civil()
 	return {"ok": true, "judgment": judgment, "compensation": compensation}
@@ -4527,7 +4544,7 @@ func civil_panel_data() -> Dictionary:
 	var out: Dictionary = {
 		"claim": {
 			"type": String(claim.get("type", "")),
-			"type_name": String(civil_sys.TYPE_NAMES.get(String(claim.get("type", "")), claim.get("type", ""))),
+			"type_name": String(claim.get("type_name", civil_sys.TYPE_NAMES.get(String(claim.get("type", "")), claim.get("type", "")))),
 			"amount": int(claim.get("amount", 0)),
 			"stage": String(claim.get("stage", "")),
 			"won": bool(claim.get("won", false)),
@@ -4551,6 +4568,184 @@ func _persist_civil() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["civil"] = _civil.duplicate(true)
+
+
+# --- D6 形象与医美 ---
+
+const CARE_COSTS: Dictionary = {"haircut": 5000, "makeup": 3000, "outfit": 20000, "fitness": 2000}
+
+## 惰性建立玩家形象档案，并以当前档案同步魅力。
+func _ensure_appearance() -> void:
+	if _appearance.is_empty():
+		_appearance = appearance_sys.new_profile(player())
+	if _aesthetic.is_empty():
+		_aesthetic = aesthetic_sys.new_state()
+	if (_aesthetic.get("id_photo", {}) as Dictionary).is_empty():
+		_aesthetic["id_photo"] = _appearance.duplicate(true)
+	_sync_appearance()
+
+
+## 把魅力公式结果回写玩家能力。
+func _sync_appearance() -> void:
+	appearance_sys.sync_charm(_appearance, player())
+
+
+## 形象护理：理发/化妆/穿搭/健身，扣费后更新档案与魅力。
+func appearance_care(kind: String, opts: Dictionary = {}) -> Dictionary:
+	_ensure_appearance()
+	if not CARE_COSTS.has(kind):
+		return {"ok": false, "reason": "unknown_care"}
+	var cost: int = int(CARE_COSTS[kind])
+	if int(economy.cash(account_id())) < cost:
+		return {"ok": false, "reason": "insufficient_funds"}
+	var use_opts: Dictionary = opts.duplicate(true)
+	use_opts["cost"] = cost
+	var r: Dictionary = appearance_sys.care(_appearance, kind, use_opts)
+	if not bool(r.get("ok", false)):
+		return r
+	economy.add_money(account_id(), -cost, "appearance_care:%s" % kind)
+	_sync_appearance()
+	_persist_appearance()
+	r["cost"] = cost
+	r["charm"] = appearance_sys.charm(_appearance)
+	return r
+
+
+## 医美：合法性影响费用/成功率/并发症；恢复期内不可再次手术。
+func aesthetic_perform(project: String, legal: bool = true) -> Dictionary:
+	_ensure_appearance()
+	if not aesthetic_sys.PROJECTS.has(project):
+		return {"ok": false, "reason": "unknown_project"}
+	if now_minutes() < int(_aesthetic.get("recovery_until", 0)):
+		return {"ok": false, "reason": "recovering", "remaining_minutes": int(_aesthetic.get("recovery_until", 0)) - now_minutes()}
+	var def: Dictionary = aesthetic_sys.PROJECTS[project]
+	var cost_mult: float = 1.0 if legal else aesthetic_sys.ILLEGAL_COST_MULT
+	var estimate: int = int(round(float(def.get("cost", 0)) * cost_mult))
+	if int(economy.cash(account_id())) < estimate:
+		return {"ok": false, "reason": "insufficient_funds", "cost": estimate}
+	var r: Dictionary = aesthetic_sys.perform(_aesthetic, _appearance, project, legal, rng, now_minutes(), cost_mult)
+	if not bool(r.get("ok", false)):
+		return r
+	var cost: int = int(r.get("cost", estimate))
+	economy.add_money(account_id(), -cost, "aesthetic:%s" % project)
+	var health_loss: float = float(r.get("health_loss", 0.0))
+	if health_loss > 0.0:
+		var attrs: Dictionary = player().get("attrs", {})
+		var phys: Dictionary = attrs.get("physiological", {})
+		phys["health"] = clampf(float(phys.get("health", 100.0)) - health_loss, 0.0, 100.0)
+		attrs["physiological"] = phys
+		player()["attrs"] = attrs
+	_appearance["bmi"] = appearance_sys.bmi(float(_appearance.get("weight_kg", 62.0)), float(_appearance.get("height_cm", 170.0)))
+	_sync_appearance()
+	_persist_appearance()
+	r["charm"] = appearance_sys.charm(_appearance)
+	r["remaining_minutes"] = maxi(0, int(_aesthetic.get("recovery_until", 0)) - now_minutes())
+	return r
+
+
+## 医美失败维权：立案进入民事侵权诉讼，赔偿经开庭/执行回流。
+func aesthetic_claim() -> Dictionary:
+	_ensure_appearance()
+	if not (_civil.get("claim", {}) as Dictionary).is_empty():
+		return {"ok": false, "reason": "existing_claim"}
+	var r: Dictionary = aesthetic_sys.malpractice_claim(_aesthetic)
+	if not bool(r.get("ok", false)):
+		return r
+	var amount: int = int(r.get("compensation", BaselineScript.AESTHETICS_MALPRACTICE_COMPENSATION))
+	var claim: Dictionary = civil_sys.new_claim("tort", amount, "player", "clinic")
+	claim["type_name"] = "医疗纠纷"
+	claim["title"] = "医美失败赔偿"
+	claim["evidence"] = 0.8
+	_civil = {"claim": claim, "judgment": {}, "enforced": false, "appealed": false}
+	var cid: String = "civil:%d:%d" % [now_minutes(), domain_wake.entry_count()]
+	var due: int = now_minutes() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
+	domain_register(cid, DomainWakeScript.KIND_CASE, {
+		"region_id": current_region_id(), "due_minute": due, "total": due - now_minutes(), "civil_id": cid,
+	})
+	_persist_civil()
+	_persist_appearance()
+	return {"ok": true, "claim": claim, "case_id": cid, "amount": amount}
+
+
+## 证件人像比对：整容后可能不匹配，需重办证件。
+func appearance_verify_id() -> Dictionary:
+	_ensure_appearance()
+	var photo: Dictionary = _aesthetic.get("id_photo", {})
+	var r: Dictionary = aesthetic_sys.verify_identity(_appearance, photo, BaselineScript.AESTHETICS_ID_TOLERANCE)
+	r["diff"] = appearance_sys.photo_diff(_appearance, photo)
+	r["tolerance"] = BaselineScript.AESTHETICS_ID_TOLERANCE
+	return r
+
+
+## 重办证件：以当前形象重拍证件照。
+func appearance_reissue_id() -> Dictionary:
+	_ensure_appearance()
+	var cost: int = BaselineScript.AESTHETICS_REISSUE_COST
+	if int(economy.cash(account_id())) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	_aesthetic["id_photo"] = _appearance.duplicate(true)
+	economy.add_money(account_id(), -cost, "appearance_reissue_id")
+	_persist_appearance()
+	return {"ok": true, "cost": cost}
+
+
+## 形象随时间自然衰减（年龄/健康）与医美效果到期回收。
+func _appearance_tick(minutes: int) -> void:
+	if minutes <= 0:
+		return
+	_ensure_appearance()
+	var years: float = float(minutes) / MINUTES_PER_YEAR
+	var age: int = int(player().get("age", 30))
+	var health: float = float((player().get("attrs", {}) as Dictionary).get("physiological", {}).get("health", 80.0))
+	appearance_sys.decay(_appearance, years, float(age), health)
+	aesthetic_sys.decay_effects(_aesthetic, _appearance, float(minutes) / float(MINUTES_PER_DAY))
+	_sync_appearance()
+	_persist_appearance()
+
+
+func appearance_panel_data() -> Dictionary:
+	_ensure_appearance()
+	var projects: Array = []
+	for key in aesthetic_sys.PROJECTS.keys():
+		var def: Dictionary = aesthetic_sys.PROJECTS[key]
+		projects.append({
+			"key": String(key), "name": String(def.get("name", key)), "cost": int(def.get("cost", 0)),
+			"recovery_minutes": int(def.get("recovery_minutes", 0)), "success": float(def.get("success", 0.0)),
+			"complication": float(def.get("complication", 0.0)), "repeatable": bool(def.get("repeatable", false)),
+		})
+	var idr: Dictionary = appearance_verify_id()
+	var procedures: Array = []
+	for rec in (_aesthetic.get("procedures", []) as Array):
+		var rd: Dictionary = rec
+		procedures.append({
+			"project": String(rd.get("project", "")), "outcome": String(rd.get("outcome", "")),
+			"minute": int(rd.get("minute", 0)), "cost": int(rd.get("cost", 0)),
+		})
+	return {
+		"profile": _appearance.duplicate(true),
+		"charm": appearance_sys.charm(_appearance),
+		"body_modifier": appearance_sys.body_type_modifier(_appearance),
+		"voice_modifier": appearance_sys.voice_modifier(_appearance),
+		"weights": appearance_sys.CHARM_WEIGHTS.duplicate(true),
+		"count": int(_aesthetic.get("count", 0)),
+		"stiffness": float(_aesthetic.get("stiffness", 0.0)),
+		"addicted": bool(_aesthetic.get("addicted", false)),
+		"recovery_remaining": maxi(0, int(_aesthetic.get("recovery_until", 0)) - now_minutes()),
+		"id_match": bool(idr.get("matched", true)),
+		"id_diff": float(idr.get("diff", 0.0)),
+		"id_tolerance": float(idr.get("tolerance", 25.0)),
+		"projects": projects,
+		"procedures": procedures,
+	}
+
+
+func _persist_appearance() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["appearance"] = {
+		"profile": _appearance.duplicate(true),
+		"aesthetics": _aesthetic.duplicate(true),
+	}
 
 
 # --- D41 社会救助、收养寄养与慈善 ---
@@ -7436,6 +7631,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_maybe_settle_property(before_minutes, now_minutes())
 		# 工厂工资按月结算（资金不足拖欠并罢工）。
 		_mfg_tick(before_minutes, now_minutes())
+		# 形象：年龄/健康折减、医美效果到期回收并同步魅力。
+		_appearance_tick(minutes)
 		# 子女成长（年度属性结算/成年独立）与早夭。
 		events.append_array(_grow_children())
 		events.append_array(_check_child_mortality(minutes))

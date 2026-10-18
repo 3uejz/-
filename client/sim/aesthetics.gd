@@ -26,18 +26,24 @@ const OVER_MEDICALIZATION_THRESHOLD: int = BaselineScript.AESTHETICS_OVER_MEDICA
 const STIFFNESS_PER_PROCEDURE: float = BaselineScript.AESTHETICS_STIFFNESS_PER_PROCEDURE
 const ILLEGAL_SUCCESS_MULT: float = BaselineScript.AESTHETICS_ILLEGAL_SUCCESS_MULT
 const ILLEGAL_COMPLICATION_MULT: float = BaselineScript.AESTHETICS_ILLEGAL_COMPLICATION_MULT
+const ILLEGAL_COST_MULT: float = BaselineScript.AESTHETICS_ILLEGAL_COST_MULT
 const MALPRACTICE_COMPENSATION: int = BaselineScript.AESTHETICS_MALPRACTICE_COMPENSATION
 
 
 func new_state() -> Dictionary:
-	return {"procedures": [], "count": 0, "stiffness": 0.0, "addicted": false, "last_failed_illegal": false}
+	return {"procedures": [], "count": 0, "stiffness": 0.0, "addicted": false, "last_failed_illegal": false, "recovery_until": 0, "id_photo": {}}
 
 
 ## 执行一次医美（R46.5、R46.6、R46.8）。clinic_legal=false 表示非法诊所。
-func perform(state: Dictionary, profile: Dictionary, project: String, clinic_legal: bool, rng, now_minute: int) -> Dictionary:
+func perform(state: Dictionary, profile: Dictionary, project: String, clinic_legal: bool, rng, now_minute: int, cost_mult: float = 1.0) -> Dictionary:
 	if not PROJECTS.has(project):
 		return {"ok": false, "reason": "unknown_project"}
 	var p: Dictionary = PROJECTS[project]
+	if not bool(p.get("repeatable", false)):
+		for rec in (state.get("procedures", []) as Array):
+			if String((rec as Dictionary).get("project", "")) == project:
+				return {"ok": false, "reason": "already_done"}
+	var cost: int = int(round(float(p["cost"]) * clampf(cost_mult, 0.1, 2.0)))
 	var success_rate: float = float(p["success"]) * (1.0 if clinic_legal else ILLEGAL_SUCCESS_MULT)
 	var complication_rate: float = float(p["complication"]) * (1.0 if clinic_legal else ILLEGAL_COMPLICATION_MULT)
 	var roll: float = rng.next_float() if rng != null else 0.0
@@ -76,16 +82,17 @@ func perform(state: Dictionary, profile: Dictionary, project: String, clinic_leg
 	if outcome != "success" and not clinic_legal:
 		state["last_failed_illegal"] = true
 
+	state["recovery_until"] = now_minute + int(p["recovery_minutes"])
 	var record: Dictionary = {
 		"project": project, "outcome": outcome, "minute": now_minute,
-		"applied": applied, "remaining_days": float(p.get("decay_days", 0)),
+		"applied": applied, "remaining_days": float(p.get("decay_days", 0)), "cost": cost,
 	}
 	var procs: Array = state.get("procedures", [])
 	procs.append(record)
 	state["procedures"] = procs
 	return {
 		"ok": true, "project": project, "outcome": outcome,
-		"cost": int(p["cost"]), "recovery_minutes": int(p["recovery_minutes"]),
+		"cost": cost, "recovery_minutes": int(p["recovery_minutes"]), "recovery_until": int(state["recovery_until"]),
 		"applied": applied, "health_loss": health_loss, "legal": clinic_legal,
 	}
 
