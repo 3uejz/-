@@ -30,6 +30,28 @@ const PLACE_GROUPS: Dictionary = {
 	"special": PLACEHOLDER,
 }
 
+## 场所类型分类（PlaceManager 的 13 类）→ 3D 场景分组。
+const GROUP_FOR_CATEGORY: Dictionary = {
+	"housing": "residence",
+	"food": "dining",
+	"retail": "retail",
+	"medical": "medical",
+	"education": "education",
+	"government": "government",
+	"transport": "transport",
+	"entertainment": "culture",
+	"religious": "religion",
+	"industry": "industry",
+	"finance": "finance",
+	"nature": "nature",
+	"special": "special",
+}
+
+
+## 分类映射到场景分组；未知分类回退 special。
+static func group_for_category(category: String) -> String:
+	return str(GROUP_FOR_CATEGORY.get(category, "special"))
+
 
 static func scene_for(group: String) -> String:
 	# 优先命中约定路径的真实资产；缺失时回退差异化占位场景。

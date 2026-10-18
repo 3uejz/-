@@ -34,6 +34,7 @@ func run_tests() -> void:
 	_test_scene_ready()
 	_test_panel_open_close()
 	_test_dialogs()
+	_test_local_3d_overlay()
 
 func _test_scene_ready() -> void:
 	check(_main.is_node_ready(), "主壳进入就绪态")
@@ -67,4 +68,11 @@ func _test_dialogs() -> void:
 	check(_main.has_dialog(), "危险弹窗仍打开")
 	check(bool(_main.confirm_dialog().get("ok", false)), "二次确认成功")
 	check(not _main.has_dialog(), "确认后自动关闭")
+
+func _test_local_3d_overlay() -> void:
+	check(not _main.has_local_3d(), "初始未打开 3D 叠层")
+	if _main.open_local_3d("medical"):
+		check(_main.has_local_3d(), "可打开全屏 3D 叠层")
+		_main.close_local_3d()
+		check(not _main.has_local_3d(), "关闭后 3D 叠层隐藏")
 	_main.free()

@@ -9,6 +9,10 @@ extends Control
 const GeoDataScript = preload("res://sim/geo.gd")
 const PlaceManagerScript = preload("res://sim/place_manager.gd")
 const ThemeTokensScript = preload("res://ui/theme/theme_tokens.gd")
+const Local3DViewScript = preload("res://presentation/local_3d_view.gd")
+
+signal explore_requested(geo_id: String)
+signal explore_exited
 
 const MIN_ZOOM: float = 0.25
 const MAX_ZOOM: float = 8.0
@@ -33,8 +37,10 @@ var _markers: Array = []        # 收藏/自定义标记：{id, lat, lon, label}
 var _theme_scheme: String = "dark"
 var _theme_variant: String = "default"
 var _draw_levels: Array = [GeoDataScript.GeographicLevel.COUNTRY, GeoDataScript.GeographicLevel.PROVINCE, GeoDataScript.GeographicLevel.CITY]
-var _viewport: SubViewport = null
 var _world_3d: Node3D = null
+var _local_view = null
+var _local_3d_enabled: bool = true
+var _atmosphere: Dictionary = {}
 
 func _ready() -> void:
 	if is_instance_valid(_zoom_in_button):
@@ -51,8 +57,27 @@ func _ready() -> void:
 func setup(geo, places = null) -> void:
 	_geo = geo
 	_places = places
+	if _places == null and _geo != null:
+		_places = PlaceManagerScript.new()
+		_places.attach_to_geo(_geo, 0, 1)
 	queue_redraw()
 	_refresh_status()
+
+## 主界面全屏 3D 叠层接管时关闭内嵌小视口，避免重复渲染。
+func set_local_3d_enabled(enabled: bool) -> void:
+	_local_3d_enabled = enabled
+
+## 注入当前游戏内时刻与天气；内嵌 3D 视口据此更新光照。
+func set_atmosphere(minute_of_day: int, condition: String = "clear", precipitation_mm: float = 0.0, status_text: String = "") -> void:
+	_atmosphere = {
+		"minute_of_day": minute_of_day,
+		"condition": condition,
+		"precipitation_mm": precipitation_mm,
+		"status_text": status_text,
+	}
+	if _local_view != null:
+		_local_view.set_atmosphere(minute_of_day, condition, precipitation_mm)
+		_local_view.set_status_text(status_text)
 
 # --- 2D 地图 ---
 
@@ -122,41 +147,38 @@ func _draw() -> void:
 # --- 3D 局部探索壳 ---
 
 func _build_3d_shell() -> void:
-	if _world_3d != null:
+	if _local_view != null:
 		return
 	var holder: Control = _local_3d if is_instance_valid(_local_3d) else get_node_or_null("Local3D")
 	if holder == null:
 		return
 	_local_3d = holder
-	var container := SubViewportContainer.new()
-	container.name = "ViewportContainer"
-	container.stretch = true
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_viewport = SubViewport.new()
-	_viewport.name = "LocalViewport"
-	_viewport.size = Vector2i(1280, 720)
-	_world_3d = Node3D.new()
-	_world_3d.name = "LocalWorld"
-	var camera := Camera3D.new()
-	camera.name = "Camera3D"
-	camera.position = Vector3(0, 1.6, 4)
-	_world_3d.add_child(camera)
-	_viewport.add_child(_world_3d)
-	container.add_child(_viewport)
-	holder.add_child(container)
+	_local_view = Local3DViewScript.new()
+	_local_view.name = "Local3DView"
+	_local_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_local_view.back_requested.connect(exit_3d)
+	holder.add_child(_local_view)
+	_world_3d = _local_view.world_3d()
 	holder.visible = false
 
 ## 进入某建筑的 3D 局部探索（结构接线；具体场景由内容包绑定）。
 func enter_3d(building_id: String) -> bool:
 	if _geo != null and not _geo.has_node(building_id):
 		return false
-	_build_3d_shell()
 	_current_geo_id = building_id
 	_is_3d = true
-	if is_instance_valid(_local_3d):
-		_local_3d.visible = true
-	if is_instance_valid(_viewport):
-		_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	if _local_3d_enabled:
+		_build_3d_shell()
+		if _local_view != null:
+			_local_view.show_place(place_group_for(building_id), place_title_for(building_id))
+			if not _atmosphere.is_empty():
+				_local_view.set_atmosphere(
+					int(_atmosphere.get("minute_of_day", 720)),
+					String(_atmosphere.get("condition", "clear")),
+					float(_atmosphere.get("precipitation_mm", 0.0)))
+		if is_instance_valid(_local_3d):
+			_local_3d.visible = true
+	explore_requested.emit(building_id)
 	_refresh_status()
 	return true
 
@@ -164,6 +186,9 @@ func exit_3d() -> void:
 	_is_3d = false
 	if is_instance_valid(_local_3d):
 		_local_3d.visible = false
+	if _local_view != null:
+		_local_view.hide_world()
+	explore_exited.emit()
 	_refresh_status()
 
 func is_3d_active() -> bool:
@@ -173,9 +198,26 @@ func current_geo_id() -> String:
 	return _current_geo_id
 
 func world_3d() -> Node3D:
-	if _world_3d == null:
+	if _local_view == null:
 		_build_3d_shell()
 	return _world_3d
+
+## 当前建筑对应的 3D 场所分组；无场所数据时回退 special。
+func place_group_for(geo_id: String) -> String:
+	if _places != null:
+		for place in _places.places_in_geo(geo_id):
+			return PlaceBindings.group_for_category(String(place.category))
+	return "special"
+
+## 建筑内第一个场所的显示名。
+func place_title_for(geo_id: String) -> String:
+	if _places != null:
+		for place in _places.places_in_geo(geo_id):
+			return String(place.name)
+	return ""
+
+func current_place_group() -> String:
+	return place_group_for(_current_geo_id) if _current_geo_id != "" else ""
 
 func _on_toggle_3d() -> void:
 	if _is_3d:

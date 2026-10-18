@@ -1,6 +1,8 @@
 extends "res://tests/test_base.gd"
 ## 3D 表现层框架测试（任务 23：局部 3D 场景切换、缓存池、LOD、与文字 UI 解耦）。
 
+const Local3DViewScript = preload("res://presentation/local_3d_view.gd")
+
 
 class FakeLoader:
 	extends RefCounted
@@ -25,6 +27,7 @@ func run_tests() -> void:
 	_test_placeholder_group_styles()
 	_test_place_models()
 	_test_presentation_root()
+	_test_local_3d_view()
 
 
 func _test_event_bus() -> void:
@@ -176,3 +179,61 @@ func _test_presentation_root() -> void:
 	check_eq(pr.publish("evt", 42), 1, "表现层根应转发事件")
 	check_eq(got.size(), 1, "订阅者应收到事件")
 	pr.queue_free()
+
+
+## 全屏局部 3D 视图：场所切换、相机、昼夜/天气氛围与返回信号。
+func _test_local_3d_view() -> void:
+	var view := Local3DViewScript.new()
+	root.add_child(view)
+	check(view.show_place("medical"), "3D 视图可显示医疗场所")
+	check(view.visible, "显示后视图可见")
+	check_eq(view.current_group(), "medical", "当前分组为医疗")
+	check(view.world_3d() != null, "3D 世界存在")
+	check(view.world_3d().get_node_or_null("WorldEnvironment") != null, "存在世界环境")
+	check(view.camera() != null and view.camera().current, "相机就绪并启用")
+	var actor: Node3D = view.world_3d().get_node_or_null("Actor")
+	check(actor != null, "主角存在")
+	check(actor.get_node_or_null("Torso") != null and actor.get_node_or_null("Head") != null, "主角为分件人形")
+	check(actor.get_node_or_null("ArmL/Mesh") != null and actor.get_node_or_null("LegR/Mesh") != null, "四肢带摆动枢轴")
+	view.set_appearance({"height_cm": 190.0, "bmi": 28.0, "gender": "female", "appearance_score": 72.0})
+	check(actor.scale.y > 1.05, "身高映射到主角缩放")
+	check(float(actor.get_meta("girth", 0.0)) > 1.0, "BMI 映射到体宽")
+	check((actor.get_node("Hair") as MeshInstance3D).scale.y > 0.9, "女性使用长发造型")
+	check((actor.get_node("Torso") as MeshInstance3D).material_override != null, "躯干按服装着色")
+	var npcs: MultiMeshInstance3D = view.world_3d().get_node_or_null("NPCs")
+	check(npcs != null and npcs.multimesh != null and npcs.multimesh.instance_count == 24, "路人批量绘制 24 人")
+	var ground: MeshInstance3D = view.world_3d().get_node_or_null("Ground")
+	check(ground != null and (ground.material_override as StandardMaterial3D).albedo_texture != null, "地面使用 CC0 贴图")
+	var medical_mat: Material = ground.material_override
+	view.show_place("nature")
+	check(ground.material_override != medical_mat, "自然场所切换为草地材质")
+	check(ResourceLoader.exists("res://assets/textures/grass_nor_1k.jpg"), "草地法线贴图存在")
+
+	var sun: DirectionalLight3D = view.world_3d().get_node_or_null("Sun")
+	check(sun != null, "存在太阳光")
+	view.set_atmosphere(720, "clear", 0.0)
+	var noon_energy: float = sun.light_energy
+	view.set_atmosphere(0, "clear", 0.0)
+	check(sun.light_energy < noon_energy, "夜间太阳光更弱")
+	view.set_atmosphere(720, "heavy_rain", 12.0)
+	var precip: CPUParticles3D = view.world_3d().get_node_or_null("Precipitation")
+	check(precip != null and precip.mesh is BoxMesh, "雨天使用雨丝粒子")
+	var env: Environment = (view.world_3d().get_node("WorldEnvironment") as WorldEnvironment).environment
+	check(env.fog_enabled, "雨天启用雾")
+	check(env.fog_density > 0.01, "雨天雾更浓")
+	view.set_atmosphere(720, "fog", 0.0)
+	check(env.fog_density > 0.03, "雾天雾最浓")
+	view.set_atmosphere(720, "light_snow", 0.0)
+	check(precip.mesh is SphereMesh, "雪天使用雪花粒子")
+	view.set_place_title("综合医院")
+	check_eq((view.get_node("PlaceTitle") as Label).text, "综合医院", "场所标题可设置")
+
+	var back: Array = []
+	view.back_requested.connect(func(): back.append(true))
+	view.back_requested.emit()
+	check_eq(back.size(), 1, "返回信号可转发")
+	view.hide_world()
+	check(not view.visible, "隐藏后视图不可见")
+	check(view.show_place("not_a_group"), "未知分组回退 special 而非失败")
+	check_eq(view.current_group(), "special", "未知分组回退 special")
+	view.queue_free()

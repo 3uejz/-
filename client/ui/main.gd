@@ -17,6 +17,8 @@ const DialogRegistryScript = preload("res://ui/components/dialog_registry.gd")
 const HistoryViewScript = preload("res://ui/layout/history_view.gd")
 const IllustrationScript = preload("res://ui/components/illustration.gd")
 const NotificationCenterScript = preload("res://ui/notifications/notification_center.gd")
+const Local3DViewScript = preload("res://presentation/local_3d_view.gd")
+const PlaceManagerScript = preload("res://sim/place_manager.gd")
 
 ## 常驻快捷动作：未输入即可游玩（R35.5）。
 const QUICK_ACTIONS: Array = [
@@ -63,6 +65,10 @@ var _drawers: Dictionary = {}          ## 面板 id -> 抽屉节点
 var _drawer_row: HBoxContainer
 var _dialog_layer: Control
 var _dialog_box: PanelContainer
+var _local_3d_layer: Control
+var _local_3d_view
+var _map_view
+var _places
 
 ## 快捷动词 -> 侧边面板映射，使按钮与文字指令同源打开面板（R35.5）。
 const VERB_PANELS: Dictionary = {
@@ -73,7 +79,8 @@ const VERB_PANELS: Dictionary = {
 	"看关系": "relations", "人脉": "relations",
 	"看地图": "map", "地图": "map",
 	"看资产": "finance", "财务": "finance",
-	"看工作": "career", "职业": "career",
+	"看工作": "career", "职业": "career", "看职场": "career", "职场": "career",
+	"看公司": "company", "公司": "company", "融资": "company",
 	"看成就": "achievements", "图鉴": "achievements",
 	"看家族史": "family", "族谱": "family",
 	"看经营": "business", "经营": "business",
@@ -169,6 +176,9 @@ func _init_simulation() -> void:
 	var seed: int = int(game.meta.get("seed", 0)) if game.meta is Dictionary else 0
 	_sim = SimHostScript.new(game, seed)
 	_executor = ExecutorScript.new(_sim)
+	if _sim.geo != null:
+		_places = PlaceManagerScript.new()
+		_places.attach_to_geo(_sim.geo, seed, 1)
 	set_command_handler(_on_intent)
 
 # --- 挂机实时世界（R1 / M0） ---
@@ -531,6 +541,49 @@ func _build_actions() -> void:
 		var params: Dictionary = action.get("params", {})
 		button.pressed.connect(func() -> void: dispatch_action(verb, objects, params, "panel"))
 		_action_panel.add_child(button)
+	var walk := Button.new()
+	walk.text = "四处走走"
+	walk.focus_mode = Control.FOCUS_ALL
+	walk.pressed.connect(func() -> void: open_local_3d(_current_place_group(), _current_place_title()))
+	_action_panel.add_child(walk)
+
+## 当前所在城市的第一个建筑场所分组；无数据时回退 special。
+func _current_place_title() -> String:
+	if _sim == null or _places == null or _sim.geo == null:
+		return ""
+	var rid: String = _sim.current_region_id()
+	var building: String = _first_building_under(rid) if rid != "" else ""
+	if building == "":
+		return ""
+	var found: Array = _places.places_in_geo(building)
+	return String(found[0].name) if not found.is_empty() else ""
+
+func _current_place_group() -> String:
+	if _sim == null or _places == null or _sim.geo == null:
+		return "special"
+	var rid: String = _sim.current_region_id()
+	var building: String = _first_building_under(rid) if rid != "" else ""
+	if building == "":
+		var all: Array = _sim.geo.nodes_at_level(5)
+		building = String(all[0]) if not all.is_empty() else ""
+	if building == "":
+		return "special"
+	var found: Array = _places.places_in_geo(building)
+	if found.is_empty():
+		return "special"
+	return PlaceBindings.group_for_category(String(found[0].category))
+
+func _first_building_under(geo_id: String) -> String:
+	var node = _sim.geo.get_node(geo_id)
+	if node == null:
+		return ""
+	if node.level == 5:
+		return geo_id
+	for child in _sim.geo.children_of(geo_id):
+		var found: String = _first_building_under(String(child))
+		if found != "":
+			return found
+	return ""
 
 # --- 侧边抽屉面板（任务 47/51） ---
 
@@ -679,7 +732,104 @@ func _mount_map_view(container: VBoxContainer) -> void:
 	view.custom_minimum_size = Vector2(280, 220)
 	container.add_child(view)
 	if view.has_method("setup"):
-		view.setup(_sim.geo, null)
+		view.setup(_sim.geo, _places)
+	_map_view = view
+	if view.has_method("set_local_3d_enabled"):
+		view.set_local_3d_enabled(false)
+	if view.has_signal("explore_requested"):
+		view.explore_requested.connect(func(geo_id: String) -> void:
+			open_local_3d(view.place_group_for(geo_id), view.place_title_for(geo_id)))
+	if view.has_signal("explore_exited"):
+		view.explore_exited.connect(close_local_3d)
+	_apply_atmosphere_to_map()
+
+## 打开全屏局部 3D 探索叠层（文字面板之上，可随时返回）。
+func open_local_3d(group: String, title: String = "") -> bool:
+	if _local_3d_layer == null or not is_instance_valid(_local_3d_layer):
+		_build_local_3d_layer()
+	if _local_3d_view == null:
+		return false
+	if not _local_3d_view.show_place(group, title):
+		return false
+	_local_3d_layer.visible = true
+	_push_local_3d_atmosphere()
+	_push_local_3d_appearance()
+	return true
+
+func close_local_3d() -> void:
+	if _local_3d_layer != null and is_instance_valid(_local_3d_layer):
+		_local_3d_layer.visible = false
+	if _local_3d_view != null:
+		_local_3d_view.hide_world()
+	if _map_view != null and is_instance_valid(_map_view) and _map_view.is_3d_active():
+		_map_view.exit_3d()
+
+func has_local_3d() -> bool:
+	return _local_3d_layer != null and is_instance_valid(_local_3d_layer) and _local_3d_layer.visible
+
+func _build_local_3d_layer() -> void:
+	_local_3d_layer = Control.new()
+	_local_3d_layer.name = "Local3DLayer"
+	_local_3d_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_local_3d_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_local_3d_layer.visible = false
+	add_child(_local_3d_layer)
+	_local_3d_view = Local3DViewScript.new()
+	_local_3d_view.name = "Local3DView"
+	_local_3d_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_local_3d_view.back_requested.connect(close_local_3d)
+	_local_3d_layer.add_child(_local_3d_view)
+
+## 当前游戏内时刻与天气 → 3D 光照参数。
+func _local_3d_atmosphere() -> Dictionary:
+	if _sim == null:
+		return {}
+	var weather: Dictionary = _sim.weather_now()
+	var minute: int = posmod(_sim.now_minutes(), 1440)
+	var hour: int = minute / 60
+	var clock_text: String = "%02d:%02d" % [hour, minute % 60]
+	var status: String = clock_text
+	if not weather.is_empty():
+		status += "  %s %s" % [String(weather.get("condition", "")), String(weather.get("temperature", ""))]
+	return {
+		"minute_of_day": minute,
+		"condition": String(weather.get("condition_key", "clear")),
+		"precipitation_mm": float(weather.get("precipitation_mm", 0.0)),
+		"status_text": status,
+	}
+
+## 把 D6 形象档案同步到 3D 主角（身高/体型/肤色/发色/服装）。
+func _push_local_3d_appearance() -> void:
+	if _local_3d_view == null or _sim == null:
+		return
+	var data: Dictionary = _sim.appearance_panel_data()
+	if data.is_empty():
+		return
+	_local_3d_view.set_appearance(data.get("profile", {}))
+
+func _push_local_3d_atmosphere() -> void:
+	if _local_3d_view == null:
+		return
+	var atmo: Dictionary = _local_3d_atmosphere()
+	if atmo.is_empty():
+		return
+	_local_3d_view.set_atmosphere(
+		int(atmo.get("minute_of_day", 720)),
+		String(atmo.get("condition", "clear")),
+		float(atmo.get("precipitation_mm", 0.0)))
+	_local_3d_view.set_status_text(String(atmo.get("status_text", "")))
+
+func _apply_atmosphere_to_map() -> void:
+	if _map_view == null or not is_instance_valid(_map_view):
+		return
+	var atmo: Dictionary = _local_3d_atmosphere()
+	if atmo.is_empty() or not _map_view.has_method("set_atmosphere"):
+		return
+	_map_view.set_atmosphere(
+		int(atmo.get("minute_of_day", 720)),
+		String(atmo.get("condition", "clear")),
+		float(atmo.get("precipitation_mm", 0.0)),
+		String(atmo.get("status_text", "")))
 
 ## 设置面板的实时预览控件：切主题/配色/主色即时重生成 Theme 并刷新抽屉（ui.md 10）。
 func _build_settings_controls(container: VBoxContainer) -> void:
@@ -795,6 +945,15 @@ func _panel_context() -> Dictionary:
 		var app: Dictionary = _sim.appearance_panel_data()
 		if not app.is_empty():
 			context["appearance"] = app
+		var mil: Dictionary = _sim.military_panel_data()
+		if not mil.is_empty():
+			context["military"] = mil
+		var wp: Dictionary = _sim.workplace_panel_data()
+		if not wp.is_empty():
+			context["workplace"] = wp
+		var co: Dictionary = _sim.company_panel_data()
+		if not co.is_empty():
+			context["company"] = co
 		var sp: Dictionary = _sim.spirit_panel_data()
 		if not sp.is_empty():
 			context["spirit"] = sp
@@ -1137,6 +1296,9 @@ func refresh_status() -> void:
 	if is_instance_valid(_speed_button):
 		if not _speed_button.pressed.is_connected(_on_speed):
 			_speed_button.pressed.connect(_on_speed)
+	if has_local_3d():
+		_push_local_3d_atmosphere()
+	_apply_atmosphere_to_map()
 
 func _on_speed() -> void:
 	var speed = get_node_or_null("/root/SpeedController")
