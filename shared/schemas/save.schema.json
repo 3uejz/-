@@ -56,7 +56,10 @@
         "engineering": { "type": "object", "additionalProperties": true },
         "professional": { "type": "object", "additionalProperties": true },
         "life_services": { "type": "object", "additionalProperties": true },
-        "transport_infra": { "type": "object", "additionalProperties": true }
+        "transport_infra": { "type": "object", "additionalProperties": true },
+        "domain_wake": { "type": "object", "additionalProperties": true },
+        "research": { "type": "object", "additionalProperties": true },
+        "civil": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

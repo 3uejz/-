@@ -5,6 +5,7 @@ extends "res://tests/test_base.gd"
 const GameStateScript = preload("res://autoload/game_state.gd")
 const SimHostScript = preload("res://sim/sim_host.gd")
 const GeoDataScript = preload("res://sim/geo.gd")
+const BaselineScript = preload("res://sim/baseline.gd")
 
 func _suite_name() -> String:
 	return "world_runtime"
@@ -25,6 +26,9 @@ func run_tests() -> void:
 	_test_persist_and_reload()
 	_test_travel_persists()
 	_test_domain_wake_advances()
+	_test_domain_wake_bindings()
+	_test_mfg_trade_and_research_bindings()
+	_test_consumer_civil_bindings()
 	_test_acquaintances_and_marriage()
 	_test_property_market_and_purchase()
 	_test_inheritance_settles()
@@ -196,6 +200,165 @@ func _test_domain_wake_advances() -> void:
 	check(host.domain_wake.is_resolved("proj:1"), "游戏内时钟推进后在建工程补算至完成")
 	host.advance(60)
 	check(host.domain_wake.is_resolved("proj:1"), "已完成条目再次推进保持完成（幂等）")
+
+func _test_domain_wake_bindings() -> void:
+	var state = GameStateScript.new()
+	state.new_game(312)
+	var host = SimHostScript.new(state, 312)
+	host.bind(state)
+	# 工程：承接即注册，休眠期满回写为完成。
+	check(bool(host.eng_new_contractor("休眠建设", "first").get("ok", false)), "成立工程公司")
+	check(bool(host.eng_take_project("休眠工程", 50000000).get("ok", false)), "承接工程")
+	var pid: String = String(host._eng_project.get("id", ""))
+	var chain_len: int = host.engineering.CHAIN.size()
+	var stage_minutes: int = chain_len * BaselineScript.WAKE_PROJECT_STAGE_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
+	host.domain_wake.advance_to(host.domain_wake.now_minute() + stage_minutes)
+	check_eq(host._apply_wake_results().size(), 1, "工程完成回写一次")
+	check_eq(String(host._eng_project.get("stage", "")), "completed", "工程休眠后回写完成")
+	check(bool(host.domain_wake.get_entry("eng:%s" % pid).get("result", {}).get("applied", false)), "工程结果标记已消费")
+	check_eq(host._apply_wake_results().size(), 0, "工程结果重复回写为幂等空集")
+	# 案件：过审限未破则转冷案。
+	host.police_start_case("theft", "detective")
+	var case_entry_id: String = ""
+	for eid in host.domain_wake.all_entries():
+		if String(host.domain_wake.get_entry(String(eid)).get("kind", "")) == "case":
+			case_entry_id = String(eid)
+	check(not case_entry_id.is_empty(), "案件已登记休眠补算")
+	host.domain_wake.advance_to(host.domain_wake.now_minute() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY + 1)
+	host._apply_wake_results()
+	check_eq(String(host._police_case.get("stage", "")), host.police.STAGE_COLD, "案件过审限转冷案")
+	# 放贷：休眠期间按年利率累计逾期利息。
+	check(bool(host.debt_lend("private_lending", 100000, 0.1).get("ok", false)), "放贷登记")
+	var lend_id: String = String(host._debt_lend.get("id", ""))
+	host.domain_wake.advance_to(host.domain_wake.now_minute() + 365 * BaselineScript.WAKE_MINUTES_PER_DAY)
+	host._apply_wake_results()
+	check(float(host._debt_lend.get("accrued_interest", 0.0)) > 0.0, "放贷利息随休眠累计")
+	check(bool(host.domain_wake.get_entry("loan:%s" % lend_id).get("result", {}).has("interest")), "贷款条目含利息结果")
+	# 灾害：72 小时后进入善后。
+	check(bool(host.emergency_new_incident("flood", 0.6).get("ok", false)), "创建灾害事件")
+	host.domain_wake.advance_to(host.domain_wake.now_minute() + BaselineScript.WAKE_DISASTER_HOURS * 60 + 1)
+	host._apply_wake_results()
+	check_eq(String(host._incident.get("stage", "")), host.emergency.STAGE_AFTERMATH, "灾害结束转善后")
+	# 读档：补算运行态与已完成/已登记领域状态均可恢复。
+	var reloaded = SimHostScript.new(state, 312)
+	reloaded.bind(state)
+	check(not reloaded.domain_wake.get_entry("eng:%s" % pid).is_empty(), "读档恢复工程补算条目")
+	check_eq(String(reloaded._eng_project.get("stage", "")), "completed", "读档恢复工程完成状态")
+	check_eq(String(reloaded._police_case.get("stage", "")), reloaded.police.STAGE_COLD, "读档恢复冷案")
+	check(float(reloaded._debt_lend.get("accrued_interest", 0.0)) > 0.0, "读档恢复贷款利息")
+	check_eq(String(reloaded._incident.get("stage", "")), reloaded.emergency.STAGE_AFTERMATH, "读档恢复灾害善后")
+
+
+func _test_mfg_trade_and_research_bindings() -> void:
+	var state = GameStateScript.new()
+	state.new_game(313)
+	var host = SimHostScript.new(state, 313)
+	host.bind(state)
+	host.economy.add_money(host.account_id(), 200000000, "test")
+	# 工厂生产：原料→成品，碳排进入企业碳账户。
+	check(bool(host.found_factory("own_factory").get("ok", false)), "开办工厂")
+	check(bool(host.mfg_purchase("steel", 100.0).get("ok", false)), "采购钢材")
+	check(bool(host.mfg_hire("unskilled", 20).get("ok", false)), "招募产线工人")
+	var emissions0: float = float(host._env_enterprise.get("emissions", 0.0))
+	var pr: Dictionary = host.mfg_produce("steel_part", 10.0)
+	check(bool(pr.get("ok", false)), "生产钢制零件")
+	check(float(host._env_enterprise.get("emissions", 0.0)) > emissions0, "生产碳排计入企业账户")
+	# 成品出口：扣成品库存并生成含吨位的外贸单据。
+	var stock: float = float(host._factory["products"].get("steel_part", 0.0))
+	check(stock > 5.0, "成品入库")
+	var ex: Dictionary = host.mfg_export("steel_part", 5.0, "新加坡")
+	check(bool(ex.get("ok", false)), "成品出口建单")
+	check_eq(int(host._shipments.size()), 1, "外贸单据入列")
+	check(int(ex.get("goods_value", 0)) > 0, "单据含货值")
+	check_near(float(ex.get("quantity_ton", 0.0)), 5.0 * BaselineScript.MFG_TONS_PER_UNIT, 0.0001, "按单位吨位折算")
+	check_near(float(host._factory["products"].get("steel_part", 0.0)), stock - 5.0, 0.0001, "成品库存扣减")
+	check(not host._shipments.is_empty() and String(host._shipments[0].get("goods", "")) == "钢制零件", "单据商品名取配方")
+	# 工资：欠薪触发罢工，补足后复工。
+	check(bool(host.mfg_hire("unskilled", 2).get("ok", false)), "招募工人")
+	var now: int = host.now_minutes()
+	var payroll: int = host.manufacturing.payroll_cost(host._factory)
+	host._factory["money"] = maxi(0, payroll - 1)
+	host._mfg_tick(now, now + 31 * 1440)
+	check(host.manufacturing.has_disruption(host._factory, "strike"), "欠薪触发罢工")
+	host._factory["money"] = payroll * 2
+	host._mfg_tick(now + 31 * 1440, now + 62 * 1440)
+	check(not host.manufacturing.has_disruption(host._factory, "strike"), "补足工资后复工")
+	# 科研：经费→立项→推进→发表→专利登记。
+	check(bool(host.research_fund(5000000).get("ok", false)), "注入科研经费")
+	host.player()["skills"] = [{"content_key": "skill.academic", "level": 20}]
+	check(bool(host.research_start("固态电池界面").get("ok", false)), "科研立项")
+	for _i in 8:
+		var ar: Dictionary = host.research_advance()
+		if not bool(ar.get("ok", false)):
+			break
+		if String(ar.get("stage", "")) in ["published", "rejected"]:
+			break
+	check(bool(host._research.get("project", {}).get("published", false)), "科研成果发表")
+	var cr: Dictionary = host.research_collect()
+	check(bool(cr.get("ok", false)), "成果结算")
+	check(float(host._research.get("prestige", 0.0)) > 0.0, "累计声望入账")
+	check(int(host._research.get("income", 0)) > 0, "成果收入入账")
+	check(not bool(host.research_collect().get("ok", false)), "成果不可重复结算")
+	host._research["project"]["quality"] = 80.0
+	var ptr: Dictionary = host.research_file_patent()
+	check(bool(ptr.get("ok", false)), "科研专利登记")
+	check(not String((ptr.get("ip", {}) as Dictionary).get("id", "")).is_empty(), "专利生成知识产权")
+	check_eq(host._ips.size(), 1, "知识产权库含专利")
+	# 读档恢复：工厂/单据/科研/专利。
+	var reloaded = SimHostScript.new(state, 313)
+	reloaded.bind(state)
+	check(not reloaded._factory.is_empty(), "读档恢复工厂")
+	check_eq(reloaded._shipments.size(), 1, "读档恢复外贸单据")
+	check(not reloaded._research.is_empty(), "读档恢复科研运行态")
+	check(bool(reloaded._research.get("project", {}).get("patented", false)), "读档恢复专利标记")
+	check_eq(reloaded._ips.size(), 1, "读档恢复知识产权")
+
+
+func _test_consumer_civil_bindings() -> void:
+	var state = GameStateScript.new()
+	state.new_game(314)
+	var host = SimHostScript.new(state, 314)
+	host.bind(state)
+	host.economy.add_money(host.account_id(), 100000000, "test")
+	# 消费纠纷立案：缺陷商品按三倍标的。
+	check(bool(host.consumer_new_order(100000, "general", true, false).get("ok", false)), "创建消费订单")
+	var cash0: int = int(host.economy.cash(host.account_id()))
+	var sr: Dictionary = host.consumer_sue(0.8)
+	check(bool(sr.get("ok", false)), "消费起诉立案")
+	var claim: Dictionary = sr.get("claim", {})
+	check_eq(int(claim.get("amount", 0)), 300000, "缺陷商品三倍标的")
+	check(not host.civil_panel_data().is_empty(), "民事面板数据非空")
+	check(not host.police_panel_data().has("case"), "民事立案不占用刑事案件位")
+	# 开庭：强制掷点保证胜诉并完成判赔与执行。
+	var lr: Dictionary = host.civil_litigate(1.0, 5, 0, 0.0)
+	check(bool(lr.get("ok", false)), "民事开庭")
+	check(bool((lr.get("judgment", {}) as Dictionary).get("won", false)), "强制掷点胜诉")
+	check(int(lr.get("compensation", 0)) > 0, "判赔入账")
+	check(int(host.economy.cash(host.account_id())) == cash0, "判决未执行前不入账")
+	var er: Dictionary = host.civil_enforce()
+	check(bool(er.get("ok", false)), "判决执行")
+	check(int(er.get("recovered", 0)) > 0, "执行回收判赔")
+	check(int(host.economy.cash(host.account_id())) > cash0, "执行后判赔入账")
+	check(not bool(host.civil_enforce().get("ok", true)), "执行不可重复")
+	# 逾期未开庭转冷案。
+	var state2 = GameStateScript.new()
+	state2.new_game(315)
+	var host2 = SimHostScript.new(state2, 315)
+	host2.bind(state2)
+	host2.economy.add_money(host2.account_id(), 100000000, "test")
+	host2.consumer_new_order(50000, "general", false, false)
+	var sr2: Dictionary = host2.consumer_sue(0.5)
+	check(bool(sr2.get("ok", false)), "第二案立案")
+	host2.domain_wake.advance_to(host2.domain_wake.now_minute() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY + 1)
+	host2._apply_wake_results()
+	check_eq(String(host2._civil.get("claim", {}).get("stage", "")), "cold", "民事案件过审限转冷案")
+	# 读档恢复民事运行态。
+	var reloaded = SimHostScript.new(state, 314)
+	reloaded.bind(state)
+	check(not reloaded.civil_state().is_empty(), "读档恢复民事案件")
+	check(bool(reloaded._civil.get("enforced", false)), "读档恢复执行状态")
+	check_eq(int(reloaded._civil.get("judgment", {}).get("award", 0)), int(host._civil.get("judgment", {}).get("award", 0)), "读档恢复判赔")
+
 
 func _test_acquaintances_and_marriage() -> void:
 	var state = GameStateScript.new()

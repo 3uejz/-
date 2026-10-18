@@ -860,6 +860,9 @@ func _panel_context() -> Dictionary:
 		var csp: Dictionary = _sim.consumer_panel_data()
 		if not csp.is_empty():
 			context["consumer"] = csp
+		var cvp: Dictionary = _sim.civil_panel_data()
+		if not cvp.is_empty():
+			context["civil"] = cvp
 		var wsp: Dictionary = _sim.welfare_panel_data()
 		if not wsp.is_empty():
 			context["welfare"] = wsp
@@ -874,6 +877,9 @@ func _panel_context() -> Dictionary:
 		var ctp: Dictionary = _sim.content_panel_data()
 		if not ctp.is_empty():
 			context["content"] = ctp
+		var rsp: Dictionary = _sim.research_panel_data()
+		if not rsp.is_empty():
+			context["research"] = rsp
 		var egp: Dictionary = _sim.engineering_panel_data()
 		if not egp.is_empty():
 			context["engineering"] = egp

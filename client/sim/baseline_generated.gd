@@ -807,7 +807,11 @@ const META_PLACEBO_MOOD: float = 5.0
 
 const MFG_DEFECT_SHARE: float = 0.5
 
+const MFG_EMISSION_PER_UNIT: float = 0.006
+
 const MFG_REFERENCE_LABOR: float = 20.0
+
+const MFG_TONS_PER_UNIT: float = 0.02
 
 const MH_EVENTS: Dictionary = {
 	"breakup": {"mood": -15.0, "stress": 16.0},
@@ -1405,9 +1409,15 @@ const TRANSPORT_MODE_ORDER: Array = ["walk", "bicycle", "bus", "metro", "taxi", 
 
 const TRANSPORT_TRANSFER_MINUTES_DEFAULT: float = 8.0
 
+const WAKE_CASE_LIMIT_DAYS: int = 90
+
+const WAKE_DISASTER_HOURS: int = 72
+
 const WAKE_EPSILON: float = 1e-06
 
 const WAKE_MINUTES_PER_DAY: int = 1440
+
+const WAKE_PROJECT_STAGE_DAYS: int = 7
 
 const WAR_BLACK_MARKET_PER_MOBILIZATION: float = 0.1
 
@@ -2328,7 +2338,7 @@ const BASELINE_DOMAINS: Dictionary = {
 		"DE_SEVERITY_PENALTY": {"heavy": 0.75, "light": 0.15, "medium": 0.4},
 	},
 	"documents": {"DOC_MINUTES_PER_YEAR": 525960, "DOC_PHOTO_MATCH_THRESHOLD": 0.75},
-	"domain_wake": {"WAKE_EPSILON": 1e-06, "WAKE_MINUTES_PER_DAY": 1440},
+	"domain_wake": {"WAKE_CASE_LIMIT_DAYS": 90, "WAKE_DISASTER_HOURS": 72, "WAKE_EPSILON": 1e-06, "WAKE_MINUTES_PER_DAY": 1440, "WAKE_PROJECT_STAGE_DAYS": 7},
 	"economy": {
 		"BANK_CREDIT_MAX": 1000,
 		"BANK_CREDIT_MIN": 0,
@@ -2783,7 +2793,7 @@ const BASELINE_DOMAINS: Dictionary = {
 	"justice": {"JUSTICE_LAWYER_FEE_PER_LEVEL": 200000},
 	"language": {"LANG_BASE_STUDY_GAIN": 1.2, "LANG_MAX_LEVEL": 100.0},
 	"legacy": {"LEGACY_ASSET_CARRY_RATIO": 0.3, "LEGACY_BLOODLINE_PER_GEN": 0.05, "LEGACY_MAX_BLOODLINE": 1.0, "LEGACY_SKILL_MEMORY_RATIO": 0.5, "LEGACY_TALENT_SLOTS": 3},
-	"manufacturing": {"MFG_DEFECT_SHARE": 0.5, "MFG_REFERENCE_LABOR": 20.0},
+	"manufacturing": {"MFG_DEFECT_SHARE": 0.5, "MFG_EMISSION_PER_UNIT": 0.006, "MFG_REFERENCE_LABOR": 20.0, "MFG_TONS_PER_UNIT": 0.02},
 	"market": {"MARKET_FX_EPSILON": 1e-09, "MARKET_MIN_SUPPLY": 0.01},
 	"medical": {
 		"MEDICAL_FACILITIES": {

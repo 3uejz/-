@@ -235,7 +235,9 @@ const (
 	BaselineMetaConfirmationBias                  = 0.15
 	BaselineMetaPlaceboMood                       = 5.0
 	BaselineMfgDefectShare                        = 0.5
+	BaselineMfgEmissionPerUnit                    = 0.006
 	BaselineMfgReferenceLabor                     = 20.0
+	BaselineMfgTonsPerUnit                        = 0.02
 	BaselineMhStressDisorderThreshold             = 70.0
 	BaselineMilitaryDischargePayPerYear           = 2.0
 	BaselineMilitaryEnlistMaxAge                  = 24.0
@@ -403,8 +405,11 @@ const (
 	BaselineTradeDefaultVatRate                   = 0.13
 	BaselineTransportCongestionPeakFactor         = 1.5
 	BaselineTransportTransferMinutesDefault       = 8.0
+	BaselineWakeCaseLimitDays                     = 90
+	BaselineWakeDisasterHours                     = 72
 	BaselineWakeEpsilon                           = 1e-06
 	BaselineWakeMinutesPerDay                     = 1440
+	BaselineWakeProjectStageDays                  = 7
 	BaselineWarBlackMarketPerMobilization         = 0.1
 	BaselineWarDebtPerYearPerMobilization         = 500000000
 	BaselineWarDeclareWarMinTension               = 70.0
@@ -1881,8 +1886,11 @@ var (
 			"DOC_PHOTO_MATCH_THRESHOLD": 0.75,
 		},
 		"domain_wake": {
-			"WAKE_EPSILON":         1e-06,
-			"WAKE_MINUTES_PER_DAY": 1440,
+			"WAKE_CASE_LIMIT_DAYS":    90,
+			"WAKE_DISASTER_HOURS":     72,
+			"WAKE_EPSILON":            1e-06,
+			"WAKE_MINUTES_PER_DAY":    1440,
+			"WAKE_PROJECT_STAGE_DAYS": 7,
 		},
 		"economy": {
 			"BANK_CREDIT_MAX":             1000,
@@ -2452,8 +2460,10 @@ var (
 			"LEGACY_TALENT_SLOTS":       3,
 		},
 		"manufacturing": {
-			"MFG_DEFECT_SHARE":    0.5,
-			"MFG_REFERENCE_LABOR": 20.0,
+			"MFG_DEFECT_SHARE":      0.5,
+			"MFG_EMISSION_PER_UNIT": 0.006,
+			"MFG_REFERENCE_LABOR":   20.0,
+			"MFG_TONS_PER_UNIT":     0.02,
 		},
 		"market": {
 			"MARKET_FX_EPSILON": 1e-09,

@@ -46,11 +46,13 @@ func _settle_stage(claim: Dictionary, base: float, lawyer_level: int, rng) -> Di
 
 
 ## 起诉与判决（R52.2、R52.3）：多维证据链 + 双方律师能力决定胜率。
-func litigate(claim: Dictionary, evidence_strength: float, lawyer_level: int, opponent_lawyer: int, rng = null) -> Dictionary:
+func litigate(claim: Dictionary, evidence_strength: float, lawyer_level: int, opponent_lawyer: int, rng = null, opts: Dictionary = {}) -> Dictionary:
 	claim["stage"] = "litigate"
 	var prob: float = 0.5 + (clampf(evidence_strength, 0.0, 1.0) - 0.5) * 0.6 + (float(lawyer_level) - float(opponent_lawyer)) * 0.06
 	prob = clampf(prob, 0.05, 0.95)
-	var roll: float = rng.next_float() if rng != null else 0.0
+	var roll: float = float(opts.get("roll", -1.0))
+	if roll < 0.0:
+		roll = rng.next_float() if rng != null else 0.0
 	var won: bool = roll < prob
 	claim["won"] = won
 	var judgment: Dictionary = {

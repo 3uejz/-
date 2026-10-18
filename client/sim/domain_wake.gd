@@ -45,6 +45,25 @@ func advanced_total() -> int:
 func entry_count() -> int:
 	return _entries.size()
 
+## 返回全部条目的深拷贝，供上层读取并做领域回写。
+func all_entries() -> Dictionary:
+	return _entries.duplicate(true)
+
+## 标记条目结果已被领域系统消费，避免重复回写。
+func mark_applied(entry_id: String) -> void:
+	if _entries.has(entry_id):
+		var result: Dictionary = _entries[entry_id].get("result", {})
+		result["applied"] = true
+		_entries[entry_id]["result"] = result
+
+## 同步外部领域系统的进度（不重置 last_minute，保持时间守恒）。
+func set_progress(entry_id: String, progress: float, status: String = "") -> void:
+	if not _entries.has(entry_id):
+		return
+	_entries[entry_id]["progress"] = progress
+	if status != "":
+		_entries[entry_id]["status"] = status
+
 func get_entry(entry_id: String) -> Dictionary:
 	return _entries.get(entry_id, {})
 

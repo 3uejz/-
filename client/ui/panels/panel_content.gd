@@ -835,6 +835,24 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 	var cases: Array = _items_of(player.get("cases", [])) + _items_of(_world(context).get("cases", []))
 	if not cases.is_empty():
 		sections.append(_section("案件", _rows_from(cases, ["type", "stage", "status"], name_resolver)))
+	var cv: Dictionary = context.get("civil", {})
+	if cv.has("claim"):
+		var cl: Dictionary = cv["claim"]
+		var crows: Array = [
+			{"label": "类型", "value": String(cl.get("type_name", cl.get("type", "")))},
+			{"label": "标的", "value": str(int(cl.get("amount", 0)))},
+			{"label": "阶段", "value": String(cl.get("stage", ""))},
+			{"label": "证据强度", "value": "%.2f" % float(cl.get("evidence", 0.0))},
+			{"label": "胜诉", "value": _yes_no(bool(cl.get("won", false)))},
+		]
+		if cv.has("judgment"):
+			var j: Dictionary = cv["judgment"]
+			crows.append({"label": "判赔", "value": str(int(j.get("award", 0)))})
+			crows.append({"label": "胜诉概率", "value": "%.2f" % float(j.get("probability", 0.0))})
+		crows.append({"label": "已执行", "value": _yes_no(bool(cv.get("enforced", false)))})
+		if bool(cv.get("appealed", false)):
+			crows.append({"label": "已上诉", "value": "是"})
+		sections.append(_section("民事案件", crows))
 	var pol: Dictionary = context.get("police", {})
 	if pol.has("case"):
 		var pc: Dictionary = pol["case"]
@@ -1817,12 +1835,42 @@ static func services(player: Dictionary, context: Dictionary, name_resolver: Cal
 	var sections: Array = []
 	sections.append_array(_professional_runtime_sections(context.get("professional", {})))
 	sections.append_array(_life_service_runtime_sections(context.get("life_services", {})))
+	sections.append_array(_research_runtime_sections(context.get("research", {})))
 	var orders: Array = _items_of(player.get("orders", []))
 	if not orders.is_empty():
 		sections.append(_section("服务单", _rows_from(orders, ["type", "status", "amount", "rating"], name_resolver)))
 	if sections.is_empty():
 		return _empty("专业与生活服务", "暂无服务单；可开事务所、承接项目，或预约维修、家政、搬家")
 	return _ok(sections)
+
+static func _research_runtime_sections(r: Dictionary) -> Array:
+	if r.is_empty():
+		return []
+	var sections: Array = []
+	var res: Dictionary = r.get("resources", {})
+	sections.append(_section("科研条件", [
+		{"label": "实验室", "value": _yes_no(bool(res.get("lab", false)))},
+		{"label": "仪器", "value": str(int(res.get("equipment", 0)))},
+		{"label": "团队", "value": str(int(res.get("team", 0)))},
+		{"label": "经费", "value": str(int(res.get("funding", 0)))},
+	]))
+	var project: Dictionary = r.get("project", {})
+	if not project.is_empty():
+		var rows: Array = [
+			{"label": "课题", "value": String(project.get("topic", ""))},
+			{"label": "阶段", "value": String(project.get("stage", ""))},
+			{"label": "成果质量", "value": "%.1f" % float(project.get("quality", 0.0))},
+			{"label": "已发表", "value": _yes_no(bool(project.get("published", false)))},
+			{"label": "已申请专利", "value": _yes_no(bool(project.get("patented", false)))},
+		]
+		sections.append(_section("科研项目", rows))
+	var totals: Array = [
+		{"label": "累计声望", "value": "%.1f" % float(r.get("prestige", 0.0))},
+		{"label": "累计引用", "value": str(int(r.get("citations", 0)))},
+		{"label": "累计收入", "value": str(int(r.get("income", 0)))},
+	]
+	sections.append(_section("科研成果", totals))
+	return sections
 
 static func _professional_runtime_sections(p: Dictionary) -> Array:
 	if p.is_empty():

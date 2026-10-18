@@ -244,6 +244,8 @@ func _dispatch(intent) -> Dictionary:
 			return _mfg_order(intent)
 		"交付订单":
 			return _mfg_deliver(intent)
+		"成品出口":
+			return _mfg_export(intent)
 		"改进经营模式":
 			return _mfg_mode(intent)
 		# 国际贸易、海关与物流（D27）
@@ -523,6 +525,14 @@ func _dispatch(intent) -> Dictionary:
 			return _consumer_association(intent)
 		"集体维权":
 			return _consumer_class_action(intent)
+		"消费起诉":
+			return _consumer_sue(intent)
+		"民事开庭":
+			return _civil_litigate(intent)
+		"民事上诉":
+			return _civil_appeal(intent)
+		"民事执行":
+			return _civil_enforce(intent)
 		"质量事故":
 			return _consumer_incident_quality(intent)
 		"食安事故":
@@ -721,6 +731,16 @@ func _dispatch(intent) -> Dictionary:
 			return _content_approval(intent)
 		"粉丝运营":
 			return _content_fandom(intent)
+		"科研立项":
+			return _research_start(intent)
+		"科研推进":
+			return _research_advance(intent)
+		"科研成果":
+			return _research_collect(intent)
+		"科研专利":
+			return _research_patent(intent)
+		"科研经费":
+			return _research_fund(intent)
 		"办工程公司":
 			return _eng_new_contractor(intent)
 		"承接工程":
@@ -1819,6 +1839,16 @@ func _mfg_produce(intent) -> Dictionary:
 		return _fail("无法生产（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["生产%s，良品 %.1f（良品率 %.0f%%）。" % [_mfg_recipe_name(recipe), float(r.get("good_output", 0.0)), float(r.get("quality_yield", 0.0)) * 100.0]], 0, "")
 
+func _mfg_export(intent) -> Dictionary:
+	var recipe := _object_id(intent, "mfg_recipe")
+	var qty: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.mfg_export(recipe, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法成品出口（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["成品出口单据 #%d：%s %.1f 件，货值 %d，吨位 %.2f。" % [
+		int(r.get("index", 0)), String(r.get("goods", "")), float(r.get("quantity", 0.0)),
+		int(r.get("goods_value", 0)), float(r.get("quantity_ton", 0.0))]], 0, "")
+
 func _mfg_order(intent) -> Dictionary:
 	var recipe := _object_id(intent, "mfg_recipe")
 	var qty: float = float(_param_number(intent, "number", 100))
@@ -1854,6 +1884,44 @@ func _param_number(intent, key: String, default: int) -> int:
 	if intent.params is Dictionary and (intent.params as Dictionary).has(key):
 		return int((intent.params as Dictionary).get(key, default))
 	return default
+
+# --- 科研流程与成果转化（D5 / R45.4-5） ---
+
+func _research_start(intent) -> Dictionary:
+	var topic: String = String(intent.params.get("method", "")).strip_edges()
+	if topic.is_empty():
+		return _fail("请给出研究课题。")
+	var r: Dictionary = host.research_start(topic)
+	if not bool(r.get("ok", false)):
+		return _fail("无法立项（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["科研立项：%s，已付启动经费 %d。" % [topic, int(r.get("spent", 0))]], 0, "")
+
+func _research_advance(intent) -> Dictionary:
+	var r: Dictionary = host.research_advance()
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进科研（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["科研推进到 %s，成果质量 %.1f。" % [String(r.get("stage", "")), float(r.get("quality", 0.0))]], 0, "")
+
+func _research_collect(intent) -> Dictionary:
+	var r: Dictionary = host.research_collect()
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算成果（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["成果发表：引用 %d，声望 %.1f，收入 %d。" % [
+		int(r.get("citations", 0)), float(r.get("prestige", 0.0)), int(r.get("income", 0))]], 0, "")
+
+func _research_patent(intent) -> Dictionary:
+	var r: Dictionary = host.research_file_patent()
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请专利（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["专利已登记，知识产权 %s，登记费 %d。" % [
+		String((r.get("ip", {}) as Dictionary).get("id", "")), int(r.get("fee", 0))]], 0, "")
+
+func _research_fund(intent) -> Dictionary:
+	var amount: int = _param_number(intent, "amount", 100000)
+	var r: Dictionary = host.research_fund(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法注入科研经费（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["科研经费余额 %d。" % int(r.get("funding", 0))], 0, "")
 
 # --- 国际贸易、海关与物流（D27） ---
 
@@ -2914,6 +2982,39 @@ func _consumer_dispute(intent, channel: String, evidence: float) -> Dictionary:
 	if bool(r.get("success", false)):
 		return _ok(["维权成功，获赔 %d。" % int(r.get("compensation", 0))], 0, "")
 	return _fail("维权未获支持。")
+
+func _consumer_sue(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_sue(0.5)
+	if not bool(r.get("ok", false)):
+		return _fail("无法起诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var claim: Dictionary = r.get("claim", {})
+	return _ok(["消费纠纷已立案，标的 %d，案号 %s。" % [
+		int(claim.get("amount", 0)), String(r.get("case_id", ""))]], 0, "")
+
+func _civil_litigate(intent) -> Dictionary:
+	var r: Dictionary = host.civil_litigate()
+	if not bool(r.get("ok", false)):
+		return _fail("无法开庭（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var j: Dictionary = r.get("judgment", {})
+	if bool(j.get("won", false)):
+		return _ok(["胜诉，判赔 %d。" % int(j.get("award", 0))], 0, "")
+	return _fail("败诉，未获判赔。")
+
+func _civil_appeal(intent) -> Dictionary:
+	var r: Dictionary = host.civil_appeal()
+	if not bool(r.get("ok", false)):
+		return _fail("无法上诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("overturned", false)):
+		return _ok(["二审改判，追加判赔 %d。" % int(r.get("delta", 0))], 0, "")
+	return _fail("二审维持原判。")
+
+func _civil_enforce(intent) -> Dictionary:
+	var r: Dictionary = host.civil_enforce()
+	if not bool(r.get("ok", false)):
+		return _fail("无法执行（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("execution_failure", false)):
+		return _ok(["执行不能，已回收 %d，未清偿 %d。" % [int(r.get("recovered", 0)), int(r.get("outstanding", 0))]], 0, "")
+	return _ok(["执行到位 %d。" % int(r.get("recovered", 0))], 0, "")
 
 func _consumer_class_action(intent) -> Dictionary:
 	var r: Dictionary = host.consumer_class_action(0.5)

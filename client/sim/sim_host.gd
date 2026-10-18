@@ -67,6 +67,8 @@ const EngineeringScript = preload("res://sim/engineering.gd")
 const ProfessionalServicesScript = preload("res://sim/professional_services.gd")
 const LifeServicesScript = preload("res://sim/life_services.gd")
 const TransportInfraScript = preload("res://sim/transport_infra.gd")
+const ResearchScript = preload("res://sim/research.gd")
+const CivilScript = preload("res://sim/civil.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -235,6 +237,10 @@ var transport_infra                ## 交通基建与航运（TransportInfraSyst
 var _tin_project: Dictionary = {}          ## 当前基建项目，入档 sim_runtime.transport_infra.project
 var _tin_route: Dictionary = {}            ## 当前运营线路，入档 sim_runtime.transport_infra.route
 var _tin_region: Dictionary = {}           ## 受影响区域（最小实现），入档 sim_runtime.transport_infra.region
+var research_sys                 ## 科研流程与成果转化（ResearchSystem）
+var _research: Dictionary = {}       ## 科研运行时（项目/实验室资源/累计成果），入档 sim_runtime.research
+var civil_sys                    ## 民事纠纷与诉讼（CivilSystem）
+var _civil: Dictionary = {}          ## 民事案件运行时（纠纷/判决/执行），入档 sim_runtime.civil
 
 var _seeded: bool = false
 var _seed: int = 0
@@ -335,6 +341,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	professional = ProfessionalServicesScript.new()
 	life_services = LifeServicesScript.new()
 	transport_infra = TransportInfraScript.new()
+	research_sys = ResearchScript.new()
+	civil_sys = CivilScript.new()
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -383,6 +391,10 @@ func _ensure_world_geo() -> void:
 		var sr: Variant = (state.sim_runtime as Dictionary).get("survival", {})
 		if sr is Dictionary and not (sr as Dictionary).is_empty():
 			survival.from_dict(sr)
+		# 恢复领域实体休眠补算运行时（案件/工程/贷款/灾害）。
+		var dwr: Variant = (state.sim_runtime as Dictionary).get("domain_wake", {})
+		if dwr is Dictionary and not (dwr as Dictionary).is_empty():
+			domain_wake.from_dict(dwr)
 		# 恢复精神疾病病程运行时（三维病程/复发/治疗标志）。
 		var mr: Variant = (state.sim_runtime as Dictionary).get("mental", {})
 		if mr is Dictionary and not (mr as Dictionary).is_empty():
@@ -433,6 +445,14 @@ func _ensure_world_geo() -> void:
 		var tr: Variant = (state.sim_runtime as Dictionary).get("trade", {})
 		if tr is Dictionary and not (tr as Dictionary).is_empty():
 			_shipments = ((tr as Dictionary).get("shipments", []) as Array).duplicate(true)
+		# 恢复科研运行时（项目/实验室资源/累计成果）。
+		var rs: Variant = (state.sim_runtime as Dictionary).get("research", {})
+		if rs is Dictionary and not (rs as Dictionary).is_empty():
+			_research = (rs as Dictionary).duplicate(true)
+		# 恢复民事案件运行时（纠纷/判决/执行）。
+		var cv: Variant = (state.sim_runtime as Dictionary).get("civil", {})
+		if cv is Dictionary and not (cv as Dictionary).is_empty():
+			_civil = (cv as Dictionary).duplicate(true)
 		# 恢复矿业/能源运行时（矿场/能源市场）。
 		var mn: Variant = (state.sim_runtime as Dictionary).get("mining", {})
 		if mn is Dictionary and not (mn as Dictionary).is_empty():
@@ -674,6 +694,8 @@ func _ensure_world_geo() -> void:
 	_ensure_acquaintances()
 	_ensure_property_market()
 	_ensure_organizations()
+	# 读档后补一次领域回写：休眠期间已结算但尚未消费的结果在同一次载入生效。
+	_apply_wake_results()
 
 ## 生成所在城市的熟人名册（确定性），建立初始关系并恢复婚姻状态。
 ## 名册由（种子, 区域, 序号）确定，不入档；关系随 player.relations 持久化。
@@ -782,6 +804,12 @@ func _persist_regions() -> void:
 		return
 	(state.world_delta as Dictionary)["regions"] = regions_delta()
 
+## 把领域实体补算运行态写回 sim_runtime.domain_wake。
+func _persist_domain_wake() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["domain_wake"] = domain_wake.to_dict()
+
 ## 由地理节点派生区域初始状态（人口/经济/物价/治安/气候），并锚定到当前时刻。
 func _geo_region_opts(region_id: String) -> Dictionary:
 	var opts: Dictionary = {"last_simulated_minute": now_minutes()}
@@ -838,7 +866,59 @@ func region_price_index() -> float:
 
 ## 注册领域实体（案件/工程/灾害/催收/异常/手术）以供离线补算；见 DomainWake。
 func domain_register(entry_id: String, kind: String, opts: Dictionary = {}) -> Dictionary:
-	return domain_wake.register(entry_id, kind, opts)
+	var entry: Dictionary = domain_wake.register(entry_id, kind, opts)
+	_persist_domain_wake()
+	return entry
+
+## 领域补算结果回写：已结算且未消费的条目更新对应领域状态，并标记 applied 保证幂等。
+func _apply_wake_results() -> Array:
+	var applied: Array = []
+	for entry_id in domain_wake.all_entries():
+		var e: Dictionary = domain_wake.get_entry(String(entry_id))
+		if e.is_empty():
+			continue
+		var result: Dictionary = e.get("result", {})
+		var kind: String = String(e.get("kind", ""))
+		var params: Dictionary = e.get("params", {})
+		# 贷款利息随休眠持续累计，反复同步且不消费结果。
+		if kind == DomainWakeScript.KIND_LOAN:
+			var target_loan: Dictionary = _debt_loan if String(params.get("side", "borrow")) == "borrow" else _debt_lend
+			if not target_loan.is_empty() and String(params.get("loan_id", "")) == String(target_loan.get("id", "")):
+				target_loan["accrued_interest"] = float(result.get("interest", 0.0))
+				target_loan["overdue_days"] = float(result.get("overdue_days", 0.0))
+				_persist_debt()
+				applied.append(String(entry_id))
+			continue
+		if not domain_wake.is_resolved(String(entry_id)):
+			continue
+		if bool(result.get("applied", false)):
+			continue
+		if kind == DomainWakeScript.KIND_PROJECT and not _eng_project.is_empty() \
+				and String(_eng_project.get("id", "")) == String(params.get("project_id", "")):
+			_eng_project["stage_index"] = engineering.CHAIN.size()
+			_eng_project["stage"] = "completed"
+			_persist_engineering()
+		elif kind == DomainWakeScript.KIND_CASE and not _civil.is_empty():
+			var claim: Dictionary = _civil.get("claim", {})
+			if not claim.is_empty() and String(params.get("civil_id", "")) == String(e.get("id", "")) \
+					and (_civil.get("judgment", {}) as Dictionary).is_empty():
+				claim["stage"] = "cold"
+				_persist_civil()
+		elif kind == DomainWakeScript.KIND_CASE and not _police_case.is_empty() \
+				and String(params.get("case_id", "")) == String(e.get("id", "")):
+			if String(_police_case.get("stage", "")) != police.STAGE_SOLVED:
+				_police_case["stage"] = police.STAGE_COLD
+				_persist_police()
+		elif kind == DomainWakeScript.KIND_DISASTER and not _incident.is_empty() \
+				and String(params.get("incident_at", "")) == String(e.get("id", "")):
+			if String(_incident.get("stage", "")) != emergency.STAGE_AFTERMATH:
+				_incident["stage"] = emergency.STAGE_AFTERMATH
+				_persist_emergency()
+		domain_wake.mark_applied(String(entry_id))
+		applied.append(String(entry_id))
+	_persist_domain_wake()
+	return applied
+
 
 ## 与指定熟人结婚：纳入家庭并持久化到 player.family.spouse_id。
 func marry_with(person_id: String) -> Dictionary:
@@ -2093,8 +2173,52 @@ func mfg_produce(recipe_key: String, batches: float = 1.0) -> Dictionary:
 		return {"ok": false, "reason": "no_factory"}
 	var r: Dictionary = manufacturing.produce(_factory, recipe_key, batches)
 	if bool(r.get("ok", false)):
+		# 生产碳排进入企业碳账户，随产量按单位系数累计。
+		var good: float = float(r.get("good_output", 0.0))
+		if good > 0.0 and not _env_enterprise.is_empty():
+			var emitted: float = good * BaselineScript.MFG_EMISSION_PER_UNIT
+			_env_enterprise["emissions"] = float(_env_enterprise.get("emissions", 0.0)) + emitted
+			r["emissions"] = emitted
+			r["carbon_balance"] = environment_sys.carbon_balance(_env_enterprise)
+			_persist_environment()
 		_persist_manufacturing()
 	return r
+
+
+## 工厂成品出口：扣成品库存，按吨位与货值建立外贸单据。
+func mfg_export(recipe_key: String, quantity: float, destination: String = "") -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var def: Dictionary = manufacturing.recipe_def(recipe_key)
+	if def.is_empty():
+		return {"ok": false, "reason": "unknown_recipe"}
+	var qty: float = maxf(0.0, quantity)
+	if qty <= 0.0:
+		return {"ok": false, "reason": "bad_quantity"}
+	var have: float = manufacturing.product_qty(_factory, recipe_key)
+	if have < qty:
+		return {"ok": false, "reason": "insufficient_stock", "available": snappedf(have, 0.1)}
+	var margin: float = 1.0 + float((manufacturing.MODES.get(String(_factory.get("mode", "")), {}) as Dictionary).get("brand_margin", 0.0))
+	var goods_value: int = int(round(qty * float(def.get("price", 0)) * margin))
+	var tons: float = qty * BaselineScript.MFG_TONS_PER_UNIT
+	var s: Dictionary = trade.new_shipment({
+		"id": "shipment_%d" % _shipments.size(),
+		"goods_value": maxi(0, goods_value),
+		"quantity_ton": maxf(0.01, tons),
+		"origin": current_region_id(),
+		"destination": destination,
+	})
+	s["goods"] = String(def.get("name", recipe_key))
+	s["recipe"] = recipe_key
+	s["quantity"] = qty
+	(_factory["products"] as Dictionary)[recipe_key] = have - qty
+	_shipments.append(s)
+	_persist_manufacturing()
+	_persist_trade()
+	return {
+		"ok": true, "index": _shipments.size() - 1, "goods": String(s["goods"]),
+		"goods_value": goods_value, "quantity": qty, "quantity_ton": float(s["quantity_ton"]),
+	}
 
 ## 接单：价取配方基准价。
 func mfg_accept_order(recipe_key: String, quantity: float) -> Dictionary:
@@ -2483,6 +2607,30 @@ func _persist_mining() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["mining"] = {"mine": _mine.duplicate(true), "energy": _energy.duplicate(true)}
+
+## 工厂工资按月结算：资金不足则拖欠并触发罢工，补足后自动复工。
+func _mfg_tick(before_minutes: int, after_minutes: int) -> void:
+	if _factory.is_empty():
+		return
+	var months: int = _month_ordinal(after_minutes) - _month_ordinal(before_minutes)
+	if months <= 0:
+		return
+	var due: int = manufacturing.payroll_cost(_factory) * months
+	if due <= 0:
+		return
+	if int(_factory.get("money", 0)) >= due:
+		_factory["money"] = int(_factory.get("money", 0)) - due
+		if bool(_factory.get("payroll_arrears", false)):
+			_factory["payroll_arrears"] = false
+			manufacturing.set_disruption(_factory, "strike", false)
+	else:
+		_factory["payroll_arrears"] = true
+		manufacturing.set_disruption(_factory, "strike", true)
+	_persist_manufacturing()
+
+func _month_ordinal(minutes: int) -> int:
+	var cal: Dictionary = GregorianScript.from_absolute_minutes(minutes)
+	return int(cal.get("year", 2000)) * 12 + int(cal.get("month", 1))
 
 
 # --- D29 农林牧渔深化 ---
@@ -3387,6 +3535,11 @@ func police_start_case(crime: String, role: String = "detective") -> Dictionary:
 	var region: String = _home_region_id
 	var r: Dictionary = police.new_case(crime, region, {"role": role})
 	_police_case = r
+	var case_id: String = "case:%d:%d" % [now_minutes(), domain_wake.entry_count()]
+	var due: int = now_minutes() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
+	domain_register(case_id, DomainWakeScript.KIND_CASE, {
+		"region_id": region, "due_minute": due, "total": due - now_minutes(), "case_id": case_id,
+	})
 	_persist_police()
 	return {"ok": true, "case": _police_case}
 
@@ -3541,6 +3694,13 @@ func emergency_stages_catalog() -> Array:
 func emergency_new_incident(type: String, severity: float = 0.5) -> Dictionary:
 	var r: Dictionary = emergency.new_incident(type, {"region": _home_region_id, "severity": severity, "at_risk": 200, "trapped": 40})
 	_incident = r
+	var iid: String = "disaster:%d:%d" % [now_minutes(), domain_wake.entry_count()]
+	var duration: float = float(BaselineScript.WAKE_DISASTER_HOURS * 60)
+	domain_register(iid, DomainWakeScript.KIND_DISASTER, {
+		"region_id": _home_region_id, "total": duration, "progress": 0.0,
+		"params": {"duration_minutes": duration, "severity": severity},
+		"incident_at": iid,
+	})
 	_persist_emergency()
 	return {"ok": true, "incident": _incident}
 
@@ -4007,6 +4167,29 @@ func debt_redeem() -> Dictionary:
 	_persist_debt()
 	return {"ok": true, "item": item, "loan": ledger}
 
+## 登记借款/放贷进休眠补算，逾期利息按年利率折算。
+func _wake_track_loan(loan: Dictionary, side: String) -> void:
+	var lid: String = String(loan.get("id", ""))
+	domain_register("loan:%s" % lid, DomainWakeScript.KIND_LOAN, {
+		"region_id": current_region_id(),
+		"principal": float(loan.get("principal", 0)),
+		"annual_rate": float(loan.get("rate", 0.0)),
+		"loan_id": lid,
+		"side": side,
+	})
+
+## 债务重组/破产后停止补算利息，保留已累计的逾期结果。
+func _wake_close_loan(side: String) -> void:
+	var loan: Dictionary = _debt_loan if side == "borrow" else _debt_lend
+	if loan.is_empty():
+		return
+	var entry_id: String = "loan:%s" % String(loan.get("id", ""))
+	var entry: Dictionary = domain_wake.get_entry(entry_id)
+	if entry.is_empty():
+		return
+	domain_wake.set_progress(entry_id, float(entry.get("progress", 0.0)), "resolved")
+	_persist_domain_wake()
+
 func debt_borrow(business: String, principal: int, rate: float) -> Dictionary:
 	if not debt.business_available(business, _current_year()):
 		return {"ok": false, "reason": "business_unavailable"}
@@ -4018,6 +4201,7 @@ func debt_borrow(business: String, principal: int, rate: float) -> Dictionary:
 		return {"ok": true, "approved": false, "credit": credit}
 	var disb: Dictionary = debt.disburse(loan, {"license": true})
 	_debt_loan = loan
+	_wake_track_loan(loan, "borrow")
 	_persist_debt()
 	return {"ok": true, "approved": true, "credit": credit, "disbursement": disb, "loan": loan}
 
@@ -4029,6 +4213,7 @@ func debt_lend(business: String, principal: int, rate: float) -> Dictionary:
 	})
 	var reg: Dictionary = debt.regulate(loan, _debt_lender)
 	_debt_lend = loan
+	_wake_track_loan(loan, "lend")
 	_persist_debt()
 	return {"ok": true, "loan": loan, "regulation": reg}
 
@@ -4048,6 +4233,8 @@ func debt_restructure() -> Dictionary:
 		return {"ok": false, "reason": "no_loan"}
 	var r: Dictionary = debt.restructure(_debt_loan, {})
 	_persist_debt()
+	if bool(r.get("ok", false)):
+		_wake_close_loan("borrow")
 	return r
 
 func debt_bankruptcy() -> Dictionary:
@@ -4059,6 +4246,7 @@ func debt_bankruptcy() -> Dictionary:
 	if bool(r.get("ok", false)):
 		_debt_loan = loans[0]
 		_persist_debt()
+		_wake_close_loan("borrow")
 	return r
 
 func debt_predatory(amount: int) -> Dictionary:
@@ -4253,6 +4441,116 @@ func _persist_consumer() -> void:
 		"product": consumer.to_dict(_consumer_product),
 		"merchant": _consumer_merchant.duplicate(true),
 	}
+
+
+# --- 民事纠纷与诉讼（D12 / R52） ---
+
+func civil_state() -> Dictionary:
+	return _civil.duplicate(true)
+
+## 消费维权起诉：以订单金额（缺陷/假货三倍）立案，并登记审限补算。
+func consumer_sue(evidence: float = 0.5) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	if not (_civil.get("claim", {}) as Dictionary).is_empty():
+		return {"ok": false, "reason": "existing_claim"}
+	var amount: int = int(_consumer_order.get("amount", 0))
+	if bool(_consumer_order.get("defective", false)) or bool(_consumer_order.get("fake", false)):
+		amount *= 3
+	var claim: Dictionary = civil_sys.new_claim("consumer", amount, "player", "merchant")
+	claim["evidence"] = clampf(evidence, 0.0, 1.0)
+	_civil = {"claim": claim, "judgment": {}, "enforced": false, "appealed": false}
+	var cid: String = "civil:%d:%d" % [now_minutes(), domain_wake.entry_count()]
+	var due: int = now_minutes() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
+	domain_register(cid, DomainWakeScript.KIND_CASE, {
+		"region_id": current_region_id(), "due_minute": due, "total": due - now_minutes(), "civil_id": cid,
+	})
+	_persist_civil()
+	return {"ok": true, "claim": claim, "case_id": cid}
+
+## 开庭审理：证据强度、双方律师能力决定胜率与判赔。
+func civil_litigate(evidence: float = -1.0, lawyer_level: int = 0, opponent_lawyer: int = 1, forced_roll: float = -1.0) -> Dictionary:
+	var claim: Dictionary = _civil.get("claim", {})
+	if claim.is_empty():
+		return {"ok": false, "reason": "no_claim"}
+	var ev: float = float(claim.get("evidence", 0.5)) if evidence < 0.0 else clampf(evidence, 0.0, 1.0)
+	var judgment: Dictionary = civil_sys.litigate(claim, ev, lawyer_level, opponent_lawyer, rng, {"roll": forced_roll})
+	var compensation: int = 0
+	if bool(judgment.get("won", false)):
+		compensation = int(judgment.get("award", 0))
+		_consumer_merchant["compensation_paid"] = int(_consumer_merchant.get("compensation_paid", 0)) + compensation
+		_consumer_merchant["reputation"] = clampf(float(_consumer_merchant.get("reputation", 0.5)) - 0.2, 0.0, 1.0)
+		_persist_consumer()
+	_civil["judgment"] = judgment
+	_persist_civil()
+	return {"ok": true, "judgment": judgment, "compensation": compensation}
+
+## 上诉：败诉后有一定概率改判，改判差额补入现金。
+func civil_appeal(lawyer_level: int = 0) -> Dictionary:
+	var claim: Dictionary = _civil.get("claim", {})
+	var judgment: Dictionary = _civil.get("judgment", {})
+	if claim.is_empty() or judgment.is_empty():
+		return {"ok": false, "reason": "no_judgment"}
+	if bool(_civil.get("appealed", false)):
+		return {"ok": false, "reason": "already_appealed"}
+	var before: int = int(judgment.get("award", 0))
+	var r: Dictionary = civil_sys.appeal(claim, judgment, lawyer_level, rng)
+	var after: int = int(r.get("award", before))
+	judgment["award"] = after
+	_civil["judgment"] = judgment
+	_civil["appealed"] = true
+	_persist_civil()
+	return {"ok": true, "overturned": bool(r.get("overturned", false)), "award": after, "delta": maxi(0, after - before)}
+
+## 执行判决：胜诉判赔入账，仅可执行一次。
+func civil_enforce() -> Dictionary:
+	var judgment: Dictionary = _civil.get("judgment", {})
+	if judgment.is_empty():
+		return {"ok": false, "reason": "no_judgment"}
+	if bool(_civil.get("enforced", false)):
+		return {"ok": false, "reason": "already_enforced"}
+	var award: int = int(judgment.get("award", 0))
+	var r: Dictionary = civil_sys.enforce(judgment, award)
+	var recovered: int = int(r.get("recovered", 0))
+	if recovered > 0:
+		economy.add_money(account_id(), recovered, "civil_enforcement")
+	_civil["enforced"] = true
+	_persist_civil()
+	return {"ok": true, "recovered": recovered, "execution_failure": bool(r.get("execution_failure", false)), "outstanding": int(r.get("outstanding", 0))}
+
+func civil_panel_data() -> Dictionary:
+	if _civil.is_empty():
+		return {}
+	var claim: Dictionary = _civil.get("claim", {})
+	if claim.is_empty():
+		return {}
+	var out: Dictionary = {
+		"claim": {
+			"type": String(claim.get("type", "")),
+			"type_name": String(civil_sys.TYPE_NAMES.get(String(claim.get("type", "")), claim.get("type", ""))),
+			"amount": int(claim.get("amount", 0)),
+			"stage": String(claim.get("stage", "")),
+			"won": bool(claim.get("won", false)),
+			"settled": bool(claim.get("settled", false)),
+			"evidence": float(claim.get("evidence", 0.0)),
+		},
+		"enforced": bool(_civil.get("enforced", false)),
+		"appealed": bool(_civil.get("appealed", false)),
+	}
+	var judgment: Dictionary = _civil.get("judgment", {})
+	if not judgment.is_empty():
+		out["judgment"] = {
+			"won": bool(judgment.get("won", false)),
+			"award": int(judgment.get("award", 0)),
+			"cost": int(judgment.get("cost", 0)),
+			"probability": float(judgment.get("probability", 0.0)),
+		}
+	return out
+
+func _persist_civil() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["civil"] = _civil.duplicate(true)
 
 
 # --- D41 社会救助、收养寄养与慈善 ---
@@ -5423,10 +5721,25 @@ func eng_take_project(name: String = "", scale: int = 50000000) -> Dictionary:
 		return {"ok": false, "reason": "no_contractor"}
 	_eng_project = engineering.new_project({"name": name if not name.is_empty() else "承接工程", "scale": maxi(1, scale), "budget": maxi(1, scale)})
 	_persist_engineering()
+	_wake_track_project()
 	return {
 		"ok": true, "name": String(_eng_project.get("name", "")),
 		"required_qualification": String(_eng_project.get("required_qualification", "")),
 	}
+
+## 把当前在建工程登记进休眠补算（进度按阶段折算，手动推进后同步）。
+func _wake_track_project() -> void:
+	if _eng_project.is_empty():
+		return
+	var pid: String = String(_eng_project.get("id", ""))
+	var total: float = float(engineering.CHAIN.size())
+	domain_register("eng:%s" % pid, DomainWakeScript.KIND_PROJECT, {
+		"region_id": current_region_id(),
+		"total": total,
+		"progress": float(_eng_project.get("stage_index", 0)),
+		"rate": 1.0 / float(BaselineScript.WAKE_PROJECT_STAGE_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY),
+		"project_id": pid,
+	})
 
 func eng_advance() -> Dictionary:
 	if _eng_project.is_empty() or _eng_contractor.is_empty():
@@ -5436,6 +5749,10 @@ func eng_advance() -> Dictionary:
 	if bool(r.get("ok", false)):
 		r["stage"] = String(engineering.CHAIN[before]) if before < engineering.CHAIN.size() else ""
 		r["next"] = String(_eng_project.get("stage", ""))
+		var pid: String = String(_eng_project.get("id", ""))
+		var done: bool = int(_eng_project.get("stage_index", 0)) >= engineering.CHAIN.size()
+		domain_wake.set_progress("eng:%s" % pid, float(_eng_project.get("stage_index", 0)), "completed" if done else "in_progress")
+		_persist_domain_wake()
 	_persist_engineering()
 	return r
 
@@ -5633,6 +5950,130 @@ func _persist_engineering() -> void:
 		"city": engineering.to_dict(_eng_city),
 		"developer": engineering.to_dict(_eng_developer),
 	}
+
+
+# --- 科研流程与成果转化（D5 / R45.4-5） ---
+
+func research_state() -> Dictionary:
+	return _research.duplicate(true)
+
+## 科研运行时惰性初始化：默认具备实验室与基础团队，经费由玩家注入。
+func _ensure_research() -> void:
+	if not _research.is_empty():
+		return
+	_research = {
+		"project": {},
+		"resources": {"lab": true, "equipment": 1, "team": 2, "funding": 0},
+		"prestige": 0.0,
+		"citations": 0,
+		"income": 0,
+	}
+
+## 科研经费注入：从玩家现金转入实验室经费池。
+func research_fund(amount: int) -> Dictionary:
+	if amount <= 0:
+		return {"ok": false, "reason": "bad_amount"}
+	if int(economy.cash(account_id())) < amount:
+		return {"ok": false, "reason": "insufficient_funds"}
+	_ensure_research()
+	economy.add_money(account_id(), -amount, "research_fund")
+	var res: Dictionary = _research["resources"]
+	res["funding"] = int(res.get("funding", 0)) + amount
+	_persist_research()
+	return {"ok": true, "funding": int(res["funding"])}
+
+## 立项：校验实验室/仪器/团队/经费并扣除启动经费。
+func research_start(topic: String) -> Dictionary:
+	_ensure_research()
+	var r: Dictionary = research_sys.start_project(topic, _research["resources"])
+	if bool(r.get("ok", false)):
+		_research["project"] = r["project"]
+		_persist_research()
+	return r
+
+## 推进一段：文献→实验→数据→论文→同行评审→发表/退稿。
+func research_advance() -> Dictionary:
+	_ensure_research()
+	var project: Dictionary = _research.get("project", {})
+	if project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = research_sys.advance(project, _research["resources"], {
+		"skills": player().get("skills", []),
+		"investment": 60.0,
+		"innovation": 60.0,
+		"competition": 20.0,
+		"rng": rng,
+	})
+	if bool(r.get("ok", false)):
+		_persist_research()
+	return r
+
+## 成果结算：发表后声望/引用/收入入账，仅可结算一次。
+func research_collect() -> Dictionary:
+	_ensure_research()
+	var project: Dictionary = _research.get("project", {})
+	if project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	if bool(project.get("collected", false)):
+		return {"ok": false, "reason": "already_collected"}
+	var r: Dictionary = research_sys.collect(project, economy, account_id())
+	if bool(r.get("ok", false)):
+		project["collected"] = true
+		_research["prestige"] = float(_research.get("prestige", 0.0)) + float(r.get("prestige", 0.0))
+		_research["citations"] = int(_research.get("citations", 0)) + int(r.get("citations", 0))
+		_research["income"] = int(_research.get("income", 0)) + int(r.get("income", 0))
+		_persist_research()
+	return r
+
+## 申请专利并登记知识产权；登记失败则回滚专利标记。
+func research_file_patent() -> Dictionary:
+	_ensure_research()
+	var project: Dictionary = _research.get("project", {})
+	if project.is_empty():
+		return {"ok": false, "reason": "no_project"}
+	var r: Dictionary = research_sys.file_patent(project)
+	if not bool(r.get("ok", false)):
+		return r
+	var ipr: Dictionary = register_ip_asset("patent", String(project.get("topic", "")))
+	if not bool(ipr.get("ok", false)):
+		project["patented"] = false
+		_persist_research()
+		return ipr
+	project["patent_ip"] = String((ipr.get("ip", {}) as Dictionary).get("id", ""))
+	_persist_research()
+	return {"ok": true, "patent": r.get("patent", {}), "ip": ipr.get("ip", {}), "fee": int(ipr.get("fee", 0))}
+
+func research_panel_data() -> Dictionary:
+	if _research.is_empty():
+		return {}
+	var project: Dictionary = _research.get("project", {})
+	var res: Dictionary = _research.get("resources", {})
+	var out: Dictionary = {
+		"resources": {
+			"lab": bool(res.get("lab", false)),
+			"equipment": int(res.get("equipment", 0)),
+			"team": int(res.get("team", 0)),
+			"funding": int(res.get("funding", 0)),
+		},
+		"prestige": float(_research.get("prestige", 0.0)),
+		"citations": int(_research.get("citations", 0)),
+		"income": int(_research.get("income", 0)),
+	}
+	if not project.is_empty():
+		out["project"] = {
+			"topic": String(project.get("topic", "")),
+			"stage": String(project.get("stage", "")),
+			"quality": float(project.get("quality", 0.0)),
+			"published": bool(project.get("published", false)),
+			"patented": bool(project.get("patented", false)),
+			"citations": int(project.get("citations", 0)),
+		}
+	return out
+
+func _persist_research() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["research"] = _research.duplicate(true)
 
 
 # --- D48 专业服务业 ---
@@ -6974,8 +7415,10 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	clock["absolute_minutes"] = int(clock.get("absolute_minutes", 0)) + minutes
 	# 活动区域随分钟推进（人口/经济日级结算）并写回存档增量；天气按当前时刻查询式演化，无需 tick。
 	regions.tick_minute(int(clock["absolute_minutes"]))
-	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进。
+	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进并回写领域状态。
 	domain_wake.advance_to(int(clock["absolute_minutes"]))
+	_apply_wake_results()
+	_persist_domain_wake()
 	_persist_regions()
 	_persist_survival()
 	if bool(r.get("dead", false)) and not _inheritance_settled:
@@ -6991,6 +7434,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 			events.append({"type": "birth", "name": String(born.get("name", ""))})
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
+		# 工厂工资按月结算（资金不足拖欠并罢工）。
+		_mfg_tick(before_minutes, now_minutes())
 		# 子女成长（年度属性结算/成年独立）与早夭。
 		events.append_array(_grow_children())
 		events.append_array(_check_child_mortality(minutes))
