@@ -7169,6 +7169,17 @@ func anomaly_accept_mission(mission_id: String, faction: String) -> Dictionary:
 
 func anomaly_complete_mission(mission_id: String, success: bool = true) -> Dictionary:
 	var r: Dictionary = anomaly.complete_mission(_anomaly_state, mission_id, {"success": success})
+	# 阵营后果：基金会/猎手压低暴露，邪教与黑实验室提高暴露。
+	if bool(r.get("ok", false)) and success:
+		var faction: String = String(_anomaly_state.get("faction", ""))
+		var delta: float = 0.0
+		match faction:
+			"foundation": delta = -6.0
+			"hunter": delta = -4.0
+			"cult": delta = 8.0
+			"black_lab": delta = 5.0
+		if delta != 0.0:
+			anomaly.add_exposure(_anomaly_state, delta)
 	# 与传承系统联动：成功任务写入家族史，供跨代叙事回放。
 	if bool(r.get("ok", false)) and success and state != null:
 		var hist: Array = state.legacy.get("history", [])
