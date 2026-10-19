@@ -617,8 +617,12 @@ func _test_emergency_commands() -> void:
 	_main.submit("现场救援")
 	check(String((sim.emergency_state().get("incident", {}) as Dictionary).get("stage", "")) == "rescue", "「现场救援」进入救援")
 	_main.submit("二次事故")
+	sim._incident["deaths"] = 10
+	var stress_before: float = float(sim.player().get("attrs", {}).get("psychological", {}).get("stress", 0.0))
 	_main.submit("善后处理")
 	check(String((sim.emergency_state().get("incident", {}) as Dictionary).get("stage", "")) == "aftermath", "「善后处理」进入善后")
+	var stress_after: float = float(sim.player().get("attrs", {}).get("psychological", {}).get("stress", 0.0))
+	check(stress_after > stress_before, "「善后处理」灾后创伤写入心理压力")
 	_main.submit("开志愿队 测试志愿队")
 	check(not (sim.emergency_state().get("org", {}) as Dictionary).is_empty(), "「开志愿队」建立志愿队")
 	_main.submit("招募志愿者 10")

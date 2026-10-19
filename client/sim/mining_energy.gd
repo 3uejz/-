@@ -30,6 +30,11 @@ const ACCIDENT_NAMES: Dictionary = {
 	"collapse": "塌方", "gas_explosion": "瓦斯爆炸", "landslide": "冒顶", "pneumoconiosis": "尘肺病",
 }
 
+## 职业病：长期低安全暴露的累积风险，与单次矿难分开结算。
+const OCCUPATIONAL_DISEASES: Dictionary = {
+	"pneumoconiosis": {"name": "尘肺病", "annual_health_loss": 2.0, "onset_health_loss": 6.0},
+}
+
 ## 能源品种：基础价（最小货币单位/单位量）、波动率、周期（年）。
 const ENERGY_TYPES: Dictionary = {
 	"oil": {"name": "石油", "base_price": 500000, "volatility": 0.35, "cycle_years": 7.0, "kind": "fossil"},
@@ -216,6 +221,41 @@ func accident_check(mine: Dictionary, opts: Dictionary = {}, rng = null) -> Dict
 	return {
 		"ok": true, "occurred": occurred, "kind": kind, "kind_name": str(ACCIDENT_NAMES.get(kind, "")),
 		"injured": injured, "rate": rate, "safety": float(mine.get("safety", 0.5)),
+	}
+
+
+## 职业病风险：安全越低、工龄/事故越多，年化发病概率越高。
+func occupational_disease_risk(mine: Dictionary, years: float = 1.0, opts: Dictionary = {}) -> float:
+	if not mine.get("occupational_disease", {}).is_empty():
+		return 0.0
+	var safety: float = clampf(float(mine.get("safety", 0.5)), 0.0, 1.0)
+	var workers: int = maxi(0, int(mine.get("workers", 0)))
+	var accidents: int = maxi(0, int(mine.get("accident_count", 0)))
+	var base: float = float(opts.get("base_rate", 0.012))
+	var annual: float = base * (1.0 - safety) * (1.0 + float(workers) / 200.0) + float(accidents) * 0.004
+	return clampf(annual * maxf(0.0, years), 0.0, 0.9)
+
+
+## 职业病判定：每年随矿业 tick 调用；确诊后记录病种与累计工龄。
+func occupational_disease_check(mine: Dictionary, years: float = 1.0, opts: Dictionary = {}, rng = null) -> Dictionary:
+	if not mine.get("occupational_disease", {}).is_empty():
+		var existing: Dictionary = mine["occupational_disease"]
+		existing["years"] = float(existing.get("years", 0.0)) + maxf(0.0, years)
+		return {"ok": true, "occurred": false, "existing": true, "disease": String(existing.get("kind", "")), "years": float(existing["years"])}
+	var risk: float = occupational_disease_risk(mine, years, opts)
+	var roll: float = _roll(float(opts.get("roll", -1.0)), rng)
+	var occurred: bool = roll < risk
+	var health_penalty: float = 0.0
+	var kind: String = ""
+	if occurred:
+		kind = "pneumoconiosis"
+		var def: Dictionary = OCCUPATIONAL_DISEASES[kind]
+		health_penalty = float(def.get("onset_health_loss", 6.0))
+		mine["occupational_disease"] = {"kind": kind, "name": String(def.get("name", kind)), "years": maxf(0.0, years), "health_penalty": health_penalty}
+	return {
+		"ok": true, "occurred": occurred, "disease": kind,
+		"name": String((OCCUPATIONAL_DISEASES.get(kind, {}) as Dictionary).get("name", "")),
+		"risk": risk, "roll": roll, "health_penalty": health_penalty,
 	}
 
 

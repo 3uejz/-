@@ -2828,6 +2828,7 @@ func mining_panel_data() -> Dictionary:
 			"revenue": int(_mine.get("revenue", 0)),
 			"money": int(_mine.get("money", 0)),
 			"accident_count": int(_mine.get("accident_count", 0)),
+			"occupational_disease": String((_mine.get("occupational_disease", {}) as Dictionary).get("name", "")),
 		}
 	var prices: Dictionary = _energy.get("prices", {})
 	var price_rows: Array = []
@@ -2875,6 +2876,13 @@ func _mining_tick(before_minutes: int, after_minutes: int) -> void:
 	if years <= 0.0:
 		return
 	mining_energy.tick_energy(_energy, years)
+	if not _mine.is_empty():
+		var occ: Dictionary = mining_energy.occupational_disease_check(_mine, years, {}, rng)
+		if bool(occ.get("occurred", false)):
+			_damage_health(float(occ.get("health_penalty", 0.0)))
+		elif not (_mine.get("occupational_disease", {}) as Dictionary).is_empty():
+			_damage_health(float(mining_energy.OCCUPATIONAL_DISEASES["pneumoconiosis"].get("annual_health_loss", 2.0)) * years)
+			_mine["occupational_disease"]["years"] = float((_mine["occupational_disease"] as Dictionary).get("years", 0.0)) + years
 	_persist_mining()
 
 func _persist_mining() -> void:
@@ -4095,6 +4103,28 @@ func emergency_aftermath() -> Dictionary:
 	if _incident.is_empty():
 		return {"ok": false, "reason": "no_incident"}
 	var r: Dictionary = emergency.aftermath(_incident)
+	# 跨域：灾后心理创伤写回心理压力/情绪，指挥失当罚款从现金扣除。
+	var trauma: float = clampf(float(r.get("psych_trauma", 0.0)), 0.0, 1.0)
+	var stress_added: float = 0.0
+	if trauma > 0.0:
+		var attrs: Dictionary = player().get("attrs", {})
+		var psych: Dictionary = attrs.get("psychological", {})
+		var before_stress: float = float(psych.get("stress", 0.0))
+		psych["stress"] = clampf(before_stress + trauma * 40.0, 0.0, 100.0)
+		psych["mood"] = clampf(float(psych.get("mood", 50.0)) - trauma * 25.0, 0.0, 100.0)
+		attrs["psychological"] = psych
+		player()["attrs"] = attrs
+		stress_added = float(psych["stress"]) - before_stress
+	var penalty: int = maxi(0, int(r.get("penalty", 0)))
+	var paid: int = 0
+	if penalty > 0:
+		paid = mini(penalty, maxi(0, int(economy.cash(account_id()))))
+		if paid > 0:
+			economy.add_money(account_id(), -paid, "emergency_penalty")
+			sync_finances()
+		r["penalty_paid"] = paid
+	r["stress_added"] = stress_added
+	_incident["applied"] = {"stress": stress_added, "penalty_paid": paid}
 	_persist_emergency()
 	return r
 
@@ -4143,6 +4173,8 @@ func emergency_panel_data() -> Dictionary:
 			"injured": int(_incident.get("injured", 0)),
 			"rescued": int(_incident.get("rescued", 0)),
 			"fault": String(_incident.get("fault", "")),
+			"stress_added": float((_incident.get("applied", {}) as Dictionary).get("stress", 0.0)),
+			"penalty_paid": int((_incident.get("applied", {}) as Dictionary).get("penalty_paid", 0)),
 			"triage": {"treated": float(tri.get("treated", 0.0)), "untreated": float(tri.get("untreated", 0.0))},
 		}
 	if not _volunteer_org.is_empty():

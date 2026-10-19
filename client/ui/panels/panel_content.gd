@@ -847,6 +847,8 @@ static func _mining_sections(mn: Dictionary) -> Array:
 			{"label": "矿场资金", "value": str(int(mine.get("money", 0)))},
 			{"label": "事故次数", "value": str(int(mine.get("accident_count", 0)))},
 		]
+		if String(mine.get("occupational_disease", "")) != "":
+			overview.append({"label": "职业病", "value": String(mine.get("occupational_disease", ""))})
 		sections.append(_section("矿场概况", overview))
 	var prices: Array = _items_of(mn.get("energy_prices", []))
 	if not prices.is_empty():
@@ -1091,6 +1093,10 @@ static func rescue(player: Dictionary, context: Dictionary, name_resolver: Calla
 		]
 		if String(ei.get("fault", "")) != "":
 			rows.append({"label": "责任认定", "value": String(ei.get("fault", ""))})
+		if float(ei.get("stress_added", 0.0)) > 0.0:
+			rows.append({"label": "心理创伤", "value": "+%.1f 压力" % float(ei.get("stress_added", 0.0))})
+		if int(ei.get("penalty_paid", 0)) > 0:
+			rows.append({"label": "已缴罚款", "value": _money(int(ei.get("penalty_paid", 0)))})
 		sections.append(_section("处置事件", rows))
 		var tri: Dictionary = ei.get("triage", {})
 		if not tri.is_empty():

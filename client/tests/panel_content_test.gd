@@ -558,7 +558,7 @@ func _test_mining_panel() -> void:
 	var ctx: Dictionary = {"mining": {
 		"mine": {"mineral": "iron", "mineral_name": "铁矿", "concession": true, "explored": true,
 			"reserve": 1200000.0, "grade": 0.4, "workers": 0, "safety": 0.5,
-			"stockpile_ore": 500.0, "refined_metal": 120.0, "revenue": 96000},
+			"stockpile_ore": 500.0, "refined_metal": 120.0, "revenue": 96000, "occupational_disease": "尘肺病"},
 		"energy_prices": [{"key": "oil", "name": "石油", "price": 500000}, {"key": "power", "name": "电力", "price": 80000}],
 		"projects": [{"name": "光伏", "kind": "solar", "capacity": 100.0}],
 		"futures": [{"energy": "oil", "name": "石油", "index": 0, "amount": 100.0, "lock_price": 500000, "settled": false}],
@@ -568,6 +568,7 @@ func _test_mining_panel() -> void:
 	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有矿业上下文非空")
 	check(_find_section(d, "矿场概况").get("rows", []).size() >= 1, "矿场概况分区有行")
+	check(_row_value(_find_section(d, "矿场概况"), "职业病") == "尘肺病", "矿场概况展示职业病")
 	check(_find_section(d, "能源价格").get("rows", []).size() >= 1, "能源价格分区有行")
 	check(_find_section(d, "新能源项目").get("rows", []).size() >= 1, "新能源项目分区有行")
 	check(_find_section(d, "能源期货").get("rows", []).size() >= 1, "能源期货分区有行")
@@ -689,7 +690,8 @@ func _test_emergency_panel() -> void:
 	var ctx: Dictionary = {"emergency": {
 		"incident": {
 			"type": "消防", "stage": "善后", "severity": 0.6, "at_risk": 200, "trapped": 40,
-			"response_minutes": 12.5, "deaths": 3, "injured": 20, "rescued": 35, "fault": "",
+			"response_minutes": 12.5, "deaths": 3, "injured": 20, "rescued": 35, "fault": "command_fault",
+			"stress_added": 8.0, "penalty_paid": 30000,
 			"triage": {"treated": 15.0, "untreated": 5.0},
 		},
 		"org": {"name": "测试志愿队", "volunteers": 10, "equipment": 2, "funds": 100000, "reputation": 0.4},
@@ -697,6 +699,8 @@ func _test_emergency_panel() -> void:
 	var d: Dictionary = PanelContentScript.build("rescue", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有应急上下文非空")
 	check(_find_section(d, "处置事件").get("rows", []).size() >= 1, "处置事件分区有行")
+	check(_row_value(_find_section(d, "处置事件"), "心理创伤") != "", "处置事件展示心理创伤")
+	check(_row_value(_find_section(d, "处置事件"), "已缴罚款") != "", "处置事件展示已缴罚款")
 	check(_find_section(d, "检伤分诊").get("rows", []).size() >= 1, "检伤分诊分区有行")
 	check(_find_section(d, "志愿救援队").get("rows", []).size() >= 1, "志愿救援队分区有行")
 

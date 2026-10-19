@@ -81,6 +81,15 @@ func _test_safety_and_accidents() -> void:
 	check(not bool(safe["occurred"]), "零风险不触发事故")
 	var fine: Dictionary = sys.environmental_liability(m, 500000)
 	check(int(fine["fine"]) == 500000 and float(m["environment_liability"]) > 0.0, "环保事故追责")
+	# 职业病：长期低安全暴露按年累计，roll=0 必确诊。
+	var occ_risk: float = sys.occupational_disease_risk(m, 1.0)
+	check(occ_risk > 0.0, "职业病风险为正")
+	var occ: Dictionary = sys.occupational_disease_check(m, 1.0, {"roll": 0.0})
+	check(bool(occ["occurred"]), "低掷骰确诊职业病")
+	check(String(m["occupational_disease"]["name"]) == "尘肺病", "职业病记录病种")
+	check(float(occ["health_penalty"]) > 0.0, "职业病扣减健康")
+	var occ2: Dictionary = sys.occupational_disease_check(m, 2.0, {"roll": 0.0})
+	check(not bool(occ2["occurred"]) and bool(occ2.get("existing", false)), "确诊后转为年度累积")
 
 
 func _test_energy_cycle_and_contracts() -> void:
