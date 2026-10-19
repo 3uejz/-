@@ -312,6 +312,8 @@ func _dispatch(intent) -> Dictionary:
 			return _sue_ip(intent)
 		"开办媒体":
 			return _open_media(intent)
+		"内容审核":
+			return _audit_content(intent)
 		"发行作品":
 			return _release_work(intent)
 		# 制造业与供应链（D26）
@@ -436,6 +438,10 @@ func _dispatch(intent) -> Dictionary:
 			return _fashion_marketing(intent)
 		"品牌复兴":
 			return _fashion_renew(intent)
+		"品牌传承":
+			return _fashion_inherit(intent)
+		"仿品侵权":
+			return _fashion_counterfeit(intent)
 		"鉴定真伪":
 			return _fashion_authenticate(intent)
 		"开启球涯":
@@ -2081,6 +2087,17 @@ func _sue_ip(intent) -> Dictionary:
 		return _ok(["维权诉讼败诉，未能获得赔偿。"], 0, "")
 	return _ok(["维权诉讼胜诉，获赔 %d。" % int(r.get("compensation", 0))], 0, "")
 
+func _audit_content(intent) -> Dictionary:
+	var risk: float = clampf(float(_param_number(intent, "number", 30)) / 100.0, 0.0, 1.0)
+	var text: String = String(intent.params.get("method", "")).strip_edges()
+	var copyright_infringement: bool = text.contains("侵权") or text.contains("盗版")
+	var r: Dictionary = host.audit_media_content(text, risk, copyright_infringement)
+	if bool(r.get("approved", false)):
+		return _ok(["内容审核通过，允许发布。"], 0, "")
+	var action: String = String(r.get("action", "reject"))
+	var label: String = "下架" if action == "takedown" else "驳回"
+	return _fail("内容审核未通过，已%s（%s）。" % [label, _reason_cn(String(r.get("reason", "")))])
+
 func _open_media(intent) -> Dictionary:
 	var media_type := _object_id(intent, "media_type")
 	if media_type.is_empty():
@@ -2642,6 +2659,23 @@ func _fashion_renew(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法复兴品牌（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["品牌相关度 %.1f。" % float(r.get("relevance", 0.0))], 0, "")
+
+func _fashion_inherit(intent) -> Dictionary:
+	var heir: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.fashion_inherit(heir)
+	if not bool(r.get("ok", false)):
+		return _fail("无法传承品牌（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["品牌已传至第 %d 代，继承人 %s。" % [int(r.get("generation", 2)), String(r.get("heir", ""))]], 0, "")
+
+func _fashion_counterfeit(intent) -> Dictionary:
+	var loss: int = int(_param_number(intent, "number", 1000000))
+	var r: Dictionary = host.fashion_counterfeit(loss)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算仿品侵权（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if r.has("lawsuit"):
+		var suit: Dictionary = r.get("lawsuit", {})
+		return _ok(["仿品造成损失 %d，已发起 IP 维权（胜诉 %s）。" % [int(r.get("loss", 0)), "是" if bool(suit.get("win", false)) else "否"]], 0, "")
+	return _ok(["仿品造成损失 %d，品牌声誉下降。" % int(r.get("loss", 0))], 0, "")
 
 func _fashion_authenticate(intent) -> Dictionary:
 	var item := _object_id(intent, "luxury_item")

@@ -327,6 +327,23 @@ func brand_aging(brand: Dictionary, years: float) -> Dictionary:
 	return {"ok": true, "age_years": float(brand["age_years"]), "relevance": float(brand["relevance"])}
 
 
+## 跨代传承：品牌交由继承人，保留资产与作品，声誉向中位回归并重置相关度。
+func inherit_brand(brand: Dictionary, heir: String, opts: Dictionary = {}) -> Dictionary:
+	var name: String = heir.strip_edges()
+	if name == "":
+		return {"ok": false, "reason": "no_heir"}
+	var generation: int = int(brand.get("generation", 1)) + 1
+	var rep: float = clampf(float(brand.get("reputation", 50.0)), 0.0, 100.0)
+	brand["generation"] = generation
+	brand["heir"] = name
+	brand["reputation"] = clampf(50.0 + (rep - 50.0) * 0.75, 0.0, 100.0)
+	brand["relevance"] = clampf(float(opts.get("relevance", 70.0)), 0.0, 100.0)
+	var heritage: Array = brand.get("heritage", [])
+	heritage.append({"generation": generation, "heir": name, "day": int(opts.get("day", 0))})
+	brand["heritage"] = heritage
+	return {"ok": true, "generation": generation, "heir": name, "reputation": float(brand["reputation"]), "relevance": float(brand["relevance"])}
+
+
 ## 品牌复兴：投入重塑相关度与声誉。
 func renew_brand(brand: Dictionary, strategy: String, cost: int, opts: Dictionary = {}) -> Dictionary:
 	var spend: int = maxi(0, cost)

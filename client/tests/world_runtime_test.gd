@@ -1001,6 +1001,9 @@ func _test_ip_media_runtime() -> void:
 	var oid: String = String((outlets[0] as Dictionary).get("id", ""))
 	var rel: Dictionary = host.release_media_work(oid, "试作", 0.9, 10000000.0)
 	check(bool(rel.get("ok", false)) and int(rel.get("revenue", 0)) > 0, "发行作品产生营收")
+	check(bool(host.audit_media_content("正常稿件", 0.1).get("approved", false)), "低风险内容审核放行")
+	var rejected: Dictionary = host.audit_media_content("盗版片段", 0.2, true)
+	check(not bool(rejected.get("approved", true)) and String(rejected.get("action", "")) == "takedown", "版权侵权内容下架")
 	# 诉讼判定返回。
 	var sue: Dictionary = host.sue_ip_infringer(ip_id, {"roll": 1.0})
 	check(bool(sue.get("ok", false)), "维权诉讼返回判定")
@@ -1241,6 +1244,14 @@ func _test_fashion_runtime() -> void:
 	check(bool(collab.get("ok", false)) and int(collab.get("revenue", 0)) > 0, "联名取得收入")
 	var auth: Dictionary = host.fashion_authenticate("handbag")
 	check(bool(auth.get("ok", false)), "鉴定真伪成功")
+	(host.player()["family"] as Dictionary)["children_ids"] = ["child-1"]
+	var inherit: Dictionary = host.fashion_inherit("")
+	check(bool(inherit.get("ok", false)) and int(inherit.get("generation", 0)) == 2, "品牌跨代传承")
+	var rep_before_fake: float = float((host.fashion_state().get("brand", {}) as Dictionary).get("reputation", 0.0))
+	check(bool(host.register_ip_asset("trademark", "品牌商标").get("ok", false)), "注册商标用于仿品维权")
+	var fake: Dictionary = host.fashion_counterfeit(500000)
+	check(bool(fake.get("ok", false)) and fake.has("lawsuit"), "仿品侵权联动 IP 诉讼")
+	check(float((host.fashion_state().get("brand", {}) as Dictionary).get("reputation", 0.0)) < rep_before_fake, "仿品拉低品牌声誉")
 	# 持久化与读档恢复。
 	host._persist_fashion()
 	check(state.sim_runtime.get("fashion", null) is Dictionary, "时尚运行态写入 sim_runtime")

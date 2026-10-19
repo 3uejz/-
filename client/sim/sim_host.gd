@@ -2163,6 +2163,22 @@ func sue_ip_infringer(ip_id: String, opts: Dictionary = {}) -> Dictionary:
 	_persist_ip_media()
 	return r
 
+## 平台内容审核：按风险与版权标记判定放行/驳回/下架，媒体机构声誉随违规内容下降。
+func audit_media_content(content: String, risk: float = 0.3, copyright_infringement: bool = false, strictness: float = 0.5) -> Dictionary:
+	var title: String = content.strip_edges()
+	if title == "":
+		title = "待审内容"
+	var r: Dictionary = ip_media.moderate_content(title, {
+		"risk": clampf(risk, 0.0, 1.0),
+		"policy_strictness": clampf(strictness, 0.0, 1.0),
+		"copyright_infringement": copyright_infringement,
+	})
+	if not bool(r.get("approved", false)) and not _outlets.is_empty():
+		var outlet: Dictionary = _outlets[_outlets.size() - 1]
+		outlet["reputation"] = clampf(float(outlet.get("reputation", 0.5)) - 0.02, 0.0, 1.0)
+		_persist_ip_media()
+	return r
+
 ## 开办媒体机构。
 func register_media_outlet(media_type: String, name: String = "") -> Dictionary:
 	if not ip_media.MEDIA_TYPES.has(media_type):
@@ -3402,6 +3418,31 @@ func fashion_renew(strategy: String, cost: int) -> Dictionary:
 	var r: Dictionary = fashion.renew_brand(_brand, strategy, maxi(0, cost))
 	if bool(r.get("ok", false)):
 		_persist_fashion()
+	return r
+
+## 品牌跨代传承：未指定继承人时取法定子女。
+func fashion_inherit(heir: String = "") -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var name: String = heir.strip_edges()
+	if name == "":
+		var heirs: Array = legal_heirs().get("children", [])
+		if heirs.is_empty():
+			return {"ok": false, "reason": "no_heir"}
+		name = String(heirs[0])
+	var r: Dictionary = fashion.inherit_brand(_brand, name, {"day": now_minutes() / MINUTES_PER_DAY})
+	if bool(r.get("ok", false)):
+		_persist_fashion()
+	return r
+
+## 仿品侵权：品牌受损；若持有 IP 则同步发起 D25 维权诉讼。
+func fashion_counterfeit(loss: int) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var r: Dictionary = fashion.counterfeit_hit(_brand, maxi(0, loss), {})
+	if not _ips.is_empty():
+		r["lawsuit"] = sue_ip_infringer(String((_ips[0] as Dictionary).get("id", "")), {"roll": -1.0})
+	_persist_fashion()
 	return r
 
 func fashion_authenticate(item: String) -> Dictionary:
