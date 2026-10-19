@@ -1972,6 +1972,13 @@ func _test_content_industry_runtime() -> void:
 	check(String((ipr.get("ip", {}) as Dictionary).get("legal_ip_id", "")).begins_with("ip.media."), "作品版权同步登记知识产权")
 	check(bool(host.content_adapt("anime").get("ok", false)), "IP 改编")
 	check(bool(host.content_operate_ip("merchandise", 1000000.0).get("ok", false)), "IP 运营")
+	# 专业服务经纪联动：未给交易额时按工作室估值撮合。
+	host.economy.add_money(host.account_id(), 50000000, "test")
+	check(bool(host.prof_new_firm("星火经纪").get("ok", false)), "文娱经纪事务所")
+	check(bool(host.prof_new_project("investment_banking", "studio.player").get("ok", false)), "文娱并购项目")
+	var ma: Dictionary = host.prof_ma_advisory(0)
+	check(String(ma.get("target", "")) == "content_studio", "并购顾问识别文娱工作室")
+	check(int(ma.get("deal_size", 0)) > 0, "文娱并购交易额由工作室估值生成")
 	# 风险。
 	check(host.content_plagiarism(0.9, 0.9).has("exposed"), "抄袭检测结算")
 	var compliance: Dictionary = host.content_compliance(0.9, 0.9)
@@ -1980,7 +1987,9 @@ func _test_content_industry_runtime() -> void:
 	check(host.content_scandal(0.9, 0.9).has("occurred"), "翻车事件结算")
 	# 经营边界。
 	check(bool(host.content_funding("seed").get("ok", false)), "种子轮融资")
-	check(host.content_fandom(0.3).has("fandom_size"), "粉丝演化结算")
+	var fandom: Dictionary = host.content_fandom(0.3)
+	check(fandom.has("fandom_size"), "粉丝演化结算")
+	check(not String(fandom.get("social_post_id", "")).is_empty(), "饭圈舆情写入社交平台")
 	check(host.content_approval("game").has("approved"), "版号审批结算")
 	check(bool(host.content_poach("design", 3.0).get("ok", false)), "挖角结算")
 	# 下架。

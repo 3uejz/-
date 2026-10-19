@@ -7678,6 +7678,9 @@ func content_takedown(reason: String = "content_violation", severity: float = 0.
 	if _content_work.is_empty():
 		return {"ok": false, "reason": "no_work"}
 	var r: Dictionary = content_industry.take_down(_content_studio, _content_work, reason, {"severity": severity})
+	_social.publish("%s.fans" % account_id(), "forum", "作品因%s被下架，引发讨论。" % reason, {
+		"valence": -clampf(severity, 0.0, 1.0), "minute": now_minutes(), "influence": 0.5})
+	_persist_social()
 	if reason.contains("copyright"):
 		var ip: Dictionary = _content_ip()
 		var legal_id: String = String(ip.get("legal_ip_id", ""))
@@ -7692,6 +7695,10 @@ func content_scandal(severity: float = 0.6, exposure: float = 0.6) -> Dictionary
 	if _content_studio.is_empty():
 		return {"ok": false, "reason": "no_studio"}
 	var r: Dictionary = content_industry.scandal_event(_content_studio, {"severity": severity, "exposure": exposure, "roll": -1.0}, rng)
+	if bool(r.get("occurred", false)):
+		_social.publish("%s.fans" % account_id(), "short_video", "主创翻车事件持续发酵。", {
+			"valence": -clampf(severity, 0.0, 1.0), "minute": now_minutes(), "influence": 0.7})
+		_persist_social()
 	_persist_content()
 	return r
 
@@ -7719,6 +7726,13 @@ func content_fandom(growth: float = 0.1) -> Dictionary:
 	if _content_studio.is_empty():
 		return {"ok": false, "reason": "no_studio"}
 	var r: Dictionary = content_industry.fandom_dynamics(_content_studio, {"growth": growth, "roll": -1.0}, rng)
+	# 饭圈舆情落到 D10 社交平台：毒性越高，讨论越负面。
+	var toxicity: float = clampf(float(r.get("toxicity", 0.0)), 0.0, 1.0)
+	if int(r.get("fandom_size", 0)) > 0:
+		var post: Dictionary = _social.publish("%s.fans" % account_id(), "interest_group", "粉丝社区正在讨论作品近况。", {
+			"valence": clampf(0.3 - toxicity * 1.0, -1.0, 1.0), "minute": now_minutes(), "influence": 0.6})
+		r["social_post_id"] = String(post.get("id", ""))
+		_persist_social()
 	_persist_content()
 	return r
 
@@ -8274,7 +8288,18 @@ func prof_due_diligence(depth: float = 0.5) -> Dictionary:
 func prof_ma_advisory(deal_size: int = 10000000) -> Dictionary:
 	if _prof_project.is_empty():
 		return {"ok": false, "reason": "no_project"}
-	var r: Dictionary = professional.ma_advisory(_prof_project, {"deal_size": maxi(0, deal_size), "roll": -1.0}, rng)
+	var size: int = maxi(0, deal_size)
+	var target: String = ""
+	# 与 D46 文娱经纪联动：未指定交易额时，以玩家文娱工作室估值撮合。
+	if size == 0 and not _content_studio.is_empty():
+		var fandom: Dictionary = _content_studio.get("fandom", {})
+		size = maxi(100000, int(_content_studio.get("money", 0)) + int(fandom.get("size", 0)) * 100)
+		target = "content_studio"
+	var r: Dictionary = professional.ma_advisory(_prof_project, {"deal_size": size, "roll": -1.0}, rng)
+	if bool(r.get("success", false)) and int(r.get("fee", 0)) > 0:
+		economy.add_money(account_id(), int(r.get("fee", 0)), "ma_advisory")
+	r["target"] = target if not target.is_empty() else "external"
+	(r as Dictionary)["deal_size"] = size
 	_persist_professional()
 	return r
 
