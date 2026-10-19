@@ -2895,6 +2895,46 @@ func sign_energy_contract(energy_type: String, amount: float = 1000.0, fixed_pri
 		_persist_mining()
 	return r
 
+## 资源城市衰退：扣减所在区域人口，并把衰退传导到宏观失业/GDP/PMI。
+func mining_city_decline() -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var rid: String = current_region_id()
+	if rid == "" or regions == null or not regions.has_region(rid):
+		return {"ok": false, "reason": "no_region"}
+	var region = regions.get_region(rid)
+	var city: Dictionary = {
+		"population": int(region.population),
+		"decline": float((region.snapshot as Dictionary).get("decline", 0.0)),
+	}
+	var r: Dictionary = mining_energy.resource_city_decline(city, _mine)
+	region.population = int(city.get("population", region.population))
+	(region.snapshot as Dictionary)["decline"] = float(city.get("decline", 0.0))
+	region.economy = maxf(0.0, float(region.economy) - float(r.get("decline", 0.0)) * 0.2)
+	var macro: Dictionary = mining_energy.apply_decline_to_macro(economy.macro, float(r.get("decline", 0.0)))
+	_persist_regions()
+	_persist_mining()
+	return {"ok": true, "region_id": rid, "population": int(region.population),
+		"decline": float(r.get("decline", 0.0)), "population_loss": int(r.get("population_loss", 0)),
+		"macro": macro}
+
+## 战略资源管制与囤积：写入能源运行态，管制越高可交易比例越低。
+func mining_strategic_control(resource: String, level: float) -> Dictionary:
+	if not mining_energy.ENERGY_TYPES.has(resource):
+		return {"ok": false, "reason": "unknown_resource"}
+	var r: Dictionary = mining_energy.set_strategic_control(_energy, resource, level)
+	r["tradable_ratio"] = mining_energy.tradable_ratio(_energy, resource)
+	_persist_mining()
+	return r
+
+func mining_stockpile(resource: String, amount: float) -> Dictionary:
+	if not mining_energy.ENERGY_TYPES.has(resource):
+		return {"ok": false, "reason": "unknown_resource"}
+	var r: Dictionary = mining_energy.stockpile(_energy, resource, amount)
+	r["tradable_ratio"] = mining_energy.tradable_ratio(_energy, resource)
+	_persist_mining()
+	return r
+
 ## 矿业/能源面板数据：矿场概况、能源价格、新能源项目。
 func mining_panel_data() -> Dictionary:
 	var out: Dictionary = {}
@@ -2930,6 +2970,8 @@ func mining_panel_data() -> Dictionary:
 	for p in _energy.get("projects", []):
 		projects.append({"name": String(p.get("name", "")), "kind": String(p.get("kind", "")), "capacity": float(p.get("capacity", 0.0))})
 	out["projects"] = projects
+	out["strategic_control"] = (_energy.get("strategic_control", {}) as Dictionary).duplicate(true)
+	out["strategic_stockpile"] = (_energy.get("stockpile", {}) as Dictionary).duplicate(true)
 	var futures_rows: Array = []
 	var futures: Dictionary = _energy.get("futures", {}) if _energy.get("futures", {}) is Dictionary else {}
 	for key in futures.keys():

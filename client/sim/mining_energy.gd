@@ -411,6 +411,17 @@ func resource_city_decline(city: Dictionary, mine: Dictionary) -> Dictionary:
 	return {"ok": true, "decline": decline, "population_loss": population_loss, "reserve_ratio": ratio}
 
 
+## 资源城市衰退的宏观传导：失业上升、GDP 增速与 PMI 下滑。
+func apply_decline_to_macro(macro: Dictionary, decline: float) -> Dictionary:
+	var d: float = clampf(decline, 0.0, 1.0)
+	macro["unemployment"] = clampf(float(macro.get("unemployment", 0.05)) + d * 0.04, 0.0, 0.30)
+	macro["gdp_growth"] = maxf(-0.20, float(macro.get("gdp_growth", 0.0)) - d * 0.05)
+	macro["pmi"] = clampf(float(macro.get("pmi", 50.0)) - d * 15.0, 0.0, 100.0)
+	return {"ok": true, "decline": d,
+		"unemployment": float(macro["unemployment"]),
+		"gdp_growth": float(macro["gdp_growth"]), "pmi": float(macro["pmi"])}
+
+
 ## 战略资源管制与囤积：管制等级越高，可交易比例越低，囤积越多。
 func set_strategic_control(state: Dictionary, resource: String, level: float) -> Dictionary:
 	state["strategic_control"][resource] = clampf(level, 0.0, 1.0)

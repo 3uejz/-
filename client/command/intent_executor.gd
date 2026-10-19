@@ -373,6 +373,12 @@ func _dispatch(intent) -> Dictionary:
 			return _sell_metal(intent)
 		"建能源项目":
 			return _build_energy_project(intent)
+		"资源衰退":
+			return _mining_city_decline(intent)
+		"战略管制":
+			return _mining_strategic_control(intent)
+		"资源囤积":
+			return _mining_stockpile(intent)
 		"安全投入":
 			return _mine_safety(intent)
 		"矿难":
@@ -2406,6 +2412,31 @@ func _sell_metal(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法出售金属（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["售出 %.1f，单价 %d，收入 %d。" % [float(r.get("sold", 0.0)), int(r.get("unit_price", 0)), int(r.get("revenue", 0))]], 0, "")
+
+func _mining_city_decline(intent) -> Dictionary:
+	var r: Dictionary = host.mining_city_decline()
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估资源城市衰退（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["资源衰退：人口减少 %d，衰退度 %.2f，失业率 %.2f，PMI %.1f。" % [
+		int(r.get("population_loss", 0)), float(r.get("decline", 0.0)),
+		float((r.get("macro", {}) as Dictionary).get("unemployment", 0.0)),
+		float((r.get("macro", {}) as Dictionary).get("pmi", 0.0))]], 0, "")
+
+func _mining_strategic_control(intent) -> Dictionary:
+	var level: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
+	var resource: String = String(intent.get("target", "oil"))
+	var r: Dictionary = host.mining_strategic_control(resource, level)
+	if not bool(r.get("ok", false)):
+		return _fail("无法设定战略管制（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["战略资源 %s 管制比例 %.0f%%，可交易比例 %.0f%%。" % [resource, level * 100.0, float(r.get("tradable_ratio", 0.0)) * 100.0]], 0, "")
+
+func _mining_stockpile(intent) -> Dictionary:
+	var amount: float = float(_param_number(intent, "number", 100))
+	var resource: String = String(intent.get("target", "oil"))
+	var r: Dictionary = host.mining_stockpile(resource, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法增加资源储备（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["战略资源 %s 储备 %.1f，可交易比例 %.0f%%。" % [resource, float(r.get("stockpile", 0.0)), float(r.get("tradable_ratio", 0.0)) * 100.0]], 0, "")
 
 func _build_energy_project(intent) -> Dictionary:
 	var kind := _object_id(intent, "energy_kind")

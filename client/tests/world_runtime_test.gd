@@ -1136,6 +1136,10 @@ func _test_mining_runtime() -> void:
 	# 新能源项目。
 	var proj: Dictionary = host.build_energy_project("solar", 100.0)
 	check(bool(proj.get("ok", false)), "建设光伏项目成功")
+	var decline: Dictionary = host.mining_city_decline()
+	check(bool(decline.get("ok", false)) and float((decline.get("macro", {}) as Dictionary).get("unemployment", 0.0)) > 0.0, "资源城市衰退传导宏观")
+	check(bool(host.mining_strategic_control("coal", 0.6).get("ok", false)), "战略资源管制")
+	check(float(host.mining_stockpile("coal", 500.0).get("stockpile", 0.0)) > 0.0, "战略资源囤积")
 	# 矿难刑事追责：低安全 + 大量工人时强制触发一次事故。
 	host._mine["safety"] = 0.0
 	host._mine["workers"] = 300
