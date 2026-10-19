@@ -11,7 +11,7 @@ const NEW_PANEL_IDS: Array[String] = [
 	"content_industry", "engineering", "services", "transport_infra", "household",
 	"sports", "events", "awards", "digital", "epidemic", "war", "market",
 	"weather", "anomaly", "goldfinger", "mental", "spirit", "language", "disability", "appearance",
-	"company",
+	"company", "social",
 ]
 
 func _suite_name() -> String:

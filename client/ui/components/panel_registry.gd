@@ -1,7 +1,7 @@
 class_name PanelRegistry
 extends RefCounted
 ## 侧边抽屉面板注册与开合（R57；任务 47.2）。
-## 47 个面板可多开并排；异常图鉴/金手指/人生结算为条件可见（全量面板清单见 `ui.md` §4）。纯逻辑，headless 可测。
+## 48 个面板可多开并排；异常图鉴/金手指/人生结算为条件可见（全量面板清单见 `ui.md` §4）。纯逻辑，headless 可测。
 
 const COND_ALWAYS: String = "always"
 const COND_ABNORMAL: String = "abnormal"
@@ -20,6 +20,7 @@ const PANELS: Dictionary = {
 	"finance": {"title": "资产与财务", "condition": COND_ALWAYS},
 	"achievements": {"title": "成就与图鉴", "condition": COND_ALWAYS},
 	"family": {"title": "家族史与传承", "condition": COND_ALWAYS},
+	"social": {"title": "社交动态", "condition": COND_ALWAYS},
 	"business": {"title": "经营", "condition": COND_ALWAYS},
 	"organizations": {"title": "组织", "condition": COND_ALWAYS},
 	"legal": {"title": "案件与法律", "condition": COND_ALWAYS},

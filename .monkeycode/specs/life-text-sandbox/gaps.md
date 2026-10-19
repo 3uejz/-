@@ -53,7 +53,7 @@
 - 物品内容字段与 1000 目标脱节；房产**已接线**看房/买房/卖房/出租（`SimHost.property_*()`，房源按（种子, 区域）确定性生成、名下房产随 `player.assets` 持久化），持有按月结算（`advance()` 跨月触发 `property.monthly_settle()` 还贷/物业/租金/折旧/断供法拍），**尚余**贷款余额/利率/租约/租客/产权年限/装修入面板；订单→物流无 schema；消费心理无数值；无订单/物流入口。
 
 ### D10 网络社交、NPC 记忆与区域全人口
-- `npc.memory` 缺失；`npc.relations` 类型错误；非个体化人口快照结构不足；社交平台扩散系数与 post/message 结构缺失；动态/私信/直播无 UI。
+`npc.memory` 已接入、`npc.relations` 为数组；社交平台已接线（发布动态/动态流/关注数/离线队列/「社交动态」面板与 `social_network` 运行态持久化）；非个体化人口快照细化与私信/直播 UI 仍待补。
 
 ### D11 育儿、继承与宠物
 - `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`parent_ids`（子女反查父母）、`sibling_ids`（分娩时子女间互链）、`guardian_ids`（`指定监护人 <人物>` 写入单值监护人）、`adopted_ids`（`收养` 动词生成收养子女 NPC，落独立 id 序号段 `ADOPT_SEQ_BASE` 并计入法定子女，记 `legacy.history` 收养条目）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，并解析未成年子女监护归属（`legal_guardian()`：指定监护人 95 > 父母 88 > 配偶 85 > 成年子女 75 > 兄弟姐妹 65 > 熟人 45）写入结算；`death_summary()` 输出人生结算。子女成长**已接线**：`advance()` 调用 `_grow_children()` 做年度成长结算（`ParentingSystem.raise_child()`，属性 = 基因×0.5 + 照护×0.2 + 教育×0.2 + 随机×0.1）并更新阶段/成年独立，`_check_child_mortality()` 按 `PARENT_EARLY_DEATH_RATE` 年化折算做早夭判定。宠物**已接线** `领养`/`喂养`/`训练宠物`（`player.pets` 运行时字段 + 「家庭与宠物」面板 + 随日推进）、「家族史与传承」与「家庭与宠物」面板展示养子女/监护人。
@@ -190,7 +190,7 @@
 
 ### D47 建筑、工程与城市规划（已收敛）
 - 已接线：`sim/engineering.gd` 资质分级与承接（特级/一级/二级、规模与资本门槛、投标加成）、工程链条（勘察→设计→造价→施工→监理→验收，质量按阶段权重融合、不达标返工）、风险（事故风险对偷工/转包深度/资质缺口单调、事故损失与致死追责、偷工减料、挂靠转包判定）、招投标（评分加权定标、围标、腐败查处）、欠款与三角债（利息/停工、有序债权链传染）、城市规划（`rezone` 联动地价/交通/人口、交通工程、规划腐败、拆迁纠纷）、房地产（开发商/预售/施工/烂尾）；`SimHost` 公开 `eng_*()` 与 `_persist_engineering()`、20 条指令与「工程与基建」面板、`sim_runtime.engineering` 白名单、4 套接线测试齐备。
-- **残留待办**：工程/招投标/规划实体的独立 schema（当前以 `sim_runtime.engineering` 内联字典承载）；与 D9 区域权威、D50 交通基建的深接入仍为最小实现。
+- **残留待办**：工程/招投标/规划实体的独立 schema（当前以 `sim_runtime.engineering` 内联字典承载）；规划人口、地价、交通与可达性已回写所在区域快照；与 D50 交通基建的深接入仍为最小实现。
 
 ### D48 专业服务业（已收敛）
 - **已收敛**：`sim/professional_services.gd` `ProfessionalServicesSystem` 覆盖执业类型 8（必需资质/基准费用/风险度/审计独立性）、专业资质 cpa/cfa/lawyer（付费应试按技能与难度判定、通过抬升声誉、`gatekeep_capacity` 接单能力）、事务所在籍（`new_firm`/`add_partner`/`partner_split` 合伙人份额与客户随迁）、客户与项目（`client_acquisition`/`new_project`/`due_diligence`/`ma_advisory`）、执业风险（`false_report`/`insider_trading`/`commercial_bribery`/`independence_conflict`）、边界（`non_compete_violation`/`client_churn`）；`SimHost` 公开 `prof_*()` 与 `_persist_professional()`、14 条指令与「专业与生活服务」面板、`sim_runtime.professional` 白名单、4 套接线测试齐备。

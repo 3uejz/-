@@ -86,6 +86,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = achievements(player, name_resolver)
 		"family":
 			data = family(player, name_resolver)
+		"social":
+			data = social(player, context, name_resolver)
 		"map":
 			data = map_panel(context, name_resolver)
 		"settings":
@@ -1950,6 +1952,34 @@ static func _crisis_name(key: String) -> String:
 		"faith_crisis": "信仰动摇", "existential_anxiety": "存在焦虑",
 	}
 	return String(NAMES.get(key, key))
+
+static func social(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("社交动态", "尚未生成角色数据")
+	var d: Dictionary = context.get("social", {})
+	if d.is_empty() or int(d.get("post_count", 0)) == 0:
+		return _empty("社交动态", "尚无动态；可先「发动态 <平台>」")
+	var sections: Array = []
+	var followers: Dictionary = d.get("followers", {})
+	if not followers.is_empty():
+		var frows: Array = []
+		for key in followers.keys():
+			if int(followers[key]) > 0:
+				frows.append({"label": String(key), "value": "%d 关注" % int(followers[key])})
+		if not frows.is_empty():
+			sections.append(_section("关注与影响力", frows))
+	var posts: Array = _items_of(d.get("posts", []))
+	if not posts.is_empty():
+		var prows: Array = []
+		for post in posts:
+			var pd: Dictionary = post
+			prows.append({"label": String(pd.get("content", "")), "value": "%s · %s · 赞 %d" % [String(pd.get("platform", "")), String(pd.get("tier", "")), int(pd.get("likes", 0))]})
+		sections.append(_section("最新动态", prows))
+	if int(d.get("offline", 0)) > 0:
+		sections.append(_section("离线队列", [{"label": "待同步", "value": "%d 条" % int(d.get("offline", 0))}]))
+	if sections.is_empty():
+		return _empty("社交动态", "尚无动态；可先「发动态 <平台>」")
+	return _ok(sections)
 
 static func content_industry(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

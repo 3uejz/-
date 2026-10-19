@@ -79,6 +79,7 @@ func run_tests() -> void:
 	_test_professional_runtime()
 	_test_life_services_runtime()
 	_test_transport_infra_runtime()
+	_test_social_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -2026,8 +2027,12 @@ func _test_engineering_runtime() -> void:
 	check(bool(host.eng_arrears(10000000).get("ok", false)), "欠款结算")
 	check(bool(host.eng_debt_chain(10000000).get("ok", false)), "三角债结算")
 	# 城市规划。
+	var region = host.regions.get_region(host.current_region_id())
+	var snap_before: Dictionary = region.snapshot.duplicate(true)
 	check(bool(host.eng_new_city("云港", 1200000).get("ok", false)), "规划新城")
 	check(bool(host.eng_rezone("商业区", "commercial").get("ok", false)), "变更用地")
+	check(int(region.snapshot.get("population", 0)) == int(host._eng_city.get("population", -1)), "规划人口回写区域")
+	check(float(region.snapshot.get("land_price", 0.0)) != float(snap_before.get("land_price", 0.0)), "规划地价回写区域快照")
 	check(bool(host.eng_transport("商业区").get("ok", false)), "城建交通")
 	check(bool(host.eng_planning_corruption(20000000).has("exposed")), "规划腐败")
 	check(bool(host.eng_demolition("商业区", 1000, 500000).get("ok", false)), "房屋拆迁")
@@ -2126,6 +2131,27 @@ func _test_life_services_runtime() -> void:
 	reloaded.bind(state)
 	check(String(reloaded._life_provider.get("name", "")) == "王阿姨", "读档恢复服务者")
 	check(not reloaded.life_services_panel_data().is_empty(), "生活服务面板数据非空")
+
+
+func _test_social_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(251)
+	var host = SimHostScript.new(state, 251)
+	host.bind(state)
+	check(host.social_platforms_catalog().size() >= 8, "社交平台≥8")
+	var platforms: Dictionary = host.social_followers()
+	check(platforms.has("short_video"), "关注表含短视频平台")
+	var pub: Dictionary = host.social_publish("short_video", "今天记录生活。", 0.2, false)
+	check(bool(pub.get("ok", false)), "发布动态")
+	check(int(host.social_feed(5).size()) == 1, "动态流含新动态")
+	check(int(host.social_followers().get("short_video", 0)) != 0, "关注数随动态变化")
+	check(bool(host.social_publish("nope").get("reason", "") == "unknown_platform"), "未知平台被拒")
+	host._persist_social()
+	check(state.sim_runtime.get("social_network", null) is Dictionary, "社交运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 251)
+	reloaded.bind(state)
+	check(reloaded.social_feed(5).size() == 1, "读档恢复动态")
+	check(not reloaded.social_panel_data().is_empty(), "社交面板数据非空")
 
 
 func _test_transport_infra_runtime() -> void:

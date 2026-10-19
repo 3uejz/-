@@ -178,6 +178,35 @@ func post_count() -> int:
 	return _posts.size()
 
 
+## 最近动态（按发布顺序倒序），供动态流与面板装配。
+func recent_posts(limit: int = 20) -> Array:
+	var all: Array = _posts.values()
+	var out: Array = []
+	var start: int = maxi(0, all.size() - maxi(1, limit))
+	for i in range(all.size() - 1, start - 1, -1):
+		out.append((all[i] as Dictionary).duplicate(true))
+	return out
+
+
+func to_dict() -> Dictionary:
+	return {
+		"posts": _posts.duplicate(true),
+		"followers": _followers.duplicate(true),
+		"offline_queue": _offline_queue.duplicate(true),
+		"seq": _seq,
+	}
+
+
+func from_dict(data: Dictionary) -> void:
+	if data.get("posts", null) is Dictionary:
+		_posts = (data["posts"] as Dictionary).duplicate(true)
+	if data.get("followers", null) is Dictionary:
+		_followers = (data["followers"] as Dictionary).duplicate(true)
+	if data.get("offline_queue", null) is Array:
+		_offline_queue = (data["offline_queue"] as Array).duplicate(true)
+	_seq = int(data.get("seq", 0))
+
+
 # --- 断网离线队列（R50.10）---
 
 func enqueue(action: Dictionary) -> void:

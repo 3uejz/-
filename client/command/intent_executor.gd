@@ -180,6 +180,10 @@ func _dispatch(intent) -> Dictionary:
 			return _feed_pets(intent)
 		"训练宠物":
 			return _train_pets(intent)
+		"发动态":
+			return _social_publish(intent)
+		"看动态":
+			return _social_feed(intent)
 		"收养":
 			return _adopt_child(intent)
 		"指定监护人":
@@ -1481,6 +1485,23 @@ func _feed_pets(_intent) -> Dictionary:
 	if done.is_empty():
 		return _fail("你没有需要喂养的宠物。")
 	return _ok(["你喂饱了：%s。" % ", ".join(done)], 0, "")
+
+func _social_publish(intent) -> Dictionary:
+	var platform: String = String(intent.params.get("social_platform", ""))
+	if platform.is_empty():
+		return _fail("请指定社交平台。")
+	var r: Dictionary = host.social_publish(platform, "分享今日近况。", 0.1, false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法发布动态。")
+	var post: Dictionary = r.get("post", {})
+	return _ok(["在%s发布动态，触达 %d，获赞 %d。" % [String(post.get("platform", platform)), int(float(post.get("reach", 0.0)) * 100.0), int(post.get("likes", 0))]], 0, "")
+
+func _social_feed(intent) -> Dictionary:
+	var d: Dictionary = host.social_panel_data()
+	if int(d.get("post_count", 0)) == 0:
+		return _ok(["还没有动态。"], 0, "social")
+	var posts: Array = d.get("posts", [])
+	return _ok(["共 %d 条动态，最近一条：%s" % [int(d.get("post_count", 0)), String((posts[0] as Dictionary).get("content", ""))]], 0, "social")
 
 func _train_pets(_intent) -> Dictionary:
 	var done: Array = host.train_pets()

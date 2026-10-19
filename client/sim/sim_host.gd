@@ -41,6 +41,7 @@ const AgricultureScript = preload("res://sim/agriculture.gd")
 const DigitalScript = preload("res://sim/digital.gd")
 const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
+const SocialNetworkScript = preload("res://sim/social_network.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
@@ -159,6 +160,7 @@ var _esports: Dictionary = {}        ## 电竞生涯运行时（战队/技能/�
 var late_tech                   ## 后期科技（LateTechSystem）
 var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/失业/延寿），入档 sim_runtime.late_tech
 var ip_media                    ## 知识产权与媒体（IpMediaSystem）
+var _social                          ## 网络社交平台（动态/关注/离线队列）
 var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 var manufacturing                ## 制造业与供应链（ManufacturingSystem）
@@ -327,6 +329,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	late_tech = LateTechScript.new()
 	_late_tech = late_tech.new_state()
 	ip_media = IpMediaScript.new()
+	_social = SocialNetworkScript.new(seed)
 	manufacturing = ManufacturingScript.new()
 	trade = TradeScript.new()
 	mining_energy = MiningScript.new()
@@ -479,6 +482,10 @@ func _ensure_world_geo() -> void:
 		var lt: Variant = (state.sim_runtime as Dictionary).get("late_tech", {})
 		if lt is Dictionary and not (lt as Dictionary).is_empty():
 			_late_tech = late_tech.from_dict(lt)
+		# 恢复网络社交运行时（动态/关注/离线队列）。
+		var sn: Variant = (state.sim_runtime as Dictionary).get("social_network", {})
+		if sn is Dictionary and not (sn as Dictionary).is_empty():
+			_social.from_dict(sn)
 		# 恢复知识产权与媒体运行时（IP/媒体机构）。
 		var im: Variant = (state.sim_runtime as Dictionary).get("ip_media", {})
 		if im is Dictionary and not (im as Dictionary).is_empty():
@@ -2056,6 +2063,48 @@ func _persist_late_tech() -> void:
 	(state.sim_runtime as Dictionary)["late_tech"] = late_tech.to_dict(_late_tech)
 
 
+# --- 网络社交（D10） ---
+
+func social_platforms_catalog() -> Array:
+	var out: Array = []
+	for key in _social.platforms():
+		var d: Dictionary = _social.platform(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key)), "anonymous": bool(d.get("anonymous", false))})
+	return out
+
+func social_followers() -> Dictionary:
+	var out: Dictionary = {}
+	for key in _social.platforms():
+		var pid: String = String(key)
+		out[pid] = _social.followers(account_id(), pid)
+	return out
+
+func social_publish(platform: String, content: String = "", valence: float = 0.0, anonymous: bool = false) -> Dictionary:
+	if not _social.has_platform(platform):
+		return {"ok": false, "reason": "unknown_platform"}
+	var text: String = content.strip_edges()
+	if text.is_empty():
+		text = "分享今日近况。"
+	var post: Dictionary = _social.publish(account_id(), platform, text, {
+		"valence": clampf(valence, -1.0, 1.0), "anonymity": anonymous, "minute": now_minutes()})
+	_persist_social()
+	return {"ok": true, "post": post}
+
+func social_feed(limit: int = 20) -> Array:
+	return _social.recent_posts(limit)
+
+func social_offline_count() -> int:
+	return _social.pending_count()
+
+func social_flush_offline() -> Array:
+	var out: Array = _social.flush()
+	_persist_social()
+	return out
+
+func social_panel_data() -> Dictionary:
+	return {"followers": social_followers(), "posts": social_feed(10),
+		"post_count": _social.post_count(), "offline": social_offline_count()}
+
 # --- 知识产权与媒体（D25） ---
 
 func ip_media_state() -> Dictionary:
@@ -2257,6 +2306,12 @@ func ip_media_panel_data() -> Dictionary:
 				"works": (od.get("works", []) as Array).size(),
 			})
 	return {"ips": ips, "outlets": outlets}
+
+func _persist_social() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["social_network"] = _social.to_dict()
+
 
 func _persist_ip_media() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
@@ -7902,11 +7957,27 @@ func eng_new_city(name: String = "", population: int = 1000000) -> Dictionary:
 	_persist_engineering()
 	return {"ok": true, "name": String(_eng_city.get("name", ""))}
 
+## 将城市规划结果同步到所在区域（D9 区域权威），人口与地价/交通写入快照。
+func _sync_city_to_region() -> void:
+	if _eng_city.is_empty():
+		return
+	var rid: String = current_region_id()
+	if regions == null or rid == "" or not regions.has_region(rid):
+		return
+	var reg = regions.get_region(rid)
+	reg.population = maxi(0, int(_eng_city.get("population", reg.population)))
+	reg.snapshot["population"] = reg.population
+	reg.snapshot["land_price"] = float(_eng_city.get("land_price", reg.snapshot.get("land_price", 10000.0)))
+	reg.snapshot["traffic"] = float(_eng_city.get("traffic", reg.snapshot.get("traffic", 0.5)))
+	reg.snapshot["accessibility"] = clampf(float(reg.snapshot.get("accessibility", 0.5)) + 0.02, 0.0, 1.0)
+	_persist_regions()
+
 func eng_rezone(zone_id: String, zone_type: String) -> Dictionary:
 	if _eng_city.is_empty():
 		return {"ok": false, "reason": "no_city"}
 	var r: Dictionary = engineering.rezone(_eng_city, zone_id, zone_type, {"migration_rate": 0.05})
 	if bool(r.get("ok", false)):
+		_sync_city_to_region()
 		_persist_engineering()
 	return r
 
@@ -7914,6 +7985,7 @@ func eng_transport(zone_id: String) -> Dictionary:
 	if _eng_city.is_empty():
 		return {"ok": false, "reason": "no_city"}
 	var r: Dictionary = engineering.transport_project(_eng_city, zone_id, {"improvement": 0.2})
+	_sync_city_to_region()
 	_persist_engineering()
 	return r
 
@@ -7929,6 +8001,7 @@ func eng_demolition(zone_id: String, residents: int = 1000, compensation: int = 
 		return {"ok": false, "reason": "no_city"}
 	var r: Dictionary = engineering.demolition(_eng_city, zone_id, {"residents": maxi(0, residents), "compensation_per": maxi(0, compensation)})
 	if bool(r.get("ok", false)):
+		_sync_city_to_region()
 		_persist_engineering()
 	return r
 
