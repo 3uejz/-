@@ -4332,6 +4332,21 @@ func emergency_weather_disaster() -> Dictionary:
 	_persist_emergency()
 	return {"ok": true, "incident": _incident, "disaster": key, "disaster_name": name, "injury": injury, "facility_losses": damage.get("losses", {}), "power_outage": outage}
 
+## 跨区增援：按距离与队伍数计费，补充现场救援队与医疗容量。
+func emergency_mutual_aid(distance_km: float, teams: int = 2) -> Dictionary:
+	if _incident.is_empty():
+		return {"ok": false, "reason": "no_incident"}
+	var added: int = clampi(teams, 1, 10)
+	var distance: float = clampf(distance_km, 1.0, 2000.0)
+	var cost: int = added * 20000 + int(round(distance * 5000.0))
+	if int(economy.cash(account_id())) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	economy.add_money(account_id(), -cost, "mutual_aid")
+	var r: Dictionary = emergency.request_mutual_aid(_incident, added, distance, {"cost": cost, "source_region": "neighbor"})
+	r["cost"] = cost
+	_persist_emergency()
+	return r
+
 func emergency_dispatch(distance_km: float = 5.0) -> Dictionary:
 	if _incident.is_empty():
 		return {"ok": false, "reason": "no_incident"}
@@ -4431,6 +4446,8 @@ func emergency_panel_data() -> Dictionary:
 			"stress_added": float((_incident.get("applied", {}) as Dictionary).get("stress", 0.0)),
 			"penalty_paid": int((_incident.get("applied", {}) as Dictionary).get("penalty_paid", 0)),
 			"triage": {"treated": float(tri.get("treated", 0.0)), "untreated": float(tri.get("untreated", 0.0))},
+			"rescue_teams": int((_incident.get("resources", {}) as Dictionary).get("rescue_teams", 1)),
+			"mutual_aid": (_incident.get("mutual_aid", []) as Array).size(),
 		}
 	if not _volunteer_org.is_empty():
 		out["org"] = {

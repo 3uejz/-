@@ -135,6 +135,26 @@ func dispatch(incident: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	return {"ok": true, "stage": incident["stage"], "response_minutes": response, "profession": prof}
 
 
+## 跨区增援：外区救援队与医疗资源加入现场，按距离计到达时间并补充资源池。
+func request_mutual_aid(incident: Dictionary, teams: int, distance_km: float, opts: Dictionary = {}) -> Dictionary:
+	var added: int = clampi(teams, 1, 20)
+	var distance: float = clampf(distance_km, 1.0, 2000.0)
+	var arrival: float = maxf(10.0, distance * 0.25)
+	var resources: Dictionary = incident.get("resources", {})
+	resources["rescue_teams"] = int(resources.get("rescue_teams", 1)) + added
+	resources["medical_capacity"] = int(resources.get("medical_capacity", 0)) + added * 8
+	incident["resources"] = resources
+	var aid: Array = incident.get("mutual_aid", [])
+	var record: Dictionary = {
+		"source_region": str(opts.get("source_region", "")),
+		"teams": added, "distance_km": distance,
+		"arrival_minutes": arrival, "cost": maxi(0, int(opts.get("cost", 0))),
+	}
+	aid.append(record)
+	incident["mutual_aid"] = aid
+	return {"ok": true, "teams": added, "arrival_minutes": arrival, "rescue_teams": int(resources["rescue_teams"]), "medical_capacity": int(resources["medical_capacity"]), "record": record}
+
+
 func response_time(incident: Dictionary) -> float:
 	return float(incident.get("response_minutes", -1.0))
 

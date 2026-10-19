@@ -534,6 +534,8 @@ func _dispatch(intent) -> Dictionary:
 			return _emergency_weather(intent)
 		"出警":
 			return _emergency_dispatch(intent)
+		"跨区增援":
+			return _emergency_mutual_aid(intent)
 		"现场救援":
 			return _emergency_rescue(intent)
 		"二次事故":
@@ -3047,6 +3049,13 @@ func _emergency_dispatch(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法出警（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["出警，响应时间 %.1f 分钟。" % float(r.get("response_minutes", 0.0))], 0, "")
+
+func _emergency_mutual_aid(intent) -> Dictionary:
+	var distance: float = float(_param_number(intent, "number", 50))
+	var r: Dictionary = host.emergency_mutual_aid(distance)
+	if not bool(r.get("ok", false)):
+		return _fail("无法调派增援（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["外区增援 %d 队抵达，耗时 %.0f 分钟，费用 %d。" % [int(r.get("teams", 0)), float(r.get("arrival_minutes", 0.0)), int(r.get("cost", 0))]], 0, "")
 
 func _emergency_rescue(intent) -> Dictionary:
 	var r: Dictionary = host.emergency_rescue()
