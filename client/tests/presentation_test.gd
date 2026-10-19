@@ -202,6 +202,13 @@ func _test_local_3d_view() -> void:
 	check((actor.get_node("Torso") as MeshInstance3D).material_override != null, "躯干按服装着色")
 	var npcs: MultiMeshInstance3D = view.world_3d().get_node_or_null("NPCs")
 	check(npcs != null and npcs.multimesh != null and npcs.multimesh.instance_count == 24, "路人批量绘制 24 人")
+	view._process(0.1)
+	var npc_before: Array = view.npc_positions()
+	view._process(0.4)
+	var npc_after: Array = view.npc_positions()
+	check(npc_before.size() == 24 and npc_after.size() == 24, "路人位置快照含 24 人")
+	check(npc_after[0] != npc_before[0], "路人有微动而非静物")
+	check(actor.get_node_or_null("EyeL") != null and actor.get_node_or_null("EyeR") != null, "主角有双眼分件")
 	var ground: MeshInstance3D = view.world_3d().get_node_or_null("Ground")
 	check(ground != null and (ground.material_override as StandardMaterial3D).albedo_texture != null, "地面使用 CC0 贴图")
 	var medical_mat: Material = ground.material_override

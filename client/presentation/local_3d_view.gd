@@ -54,6 +54,14 @@ var _hair_color := Color(0.15, 0.12, 0.10)
 var _outfit_color := Color(0.24, 0.36, 0.50)
 var _lamps: Array[OmniLight3D] = []
 var _lamp_material: StandardMaterial3D
+var _eye_l: MeshInstance3D
+var _eye_r: MeshInstance3D
+var _blink_clock: float = 0.0
+var _blink_next: float = 3.2
+var _idle_clock: float = 0.0
+var _npc_data: Array = []
+var _npc_poses: Array = []
+var _npc_clock: float = 0.0
 
 
 func _ready() -> void:
@@ -152,10 +160,10 @@ func _build_actor() -> void:
 	_head = _add_part(_actor, "Head", _sphere(0.16), Vector3(0.0, 1.62, 0.0))
 	_hair = _add_part(_actor, "Hair", _sphere(0.17), Vector3(0.0, 1.68, -0.01))
 	_hair.scale = Vector3(1.02, 0.72, 1.02)
-	var eye_l := _add_part(_actor, "EyeL", _sphere(0.022), Vector3(-0.058, 1.65, 0.145))
-	var eye_r := _add_part(_actor, "EyeR", _sphere(0.022), Vector3(0.058, 1.65, 0.145))
-	eye_l.material_override = _flat_material(Color(0.10, 0.10, 0.12))
-	eye_r.material_override = _flat_material(Color(0.10, 0.10, 0.12))
+	_eye_l = _add_part(_actor, "EyeL", _sphere(0.022), Vector3(-0.058, 1.65, 0.145))
+	_eye_r = _add_part(_actor, "EyeR", _sphere(0.022), Vector3(0.058, 1.65, 0.145))
+	_eye_l.material_override = _flat_material(Color(0.10, 0.10, 0.12))
+	_eye_r.material_override = _flat_material(Color(0.10, 0.10, 0.12))
 
 	_arm_l = _limb_pivot(_actor, "ArmL", Vector3(-0.28, 1.40, 0.0), 0.60, 0.065)
 	_arm_r = _limb_pivot(_actor, "ArmR", Vector3(0.28, 1.40, 0.0), 0.60, 0.065)
@@ -286,14 +294,22 @@ func _build_npcs() -> void:
 	mm.use_colors = true
 	mm.mesh = mesh
 	mm.instance_count = 24
+	_npc_data.clear()
 	for i in 24:
 		var angle: float = float(i) * TAU / 24.0 + float(i % 5) * 0.17
 		var radius: float = 3.2 + float((i * 7) % 9)
-		var height: float = 0.71 + float(i % 3) * 0.03
-		var basis := Basis().scaled(Vector3.ONE * (0.92 + float(i % 4) * 0.04))
-		mm.set_instance_transform(i, Transform3D(basis, Vector3(cos(angle) * radius, height, sin(angle) * radius)))
+		var center := Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		var base_scale: float = 0.92 + float(i % 4) * 0.04
+		var height: float = 0.71 * base_scale + float(i % 3) * 0.03
+		var basis := Basis().scaled(Vector3.ONE * base_scale)
+		mm.set_instance_transform(i, Transform3D(basis, center + Vector3(0.0, height, 0.0)))
 		var tone: float = 0.42 + float((i * 13) % 20) * 0.012
-		mm.set_instance_color(i, Color(tone, tone * 0.96, tone * 0.9))
+		mm.set_instance_color(i, Color(tone, tone * 0.96 + float(i % 3) * 0.02, tone * 0.9))
+		_npc_data.append({
+			"center": center, "y": height, "scale": base_scale,
+			"phase": float(i) * 0.7, "speed": 0.35 + float(i % 5) * 0.09,
+			"radius": 0.18 + float(i % 4) * 0.13,
+		})
 	_npc_root.multimesh = mm
 	var npc_material := _flat_material(Color(0.9, 0.9, 0.9))
 	npc_material.vertex_color_use_as_albedo = true
@@ -557,10 +573,53 @@ func _process(delta: float) -> void:
 			_arm_l.rotation.x = -swing * 0.8
 		if _arm_r != null:
 			_arm_r.rotation.x = swing * 0.8
+		_idle_clock += delta
+		if not _moving:
+			var idle_sway: float = sin(_idle_clock * 0.9) * 0.035
+			if _arm_l != null:
+				_arm_l.rotation.x = idle_sway
+			if _arm_r != null:
+				_arm_r.rotation.x = -idle_sway
+		_blink_clock += delta
+		if _blink_clock >= _blink_next:
+			_blink_clock = 0.0
+			_blink_next = 2.4 + fmod(absf(sin(float(Time.get_ticks_msec()) * 0.0007)), 1.0) * 3.6
+		var blink_scale: float = 0.12 if _blink_clock < 0.12 else 1.0
+		if _eye_l != null:
+			_eye_l.scale.y = blink_scale
+		if _eye_r != null:
+			_eye_r.scale.y = blink_scale
 		_camera_target = Vector3(_actor.position.x, 2.2, _actor.position.z)
 		_update_camera()
+	if _npc_root != null and _npc_root.multimesh != null:
+		_npc_clock += delta
+		_update_npcs()
 	if _precip != null and _precip.emitting and _camera != null:
 		_precip.position = Vector3(_camera.position.x, 12.0, _camera.position.z)
+
+
+## 路人微动：围绕各自站位小幅踱步、轻微起伏，避免整条街像静物。
+func _update_npcs() -> void:
+	var mm: MultiMesh = _npc_root.multimesh
+	_npc_poses.clear()
+	for i in mini(_npc_data.size(), mm.instance_count):
+		var data: Dictionary = _npc_data[i]
+		var phase: float = float(data["phase"]) + _npc_clock * float(data["speed"])
+		var center: Vector3 = data["center"]
+		var drift_r: float = float(data["radius"])
+		var pos := Vector3(
+			center.x + cos(phase) * drift_r,
+			float(data["y"]) + sin(phase * 2.0) * 0.03,
+			center.z + sin(phase) * drift_r
+		)
+		var yaw: float = atan2(-sin(phase), cos(phase))
+		var basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * float(data["scale"]))
+		mm.set_instance_transform(i, Transform3D(basis, pos))
+		_npc_poses.append(pos)
+
+## 当前路人位置快照（供无人渲染的测试核验微动）。
+func npc_positions() -> Array:
+	return _npc_poses.duplicate()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
