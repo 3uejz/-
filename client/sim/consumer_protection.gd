@@ -166,6 +166,36 @@ func file_complaint(order: Dictionary, channel: String, opts: Dictionary = {}) -
 	return {"ok": true, "complaint": complaint, "platform_evade": bool(complaint["platform_evade"])}
 
 
+## 12315 热线受理模拟：登记案号、受理/驳回与办理时限；恶意低证据投诉触发商家反诉风险。
+## opts: evidence/sequence/malicious/merchant_aggressive。
+func hotline_12315(order: Dictionary, opts: Dictionary = {}) -> Dictionary:
+	var evidence: float = clampf(float(opts.get("evidence", 0.3)), 0.0, 1.0)
+	var sequence: int = maxi(1, int(opts.get("sequence", 1)))
+	var malicious: bool = bool(opts.get("malicious", false))
+	var accepted: bool = evidence >= 0.25
+	var counterclaim_risk: bool = malicious and evidence < 0.5
+	var case_no: String = "12315-%06d" % sequence
+	var process_days: int = 15 if accepted else 7
+	var outcome: String = "mediation" if accepted else "rejected"
+	if counterclaim_risk:
+		outcome = "counterclaim"
+	var complaint: Dictionary = {}
+	for c in (order.get("complaints", []) as Array):
+		if String((c as Dictionary).get("channel", "")) == CHANNEL_12315:
+			complaint = (c as Dictionary).duplicate(true)
+	if complaint.is_empty():
+		complaint = file_complaint(order, CHANNEL_12315, {"evidence": evidence}).get("complaint", {})
+	complaint["status"] = "accepted" if accepted else "rejected"
+	var record: Dictionary = {
+		"case_no": case_no, "accepted": accepted, "outcome": outcome,
+		"process_days": process_days, "evidence": evidence,
+		"counterclaim_risk": counterclaim_risk,
+		"merchant_response_days": 7,
+		"jurisdiction": str(opts.get("jurisdiction", "属地市场监管所")),
+	}
+	return {"ok": true, "complaint": complaint, "record": record, "accepted": accepted, "case_no": case_no, "outcome": outcome, "process_days": process_days, "counterclaim_risk": counterclaim_risk}
+
+
 # --- 维权路径 ---
 
 ## 解决纠纷：按渠道权重 + 证据强度 + 举证责任判定结果。与 CivilSystem 的诉讼衔接，

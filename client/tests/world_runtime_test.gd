@@ -1620,6 +1620,10 @@ func _test_consumer_runtime() -> void:
 	check(String(host.consumer_burden(30).get("bearer", "")) == "merchant", "耐用商品举证责任在商家")
 	# 维权路径与集体维权。
 	check(bool(host.consumer_dispute("platform", 0.9).get("ok", false)), "平台投诉受理")
+	var hotline: Dictionary = host.consumer_12315(0.8)
+	check(bool(hotline.get("accepted", false)) and String(hotline.get("case_no", "")) != "", "12315 受理并生成案号")
+	var counter: Dictionary = host.consumer_12315(0.1, true)
+	check(bool(counter.get("counterclaim_risk", false)), "低证据恶意投诉触发商家反诉风险")
 	check(bool(host.consumer_class_action(0.9).get("ok", false)), "集体维权受理")
 	# 监管事故与召回。
 	var inc: Dictionary = host.consumer_incident("food_safety", 0.9, 5)

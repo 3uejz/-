@@ -5089,6 +5089,18 @@ func consumer_dispute(channel: String, evidence: float) -> Dictionary:
 	_persist_consumer()
 	return r
 
+## 12315 热线投诉：生成受理案号与办理时限，恶意投诉标记商家反诉风险。
+func consumer_12315(evidence: float, malicious: bool = false) -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var cases: Array = _consumer_order.get("hotline_cases", [])
+	var r: Dictionary = consumer.hotline_12315(_consumer_order, {"evidence": evidence, "sequence": cases.size() + 1, "malicious": malicious})
+	if bool(r.get("ok", false)):
+		cases.append((r.get("record", {}) as Dictionary).duplicate(true))
+		_consumer_order["hotline_cases"] = cases
+		_persist_consumer()
+	return r
+
 func consumer_class_action(evidence: float) -> Dictionary:
 	if _consumer_order.is_empty():
 		return {"ok": false, "reason": "no_order"}

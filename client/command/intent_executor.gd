@@ -656,6 +656,8 @@ func _dispatch(intent) -> Dictionary:
 			return _consumer_platform(intent)
 		"消协调解":
 			return _consumer_association(intent)
+		"热线投诉":
+			return _consumer_hotline(intent)
 		"集体维权":
 			return _consumer_class_action(intent)
 		"消费起诉":
@@ -3720,6 +3722,16 @@ func _find_region_id(text: String) -> String:
 			if rid == text or rid.to_lower() == text.to_lower():
 				return rid
 	return text
+
+func _consumer_hotline(intent) -> Dictionary:
+	var evidence: float = float(_param_number(intent, "number", 60)) / 100.0
+	var r: Dictionary = host.consumer_12315(evidence)
+	if not bool(r.get("ok", false)):
+		return _fail("无法提交热线投诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "12315 受理案号 %s，办理时限 %d 天。" % [String(r.get("case_no", "")), int(r.get("process_days", 0))]
+	if bool(r.get("counterclaim_risk", false)):
+		line += " 证据不足，商家可能反诉敲诈。"
+	return _ok([line], 0, "")
 
 func _consumer_class_action(intent) -> Dictionary:
 	var r: Dictionary = host.consumer_class_action(0.5)
