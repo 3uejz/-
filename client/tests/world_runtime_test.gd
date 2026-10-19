@@ -1543,6 +1543,8 @@ func _test_municipal_runtime() -> void:
 	# 特许经营与政府购买。
 	check(bool(host.municipal_grant_franchise("street_cleaning").get("ok", false)), "取得道路保洁特许")
 	check(bool(host.municipal_assess_quality(0.9).get("ok", false)), "服务考核完成")
+	var utility: Dictionary = host.municipal_utility_report(30.0)
+	check(bool(utility.get("ok", false)) and int(utility.get("revenue", 0)) > 0, "公用事业报表结算营收")
 	check(bool(host.municipal_government_purchase("park_maintenance", 800000).get("ok", false)), "政府购买服务完成")
 	# 持久化与读档恢复。
 	host._persist_municipal()

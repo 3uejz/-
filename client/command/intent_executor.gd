@@ -612,6 +612,8 @@ func _dispatch(intent) -> Dictionary:
 			return _municipal_franchise(intent)
 		"服务考核":
 			return _municipal_quality(intent)
+		"公用事业报表":
+			return _municipal_utility(intent)
 		"政府购买":
 			return _municipal_purchase(intent)
 		"典当":
@@ -3347,6 +3349,13 @@ func _municipal_quality(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法考核（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["服务考核 %s 级%s。" % [String(r.get("grade", "")), ("，扣减服务费 %d" % int(r.get("penalty", 0))) if int(r.get("penalty", 0)) > 0 else ""]], 0, "")
+
+func _municipal_utility(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 30))
+	var r: Dictionary = host.municipal_utility_report(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法生成公用事业报表（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["公用事业 %.0f 天：营收 %d，成本 %d，净利 %d。" % [float(r.get("days", 0.0)), int(r.get("revenue", 0)), int(r.get("cost", 0)), int(r.get("net", 0))]], 0, "")
 
 func _municipal_purchase(intent) -> Dictionary:
 	var service := _object_id(intent, "franchise_service")

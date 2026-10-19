@@ -4758,6 +4758,18 @@ func municipal_grant_franchise(service: String) -> Dictionary:
 	_persist_municipal()
 	return r
 
+## 公用事业月度报表：结算最近一份特许合同，净利回写玩家账户。
+func municipal_utility_report(days: float = 30.0) -> Dictionary:
+	var franchises: Array = _city_municipal.get("franchises", [])
+	if franchises.is_empty():
+		return {"ok": false, "reason": "no_franchise"}
+	var contract: Dictionary = franchises[franchises.size() - 1]
+	var r: Dictionary = municipal.utility_statement(_city_municipal, contract, {"days": days})
+	if bool(r.get("ok", false)):
+		economy.add_money(account_id(), int(r.get("net", 0)), "utility_operation")
+		_persist_municipal()
+	return r
+
 func municipal_assess_quality(score: float) -> Dictionary:
 	var franchises: Array = _city_municipal.get("franchises", [])
 	if franchises.is_empty():

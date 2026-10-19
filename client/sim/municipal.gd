@@ -74,6 +74,16 @@ const FRANCHISE_SERVICES: Dictionary = {
 }
 
 
+## 公用事业运营参数：人均月票价/费率、单位成本与固定成本。
+const UTILITY_FINANCE: Dictionary = {
+	"water_supply": {"penetration": 0.92, "tariff": 1800, "unit_cost": 1050, "fixed": 250000},
+	"waste_collection": {"penetration": 1.0, "tariff": 600, "unit_cost": 380, "fixed": 120000},
+	"street_cleaning": {"penetration": 1.0, "tariff": 350, "unit_cost": 240, "fixed": 80000},
+	"bus_operation": {"penetration": 0.55, "tariff": 900, "unit_cost": 620, "fixed": 400000},
+	"park_maintenance": {"penetration": 0.35, "tariff": 500, "unit_cost": 300, "fixed": 60000},
+}
+
+
 func _roll(forced: float, rng) -> float:
 	if forced >= 0.0:
 		return clampf(forced, 0.0, 1.0)
@@ -520,6 +530,31 @@ func assess_service_quality(city: Dictionary, contract: Dictionary, score: float
 		penalty = int(round(float(contract.get("fee", 0)) * (pass_line - s)))
 		contract["active"] = false
 	return {"ok": true, "grade": grade, "passed": s >= pass_line, "penalty": penalty, "pass_line": pass_line}
+
+
+## 公用事业月度报表：按服务人口、渗透率、费率与运营成本结算，质量影响收入。
+func utility_statement(city: Dictionary, contract: Dictionary, opts: Dictionary = {}) -> Dictionary:
+	var service: String = str(contract.get("service", ""))
+	if not UTILITY_FINANCE.has(service):
+		return {"ok": false, "reason": "unknown_service"}
+	var fin: Dictionary = UTILITY_FINANCE[service]
+	var days: float = clampf(float(opts.get("days", 30)), 1.0, 365.0)
+	var months: float = days / 30.0
+	var population: int = maxi(0, int(city.get("population", 0)))
+	var quality: float = clampf(float(contract.get("quality_score", 0.0)), 0.0, 1.0)
+	var served: float = float(population) * float(fin["penetration"]) * (0.75 + 0.25 * quality)
+	var revenue: int = int(round(served * float(fin["tariff"]) * months))
+	var cost: int = int(round(served * float(fin["unit_cost"]) * months + float(fin["fixed"]) * months))
+	var net: int = revenue - cost
+	var statement: Dictionary = {
+		"service": service, "days": days, "served": served,
+		"revenue": revenue, "cost": cost, "net": net,
+		"quality": quality, "grade": String(contract.get("quality_grade", "")),
+	}
+	contract["last_statement"] = statement
+	var out: Dictionary = statement.duplicate(true)
+	out["ok"] = true
+	return out
 
 
 ## 特许经营投诉：计入合同并在反复投诉后触发复核。
