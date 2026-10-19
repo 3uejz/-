@@ -1919,6 +1919,56 @@ func invest_biotech_lifespan(investment: float) -> Dictionary:
 	_persist_late_tech()
 	return r
 
+## 极端环境目录（失重/辐射/深海高压）。
+func late_tech_environments_catalog() -> Array:
+	var out: Array = []
+	for key in late_tech.ENVIRONMENTS.keys():
+		out.append({"id": String(key), "name": String((late_tech.ENVIRONMENTS[key] as Dictionary).get("name", key))})
+	return out
+
+## 自动化冲击评估：效率提升淘汰传统岗位，可能触发失业危机。
+func late_tech_automation_impact(efficiency: float = 1.0) -> Dictionary:
+	var r: Dictionary = late_tech.automation_impact(_late_tech, clampf(efficiency, 0.0, 2.0), {})
+	_late_tech["last_report"] = {"kind": "automation", "result": r.duplicate(true)}
+	_persist_late_tech()
+	return r
+
+## 极端环境暴露：扣减玩家健康并返回骨/肌/辐射/压力分项。
+func late_tech_extreme_environment(environment: String, exposure: float = 1.0) -> Dictionary:
+	var r: Dictionary = late_tech.extreme_environment_effect(environment, maxf(0.0, exposure), {"tolerance": clampf(float(_late_tech.get("lifespan_bonus", 0.0)) / 50.0, 0.0, 0.3)})
+	if not bool(r.get("ok", false)):
+		return r
+	var penalty: float = float(r.get("health_penalty", 0.0))
+	if penalty > 0.0:
+		_damage_health(penalty * 100.0)
+	_late_tech["last_report"] = {"kind": "environment", "result": r.duplicate(true)}
+	_persist_late_tech()
+	return r
+
+## 气候难民评估：按升温与沿海人口估算难民规模并记账。
+func late_tech_climate_refugees(warming: float = 2.0) -> Dictionary:
+	var r: Dictionary = late_tech.climate_refugees(_late_tech, maxf(0.0, warming), {})
+	_late_tech["last_report"] = {"kind": "climate", "result": r.duplicate(true)}
+	_persist_late_tech()
+	return r
+
+## AI 伦理失控演练：按自主性判定失控概率与技术事故连锁。
+func late_tech_ai_ethics_incident(autonomy: float = 0.9) -> Dictionary:
+	var r: Dictionary = late_tech.ai_ethics_incident(_late_tech, clampf(autonomy, 0.0, 1.0), {"risk": 0.05, "critical": true}, rng)
+	_late_tech["last_report"] = {"kind": "ai", "result": r.duplicate(true)}
+	_persist_late_tech()
+	return r
+
+## 健康扣减：写成生理健康字段，供极端环境等外部惩罚使用。
+func _damage_health(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var attrs: Dictionary = player().get("attrs", {})
+	var phys: Dictionary = attrs.get("physiological", {})
+	phys["health"] = clampf(float(phys.get("health", 100.0)) - amount, 0.0, 100.0)
+	attrs["physiological"] = phys
+	player()["attrs"] = attrs
+
 ## 取职业路径中的最高技能等级（近似玩家科技素养）。
 func _late_tech_best_skill() -> int:
 	var best: int = 0
@@ -1963,6 +2013,7 @@ func late_tech_panel_data() -> Dictionary:
 		"unemployment_rate": snappedf(float(_late_tech.get("unemployment_rate", 0.0)), 0.001),
 		"careers": careers,
 		"missions": missions,
+		"last_report": (_late_tech.get("last_report", {}) as Dictionary).duplicate(true),
 	}
 
 func _persist_late_tech() -> void:
@@ -2403,6 +2454,13 @@ func trade_barriers_catalog() -> Array:
 		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
 	return out
 
+func trade_risk_events_catalog() -> Array:
+	const NAMES: Dictionary = {"trade_war": "贸易战", "sanction": "制裁", "war": "战争"}
+	var out: Array = []
+	for key in trade.RISK_EVENTS:
+		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
+	return out
+
 ## 新建出口单据：以货值建单，商品名落单据，返回序号。
 func export_shipment(goods: String, value: int) -> Dictionary:
 	var s: Dictionary = trade.new_shipment({"id": "shipment_%d" % _shipments.size(), "goods_value": maxi(0, value)})
@@ -2491,6 +2549,64 @@ func settle_shipment(index: int) -> Dictionary:
 	_persist_trade()
 	return {"ok": true, "fee": fee, "method": method, "method_name": String((trade.SETTLEMENTS[method] as Dictionary).get("name", method))}
 
+## 施加贸易壁垒：关税/配额/反倾销/原产地规则写入单据。
+func apply_trade_barrier(index: int, barrier: String) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.apply_barrier(s, barrier)
+	if bool(r.get("ok", false)):
+		_persist_trade()
+	return r
+
+## 触发外贸风险事件：写入滞留/改道/额外费用，并从现金扣除。
+func apply_trade_risk(index: int, event: String) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.risk_event(s, event)
+	if not bool(r.get("ok", false)):
+		return r
+	var extra: int = maxi(0, int(r.get("extra_cost", 0)))
+	if extra > 0:
+		if int(economy.cash(account_id())) < extra:
+			return {"ok": false, "reason": "insufficient_funds", "extra_cost": extra}
+		economy.add_money(account_id(), -extra, "trade_risk:%s" % event)
+	s["delay_days"] = float(s.get("delay_days", 0.0)) + float(r.get("delay_days", 0.0))
+	s["extra_cost"] = int(s.get("extra_cost", 0)) + extra
+	_persist_trade()
+	return r
+
+## 检验检疫：默认合格，不合格时标记可退运/整改。
+func inspect_shipment(index: int, passed: bool = true) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.quarantine_inspect(s, {"passed": passed})
+	_persist_trade()
+	return r
+
+## 货损：按比例折减货值。
+func damage_shipment(index: int, loss_rate: float) -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.damage_loss(s, clampf(loss_rate, 0.0, 1.0))
+	_persist_trade()
+	return r
+
+## 退运：标记退运并按运费计退运成本。
+func return_shipment(index: int, reason: String = "rejected") -> Dictionary:
+	var s: Dictionary = _shipment_at(index)
+	if s.is_empty():
+		return {"ok": false, "reason": "no_shipment"}
+	var r: Dictionary = trade.return_shipment(s, reason)
+	var cost: int = maxi(0, int(r.get("return_cost", 0)))
+	if cost > 0 and int(economy.cash(account_id())) >= cost:
+		economy.add_money(account_id(), -cost, "trade_return")
+	_persist_trade()
+	return r
+
 ## 外贸面板数据：单据、阶段、运输、税费、结算。
 func trade_panel_data() -> Dictionary:
 	if _shipments.is_empty():
@@ -2510,6 +2626,12 @@ func trade_panel_data() -> Dictionary:
 			"transport": String(sd.get("transport", "")),
 			"freight": int(sd.get("freight", 0)),
 			"settled": bool(sd.get("settled", false)),
+			"barriers": (sd.get("barriers", []) as Array).duplicate(),
+			"risk_events": (sd.get("risk_events", []) as Array).duplicate(),
+			"delay_days": float(sd.get("delay_days", 0.0)),
+			"extra_cost": int(sd.get("extra_cost", 0)),
+			"inspection_passed": bool(sd.get("inspection_passed", true)),
+			"returned": bool(sd.get("returned", false)),
 		})
 		idx += 1
 	return {"shipments": rows}
@@ -2545,6 +2667,12 @@ func mining_energy_catalog() -> Array:
 	for key in mining_energy.energy_keys():
 		var d: Dictionary = mining_energy.energy_def(String(key))
 		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func mining_energy_types_catalog() -> Array:
+	var out: Array = []
+	for key in mining_energy.energy_keys():
+		out.append({"id": String(key), "name": String((mining_energy.ENERGY_TYPES[key] as Dictionary).get("name", key))})
 	return out
 
 func mining_energy_kinds_catalog() -> Array:
@@ -2615,6 +2743,71 @@ func build_energy_project(kind: String, capacity: float) -> Dictionary:
 	_persist_mining()
 	return {"ok": true, "kind": kind, "name": String(p.get("name", kind)), "capacity": float(p.get("capacity", 0.0))}
 
+## 安全投入：从矿场资金池扣款，降低事故率。
+func invest_mine_safety(amount: int) -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var spend: int = maxi(0, amount)
+	if int(_mine.get("money", 0)) < spend:
+		return {"ok": false, "reason": "insufficient_funds", "required": spend}
+	_mine["money"] = int(_mine.get("money", 0)) - spend
+	var r: Dictionary = mining_energy.safety_invest(_mine, spend)
+	_persist_mining()
+	return r
+
+## 矿难判定：按安全水平掷骰，事故造成罚款、健康损伤与环保负债。
+func check_mine_accident() -> Dictionary:
+	if _mine.is_empty():
+		return {"ok": false, "reason": "no_mine"}
+	var r: Dictionary = mining_energy.accident_check(_mine, {}, rng)
+	if bool(r.get("occurred", false)):
+		var fine: int = mini(int(_mine.get("money", 0)), 2000000)
+		_mine["money"] = int(_mine.get("money", 0)) - fine
+		_mine["environment_liability"] = clampf(float(_mine.get("environment_liability", 0.0)) + 0.1, 0.0, 1.0)
+		var injured: int = int(r.get("injured", 0))
+		_damage_health(clampf(float(injured) * 0.05, 0.0, 5.0))
+		r["fine"] = fine
+		_mine["last_accident"] = r.duplicate(true)
+	_persist_mining()
+	return r
+
+## 能源期货：锁定未来价格，到期按市价与锁价差额结算。
+func buy_energy_futures(energy_type: String, amount: float = 100.0, lock_price: int = 0) -> Dictionary:
+	var price: int = lock_price if lock_price > 0 else mining_energy.energy_price(_energy, energy_type)
+	var r: Dictionary = mining_energy.futures_contract(_energy, energy_type, maxf(0.0, amount), price)
+	if bool(r.get("ok", false)):
+		_persist_mining()
+	return r
+
+## 结算能源期货：index 为 -1 时取该品种首个未结算合约。
+func settle_energy_futures(energy_type: String, index: int = -1) -> Dictionary:
+	var contracts: Array = (_energy.get("futures", {}) as Dictionary).get(energy_type, []) if _energy.get("futures", {}) is Dictionary else []
+	var idx: int = index
+	if idx < 0:
+		idx = -1
+		for i in range(contracts.size()):
+			if not bool((contracts[i] as Dictionary).get("settled", false)):
+				idx = i
+				break
+	if idx < 0:
+		return {"ok": false, "reason": "no_contract"}
+	var market: int = mining_energy.energy_price(_energy, energy_type)
+	var r: Dictionary = mining_energy.settle_futures(_energy, energy_type, idx, market)
+	if bool(r.get("ok", false)):
+		var pnl: int = int(r.get("pnl", 0))
+		if not _mine.is_empty():
+			_mine["money"] = int(_mine.get("money", 0)) + pnl
+		_persist_mining()
+	return r
+
+## 能源长约：锁定固定价与年限，期间不受市价影响。
+func sign_energy_contract(energy_type: String, amount: float = 1000.0, fixed_price: int = 0, years: float = 1.0) -> Dictionary:
+	var price: int = fixed_price if fixed_price > 0 else mining_energy.energy_price(_energy, energy_type)
+	var r: Dictionary = mining_energy.long_term_contract(_energy, energy_type, maxf(0.0, amount), price, maxf(0.0, years))
+	if bool(r.get("ok", false)):
+		_persist_mining()
+	return r
+
 ## 矿业/能源面板数据：矿场概况、能源价格、新能源项目。
 func mining_panel_data() -> Dictionary:
 	var out: Dictionary = {}
@@ -2633,6 +2826,8 @@ func mining_panel_data() -> Dictionary:
 			"in_transit_ore": float(_mine.get("in_transit_ore", 0.0)),
 			"refined_metal": float(_mine.get("refined_metal", 0.0)),
 			"revenue": int(_mine.get("revenue", 0)),
+			"money": int(_mine.get("money", 0)),
+			"accident_count": int(_mine.get("accident_count", 0)),
 		}
 	var prices: Dictionary = _energy.get("prices", {})
 	var price_rows: Array = []
@@ -2647,6 +2842,32 @@ func mining_panel_data() -> Dictionary:
 	for p in _energy.get("projects", []):
 		projects.append({"name": String(p.get("name", "")), "kind": String(p.get("kind", "")), "capacity": float(p.get("capacity", 0.0))})
 	out["projects"] = projects
+	var futures_rows: Array = []
+	var futures: Dictionary = _energy.get("futures", {}) if _energy.get("futures", {}) is Dictionary else {}
+	for key in futures.keys():
+		var i: int = 0
+		for c in (futures[key] as Array):
+			futures_rows.append({
+				"energy": String(key),
+				"name": String((mining_energy.ENERGY_TYPES.get(String(key), {}) as Dictionary).get("name", key)),
+				"index": i,
+				"amount": float((c as Dictionary).get("amount", 0.0)),
+				"lock_price": int((c as Dictionary).get("lock_price", 0)),
+				"settled": bool((c as Dictionary).get("settled", false)),
+			})
+			i += 1
+	out["futures"] = futures_rows
+	var contracts_rows: Array = []
+	for c in (_energy.get("long_term_contracts", []) as Array):
+		contracts_rows.append({
+			"energy": String((c as Dictionary).get("energy", "")),
+			"name": String((mining_energy.ENERGY_TYPES.get(String((c as Dictionary).get("energy", "")), {}) as Dictionary).get("name", "")),
+			"amount": float((c as Dictionary).get("amount", 0.0)),
+			"fixed_price": int((c as Dictionary).get("fixed_price", 0)),
+			"years": float((c as Dictionary).get("years", 0.0)),
+		})
+	out["contracts"] = contracts_rows
+	out["last_accident"] = (_mine.get("last_accident", {}) as Dictionary).duplicate(true) if not _mine.is_empty() else {}
 	return out
 
 func _mining_tick(before_minutes: int, after_minutes: int) -> void:
@@ -3110,6 +3331,7 @@ func fashion_panel_data() -> Dictionary:
 		"reputation": float(_brand.get("reputation", 50.0)),
 		"fame": float(_brand.get("fame", 0.0)),
 		"relevance": float(_brand.get("relevance", 80.0)),
+		"age_years": float(_brand.get("age_years", 0.0)),
 		"brand_value": int(_brand.get("brand_value", 0)),
 		"premium": fashion.brand_premium(_brand),
 		"stores": (_brand.get("stores", []) as Array).size(),
@@ -3136,6 +3358,16 @@ func _persist_fashion() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["fashion"] = {"brand": fashion.to_dict(_brand), "trend": _trend.duplicate(true)}
+
+## 品牌按年老化：相关度随定位自然衰减，玩家可用「品牌复兴」对冲。
+func _fashion_tick(before_minutes: int, after_minutes: int) -> void:
+	if _brand.is_empty():
+		return
+	var years: float = float(maxi(0, after_minutes - before_minutes)) / 525960.0
+	if years <= 0.0:
+		return
+	fashion.brand_aging(_brand, years)
+	_persist_fashion()
 
 
 func sports_state() -> Dictionary:
@@ -3253,6 +3485,84 @@ func sports_retire() -> Dictionary:
 	_persist_sports()
 	return r
 
+## 国家队征召：状态达到门槛即可入选。
+func sports_national_callup(nation: String = "中国") -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.national_callup(_pro_player, nation, {"form_threshold": 40.0})
+	if bool(r.get("ok", false)):
+		_persist_sports()
+	return r
+
+## 国际赛事：以球会与国家队实力推演冠军并结算奖金。
+func sports_international_tournament(competition: String = "world_cup") -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var club_name: String = String(_sports_club.get("name", "本地球会"))
+	var rival_name: String = String(_sports_rival.get("name", "同城劲敌"))
+	var teams: Array = [
+		{"name": club_name, "strength": float(_sports_club.get("strength", 50.0)) + float(_pro_player.get("form", 50.0)) * 0.1},
+		{"name": rival_name, "strength": float(_sports_rival.get("strength", 50.0))},
+		{"name": "国家队", "strength": 72.0},
+		{"name": "海外劲旅", "strength": 78.0},
+	]
+	var r: Dictionary = sports_industry.international_tournament(competition, teams, rng, {"reward": 30000000})
+	if bool(r.get("ok", false)):
+		var reward: int = int(r.get("reward", 0))
+		if String(r.get("champion", "")) == club_name:
+			economy.add_money(account_id(), reward, "sports_tournament")
+		else:
+			r["reward"] = 0
+		_pro_player["last_tournament"] = {"competition": competition, "champion": String(r.get("champion", "")), "reward": int(r.get("reward", 0))}
+		_persist_sports()
+	return r
+
+## 球迷冲突：罚款并损伤球会声誉。
+func sports_fan_violence() -> Dictionary:
+	if _sports_club.is_empty():
+		return {"ok": false, "reason": "no_club"}
+	var r: Dictionary = sports_industry.fan_violence(_sports_club, 0.0, {"force": true})
+	_persist_sports()
+	return r
+
+## 裁判争议：申诉并支付申诉费。
+func sports_referee_controversy() -> Dictionary:
+	if _sports_club.is_empty():
+		return {"ok": false, "reason": "no_club"}
+	var r: Dictionary = sports_industry.referee_controversy({}, 0.0, {"force": true})
+	var fee: int = int(r.get("protest_fee", 0))
+	if bool(r.get("disputed", false)) and fee > 0:
+		if int(economy.cash(account_id())) < fee:
+			return {"ok": false, "reason": "insufficient_funds", "protest_fee": fee}
+		economy.add_money(account_id(), -fee, "sports_protest")
+		_sports_club["reputation"] = clampf(float(_sports_club.get("reputation", 50.0)) - 3.0, 0.0, 100.0)
+	_persist_sports()
+	return r
+
+## 学业冲突：在役且在读时，训练挤压学业；成绩过低退学。
+func sports_academic_conflict() -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var enrolled: bool = false
+	var edu: Array = player().get("education", []) if player().get("education", []) is Array else []
+	for e in edu:
+		if e is Dictionary and String((e as Dictionary).get("status", "")) == "enrolled":
+			enrolled = true
+			break
+	if not enrolled:
+		return {"ok": true, "conflict": false, "reason": "not_enrolled"}
+	var p: Dictionary = {"enrolled": true, "gpa": float(player().get("gpa", 70.0))}
+	var r: Dictionary = sports_industry.academic_conflict(p, {})
+	player()["gpa"] = float(p.get("gpa", 70.0))
+	player()["enrolled"] = bool(p.get("enrolled", true))
+	if not bool(r.get("can_continue", true)):
+		for e in edu:
+			if e is Dictionary and String((e as Dictionary).get("status", "")) == "enrolled":
+				(e as Dictionary)["status"] = "suspended"
+		player()["education"] = edu
+	_persist_sports()
+	return r
+
 func sports_panel_data() -> Dictionary:
 	if _pro_player.is_empty():
 		return {}
@@ -3269,7 +3579,10 @@ func sports_panel_data() -> Dictionary:
 		"club": String(_sports_club.get("name", "")),
 		"club_division": String(_sports_club.get("division", "top")),
 		"budget": int(_sports_club.get("budget", 0)),
+		"club_reputation": float(_sports_club.get("reputation", 50.0)),
 		"sponsors": (_pro_player.get("sponsors", []) as Array).size(),
+		"national_team": String(_pro_player.get("national_team", "")),
+		"last_tournament": (_pro_player.get("last_tournament", {}) as Dictionary).duplicate(true),
 	}
 	var rows: Array = []
 	for row in sports_industry.standings(_sports_league):
@@ -8198,6 +8511,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_advance_farm(before_minutes, now_minutes())
 	# 矿业/能源：能源价格按年周期演化（离线亦结算）。
 	_mining_tick(before_minutes, now_minutes())
+	# 时尚品牌：相关度随年岁自然衰减。
+	_fashion_tick(before_minutes, now_minutes())
 	# 农林牧渔：渔场资源恢复、林木按日生长。
 	_primary_tick(before_minutes, now_minutes())
 	_persist_mental()

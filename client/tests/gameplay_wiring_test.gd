@@ -341,6 +341,21 @@ func _test_late_tech_commands() -> void:
 	# 生物延寿（带金额参数）
 	_main.submit("生物延寿 1000000")
 	check(float(sim.late_tech_state().get("lifespan_bonus", 0.0)) > 0.0, "「生物延寿」写入延寿加成")
+	# 自动化冲击
+	_main.submit("自动化评估 120")
+	check_eq(String((sim.late_tech_state().get("last_report", {}) as Dictionary).get("kind", "")), "automation", "「自动化评估」记录冲击")
+	# 极端环境（先恢复健康，避免前序操作已耗尽体力）
+	sim.player()["attrs"]["physiological"]["health"] = 100.0
+	var health_before: float = float(sim.player().get("attrs", {}).get("physiological", {}).get("health", 100.0))
+	_main.submit("极端环境 失重 10")
+	var health_after: float = float(sim.player().get("attrs", {}).get("physiological", {}).get("health", 100.0))
+	check(health_after < health_before, "「极端环境」扣减健康")
+	# 气候难民
+	_main.submit("气候难民 20")
+	check(float(sim.late_tech_state().get("warming", 0.0)) >= 2.0, "「气候难民」写入升温")
+	# AI 伦理事件
+	_main.submit("AI伦理事件 100")
+	check_eq(String((sim.late_tech_state().get("last_report", {}) as Dictionary).get("kind", "")), "ai", "「AI伦理事件」记录演练")
 
 func _test_ip_media_commands() -> void:
 	var sim = _main._sim
@@ -400,6 +415,17 @@ func _test_trade_commands() -> void:
 	check(bool((shipments[0] as Dictionary).get("settled", false)) == false, "「外贸交付」进入交付")
 	_main.submit("结汇")
 	check(bool((shipments[0] as Dictionary).get("settled", false)), "「结汇」标记已结汇")
+	_main.submit("贸易壁垒 反倾销")
+	check((shipments[0] as Dictionary).get("barriers", []).size() >= 1, "「贸易壁垒」写入壁垒")
+	_main.submit("外贸风险 制裁")
+	check((shipments[0] as Dictionary).get("risk_events", []).size() >= 1, "「外贸风险」写入风险事件")
+	_main.submit("检验检疫")
+	check(bool((shipments[0] as Dictionary).get("inspection_passed", false)), "「检验检疫」记录结果")
+	var goods_before: int = int((shipments[0] as Dictionary).get("goods_value", 0))
+	_main.submit("货损 10")
+	check(int((shipments[0] as Dictionary).get("goods_value", 0)) < goods_before, "「货损」折减货值")
+	_main.submit("退运")
+	check(bool((shipments[0] as Dictionary).get("returned", false)), "「退运」标记退运")
 
 func _test_mining_commands() -> void:
 	var sim = _main._sim
@@ -420,6 +446,17 @@ func _test_mining_commands() -> void:
 	check(int((sim.mining_state().get("mine", {}) as Dictionary).get("revenue", 0)) > 0, "「卖矿」取得收入")
 	_main.submit("建能源项目 光伏")
 	check((sim.mining_panel_data().get("projects", []) as Array).size() >= 1, "「建能源项目」登记项目")
+	_main.submit("安全投入 1000000")
+	check(float((sim.mining_state().get("mine", {}) as Dictionary).get("safety", 0.0)) > 0.5, "「安全投入」提升安全水平")
+	_main.submit("矿难")
+	check(sim.mining_panel_data().has("last_accident"), "「矿难」返回事故判定")
+	_main.submit("能源期货 石油 100")
+	check((sim.mining_panel_data().get("futures", []) as Array).size() >= 1, "「能源期货」建立合约")
+	_main.submit("期货结算 石油")
+	var futures: Array = sim.mining_panel_data().get("futures", [])
+	check(futures.size() >= 1 and bool((futures[0] as Dictionary).get("settled", false)), "「期货结算」结算合约")
+	_main.submit("能源长约 石油 1000")
+	check((sim.mining_panel_data().get("contracts", []) as Array).size() >= 1, "「能源长约」签订长约")
 
 func _test_primary_commands() -> void:
 	var sim = _main._sim
@@ -489,6 +526,17 @@ func _test_sports_commands() -> void:
 	check(String((sim.sports_state().get("player", {}) as Dictionary).get("club", "")) == "rival_club", "「转会」更换球会")
 	_main.submit("代言合同 800000")
 	check((sim.sports_state().get("player", {}) as Dictionary).get("sponsors", []).size() == 1, "「代言合同」增加赞助")
+	_main.submit("国家队征召 中国")
+	check_eq(String((sim.sports_state().get("player", {}) as Dictionary).get("national_team", "")), "中国", "「国家队征召」入选国家队")
+	_main.submit("国际赛事 世界杯")
+	check(not ((sim.sports_state().get("player", {}) as Dictionary).get("last_tournament", {}) as Dictionary).is_empty(), "「国际赛事」记录赛事")
+	_main.submit("球迷冲突")
+	check(float(sim.sports_panel_data().get("club_reputation", 100.0)) < 50.0, "「球迷冲突」损伤球会声誉")
+	var cash_before: int = sim.economy.cash(sim.account_id())
+	_main.submit("裁判争议")
+	check(sim.economy.cash(sim.account_id()) < cash_before, "「裁判争议」支付申诉费")
+	_main.submit("学业冲突")
+	check(true, "「学业冲突」可执行")
 	_main.submit("运动康复 30")
 	check(true, "「运动康复」可执行")
 	_main.submit("退役")

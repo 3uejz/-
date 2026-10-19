@@ -289,6 +289,14 @@ func _dispatch(intent) -> Dictionary:
 			return _tech_mission(intent)
 		"生物延寿":
 			return _biotech(intent)
+		"自动化评估":
+			return _late_tech_automation(intent)
+		"极端环境":
+			return _late_tech_environment(intent)
+		"气候难民":
+			return _late_tech_climate(intent)
+		"AI伦理事件":
+			return _late_tech_ai(intent)
 		# 知识产权与媒体（D25）
 		"登记知识产权":
 			return _register_ip(intent)
@@ -336,6 +344,16 @@ func _dispatch(intent) -> Dictionary:
 			return _deliver_shipment(intent)
 		"结汇":
 			return _settle_shipment(intent)
+		"贸易壁垒":
+			return _trade_barrier(intent)
+		"外贸风险":
+			return _trade_risk(intent)
+		"检验检疫":
+			return _trade_inspect(intent)
+		"货损":
+			return _trade_damage(intent)
+		"退运":
+			return _trade_return(intent)
 		# 矿业、能源与资源（D28）
 		"开矿":
 			return _open_mine(intent)
@@ -351,6 +369,16 @@ func _dispatch(intent) -> Dictionary:
 			return _sell_metal(intent)
 		"建能源项目":
 			return _build_energy_project(intent)
+		"安全投入":
+			return _mine_safety(intent)
+		"矿难":
+			return _mine_accident(intent)
+		"能源期货":
+			return _energy_futures(intent)
+		"期货结算":
+			return _energy_settle(intent)
+		"能源长约":
+			return _energy_contract(intent)
 		# 农林牧渔深化（D29）
 		"建渔场":
 			return _new_fishery(intent)
@@ -420,6 +448,16 @@ func _dispatch(intent) -> Dictionary:
 			return _sports_doping_test(intent)
 		"退役":
 			return _sports_retire(intent)
+		"国家队征召":
+			return _sports_national(intent)
+		"国际赛事":
+			return _sports_tournament(intent)
+		"球迷冲突":
+			return _sports_fans(intent)
+		"裁判争议":
+			return _sports_referee(intent)
+		"学业冲突":
+			return _sports_academic(intent)
 		"活动策划":
 			return _start_event_career(intent)
 		"办活动":
@@ -1888,6 +1926,42 @@ func _biotech(intent) -> Dictionary:
 		return _fail("无法进行生物延寿投资（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你投入 %d 于生物科技，延寿 %+.1f 年（累计 %+.1f 年）。" % [int(amount), float(r.get("lifespan_gain", 0.0)), float(r.get("total_bonus", 0.0))]], 0, "")
 
+func _late_tech_automation(intent) -> Dictionary:
+	var efficiency: float = float(_param_number(intent, "number", 100)) / 100.0
+	var r: Dictionary = host.late_tech_automation_impact(efficiency)
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估自动化冲击（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var msg: String = "效率 %.2f：淘汰 %d 岗、新增 %d 岗，失业率 %.1f%%。" % [efficiency, int(r.get("jobs_lost", 0)), int(r.get("jobs_created", 0)), float(r.get("unemployment_rate", 0.0)) * 100.0]
+	if bool(r.get("social_security_issue", false)):
+		msg += " 已触发失业危机与社会保障议题。"
+	return _ok([msg], 0, "")
+
+func _late_tech_environment(intent) -> Dictionary:
+	var env := _object_id(intent, "late_tech_environment")
+	if env.is_empty():
+		return _fail("未指定环境；可选失重、辐射或深海高压。")
+	var exposure: float = float(_param_number(intent, "number", 10)) / 10.0
+	var r: Dictionary = host.late_tech_extreme_environment(env, exposure)
+	if not bool(r.get("ok", false)):
+		return _fail("无法模拟极端环境（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["暴露于%s：骨流失 %.2f，肌肉流失 %.2f，健康损伤 %.2f。" % [String(host.late_tech.ENVIRONMENTS.get(env, {}).get("name", env)), float(r.get("bone_loss", 0.0)), float(r.get("muscle_loss", 0.0)), float(r.get("health_penalty", 0.0))]], 0, "")
+
+func _late_tech_climate(intent) -> Dictionary:
+	var warming: float = float(_param_number(intent, "number", 20)) / 10.0
+	var r: Dictionary = host.late_tech_climate_refugees(warming)
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估气候难民（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["升温 %.1f℃：新增气候难民 %d 人。" % [float(r.get("warming", 0.0)), int(r.get("refugees", 0))]], 0, "")
+
+func _late_tech_ai(intent) -> Dictionary:
+	var autonomy: float = float(_param_number(intent, "number", 90)) / 100.0
+	var r: Dictionary = host.late_tech_ai_ethics_incident(autonomy)
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估 AI 伦理风险（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("loss_of_control", false)):
+		return _ok(["自主性 %.0f%% 下发生 AI 失控，连锁事件 %d 项。" % [autonomy * 100.0, (r.get("chain", []) as Array).size()]], 0, "")
+	return _ok(["自主性 %.0f%% 下未发生失控（概率 %.0f%%）。" % [autonomy * 100.0, float(r.get("probability", 0.0)) * 100.0]], 0, "")
+
 func _tech_career_name(career: String) -> String:
 	return String(host.late_tech.CAREERS.get(career, {}).get("name", career))
 
@@ -2151,6 +2225,51 @@ func _settle_shipment(intent) -> Dictionary:
 		return _fail("无法结汇（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["按%s结汇，手续费 %d。" % [String(r.get("method_name", "")), int(r.get("fee", 0))]], 0, "")
 
+func _trade_barrier(intent) -> Dictionary:
+	var barrier := _object_id(intent, "trade_barrier")
+	if barrier.is_empty():
+		return _fail("未指定壁垒；可选加征关税、配额、反倾销或原产地。")
+	var r: Dictionary = host.apply_trade_barrier(-1, barrier)
+	if not bool(r.get("ok", false)):
+		return _fail("无法施加贸易壁垒（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已施加%s壁垒。" % _trade_barrier_name(barrier)], 0, "")
+
+func _trade_risk(intent) -> Dictionary:
+	var event := _object_id(intent, "trade_risk")
+	if event.is_empty():
+		return _fail("未指定风险事件；可选贸易战、制裁或战争。")
+	var r: Dictionary = host.apply_trade_risk(-1, event)
+	if not bool(r.get("ok", false)):
+		return _fail("无法触发外贸风险（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["遭遇%s：滞留 %.1f 天，额外费用 %d。" % [_trade_risk_name(event), float(r.get("delay_days", 0.0)), int(r.get("extra_cost", 0))]], 0, "")
+
+func _trade_inspect(_intent) -> Dictionary:
+	var r: Dictionary = host.inspect_shipment(-1, true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法检验检疫（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["检验检疫合格，进入下一环节。" if bool(r.get("passed", true)) else "检验检疫不合格，需退运或整改。"], 0, "")
+
+func _trade_damage(intent) -> Dictionary:
+	var rate: float = float(_param_number(intent, "number", 5)) / 100.0
+	var r: Dictionary = host.damage_shipment(-1, rate)
+	if not bool(r.get("ok", false)):
+		return _fail("无法登记货损（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["货损 %.0f%%，损失 %d，剩余货值 %d。" % [rate * 100.0, int(r.get("loss", 0)), int(r.get("remaining_value", 0))]], 0, "")
+
+func _trade_return(_intent) -> Dictionary:
+	var r: Dictionary = host.return_shipment(-1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法退运（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已退运，退运成本 %d。" % int(r.get("return_cost", 0))], 0, "")
+
+func _trade_barrier_name(key: String) -> String:
+	const NAMES: Dictionary = {"tariff": "加征关税", "quota": "配额", "anti_dumping": "反倾销", "origin": "原产地"}
+	return String(NAMES.get(key, key))
+
+func _trade_risk_name(key: String) -> String:
+	const NAMES: Dictionary = {"trade_war": "贸易战", "sanction": "制裁", "war": "战争"}
+	return String(NAMES.get(key, key))
+
 func _trade_mode_name(mode: String) -> String:
 	return String(host.trade.TRANSPORT_MODES.get(mode, {}).get("name", mode))
 
@@ -2204,6 +2323,53 @@ func _build_energy_project(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法建设能源项目（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["建成%s，装机 %.1f。" % [String(r.get("name", kind)), float(r.get("capacity", 0.0))]], 0, "")
+
+func _mine_safety(intent) -> Dictionary:
+	var amount: int = _param_number(intent, "amount", 1000000)
+	var r: Dictionary = host.invest_mine_safety(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法追加安全投入（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["安全投入后安全水平 %.2f。" % float(r.get("safety", 0.0))], 0, "")
+
+func _mine_accident(_intent) -> Dictionary:
+	var r: Dictionary = host.check_mine_accident()
+	if not bool(r.get("ok", false)):
+		return _fail("无法进行矿难判定（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("occurred", false)):
+		return _ok(["本次巡检未发生矿难，安全水平 %.2f。" % float(r.get("safety", 0.0))], 0, "")
+	return _ok(["发生%s：伤 %d 人，罚款 %d，健康受损。" % [String(r.get("kind_name", "")), int(r.get("injured", 0)), int(r.get("fine", 0))]], 0, "")
+
+func _energy_futures(intent) -> Dictionary:
+	var energy := _object_id(intent, "energy_type")
+	if energy.is_empty():
+		return _fail("未指定能源品种。")
+	var amount: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.buy_energy_futures(energy, amount, 0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建立能源期货（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["建立%s期货 %.1f，锁价 %d。" % [_energy_name(energy), amount, int((r.get("contract", {}) as Dictionary).get("lock_price", 0))]], 0, "")
+
+func _energy_settle(intent) -> Dictionary:
+	var energy := _object_id(intent, "energy_type")
+	if energy.is_empty():
+		return _fail("未指定能源品种。")
+	var r: Dictionary = host.settle_energy_futures(energy, -1)
+	if not bool(r.get("ok", false)):
+		return _fail("无法结算能源期货（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["结算%s期货，盈亏 %+d。" % [_energy_name(energy), int(r.get("pnl", 0))]], 0, "")
+
+func _energy_contract(intent) -> Dictionary:
+	var energy := _object_id(intent, "energy_type")
+	if energy.is_empty():
+		return _fail("未指定能源品种。")
+	var amount: float = float(_param_number(intent, "number", 1000))
+	var r: Dictionary = host.sign_energy_contract(energy, amount, 0, 1.0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法签订能源长约（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["签订%s长约 %.1f。" % [_energy_name(energy), amount]], 0, "")
+
+func _energy_name(key: String) -> String:
+	return String(host.mining_energy.ENERGY_TYPES.get(key, {}).get("name", key))
 
 # --- 农林牧渔深化（D29） ---
 
@@ -2485,6 +2651,47 @@ func _sports_retire(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法退役（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你宣布退役，退役金 %d。" % int(r.get("pension", 0))], 0, "")
+
+func _sports_national(intent) -> Dictionary:
+	var nation: String = String(intent.params.get("method", "")).strip_edges()
+	if nation.is_empty():
+		nation = "中国"
+	var r: Dictionary = host.sports_national_callup(nation)
+	if not bool(r.get("ok", false)):
+		return _fail("无法入选国家队（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["你入选了%s国家队。" % nation], 0, "")
+
+func _sports_tournament(intent) -> Dictionary:
+	var competition := _object_id(intent, "competition")
+	if competition.is_empty():
+		competition = "world_cup"
+	var r: Dictionary = host.sports_international_tournament(competition)
+	if not bool(r.get("ok", false)):
+		return _fail("无法参加国际赛事（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s冠军：%s，奖金 %d。" % [_competition_name(competition), String(r.get("champion", "")), int(r.get("reward", 0))]], 0, "")
+
+func _sports_fans(_intent) -> Dictionary:
+	var r: Dictionary = host.sports_fan_violence()
+	if not bool(r.get("ok", false)):
+		return _fail("无法处理球迷冲突（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["球迷冲突：罚款 %d，球迷降至 %d，声誉 %.0f。" % [int(r.get("fine", 0)), int(r.get("fans", 0)), float(r.get("reputation", 0.0))]], 0, "")
+
+func _sports_referee(_intent) -> Dictionary:
+	var r: Dictionary = host.sports_referee_controversy()
+	if not bool(r.get("ok", false)):
+		return _fail("无法发起裁判申诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["裁判争议已申诉，申诉费 %d。" % int(r.get("protest_fee", 0))], 0, "")
+
+func _sports_academic(_intent) -> Dictionary:
+	var r: Dictionary = host.sports_academic_conflict()
+	if not bool(r.get("ok", false)):
+		return _fail("无法评估学业冲突（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("conflict", false)):
+		return _ok(["当前无在读学业，不存在学业冲突。"], 0, "")
+	return _ok(["学业冲突：绩点 %.1f，%s。" % [float(r.get("gpa", 0.0)), "仍可继续" if bool(r.get("can_continue", true)) else "已退学"]], 0, "")
+
+func _competition_name(key: String) -> String:
+	return String(host.sports_industry.COMPETITIONS.get(key, {}).get("name", key))
 
 func _start_event_career(intent) -> Dictionary:
 	var role := _object_id(intent, "event_role")
@@ -4945,6 +5152,18 @@ func _reason_cn(reason: String) -> String:
 			return "矿藏已枯竭"
 		"unknown_energy_kind":
 			return "未知新能源类型"
+		"unknown_environment":
+			return "未知极端环境"
+		"unknown_barrier":
+			return "未知贸易壁垒"
+		"unknown_event":
+			return "未知风险事件"
+		"no_contract":
+			return "无待结算合约"
+		"no_club":
+			return "尚未加入球会"
+		"form_too_low":
+			return "竞技状态未达征召门槛"
 		"already_owns":
 			return "你已拥有该项产业"
 		"no_fishery":
@@ -5372,6 +5591,8 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_late_tech_career_by_name(text)
 		"late_tech_mission":
 			return _find_late_tech_mission_by_name(text)
+		"late_tech_environment":
+			return _find_catalog_by_name(host.late_tech_environments_catalog(), text)
 		"ip_asset":
 			return _find_ip_asset_by_name(text)
 		"mfg_role":
@@ -5388,10 +5609,16 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.trade_incoterms_catalog(), text)
 		"trade_settlement":
 			return _find_catalog_by_name(host.trade_settlements_catalog(), text)
+		"trade_barrier":
+			return _find_catalog_by_name(host.trade_barriers_catalog(), text)
+		"trade_risk":
+			return _find_catalog_by_name(host.trade_risk_events_catalog(), text)
 		"mineral":
 			return _find_catalog_by_name(host.mining_minerals_catalog(), text)
 		"energy_kind":
 			return _find_catalog_by_name(host.mining_energy_kinds_catalog(), text)
+		"energy_type":
+			return _find_catalog_by_name(host.mining_energy_types_catalog(), text)
 		"fish_species":
 			return _find_catalog_by_name(host.fish_species_catalog(), text)
 		"game_species":
@@ -5448,6 +5675,8 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.tin_infra_types_catalog(), text)
 		"tin_mode":
 			return _find_catalog_by_name(host.tin_modes_catalog(), text)
+		"competition":
+			return _find_catalog_by_name(host.sports_competitions_catalog(), text)
 		_:
 			return ""
 

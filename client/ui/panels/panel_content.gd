@@ -628,12 +628,22 @@ static func business(player: Dictionary, context: Dictionary, name_resolver: Cal
 		for sh in shipments:
 			if sh is Dictionary:
 				var sd: Dictionary = sh
+				var flags: PackedStringArray = []
+				if not (sd.get("barriers", []) as Array).is_empty():
+					flags.append("壁垒 %d" % (sd.get("barriers", []) as Array).size())
+				if not (sd.get("risk_events", []) as Array).is_empty():
+					flags.append("风险 %d" % (sd.get("risk_events", []) as Array).size())
+				if bool(sd.get("returned", false)):
+					flags.append("已退运")
+				if not bool(sd.get("inspection_passed", true)):
+					flags.append("检疫不合格")
 				trows.append({
 					"label": "%s #%d" % [String(sd.get("goods", "货物")), int(sd.get("index", 0))],
-					"value": "%s · %s · %s" % [
+					"value": "%s · %s · %s%s" % [
 						String(sd.get("stage_name", "")),
 						String(sd.get("incoterm", "未签约")),
 						("已结汇" if bool(sd.get("settled", false)) else ("运费 %d" % int(sd.get("freight", 0)))),
+						("" if flags.is_empty() else " · " + " ".join(flags)),
 					],
 				})
 		sections.append(_section("外贸单据", trows))
@@ -662,6 +672,7 @@ static func _fashion_sections(fsh: Dictionary) -> Array:
 		{"label": "声誉", "value": "%.0f" % float(fsh.get("reputation", 0.0))},
 		{"label": "热度", "value": "%.0f" % float(fsh.get("fame", 0.0))},
 		{"label": "相关度", "value": "%.0f" % float(fsh.get("relevance", 0.0))},
+		{"label": "品牌年龄", "value": "%.1f 年" % float(fsh.get("age_years", 0.0))},
 		{"label": "门店", "value": "%d 家" % int(fsh.get("stores", 0))},
 	]))
 	sections.append(_section("时尚潮流", [
@@ -700,11 +711,20 @@ static func _sports_sections(spo: Dictionary) -> Array:
 		{"label": "出场", "value": str(int(spo.get("appearances", 0)))},
 		{"label": "进球", "value": str(int(spo.get("goals", 0)))},
 		{"label": "赞助", "value": "%d 家" % int(spo.get("sponsors", 0))},
+		{"label": "国家队", "value": String(spo.get("national_team", "未入选"))},
 	]))
+	var last_t: Dictionary = spo.get("last_tournament", {}) if spo.get("last_tournament") is Dictionary else {}
+	if not last_t.is_empty():
+		sections.append(_section("最近国际赛事", [
+			{"label": "赛事", "value": String(last_t.get("competition", ""))},
+			{"label": "冠军", "value": String(last_t.get("champion", ""))},
+			{"label": "奖金", "value": str(int(last_t.get("reward", 0)))},
+		]))
 	sections.append(_section("所属球会", [
 		{"label": "名称", "value": String(spo.get("club", ""))},
 		{"label": "级别", "value": String(spo.get("club_division", ""))},
 		{"label": "预算", "value": str(int(spo.get("budget", 0)))},
+		{"label": "声誉", "value": "%.0f" % float(spo.get("club_reputation", 50.0))},
 	]))
 	var rows_list: Array = _items_of(spo.get("standings", []))
 	if not rows_list.is_empty():
@@ -824,6 +844,8 @@ static func _mining_sections(mn: Dictionary) -> Array:
 			{"label": "待炼矿石", "value": "%.1f" % float(mine.get("in_transit_ore", 0.0))},
 			{"label": "精炼金属", "value": "%.1f" % float(mine.get("refined_metal", 0.0))},
 			{"label": "累计营收", "value": str(int(mine.get("revenue", 0)))},
+			{"label": "矿场资金", "value": str(int(mine.get("money", 0)))},
+			{"label": "事故次数", "value": str(int(mine.get("accident_count", 0)))},
 		]
 		sections.append(_section("矿场概况", overview))
 	var prices: Array = _items_of(mn.get("energy_prices", []))
@@ -840,6 +862,29 @@ static func _mining_sections(mn: Dictionary) -> Array:
 			if pj is Dictionary:
 				jrows.append({"label": String((pj as Dictionary).get("name", "?")), "value": "装机 %.1f" % float((pj as Dictionary).get("capacity", 0.0))})
 		sections.append(_section("新能源项目", jrows))
+	var futures: Array = _items_of(mn.get("futures", []))
+	if not futures.is_empty():
+		var frows: Array = []
+		for f in futures:
+			if f is Dictionary:
+				var fd: Dictionary = f
+				frows.append({"label": "%s 期货 #%d" % [String(fd.get("name", "?")), int(fd.get("index", 0))], "value": "%.1f @ %d %s" % [float(fd.get("amount", 0.0)), int(fd.get("lock_price", 0)), ("已结算" if bool(fd.get("settled", false)) else "持仓")]})
+		sections.append(_section("能源期货", frows))
+	var contracts: Array = _items_of(mn.get("contracts", []))
+	if not contracts.is_empty():
+		var crows: Array = []
+		for c in contracts:
+			if c is Dictionary:
+				var cd: Dictionary = c
+				crows.append({"label": String(cd.get("name", "?")), "value": "%.1f @ %d · %.1f 年" % [float(cd.get("amount", 0.0)), int(cd.get("fixed_price", 0)), float(cd.get("years", 0.0))]})
+		sections.append(_section("能源长约", crows))
+	var accident: Dictionary = mn.get("last_accident", {}) if mn.get("last_accident") is Dictionary else {}
+	if not accident.is_empty() and bool(accident.get("occurred", false)):
+		sections.append(_section("最近矿难", [
+			{"label": "类型", "value": String(accident.get("kind_name", ""))},
+			{"label": "受伤", "value": "%d 人" % int(accident.get("injured", 0))},
+			{"label": "罚款", "value": str(int(accident.get("fine", 0)))},
+		]))
 	return sections
 
 static func _mfg_bottleneck_cn(key: String) -> String:
@@ -941,7 +986,7 @@ static func appearance(player: Dictionary, context: Dictionary) -> Dictionary:
 	var records: Array = []
 	for r in (app.get("procedures", []) as Array):
 		var rd: Dictionary = r
-		records.append({"label": String(rd.get("project", "")), "value": "%s · %s · %s" % [
+		records.append({"label": String(rd.get("project", "")), "value": "%s · %s · %s%s" % [
 			String(rd.get("outcome", "")), _money(int(rd.get("cost", 0))), "%d 分钟" % int(rd.get("minute", 0)),
 		]})
 	if not records.is_empty():
@@ -1796,6 +1841,21 @@ static func late_tech(player: Dictionary, context: Dictionary, name_resolver: Ca
 			mrows.append({"label": String(md.get("name", "?")), "value": "技能 %d · 报酬 %d" % [int(md.get("min_skill", 0)), int(md.get("reward", 0))]})
 	if not mrows.is_empty():
 		sections.append(_section("高风险任务", mrows))
+	var report: Dictionary = d.get("last_report", {}) if d.get("last_report") is Dictionary else {}
+	if not report.is_empty():
+		var rr: Dictionary = report.get("result", {}) if report.get("result") is Dictionary else {}
+		var rows: Array = []
+		match String(report.get("kind", "")):
+			"automation":
+				rows.append({"label": "自动化冲击", "value": "淘汰 %d · 新增 %d · 失业率 %.1f%%" % [int(rr.get("jobs_lost", 0)), int(rr.get("jobs_created", 0)), float(rr.get("unemployment_rate", 0.0)) * 100.0]})
+			"environment":
+				rows.append({"label": "极端环境", "value": "健康损伤 %.2f" % float(rr.get("health_penalty", 0.0))})
+			"climate":
+				rows.append({"label": "气候难民", "value": "%d 人（升温 %.1f℃）" % [int(rr.get("refugees", 0)), float(rr.get("warming", 0.0))]})
+			"ai":
+				rows.append({"label": "AI 伦理", "value": ("失控 · 连锁 %d 项" % (rr.get("chain", []) as Array).size()) if bool(rr.get("loss_of_control", false)) else "未失控"})
+		if not rows.is_empty():
+			sections.append(_section("社会与技术风险", rows))
 	return _ok(sections)
 
 static func _to_strings(items: Array) -> Array:

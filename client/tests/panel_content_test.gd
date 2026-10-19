@@ -503,12 +503,14 @@ func _test_late_tech_panel() -> void:
 		"places": [{"id": "spaceport", "name": "太空港"}],
 		"careers": [{"id": "aerospace_astronaut", "name": "宇航员", "stage": "intelligent", "unlocked": true, "min_level": 14, "salary": 500000}],
 		"missions": [{"id": "space_travel", "name": "太空旅行", "stage": "intelligent", "min_skill": 8, "reward": 1000000}],
+		"last_report": {"kind": "automation", "result": {"jobs_lost": 30000, "jobs_created": 10000, "unemployment_rate": 0.18}},
 	}}
 	var d2: Dictionary = PanelContentScript.build("late_tech", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d2.get("empty", true)), "有后期科技上下文非空")
 	check(_find_section(d2, "科技阶段").get("rows", []).size() >= 1, "科技阶段分区有行")
 	check(_find_section(d2, "科技职业").get("rows", []).size() >= 1, "科技职业分区有行")
 	check(_find_section(d2, "高风险任务").get("rows", []).size() >= 1, "高风险任务分区有行")
+	check(_find_section(d2, "社会与技术风险").get("rows", []).size() >= 1, "社会与技术风险分区有行")
 
 func _test_ip_media_panel() -> void:
 	var data: Dictionary = PanelContentScript.build("ip_media", GameStateScript.default_player(), Callable(), {})
@@ -559,12 +561,18 @@ func _test_mining_panel() -> void:
 			"stockpile_ore": 500.0, "refined_metal": 120.0, "revenue": 96000},
 		"energy_prices": [{"key": "oil", "name": "石油", "price": 500000}, {"key": "power", "name": "电力", "price": 80000}],
 		"projects": [{"name": "光伏", "kind": "solar", "capacity": 100.0}],
+		"futures": [{"energy": "oil", "name": "石油", "index": 0, "amount": 100.0, "lock_price": 500000, "settled": false}],
+		"contracts": [{"energy": "oil", "name": "石油", "amount": 1000.0, "fixed_price": 500000, "years": 1.0}],
+		"last_accident": {"occurred": true, "kind_name": "塌方", "injured": 2, "fine": 100000},
 	}}
 	var d: Dictionary = PanelContentScript.build("business", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有矿业上下文非空")
 	check(_find_section(d, "矿场概况").get("rows", []).size() >= 1, "矿场概况分区有行")
 	check(_find_section(d, "能源价格").get("rows", []).size() >= 1, "能源价格分区有行")
 	check(_find_section(d, "新能源项目").get("rows", []).size() >= 1, "新能源项目分区有行")
+	check(_find_section(d, "能源期货").get("rows", []).size() >= 1, "能源期货分区有行")
+	check(_find_section(d, "能源长约").get("rows", []).size() >= 1, "能源长约分区有行")
+	check(_find_section(d, "最近矿难").get("rows", []).size() >= 1, "最近矿难分区有行")
 
 func _test_primary_panel() -> void:
 	var ctx: Dictionary = {"agriculture": {"primary": {
@@ -602,7 +610,7 @@ func _test_fashion_panel() -> void:
 	var ctx: Dictionary = {"fashion": {
 		"name": "无名品牌", "positioning": "luxury", "positioning_name": "奢侈",
 		"money": 1000000, "reputation": 50.0, "fame": 32.0, "relevance": 83.0,
-		"brand_value": 1500000, "premium": 3.0, "stores": 1,
+		"brand_value": 1500000, "premium": 3.0, "stores": 1, "age_years": 3.5,
 		"trend_phase": "emerging", "trend_phase_name": "新兴", "trend_hot": "服装设计",
 		"designs": [{"discipline": "apparel", "discipline_name": "服装设计", "score": 45.0, "grade": "mediocre"}],
 		"inventory": [{"key": "handbag", "qty": 10, "price": 60000}],
@@ -619,7 +627,8 @@ func _test_sports_panel() -> void:
 		"stage": "pro_contract", "age": 24, "form": 62.0, "market_value": 3000000,
 		"wage": 500000, "injury_days": 0.0, "ban_days": 0.0,
 		"appearances": 10, "goals": 4, "sponsors": 1,
-		"club": "本地球会", "club_division": "top", "budget": 12000000,
+		"club": "本地球会", "club_division": "top", "budget": 12000000, "club_reputation": 42.0,
+		"national_team": "中国", "last_tournament": {"competition": "world_cup", "champion": "本地球会", "reward": 30000000},
 		"standings": [
 			{"id": "home_club", "played": 10, "points": 21, "goals_for": 18, "goals_against": 10},
 			{"id": "rival_club", "played": 10, "points": 15, "goals_for": 12, "goals_against": 14},
@@ -630,6 +639,7 @@ func _test_sports_panel() -> void:
 	check(_find_section(d, "球员生涯").get("rows", []).size() >= 1, "球员生涯分区有行")
 	check(_find_section(d, "所属球会").get("rows", []).size() >= 1, "所属球会分区有行")
 	check(_find_section(d, "积分榜").get("rows", []).size() >= 1, "积分榜分区有行")
+	check(_find_section(d, "最近国际赛事").get("rows", []).size() >= 1, "最近国际赛事分区有行")
 
 func _test_events_panel() -> void:
 	var ctx: Dictionary = {"events": {
