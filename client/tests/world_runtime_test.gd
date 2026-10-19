@@ -1217,6 +1217,18 @@ func _test_dining_runtime() -> void:
 	check(bool(food_incident.get("ok", false)) and food_incident.has("restaurant_incident"), "食安事故联动餐厅处罚")
 	check(float(host.dining_state().get("reputation", 0.0)) < rep_before_incident, "餐厅声誉因食安事故下降")
 	check(bool(host.restaurant_expand("single_shop").get("ok", false)), "扩张校验通过（单店）")
+	# 中央厨房 ↔ D26 食品产线：工厂产出直接补餐厅预包装库存。
+	host._factory = host.manufacturing.new_factory(10000000, {"mode": "obm"})
+	host._factory["staff"]["unskilled"] = 20
+	for mat in ["rice", "meat", "vegetable"]:
+		host.manufacturing.add_material(host._factory, mat, 50.0)
+	var line_run: Dictionary = host.manufacturing.produce(host._factory, "home_style", 5.0)
+	check(bool(line_run.get("ok", false)), "食品产线生产速食家常菜")
+	host._restaurant["mode"] = "central_kitchen"
+	host._restaurant["central_kitchen"] = true
+	var supply: Dictionary = host.restaurant_industrial_supply("home_style", 2.0)
+	check(bool(supply.get("ok", false)) and float(supply.get("moved", 0.0)) == 2.0, "产线成品转入中央厨房")
+	check(float((host._factory["products"] as Dictionary).get("home_style", 0.0)) < float(line_run.get("good_output", 0.0)), "工厂库存同步扣减")
 	# 持久化与读档恢复。
 	host._persist_dining()
 	check(state.sim_runtime.get("dining", null) is Dictionary, "餐饮运行态写入 sim_runtime")

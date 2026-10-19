@@ -26,7 +26,7 @@ func _test_tables() -> void:
 	var sys = MfgScript.new()
 	check_eq(sys.role_keys().size(), 7, "七类岗位")
 	check_eq(sys.mode_keys().size(), 4, "四种经营模式")
-	check_eq(sys.recipe_keys().size(), 3, "三种配方")
+	check_eq(sys.recipe_keys().size(), 6, "六种配方（工业三类与食品产线三类）")
 	for r in sys.role_keys():
 		check(not (sys.role_def(r) as Dictionary).is_empty(), "岗位定义: " + str(r))
 	check_eq(str((MfgScript.MODES["oem"] as Dictionary)["name"]), "代工", "OEM 代工")

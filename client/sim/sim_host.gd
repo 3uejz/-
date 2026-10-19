@@ -2283,7 +2283,7 @@ func mfg_recipes_catalog() -> Array:
 	return out
 
 func mfg_materials_catalog() -> Array:
-	const MATERIAL_NAMES: Dictionary = {"steel": "钢材", "resin": "树脂", "copper": "铜材"}
+	const MATERIAL_NAMES: Dictionary = {"steel": "钢材", "resin": "树脂", "copper": "铜材", "rice": "米面", "meat": "肉类", "vegetable": "蔬菜", "spice": "调味"}
 	var seen: Dictionary = {}
 	var out: Array = []
 	for key in manufacturing.RECIPES.keys():
@@ -3258,6 +3258,34 @@ func restaurant_process(recipe: String, qty: float) -> Dictionary:
 		_persist_dining()
 	return r
 
+## 中央厨房产线供餐：把自有食品工厂的成品转入餐厅预包装库存。
+func restaurant_industrial_supply(recipe: String, qty: float) -> Dictionary:
+	if _restaurant.is_empty():
+		return {"ok": false, "reason": "no_restaurant"}
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	if not (bool(_restaurant.get("central_kitchen", false)) or String(_restaurant.get("mode", "")) == "food_factory"):
+		return {"ok": false, "reason": "no_food_facility"}
+	if not dining.PACKAGED.has(recipe) or manufacturing.recipe_def(recipe).is_empty():
+		return {"ok": false, "reason": "not_packageable"}
+	var amount: float = maxf(0.0, qty)
+	if amount <= 0.0:
+		return {"ok": false, "reason": "bad_quantity"}
+	var have: float = manufacturing.product_qty(_factory, recipe)
+	var moved: float = minf(amount, have)
+	if moved <= 0.0:
+		return {"ok": false, "reason": "no_stock"}
+	(_factory["products"] as Dictionary)[recipe] = have - moved
+	var products: Dictionary = _restaurant.get("products", {})
+	var entry: Dictionary = products.get(recipe, {"qty": 0.0})
+	entry["qty"] = float(entry.get("qty", 0.0)) + moved
+	products[recipe] = entry
+	_restaurant["products"] = products
+	_restaurant["industrial_supply"] = int(_restaurant.get("industrial_supply", 0)) + int(ceil(moved))
+	_persist_manufacturing()
+	_persist_dining()
+	return {"ok": true, "recipe": recipe, "moved": moved, "factory_stock": have - moved, "restaurant_stock": float(entry["qty"])}
+
 func restaurant_distribute(recipe: String, qty: float, channel: String = "retail") -> Dictionary:
 	if _restaurant.is_empty():
 		return {"ok": false, "reason": "no_restaurant"}
@@ -3302,8 +3330,11 @@ func dining_panel_data() -> Dictionary:
 	out["staff"] = staff_rows
 	var products: Array = []
 	for k in (_restaurant.get("products", {}) as Dictionary).keys():
-		products.append({"key": String(k), "qty": float((_restaurant["products"] as Dictionary)[k])})
+		var raw: Variant = (_restaurant["products"] as Dictionary)[k]
+		var qty: float = float((raw as Dictionary).get("qty", 0.0)) if raw is Dictionary else float(raw)
+		products.append({"key": String(k), "qty": qty})
 	out["products"] = products
+	out["industrial_supply"] = int(_restaurant.get("industrial_supply", 0))
 	out["certifications"] = (_restaurant.get("certifications", []) as Array).duplicate()
 	return out
 

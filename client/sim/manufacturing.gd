@@ -50,6 +50,9 @@ const RECIPES: Dictionary = {
 	"steel_part": {"name": "钢制零件", "inputs": {"steel": 1.0}, "base_yield": 0.92, "work_hours": 1.0, "price": 5000},
 	"plastic_part": {"name": "塑料件", "inputs": {"resin": 1.0}, "base_yield": 0.95, "work_hours": 0.6, "price": 3000},
 	"circuit_board": {"name": "电路板", "inputs": {"copper": 0.4, "resin": 0.6}, "base_yield": 0.88, "work_hours": 1.5, "price": 12000},
+	"home_style": {"name": "速食家常菜", "inputs": {"rice": 0.5, "meat": 0.3, "vegetable": 0.2}, "base_yield": 0.93, "work_hours": 0.8, "price": 4200},
+	"braised_pork": {"name": "真空红烧肉", "inputs": {"meat": 0.7, "spice": 0.3}, "base_yield": 0.91, "work_hours": 1.0, "price": 6800},
+	"beef_noodle": {"name": "方便牛肉面", "inputs": {"rice": 0.5, "meat": 0.3, "vegetable": 0.2}, "base_yield": 0.94, "work_hours": 0.7, "price": 3600},
 }
 
 const DISRUPTIONS: Array = ["power_outage", "material_shortage", "equipment_failure", "strike", "absenteeism"]

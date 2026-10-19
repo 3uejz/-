@@ -423,6 +423,8 @@ func _dispatch(intent) -> Dictionary:
 			return _process_food(intent)
 		"分销食品":
 			return _distribute_food(intent)
+		"产线供餐":
+			return _supply_from_factory(intent)
 		# 时尚、设计与奢侈品（D31）
 		"建品牌":
 			return _new_brand(intent)
@@ -2597,6 +2599,14 @@ func _distribute_food(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法分销（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["分销%s %.1f，净收入 %d。" % [_recipe_name(recipe), float(r.get("sold", 0.0)), int(r.get("net", 0))]], 0, "")
+
+func _supply_from_factory(intent) -> Dictionary:
+	var recipe := _object_id(intent, "recipe")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.restaurant_industrial_supply(recipe, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法由产线供餐（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["食品产线供餐%s %.1f，餐厅库存 %.1f。" % [_recipe_name(recipe), float(r.get("moved", 0.0)), float(r.get("restaurant_stock", 0.0))]], 0, "")
 
 func _recipe_name(recipe: String) -> String:
 	return String((host.dining.RECIPES.get(recipe, {}) as Dictionary).get("name", recipe))
