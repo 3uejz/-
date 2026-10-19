@@ -8451,6 +8451,12 @@ func tin_project() -> Dictionary:
 	return _tin_project
 
 func _tin_default_region() -> Dictionary:
+	var rid: String = current_region_id()
+	if regions != null and rid != "" and regions.has_region(rid):
+		var reg = regions.get_region(rid)
+		return {"region": rid, "accessibility": 0.5,
+			"land_price": maxf(1.0, float(reg.price_index) * 10000.0),
+			"gdp": maxf(1.0, float(reg.economy)), "population": float(maxi(0, int(reg.population)))}
 	return {"region": "home", "accessibility": 0.5, "land_price": 10000.0, "gdp": 1000000.0, "population": 100000.0}
 
 func tin_new_project(type: String = "highway", scale: float = 1.0) -> Dictionary:
@@ -8496,6 +8502,15 @@ func tin_regional_impact() -> Dictionary:
 	if _tin_region.is_empty():
 		_tin_region = _tin_default_region()
 	var r: Dictionary = transport_infra.regional_impact(_tin_project, _tin_region, {"migration": 1.0})
+	# 与 D9 区域权威联动：可达性提升回写人口与经济。
+	var rid: String = String(_tin_region.get("region", ""))
+	if regions != null and rid != "" and regions.has_region(rid):
+		var reg = regions.get_region(rid)
+		reg.population = maxi(0, int(r.get("population", reg.population)))
+		reg.economy = maxf(0.0, float(r.get("gdp", reg.economy)))
+		reg.snapshot["population"] = reg.population
+		reg.snapshot["accessibility"] = float(r.get("accessibility", reg.snapshot.get("accessibility", 0.5)))
+		_persist_regions()
 	_persist_transport_infra()
 	return r
 

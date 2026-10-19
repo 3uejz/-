@@ -202,7 +202,7 @@
 
 ### D50 交通基建与航运（已收敛）
 - **已收敛**：`sim/transport_infra.gd` `TransportInfraSystem` 覆盖基建类型 7（基准成本/工期/运力/公益性）、建设（`new_infra_project` 规模缩放、`tender_infra` 加权定标、`build` 超支/延期/建成）、运营（`operate` 票价/需求/运力→盈亏与准点率）、区域影响（`regional_impact` 可达性/地价/GDP/人口、`network_effect` 换乘与物流）、结算与风险（`subsidy`/`settle`/`infra_accident`/`monopoly_regulation`/`international_disruption`）；`SimHost` 公开 `tin_*()` 与 `_persist_transport_infra()`、11 条指令与「交通基建」面板、`sim_runtime.transport_infra` 白名单、4 套接线测试齐备。
-- **残留待办**：基建项目/线路/网络的独立 schema（当前以 `sim_runtime.transport_infra` 内联字典承载）；与 D9 区域权威、D47 工程招投标的深接入仍为最小实现（区域影响以最小字典承载）。
+- **残留待办**：基建项目/线路/网络的独立 schema（当前以 `sim_runtime.transport_infra` 内联字典承载）；区域影响已从所在区域初始化并回写人口、经济与可达性快照；与 D47 工程招投标的深接入仍为最小实现。
 
 ## 3. 修复路线（横切优先）
 
