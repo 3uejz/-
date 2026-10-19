@@ -7249,9 +7249,44 @@ func medtech_organ_source_catalog() -> Array:
 	return out
 
 func medical_visit(facility: String, service: String, disease: String = "") -> Dictionary:
+	var fund: int = int(_medical_region.get("insurance_fund", 0))
+	var cost_estimate: int = 0
+	if medical.FACILITIES.has(facility):
+		var f: Dictionary = medical.FACILITIES[facility]
+		cost_estimate = int(round(float(medical.SERVICE_COST.get(service, 0)) * float(f.get("cost_mult", 1.0))))
+	if int(economy.cash(account_id())) < cost_estimate:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost_estimate}
 	var r: Dictionary = medical.visit(facility, service, disease, now_minutes(), rng)
+	if not bool(r.get("ok", false)):
+		return r
+	# 医保基金不足时按可用余额封顶，剩余转自付。
+	var reimburse: int = mini(int(r.get("reimbursed", 0)), fund)
+	r["reimbursed"] = reimburse
+	r["self_pay"] = int(r.get("cost", 0)) - reimburse
+	_medical_region["insurance_fund"] = maxi(0, fund - reimburse)
+	(economy.macro as Dictionary)["medical_spending"] = int(economy.macro.get("medical_spending", 0)) + reimburse
+	if int(r.get("self_pay", 0)) != 0:
+		economy.add_money(account_id(), -int(r["self_pay"]), "medical_visit")
 	_persist_medical()
 	return r
+
+## 用药疗程：按天数累计耐药，并按副作用风险扣减健康。
+func medical_drug_course(days: int, adherence: float = 0.7) -> Dictionary:
+	var side: Dictionary = medtech.drug_side_effect(1.0, {"susceptibility": 0.3})
+	var resist: Dictionary = medtech.drug_resistance(float(days), {"adherence": adherence})
+	var health: Dictionary = player().get("health", {})
+	var prior: float = clampf(float(health.get("drug_resistance", 0.0)), 0.0, 1.0)
+	var total_resistance: float = clampf(prior + float(resist.get("resistance", 0.0)), 0.0, 1.0)
+	health["drug_resistance"] = total_resistance
+	var loss: float = 0.0
+	if rng.next_float() < float(side.get("risk", 0.0)):
+		loss = 6.0 if String(side.get("severity", "")) == "severe" else (3.0 if String(side.get("severity", "")) == "moderate" else 1.0)
+		_damage_health(loss)
+	player()["health"] = health
+	_persist_medical()
+	return {"ok": true, "days": maxi(0, days), "resistance": total_resistance,
+		"effective": bool(resist.get("effective", true)) and total_resistance < 0.7,
+		"side_effect_risk": float(side.get("risk", 0.0)), "side_effect_loss": loss}
 
 func medical_treat(disease: String, method: String) -> Dictionary:
 	var r: Dictionary = medical.treat(disease, method)
@@ -7388,6 +7423,8 @@ func medical_panel_data() -> Dictionary:
 			"drugs": (_pharma_company.get("pipeline", {}) as Dictionary).size(),
 			"scandal": bool(_pharma_company.get("scandal", false)),
 		}
+	out["drug_resistance"] = float((player().get("health", {}) as Dictionary).get("drug_resistance", 0.0))
+	out["insurance_fund"] = int(_medical_region.get("insurance_fund", 0))
 	return out
 
 func _persist_medical() -> void:

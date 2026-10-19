@@ -882,6 +882,8 @@ func _dispatch(intent) -> Dictionary:
 			return _medical_over(intent)
 		"医疗保险欺诈":
 			return _medical_fraud(intent)
+		"用药疗程":
+			return _medical_drug_course(intent)
 		"试验丑闻":
 			return _medical_scandal(intent)
 		"开工作室":
@@ -4758,6 +4760,15 @@ func _medical_over(intent) -> Dictionary:
 	var cost: int = int(_param_number(intent, "number", 100000))
 	var r: Dictionary = host.medtech_over_treatment(cost)
 	return _ok(["过度医疗虚增费用 %d，审计风险 %d%%。" % [int(r.get("excess_cost", 0)), int(round(float(r.get("audit_risk", 0.0)) * 100.0))]], 0, "")
+
+func _medical_drug_course(intent) -> Dictionary:
+	var days: int = int(_param_number(intent, "number", 30))
+	var r: Dictionary = host.medical_drug_course(days, 0.7)
+	if not bool(r.get("ok", false)):
+		return _fail("无法执行用药疗程。")
+	return _ok(["用药 %d 天，累计耐药 %.2f，副作用风险 %.0f%%，本次健康损失 %.1f。" % [
+		int(r.get("days", 0)), float(r.get("resistance", 0.0)),
+		float(r.get("side_effect_risk", 0.0)) * 100.0, float(r.get("side_effect_loss", 0.0))]], 0, "")
 
 func _medical_fraud(intent) -> Dictionary:
 	var claim: int = int(_param_number(intent, "number", 100000))

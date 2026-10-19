@@ -1892,6 +1892,13 @@ func _test_medical_runtime() -> void:
 	check(host.medtech_high_end_catalog().size() >= 6, "高阶医疗≥6")
 	check(host.medtech_organ_source_catalog().size() >= 4, "器官来源≥4")
 	# 就医与治疗。
+	host.economy.add_money(host.account_id(), 5000000, "test")
+	var fund_before: int = int(host._medical_region.get("insurance_fund", 0))
+	var visit: Dictionary = host.medical_visit("hospital", "surgery", "")
+	check(bool(visit.get("ok", false)), "手术结算")
+	check(int(host._medical_region.get("insurance_fund", 0)) <= fund_before, "医保基金按报销扣减")
+	var drug: Dictionary = host.medical_drug_course(180, 0.5)
+	check(bool(drug.get("ok", false)) and float(drug.get("resistance", 0.0)) > 0.0, "长期用药累计耐药")
 	check(bool(host.medical_visit("hospital", "register").get("ok", false)), "挂号结算")
 	host.medical.trigger("cold", 0)
 	check(bool(host.medical_treat("cold", "medicine").get("ok", false)), "治疗感冒")
