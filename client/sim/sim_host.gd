@@ -7326,6 +7326,7 @@ func medical_visit(facility: String, service: String, disease: String = "") -> D
 	r["self_pay"] = int(r.get("cost", 0)) - reimburse
 	_medical_region["insurance_fund"] = maxi(0, fund - reimburse)
 	(economy.macro as Dictionary)["medical_spending"] = int(economy.macro.get("medical_spending", 0)) + reimburse
+	_bump_region_stat("medical_spending", reimburse)
 	if int(r.get("self_pay", 0)) != 0:
 		economy.add_money(account_id(), -int(r["self_pay"]), "medical_visit")
 	_persist_medical()
@@ -7992,6 +7993,15 @@ func _sync_city_to_region() -> void:
 	reg.snapshot["accessibility"] = clampf(float(reg.snapshot.get("accessibility", 0.5)) + 0.02, 0.0, 1.0)
 	_persist_regions()
 
+## 区域统计计数：把本地服务业活动写入所在区域快照（D9 区域权威）。
+func _bump_region_stat(key: String, delta: int) -> void:
+	var rid: String = current_region_id()
+	if regions == null or rid == "" or not regions.has_region(rid):
+		return
+	var reg = regions.get_region(rid)
+	reg.snapshot[key] = int(reg.snapshot.get(key, 0)) + delta
+	_persist_regions()
+
 func eng_rezone(zone_id: String, zone_type: String) -> Dictionary:
 	if _eng_city.is_empty():
 		return {"ok": false, "reason": "no_city"}
@@ -8257,6 +8267,7 @@ func prof_new_firm(name: String = "") -> Dictionary:
 	var nm: String = name if not name.is_empty() else "我的事务所"
 	_prof_firm = professional.new_firm({"id": "firm.player", "name": nm, "money": 5000000})
 	_prof_project = {}
+	_bump_region_stat("professional_firms", 1)
 	_persist_professional()
 	return {"ok": true, "name": String(_prof_firm.get("name", nm))}
 
@@ -8281,6 +8292,8 @@ func prof_new_project(practice: String, client_id: String = "") -> Dictionary:
 	var r: Dictionary = professional.new_project(_prof_firm, cid, practice, {})
 	if bool(r.get("ok", false)):
 		_prof_project = r["project"]
+		_bump_region_stat("professional_projects", 1)
+		_bump_region_stat("professional_output", int(_prof_project.get("fee", 0)))
 	_persist_professional()
 	return r
 
@@ -8418,6 +8431,7 @@ func life_new_provider(name: String = "", category: String = "housekeeping") -> 
 	var nm: String = name if not name.is_empty() else "服务者"
 	_life_provider = life_services.new_provider({"id": "provider.player", "name": nm, "category": category})
 	_life_order = {}
+	_bump_region_stat("life_providers", 1)
 	_persist_life_services()
 	return {"ok": true, "name": String(_life_provider.get("name", nm)), "category": category}
 
@@ -8435,6 +8449,8 @@ func life_new_order(service: String = "", price: int = 1000) -> Dictionary:
 	var r: Dictionary = life_services.new_order(_life_provider, {"service": svc, "price": maxi(0, price)})
 	if bool(r.get("ok", false)):
 		_life_order = r["order"]
+		_bump_region_stat("life_orders", 1)
+		_bump_region_stat("life_service_output", maxi(0, price))
 	_persist_life_services()
 	return r
 

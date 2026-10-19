@@ -1903,6 +1903,7 @@ func _test_medical_runtime() -> void:
 	var visit: Dictionary = host.medical_visit("hospital", "surgery", "")
 	check(bool(visit.get("ok", false)), "手术结算")
 	check(int(host._medical_region.get("insurance_fund", 0)) <= fund_before, "医保基金按报销扣减")
+	check(int(host.regions.get_region(host.current_region_id()).snapshot.get("medical_spending", 0)) > 0, "医保支出回写区域统计")
 	var drug: Dictionary = host.medical_drug_course(180, 0.5)
 	check(bool(drug.get("ok", false)) and float(drug.get("resistance", 0.0)) > 0.0, "长期用药累计耐药")
 	check(bool(host.medical_visit("hospital", "register").get("ok", false)), "挂号结算")
@@ -2082,6 +2083,7 @@ func _test_professional_runtime() -> void:
 	var ca: Dictionary = host.prof_client()
 	check(bool(ca.get("ok", false)), "开发客户结算")
 	check(bool(host.prof_new_project("accounting_audit", "客户甲").get("ok", false)), "立项项目")
+	check(int(host.regions.get_region(host.current_region_id()).snapshot.get("professional_projects", 0)) > 0, "专业项目回写区域统计")
 	check(not host._prof_project.is_empty(), "立项项目非空")
 	# 尽调与并购。
 	check(bool(host.prof_due_diligence(0.9).has("findings")), "尽职调查")
@@ -2122,6 +2124,7 @@ func _test_life_services_runtime() -> void:
 	check(bool(host.life_new_provider("甲", "nope").get("reason", "") == "unknown_category"), "未知类别被拒")
 	check(bool(host.life_background_check().has("flagged")), "背景核查")
 	check(bool(host.life_new_order("housekeeping", 2000).get("ok", false)), "预约服务")
+	check(int(host.regions.get_region(host.current_region_id()).snapshot.get("life_orders", 0)) > 0, "生活服务订单回写区域统计")
 	check(not host._life_order.is_empty(), "服务单非空")
 	check(bool(host.life_housekeeping().get("ok", false)), "家政服务")
 	host.economy.add_money(host.account_id(), 500000, "test")
