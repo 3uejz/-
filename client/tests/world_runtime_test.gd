@@ -2206,6 +2206,10 @@ func _test_transport_infra_runtime() -> void:
 	check(bool(impact.has("population_delta")), "区域影响")
 	check(int(host.regions.get_region(host.current_region_id()).population) >= pop_before, "区域影响回写人口")
 	check(float(host.regions.get_region(host.current_region_id()).snapshot.get("accessibility", 0.0)) > 0.5, "可达性写入区域快照")
+	host.eng_new_city("测试城", 500000)
+	host._eng_city["traffic"] = 0.8
+	host.tin_regional_impact()
+	check(float(host._eng_city.get("traffic", 1.0)) < 0.8, "交通运力缓解城市规划拥堵")
 	check(bool(host.tin_network().has("connectivity")), "路网效应")
 	check(bool(host.tin_subsidy(-1).has("granted")), "线路补贴")
 	check(bool(host.tin_settle().has("construction_days")), "基建结算")

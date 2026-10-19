@@ -8675,6 +8675,11 @@ func tin_regional_impact() -> Dictionary:
 		reg.snapshot["population"] = reg.population
 		reg.snapshot["accessibility"] = float(r.get("accessibility", reg.snapshot.get("accessibility", 0.5)))
 		_persist_regions()
+	# 与 D47 城市规划联动：新增运力缓解城市拥堵并回写区域快照。
+	if not _eng_city.is_empty():
+		_eng_city["traffic"] = clampf(float(_eng_city.get("traffic", 0.5)) - 0.02, 0.0, 1.0)
+		_sync_city_to_region()
+		_persist_engineering()
 	_persist_transport_infra()
 	return r
 
