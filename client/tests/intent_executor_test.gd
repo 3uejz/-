@@ -36,6 +36,7 @@ func run_tests() -> void:
 	_test_deposit_withdraw()
 	_test_securities_commands()
 	_test_bank_loan_commands()
+	_test_fixed_deposit_and_tax()
 	_test_study()
 	_test_exercise()
 	_test_job_apply_unqualified()
@@ -130,6 +131,24 @@ func _test_bank_loan_commands() -> void:
 	var repay: Dictionary = _run("还款 2000元")
 	check(bool(repay["ok"]), "还款指令可执行")
 	check_eq(host.economy.debt(host.account_id()), 300000, "还款冲抵负债")
+
+func _test_fixed_deposit_and_tax() -> void:
+	_setup()
+	host.economy.issue_money(host.account_id(), 2000000, "test_fund")
+	host.sync_finances()
+	var dep: Dictionary = _run("存钱 10000元 1年")
+	check(bool(dep["ok"]), "定期存款指令可执行")
+	check_eq(host.bank.fixed_deposits(host.account_id()).size(), 1, "定期存款入账")
+	var gov_before: int = host.economy.cash("government")
+	var tax: Dictionary = _run("纳税 个税 120000元")
+	check(bool(tax["ok"]), "纳税指令可执行")
+	check(host.economy.cash("government") > gov_before, "税款进入政府账户")
+	var lot: Dictionary = _run("买彩票")
+	check(bool(lot["ok"]), "买彩票指令可执行")
+	# 存贷计息与到期结算随日推进。
+	host.advance(370 * 24 * 60)
+	var deposits: Array = host.bank.fixed_deposits(host.account_id())
+	check(not deposits.is_empty() and bool((deposits[0] as Dictionary).get("matured", false)), "定期存款到期结算")
 
 func _test_study() -> void:
 	_setup()

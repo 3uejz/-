@@ -18,6 +18,7 @@ const RelationsScript = preload("res://sim/relations.gd")
 const HappinessScript = preload("res://sim/happiness.gd")
 const WeatherScript = preload("res://sim/weather.gd")
 const BankScript = preload("res://sim/bank.gd")
+const TaxScript = preload("res://sim/tax.gd")
 const RngScript = preload("res://sim/rng.gd")
 const BaselineScript = preload("res://sim/baseline.gd")
 const GeoScript = preload("res://sim/geo.gd")
@@ -118,6 +119,8 @@ var relations
 var happiness
 var weather
 var bank
+var tax
+var _last_finance_day: int = -1
 var geo                         ## 六级地理（种子确定性生成，不入档）
 var regions                     ## 分区休眠/唤醒与全人口（RegionManager）
 var domain_wake                 ## 领域状态休眠补算（DomainWake）
@@ -280,6 +283,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	happiness = HappinessScript.new()
 	weather = WeatherScript.new(seed)
 	bank = BankScript.new(seed)
+	tax = TaxScript.new()
 	geo = GeoScript.new()
 	regions = RegionManagerScript.new(null, seed)
 	domain_wake = DomainWakeScript.new()
@@ -402,6 +406,8 @@ func _ensure_world() -> void:
 			economy.open_account(external_id, 100000000)
 	_seeded = true
 	_ensure_world_geo()
+	if _last_finance_day < 0:
+		_last_finance_day = now_minutes() / MINUTES_PER_DAY
 
 ## 建立世界运行时：种子确定性生成六级地理，载入存档中的区域增量，登记玩家所在城市为
 ## 活动区域并绑定气候带，使区域人口/经济与天气随游戏内时钟演化（R5/R50、D1/D2）。
@@ -491,6 +497,7 @@ func _ensure_world_geo() -> void:
 		var fin_state: Variant = (state.sim_runtime as Dictionary).get("finance", {})
 		if fin_state is Dictionary and not (fin_state as Dictionary).is_empty():
 			bank.from_dict(fin_state)
+			_last_finance_day = int((fin_state as Dictionary).get("last_settle_day", -1))
 		# 恢复形象档案与医美运行态。
 		var ap: Variant = (state.sim_runtime as Dictionary).get("appearance", {})
 		if ap is Dictionary and not (ap as Dictionary).is_empty():
@@ -8023,6 +8030,41 @@ func bank_loan(amount_minor: int, term_days: int = 365) -> Dictionary:
 	_persist_finance()
 	return {"ok": true, "principal": principal, "term_days": term_days, "rating": bank.credit_rating(account_id())}
 
+## 开立定期存款：期限按天计，利率取当前定期挂牌利率。
+func open_fixed_deposit(amount_minor: int, term_days: int) -> Dictionary:
+	if amount_minor <= 0 or term_days <= 0:
+		return {"ok": false, "reason": "bad_amount"}
+	var day: int = now_minutes() / MINUTES_PER_DAY
+	if not bank.open_fixed_deposit(economy, account_id(), amount_minor, day, term_days):
+		return {"ok": false, "reason": "insufficient_cash"}
+	sync_finances()
+	_persist_finance()
+	return {"ok": true, "principal": amount_minor, "term_days": term_days, "rate": bank.fixed_rate()}
+
+## 按税目申报缴纳：base_major 为对应计税基数（主币单位），返回应纳与实缴。
+func pay_tax(tax_type: String, base_major: float) -> Dictionary:
+	if not BaselineScript.TAX_TYPES.has(tax_type):
+		return {"ok": false, "reason": "unknown_tax"}
+	var due_major: float = tax.liability(tax_type, base_major)
+	var due_minor: int = int(round(due_major * float(BaselineScript.MONEY_MINOR_SCALE)))
+	var collected: int = tax.collect(economy, account_id(), "government", due_minor, tax_type)
+	if collected > 0:
+		sync_finances()
+		_persist_finance()
+	return {
+		"ok": collected > 0, "tax_type": tax_type, "due_minor": due_minor,
+		"collected_minor": collected, "reason": "insufficient_cash" if collected <= 0 else "",
+	}
+
+## 买一张彩票并即时开奖：返回是否中奖与奖金（最小货币单位）。
+func play_lottery() -> Dictionary:
+	if not bank.buy_lottery(economy, account_id()):
+		return {"ok": false, "reason": "insufficient_cash"}
+	var payout: int = bank.draw_lottery(economy, account_id())
+	sync_finances()
+	_persist_finance()
+	return {"ok": true, "payout": payout, "won": payout > 0}
+
 ## 偿还银行贷款：金额上限为现金与负债的较小值。
 func repay_bank_loan(amount_minor: int) -> Dictionary:
 	if amount_minor <= 0:
@@ -8054,10 +8096,34 @@ func finance_panel_data() -> Dictionary:
 		"securities": securities_catalog(),
 	}
 
+## 手动触发金融运行态落盘（存取款等不改变证券持仓的操作）。
+func persist_finance() -> void:
+	_persist_finance()
+
 func _persist_finance() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
-	(state.sim_runtime as Dictionary)["finance"] = bank.to_dict()
+	var data: Dictionary = bank.to_dict()
+	data["last_settle_day"] = _last_finance_day
+	(state.sim_runtime as Dictionary)["finance"] = data
+
+## 按日结算贷款利息与定期存款到期；跨多日时一次补算。
+func _settle_finance_daily() -> void:
+	var day: int = now_minutes() / MINUTES_PER_DAY
+	if _last_finance_day < 0:
+		_last_finance_day = day
+		return
+	var days: int = day - _last_finance_day
+	if days <= 0:
+		return
+	var id: String = account_id()
+	if economy.debt(id) > 0:
+		bank.accrue_loan_interest(economy, id, days)
+	var matured: int = bank.mature_fixed_deposits(economy, id, day)
+	_last_finance_day = day
+	if matured > 0:
+		sync_finances()
+	_persist_finance()
 
 ## 把经济运行账户余额回写到 player.finances（最小货币单位 → 主单位）。
 func sync_finances() -> void:
@@ -8087,6 +8153,7 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	regions.tick_minute(int(clock["absolute_minutes"]))
 	# 证券市场报价随游戏内时间连续演化（GBM，同种子可复现）。
 	bank.advance_securities(float(minutes) / MINUTES_PER_YEAR)
+	_settle_finance_daily()
 	_persist_finance()
 	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进并回写领域状态。
 	domain_wake.advance_to(int(clock["absolute_minutes"]))

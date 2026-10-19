@@ -501,6 +501,13 @@ func _test_finance_runtime() -> void:
 	var sell: Dictionary = reloaded.sell_security("科技成长", 4)
 	check(bool(sell.get("ok", false)), "读档后卖出成功")
 	check_eq(reloaded.bank.holding_qty("stock.tech"), 0, "卖出后清仓")
+	# 贷款按日计息：跨日后负债增长，结算日随存档恢复。
+	var loan: Dictionary = reloaded.bank_loan(100000, 365)
+	check(bool(loan.get("ok", false)), "读档后贷款成功")
+	var debt0: int = reloaded.economy.debt(reloaded.account_id())
+	reloaded.advance(10 * 24 * 60)
+	check(reloaded.economy.debt(reloaded.account_id()) > debt0, "跨日贷款计息")
+	check(int(reloaded._last_finance_day) > 0, "结算日已记录")
 
 func _test_acquaintances_and_marriage() -> void:
 	var state = GameStateScript.new()

@@ -92,6 +92,10 @@ func _dispatch(intent) -> Dictionary:
 			return _security_buy(intent)
 		"卖股票":
 			return _security_sell(intent)
+		"买彩票":
+			return _lottery(intent)
+		"纳税":
+			return _pay_tax(intent)
 		# 职业
 		"求职", "面试":
 			return _job_apply(intent)
@@ -1073,11 +1077,53 @@ func _deposit(intent) -> Dictionary:
 		minor = host.economy.cash(acct)
 	if minor <= 0:
 		return _fail("没有可存入的现金。")
+	if intent.params.has("duration"):
+		var days: int = maxi(1, _duration_minutes(intent, 365 * DAY) / DAY)
+		var fr: Dictionary = host.open_fixed_deposit(minor, days)
+		if not bool(fr.get("ok", false)):
+			return _fail("定期存款失败。")
+		return _ok(["存入定期 %.0f 元，期限 %d 天，年息 %.2f%%。" % [
+			float(minor) / 100.0, days, float(fr.get("rate", 0.0)) * 100.0]], 0, "")
 	if not host.bank.deposit(host.economy, acct, minor):
 		return _fail("存款失败。")
 	host.sync_finances()
+	host.persist_finance()
 	return _ok([FlavorScript.time_line("bank", host.now_minutes()),
 		"存入 %.0f 元。" % (float(minor) / 100.0)], 0, "")
+
+func _pay_tax(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", ""))
+	if raw.is_empty():
+		raw = _object_id(intent, "tax")
+	var tax_type: String = "income"
+	var labels: Dictionary = {
+		"个税": "income", "个人所得税": "income", "企业税": "corporate", "企业所得税": "corporate",
+		"增值税": "vat", "消费税": "consumption", "房产税": "property", "遗产税": "inheritance",
+		"印花税": "stamp", "社保": "social_security",
+	}
+	for label in labels.keys():
+		if raw.contains(String(label)):
+			tax_type = String(labels[label])
+			break
+	var base_major: float = float(_amount_minor(intent)) / 100.0
+	if base_major <= 0.0:
+		var salary: float = float((host.player().get("job", {}) as Dictionary).get("salary", 0.0))
+		base_major = salary * 12.0
+	if base_major <= 0.0:
+		return _fail("请指定计税基数，或先拥有一份工作。")
+	var r: Dictionary = host.pay_tax(tax_type, base_major)
+	if not bool(r.get("ok", false)):
+		return _fail("缴税失败：现金不足或税目无效。")
+	return _ok(["应纳 %.0f 元，实缴 %.0f 元。" % [
+		float(r.get("due_minor", 0)) / 100.0, float(r.get("collected_minor", 0)) / 100.0]], 0, "")
+
+func _lottery(_intent) -> Dictionary:
+	var r: Dictionary = host.play_lottery()
+	if not bool(r.get("ok", false)):
+		return _fail("现金不足，买不了彩票。")
+	if bool(r.get("won", false)):
+		return _ok(["彩票中奖，获得 %.0f 元。" % (float(r.get("payout", 0)) / 100.0)], 0, "")
+	return _ok(["彩票未中奖。"], 0, "")
 
 func _bank_loan(intent) -> Dictionary:
 	var minor := _amount_minor(intent)
