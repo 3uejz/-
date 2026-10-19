@@ -1789,6 +1789,7 @@ func _test_metaphysics_runtime() -> void:
 	state.new_game(171)
 	var host = SimHostScript.new(state, 171)
 	host.bind(state)
+	check(host.metaphysics_phrases_catalog().size() >= 56, "玄学话术库按服务/结果分档")
 	check(host.metaphysics_services_catalog().size() >= 7, "玄学服务表含算命/风水等")
 	check(host.metaphysics_modes_catalog().size() >= 2, "线上/线下模式")
 	check(host.metaphysics_folk_practices_catalog().size() >= 4, "民俗活动表")

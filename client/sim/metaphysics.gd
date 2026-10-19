@@ -31,6 +31,38 @@ const SERVICES: Dictionary = {
 	"exorcism": {"name": "驱邪", "fee": 80000, "risk": 0.40, "base_rate": 0.5},
 }
 
+## 显式话术库：按服务与结果分档，同一结果给出多种说法（确定性取 roll 分档）。
+const PHRASES: Dictionary = {
+	"fortune": {
+		"success": ["近期有贵人相助，宜主动求变。", "命盘见财星，正财偏财皆有起色。", "流年逢吉，旧事可望转圜。", "运势上行，适合推进长期计划。"],
+		"fail": ["近期宜静不宜动，守成为上。", "命盘有冲，行事宜留余地。", "流年平平，急进反易生变。", "运势尚在蓄势，暂缓大动作。"],
+	},
+	"fengshui": {
+		"success": ["宅内气场已顺，明堂开阔。", "坐向得水，宜在东南设书桌。", "门厅纳气，移除杂物即可见效。", "格局可调，床位避开横梁为佳。"],
+		"fail": ["宅内气场需调整，先理动线。", "方位尚可，不必大动土木。", "格局小瑕，通风采光优先。", "气口受阻，清理玄关即可。"],
+	},
+	"astrology": {
+		"success": ["星象显示转运在即，水逆将退。", "木星入宫，扩张与学习有利。", "金星照命，人际与财缘同旺。", "月相转盈，适合开启新周期。"],
+		"fail": ["星象平淡，按部就班即可。", "水逆未退，沟通宜多确认。", "土星压境，耐心积累为上。", "星位无大碍，注意作息规律。"],
+	},
+	"physiognomy": {
+		"success": ["面相福厚，眉宇间有贵气。", "眼神清定，中年运势渐旺。", "鼻准丰隆，财帛宫有守。", "唇厚齿齐，晚景安稳。"],
+		"fail": ["面相平平，贵在勤勉。", "气色略滞，宜调养作息。", "五官端正，运势需自修。", "眉压眼者，遇事宜放宽心。"],
+	},
+	"naming": {
+		"success": ["新名可补五行，读音清亮。", "字形稳当，利于书写与记忆。", "三才配置相生，寓意进取。", "音律协和，社交场合易被记住。"],
+		"fail": ["旧名亦可，无需强改。", "改名需配合生辰，不宜草率。", "现名无大碍，重在行止。", "字义尚可，避免生僻即可。"],
+	},
+	"luck_opening": {
+		"success": ["开运后诸事顺遂，气场转旺。", "随身物件已开光，宜静心佩戴。", "仪式完成，近期宜多行善事。", "运势已启，把握眼前机会。"],
+		"fail": ["开运收效有限，心念先定。", "仪式可作提醒，行动仍是关键。", "气场未稳，建议一月后再看。", "开运非万能，务实为上。"],
+	},
+	"exorcism": {
+		"success": ["邪祟已驱散，居所可安。", "气场已清，夜间安睡无碍。", "仪式圆满，家人心绪渐平。", "秽气已退，宜开窗通风。"],
+		"fail": ["邪祟未净，需再行观察。", "仪式已做，仍宜从环境与作息找因。", "气场反复，建议暂离旧宅数日。", "未见实邪，安心为上。"],
+	},
+}
+
 const MODES: Array = ["online", "offline"]
 const MODE_NAMES: Dictionary = {"online": "线上", "offline": "线下"}
 
@@ -121,7 +153,7 @@ func consult(practitioner: Dictionary, service: String, client: Dictionary = {},
 		"attributes_changed": false,
 		"event_outcome_changed": real and success and bool(opts.get("event_related", false)),
 		"scam": scam,
-		"claimed": _claim(service, success),
+		"claimed": _claim(service, success, roll),
 	}
 	# 心理安慰：无论真假都产生少量心情改善（安慰剂），但绝不改变属性。
 	var mood_delta: float = 0.0
@@ -137,24 +169,26 @@ func consult(practitioner: Dictionary, service: String, client: Dictionary = {},
 	return result
 
 
-func _claim(service: String, success: bool) -> String:
-	match service:
-		"fortune":
-			return "近期有贵人相助" if success else "近期宜静不宜动"
-		"fengshui":
-			return "宅内气场需调整" if success else "方位尚可"
-		"astrology":
-			return "星象显示转运在即" if success else "星象平淡"
-		"physiognomy":
-			return "面相福厚" if success else "面相平平"
-		"naming":
-			return "新名可补五行" if success else "旧名亦可"
-		"luck_opening":
-			return "开运后诸事顺遂" if success else "开运收效有限"
-		"exorcism":
-			return "邪祟已驱散" if success else "邪祟未净"
-		_:
-			return ""
+func _claim(service: String, success: bool, roll: float = 0.0) -> String:
+	var def: Dictionary = PHRASES.get(service, {})
+	var pool: Array = def.get("success" if success else "fail", [])
+	if pool.is_empty():
+		return ""
+	var idx: int = clampi(int(floor(clampf(roll, 0.0, 0.999) * float(pool.size()))), 0, pool.size() - 1)
+	return String(pool[idx])
+
+
+## 话术目录：供内容表与面板展示，按服务/结果/序号展开。
+func phrase_catalog() -> Array:
+	var out: Array = []
+	for key in PHRASES.keys():
+		var def: Dictionary = PHRASES[key]
+		for outcome in ["success", "fail"]:
+			var i: int = 0
+			for text in (def.get(outcome, []) as Array):
+				out.append({"service": String(key), "outcome": outcome, "index": i, "text": String(text)})
+				i += 1
+	return out
 
 
 ## 安慰剂与确认偏误：只影响心情与决策倾向，明确声明属性与事件结果不变。

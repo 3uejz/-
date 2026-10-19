@@ -6908,6 +6908,10 @@ func _persist_funeral() -> void:
 func metaphysics_state() -> Dictionary:
 	return {"client": _meta_client, "practitioner": _meta_practitioner, "business": _meta_business}
 
+## 玄学话术目录：按服务与结果分档的显式文案。
+func metaphysics_phrases_catalog() -> Array:
+	return metaphysics.phrase_catalog()
+
 func metaphysics_services_catalog() -> Array:
 	var out: Array = []
 	for key in metaphysics.services():
