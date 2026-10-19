@@ -169,6 +169,78 @@ func carbon_trade(ent: Dictionary, credits: float, price: int = -1, opts: Dictio
 	return {"ok": true, "credits": float(ent["credits"]), "price": p, "cash": cash, "balance": carbon_balance(ent)}
 
 
+## 碳配额拍卖：按申购量抬升出清价，申报价低于出清价则不成交。
+## opts: base_price/supply/floor/ceiling。
+func carbon_auction(ent: Dictionary, bid_credits: float, bid_price: int, opts: Dictionary = {}) -> Dictionary:
+	var amount: float = maxf(0.0, bid_credits)
+	var supply: float = maxf(1.0, float(opts.get("supply", 500.0)))
+	var base: float = float(opts.get("base_price", ent.get("carbon_price", DEFAULT_CARBON_PRICE)))
+	var floor_price: int = int(opts.get("floor", 80))
+	var ceiling: int = int(opts.get("ceiling", 160))
+	var clearing: int = clampi(int(round(base * (0.8 + 0.4 * (amount / supply)))), floor_price, ceiling)
+	if amount <= 0.0 or bid_price < clearing:
+		return {"ok": true, "filled": 0.0, "clearing_price": clearing, "cost": 0, "reason": "below_clearing"}
+	var fill: float = minf(amount, supply)
+	var cost: int = int(round(fill * float(clearing)))
+	ent["credits"] = float(ent.get("credits", 0.0)) + fill
+	ent["carbon_cost"] = int(ent.get("carbon_cost", 0)) + cost
+	return {"ok": true, "filled": fill, "clearing_price": clearing, "cost": cost,
+		"credits": float(ent["credits"]), "balance": carbon_balance(ent)}
+
+
+## 跨企业撮合：卖方按报价从低到高、买方按报价从高到低，逐笔在买卖价之间成交。
+## enterprises 内每项需含 name/emissions/quota/credits/carbon_price。
+func match_carbon_market(enterprises: Array, opts: Dictionary = {}) -> Dictionary:
+	var buyers: Array = []
+	var sellers: Array = []
+	for e in enterprises:
+		var ent: Dictionary = e
+		var gap: float = carbon_balance(ent)
+		var price: float = float(ent.get("carbon_price", DEFAULT_CARBON_PRICE))
+		if gap > 0.0:
+			buyers.append({"ent": ent, "need": gap, "bid": price * float(opts.get("buyer_premium", 1.05))})
+		elif gap < 0.0:
+			sellers.append({"ent": ent, "surplus": -gap, "ask": price * float(opts.get("seller_discount", 0.95))})
+	buyers.sort_custom(func(a, b): return float(a["bid"]) > float(b["bid"]))
+	sellers.sort_custom(func(a, b): return float(a["ask"]) < float(b["ask"]))
+	var trades: Array = []
+	var volume: float = 0.0
+	var prices: Array = []
+	var bi: int = 0
+	var si: int = 0
+	while bi < buyers.size() and si < sellers.size():
+		var buyer: Dictionary = buyers[bi]
+		var seller: Dictionary = sellers[si]
+		if float(buyer["bid"]) < float(seller["ask"]):
+			break
+		var qty: float = minf(float(buyer["need"]), float(seller["surplus"]))
+		var price: float = (float(buyer["bid"]) + float(seller["ask"])) * 0.5
+		var cash: int = int(round(qty * price))
+		var b_ent: Dictionary = buyer["ent"]
+		var s_ent: Dictionary = seller["ent"]
+		b_ent["credits"] = float(b_ent.get("credits", 0.0)) + qty
+		b_ent["carbon_cost"] = int(b_ent.get("carbon_cost", 0)) + cash
+		s_ent["credits"] = float(s_ent.get("credits", 0.0)) - qty
+		s_ent["carbon_cost"] = int(s_ent.get("carbon_cost", 0)) - cash
+		trades.append({"buyer": String(b_ent.get("name", "")), "seller": String(s_ent.get("name", "")),
+			"credits": qty, "price": price, "cash": cash})
+		volume += qty
+		prices.append(price)
+		buyer["need"] = float(buyer["need"]) - qty
+		seller["surplus"] = float(seller["surplus"]) - qty
+		if float(buyer["need"]) <= 0.0001:
+			bi += 1
+		if float(seller["surplus"]) <= 0.0001:
+			si += 1
+	var avg_price: float = 0.0
+	if not prices.is_empty():
+		for p in prices:
+			avg_price += float(p)
+		avg_price /= float(prices.size())
+	return {"ok": true, "trades": trades, "volume": volume, "average_price": avg_price,
+		"participants": enterprises.size(), "matched_buyers": bi, "matched_sellers": si}
+
+
 ## 碳足迹核算：总量与按范围拆分的示意值。
 func carbon_footprint(ent: Dictionary) -> Dictionary:
 	var total: float = float(ent.get("emissions", 0.0))

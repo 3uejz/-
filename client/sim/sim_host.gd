@@ -4527,6 +4527,45 @@ func env_carbon_trade(credits: float) -> Dictionary:
 	_persist_environment()
 	return r
 
+func env_carbon_auction(bid_credits: float, bid_price: int = 160) -> Dictionary:
+	var cost_est: int = int(round(maxf(0.0, bid_credits) * float(bid_price)))
+	if int(economy.cash(account_id())) < cost_est:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost_est}
+	var r: Dictionary = environment_sys.carbon_auction(_env_enterprise, maxf(0.0, bid_credits), bid_price)
+	if bool(r.get("ok", false)) and int(r.get("cost", 0)) > 0:
+		economy.add_money(account_id(), -int(r["cost"]), "carbon_auction")
+		_persist_environment()
+	return r
+
+## 跨企业碳市场：玩家企业与三家同业参与撮合，成交额回写/扣减玩家现金。
+func env_carbon_market() -> Dictionary:
+	var peers: Array = [
+		environment_sys.new_enterprise("华东电力", {"emissions": 320.0, "quota": 220.0, "carbon_price": 100}),
+		environment_sys.new_enterprise("绿源水泥", {"emissions": 140.0, "quota": 260.0, "carbon_price": 100}),
+		environment_sys.new_enterprise("北岭钢铁", {"emissions": 260.0, "quota": 210.0, "carbon_price": 100}),
+	]
+	var pool: Array = [_env_enterprise]
+	pool.append_array(peers)
+	var r: Dictionary = environment_sys.match_carbon_market(pool)
+	var mine: String = String(_env_enterprise.get("name", ""))
+	var cash: int = 0
+	var player_trade: Dictionary = {}
+	for t in r.get("trades", []):
+		var trade: Dictionary = t
+		if String(trade.get("buyer", "")) == mine:
+			cash -= int(trade.get("cash", 0))
+			player_trade = trade
+		elif String(trade.get("seller", "")) == mine:
+			cash += int(trade.get("cash", 0))
+			player_trade = trade
+	if cash != 0:
+		economy.add_money(account_id(), cash, "carbon_market")
+	if not player_trade.is_empty():
+		_persist_environment()
+	r["player_trade"] = player_trade
+	r["player_cash"] = cash
+	return r
+
 func env_carbon_compliance(mode: String) -> Dictionary:
 	var balance: float = environment_sys.carbon_balance(_env_enterprise)
 	var cost: int = 0

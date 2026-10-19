@@ -1481,6 +1481,12 @@ func _test_environment_runtime() -> void:
 	check(bool(comp.get("ok", false)) and bool(comp.get("compliant", false)), "碳履约合规")
 	check_eq(int(host.economy.cash(host.account_id())), cash_before, "碳履约购配额扣款")
 	check(bool(host.env_report_carbon(100.0).get("ok", false)), "碳申报完成")
+	var auction: Dictionary = host.env_carbon_auction(100.0, 160)
+	check(bool(auction.get("ok", false)) and float(auction.get("filled", 0.0)) > 0.0, "碳配额拍卖成交")
+	check(int(auction.get("clearing_price", 0)) >= 80, "拍卖出清价在区间内")
+	host.env_carbon_trade(200.0)
+	var market: Dictionary = host.env_carbon_market()
+	check(bool(market.get("ok", false)) and (market.get("trades", []) as Array).size() > 0, "跨企业碳市场撮合")
 	# 环保从业组织。
 	check(bool(host.start_env_org("env_company").get("ok", false)), "开办环保企业成功")
 	check(bool(host.start_env_org("env_ngo").get("reason", "") == "already_org"), "重复开办被拒")

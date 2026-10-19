@@ -564,6 +564,10 @@ func _dispatch(intent) -> Dictionary:
 			return _env_carbon_account(intent)
 		"碳交易":
 			return _env_carbon_trade(intent)
+		"碳拍卖":
+			return _env_carbon_auction(intent)
+		"碳撮合":
+			return _env_carbon_market(intent)
 		"碳履约":
 			return _env_carbon_compliance(intent)
 		"碳申报":
@@ -3158,6 +3162,25 @@ func _env_carbon_account(intent) -> Dictionary:
 		return _fail("无法碳核算（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	var esg: Dictionary = r.get("esg", {})
 	return _ok(["碳平衡 %.1f，ESG %.1f（%s 级）。" % [float(r.get("balance", 0.0)), float(esg.get("score", 0.0)), String(esg.get("grade", ""))]], 0, "")
+
+func _env_carbon_auction(intent) -> Dictionary:
+	var credits: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.env_carbon_auction(credits, 160)
+	if not bool(r.get("ok", false)):
+		return _fail("无法参与碳拍卖（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if float(r.get("filled", 0.0)) <= 0.0:
+		return _ok(["碳拍卖未成交，出清价 %d 高于申报价。" % int(r.get("clearing_price", 0))], 0, "")
+	return _ok(["碳拍卖成交 %.1f 吨，出清价 %d，支付 %d。" % [float(r.get("filled", 0.0)), int(r.get("clearing_price", 0)), int(r.get("cost", 0))]], 0, "")
+
+func _env_carbon_market(intent) -> Dictionary:
+	var r: Dictionary = host.env_carbon_market()
+	host.state.dirty = true
+	if not bool(r.get("ok", false)):
+		return _fail("碳市场撮合失败。")
+	var trade: Dictionary = r.get("player_trade", {})
+	if trade.is_empty():
+		return _ok(["碳市场撮合完成，成交 %.1f 吨，均价 %.1f；本企业无成交。" % [float(r.get("volume", 0.0)), float(r.get("average_price", 0.0))]], 0, "")
+	return _ok(["碳市场成交 %.1f 吨，价格 %.1f，现金流 %d。" % [float(trade.get("credits", 0.0)), float(trade.get("price", 0.0)), int(r.get("player_cash", 0))]], 0, "")
 
 func _env_carbon_trade(intent) -> Dictionary:
 	var credits: float = float(_param_number(intent, "number", 10))
