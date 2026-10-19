@@ -4005,7 +4005,10 @@ func honors_award(award_key: String, corrupt: bool = false) -> Dictionary:
 	if _honor_candidate.is_empty():
 		return {"ok": false, "reason": "no_profile"}
 	var jury: Dictionary = {"corruption": 0.9} if corrupt else {}
-	var r: Dictionary = honors.award(_honor_candidate, award_key, jury, {"hall": _hall, "enshrine": true})
+	var r: Dictionary = honors.award(_honor_candidate, award_key, jury, {
+		"hall": _hall, "enshrine": true,
+		"generation": maxi(1, int(state.legacy.get("generation", 0)) + 1),
+	})
 	if bool(r.get("awarded", false)):
 		honors.honor_effects(_honor_candidate)
 	_persist_honors()
@@ -4031,6 +4034,10 @@ func honors_expose() -> Dictionary:
 func honors_inherit() -> Dictionary:
 	return honors.inherit_evaluation(_hall)
 
+## 跨代名人堂与家族史联动：名人堂代际聚合 + legacy.history/lineage 叙事。
+func honors_family_legacy() -> Dictionary:
+	return honors.family_legacy(_hall, state.legacy)
+
 func honors_panel_data() -> Dictionary:
 	if _honor_candidate.is_empty() and _hall.is_empty():
 		return {}
@@ -4049,6 +4056,7 @@ func honors_panel_data() -> Dictionary:
 		out["honors"] = honor_rows
 	out["hall_size"] = honors.hall_size(_hall)
 	out["hall_active"] = int(honors.inherit_evaluation(_hall).get("active_honors", 0))
+	out["family_legacy"] = honors_family_legacy()
 	return out
 
 func _persist_honors() -> void:

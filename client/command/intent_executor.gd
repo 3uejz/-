@@ -504,6 +504,8 @@ func _dispatch(intent) -> Dictionary:
 			return _honor_buy(intent)
 		"揭露黑幕":
 			return _honor_expose(intent)
+		"家族荣誉":
+			return _honors_family_legacy(intent)
 		"立案":
 			return _police_case(intent)
 		"勘查":
@@ -2937,6 +2939,17 @@ func _honor_buy(intent) -> Dictionary:
 	if bool(r.get("awarded", false)):
 		return _ok(["你运作获得了%s（此事暂无人知晓）。" % String((r.get("honor", {}) as Dictionary).get("name", ""))], 0, "")
 	return _ok(["运作未果。"], 0, "")
+
+func _honors_family_legacy(intent) -> Dictionary:
+	var r: Dictionary = host.honors_family_legacy()
+	if not bool(r.get("ok", false)):
+		return _fail("无法读取家族荣誉。")
+	var lines: Array = ["家族传承：%d 代，名人堂代际 %d，族谱 %d 人，家族事件 %d 条。" % [
+		int(r.get("generations", 0)), (r.get("honored_generations", []) as Array).size(),
+		int(r.get("lineage", 0)), int(r.get("family_events", 0))]]
+	for s in r.get("stories", []):
+		lines.append(String(s))
+	return _ok(lines, 0, "")
 
 func _honor_expose(intent) -> Dictionary:
 	var r: Dictionary = host.honors_expose()

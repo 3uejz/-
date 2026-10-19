@@ -1360,6 +1360,12 @@ func _test_honors_runtime() -> void:
 	check(bool(exp.get("exposed", false)), "黑幕可揭露")
 	check((host.honors_state()["candidate"].get("honors", []) as Array).is_empty(), "揭露后荣誉撤销")
 	check(bool(host.honors_inherit().get("ok", false)), "传承评价可计算")
+	state.legacy["generation"] = 2
+	state.legacy["lineage"] = [{"name": "长子", "summary": "出生于本地"}]
+	state.legacy["history"] = [{"kind": "birth", "name": "长子", "birth_minutes": 10}]
+	var fam: Dictionary = host.honors_family_legacy()
+	check(bool(fam.get("ok", false)) and int(fam.get("generations", 0)) >= 2, "家族荣誉跨代聚合")
+	check((fam.get("stories", []) as Array).size() > 0, "家族传承叙事非空")
 	# 持久化与读档恢复。
 	host._persist_honors()
 	check(state.sim_runtime.get("honors", null) is Dictionary, "荣誉运行态写入 sim_runtime")

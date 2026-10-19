@@ -356,6 +356,40 @@ func inherit_evaluation(hall: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	}
 
 
+## 跨代家族荣誉：把名人堂条目按代际聚合，并与家族史事件合成传承叙事。
+func family_legacy(hall: Dictionary, legacy: Dictionary, opts: Dictionary = {}) -> Dictionary:
+	var max_gen: int = int(opts.get("generation", legacy.get("generation", 0)))
+	var by_gen: Dictionary = {}
+	for e in (hall.get("entries", []) as Array):
+		var d: Dictionary = e
+		var g: int = int(d.get("generation", 0))
+		if g <= 0:
+			g = 1
+		var names: Array = by_gen.get(g, [])
+		var label: String = String(d.get("candidate_name", ""))
+		if String(d.get("status", "active")) != "active":
+			label += "（记录已撤销）"
+		names.append(label)
+		by_gen[g] = names
+		max_gen = maxi(max_gen, g)
+	var stories: Array = []
+	var gens: Array = by_gen.keys()
+	gens.sort()
+	for g in gens:
+		stories.append("第 %d 代：%s 入选名人堂。" % [int(g), "、".join(by_gen[g])])
+	var events: Array = (legacy.get("history", []) as Array).duplicate(true)
+	events.sort_custom(func(a, b): return int((a as Dictionary).get("birth_minutes", 0)) < int((b as Dictionary).get("birth_minutes", 0)))
+	var inheritance: Dictionary = inherit_evaluation(hall, {"generation": max_gen})
+	return {
+		"ok": true, "generations": max_gen, "honored_generations": gens,
+		"stories": stories, "family_events": events.size(),
+		"lineage": (legacy.get("lineage", []) as Array).size(),
+		"heritage_score": float(inheritance.get("heritage_score", 0.0)),
+		"start_reputation": float(inheritance.get("start_reputation", 0.0)),
+		"career_bonus": float(inheritance.get("career_bonus", 0.0)),
+	}
+
+
 # --- 并列与影响 ---
 
 ## 处理评审并列：eps 内并列则共享、决选或由评委会定夺。
