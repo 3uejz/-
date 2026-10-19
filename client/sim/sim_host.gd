@@ -2083,23 +2083,59 @@ func register_ip_asset(ip_type: String, title: String = "") -> Dictionary:
 	return {"ok": true, "ip": r.get("ip", {}), "fee": fee}
 
 ## 授权知识产权：许可费入账。
+## IP 收益归属：个人 IP 进玩家现金，职务发明进公司账户。
+func _ip_owner_account(ip: Dictionary) -> String:
+	var owner: String = String(ip.get("owner", "player"))
+	if owner.begins_with("company:"):
+		return "company." + owner.trim_prefix("company:")
+	return account_id()
+
 func license_ip_asset(ip_id: String, deal_size: float, exclusive: bool = false) -> Dictionary:
 	var ip: Dictionary = _find_ip(ip_id)
 	if ip.is_empty():
 		return {"ok": false, "reason": "unknown_ip"}
 	var r: Dictionary = ip_media.license_ip(ip, "外部被许可方", deal_size, {"exclusive": exclusive, "minute": now_minutes()})
 	if bool(r.get("ok", false)):
-		economy.add_money(account_id(), int(r.get("fee", 0)), "ip_license")
+		economy.add_money(_ip_owner_account(ip), int(r.get("fee", 0)), "ip_license")
 		_persist_ip_media()
 	return r
+
+## 职务发明：以公司名义登记 IP，登记费从公司账户扣除，收益归公司。
+func company_file_ip(ip_type: String, title: String = "") -> Dictionary:
+	if _company.is_empty():
+		return {"ok": false, "reason": "no_company"}
+	if not ip_media.IP_TYPES.has(ip_type):
+		return {"ok": false, "reason": "unknown_ip_type"}
+	var def: Dictionary = ip_media.IP_TYPES[ip_type]
+	var fee: int = int(def.get("registration_fee", 0))
+	var account: String = String(_company.get("account", ""))
+	if account == "" or int(economy.cash(account)) < fee:
+		return {"ok": false, "reason": "insufficient_funds"}
+	var name: String = title
+	if name.strip_edges() == "":
+		name = "%s%d" % [String(def.get("name", ip_type)), _ips.size() + 1]
+	var owner: String = "company:" + String(_company.get("id", ""))
+	var r: Dictionary = ip_media.register_ip(ip_type, owner, name, {"created_minute": now_minutes()})
+	if not bool(r.get("ok", false)):
+		return r
+	var ip: Dictionary = r["ip"]
+	_ips.append(ip)
+	economy.add_money(account, -fee, "company_ip_registration")
+	var assets: Array = _company.get("ip_assets", [])
+	assets.append({"id": String(ip.get("id", "")), "type": ip_type, "title": name})
+	_company["ip_assets"] = assets
+	_persist_ip_media()
+	_persist_company()
+	return {"ok": true, "ip": ip, "fee": fee, "owner": owner}
 
 ## 转让知识产权：成交价入账并变更所有权。
 func transfer_ip_asset(ip_id: String, price: int) -> Dictionary:
 	var ip: Dictionary = _find_ip(ip_id)
 	if ip.is_empty():
 		return {"ok": false, "reason": "unknown_ip"}
+	var payee: String = _ip_owner_account(ip)
 	var r: Dictionary = ip_media.transfer_ip(ip, "外部买家", price)
-	economy.add_money(account_id(), int(r.get("price", 0)), "ip_transfer")
+	economy.add_money(payee, int(r.get("price", 0)), "ip_transfer")
 	_persist_ip_media()
 	return r
 
@@ -2108,9 +2144,10 @@ func pledge_ip_asset(ip_id: String, amount: int) -> Dictionary:
 	var ip: Dictionary = _find_ip(ip_id)
 	if ip.is_empty():
 		return {"ok": false, "reason": "unknown_ip"}
+	var payee: String = _ip_owner_account(ip)
 	var r: Dictionary = ip_media.pledge_ip(ip, amount)
 	if bool(r.get("ok", false)):
-		economy.add_money(account_id(), int(r.get("amount", 0)), "ip_pledge")
+		economy.add_money(payee, int(r.get("amount", 0)), "ip_pledge")
 		_persist_ip_media()
 	return r
 
@@ -2119,9 +2156,10 @@ func sue_ip_infringer(ip_id: String, opts: Dictionary = {}) -> Dictionary:
 	var ip: Dictionary = _find_ip(ip_id)
 	if ip.is_empty():
 		return {"ok": false, "reason": "unknown_ip"}
+	var payee: String = _ip_owner_account(ip)
 	var r: Dictionary = ip_media.file_lawsuit(ip, opts)
 	if bool(r.get("win", false)) and int(r.get("compensation", 0)) > 0:
-		economy.add_money(account_id(), int(r["compensation"]), "ip_compensation")
+		economy.add_money(payee, int(r["compensation"]), "ip_compensation")
 	_persist_ip_media()
 	return r
 
@@ -2172,6 +2210,8 @@ func ip_media_panel_data() -> Dictionary:
 				"type": String(d.get("type", "")),
 				"type_name": String(ip_media.IP_TYPES.get(String(d.get("type", "")), {}).get("name", d.get("type", ""))),
 				"title": String(d.get("title", "")),
+				"owner": String(d.get("owner", "player")),
+				"company_owned": String(d.get("owner", "")).begins_with("company:"),
 				"status": String(d.get("status", "")),
 				"licenses": (d.get("licenses", []) as Array).size(),
 				"pledged": bool(d.get("pledged", false)),
@@ -2790,6 +2830,11 @@ func check_mine_accident() -> Dictionary:
 		var injured: int = int(r.get("injured", 0))
 		_damage_health(clampf(float(injured) * 0.05, 0.0, 5.0))
 		r["fine"] = fine
+		if injured >= 3:
+			crime_sys.add_record(_crime_state, "major_accident", current_region_id(), now_minutes(), 0.9)
+			crime_sys.add_wanted(_crime_state, "major_accident", current_region_id(), 2)
+			_sync_legal()
+			r["criminal_record"] = true
 		_mine["last_accident"] = r.duplicate(true)
 	_persist_mining()
 	return r
@@ -3540,6 +3585,15 @@ func sports_national_callup(nation: String = "中国") -> Dictionary:
 	if _pro_player.is_empty():
 		return {"ok": false, "reason": "no_career"}
 	var r: Dictionary = sports_industry.national_callup(_pro_player, nation, {"form_threshold": 40.0})
+	if bool(r.get("ok", false)):
+		_persist_sports()
+	return r
+
+## 国家队集训：按天数提升状态。
+func sports_national_camp(days: float = 10.0) -> Dictionary:
+	if _pro_player.is_empty():
+		return {"ok": false, "reason": "no_career"}
+	var r: Dictionary = sports_industry.national_camp(_pro_player, maxf(0.0, days))
 	if bool(r.get("ok", false)):
 		_persist_sports()
 	return r
@@ -5208,6 +5262,10 @@ func crime_trial() -> Dictionary:
 	_crime_state["surrendered"] = false
 	_crime_state["surrender_case"] = {}
 	_crime_state["last"] = {"crime": crime, "convicted": true, "days": days, "fine": fine}
+	_crime_state["last_judgment"] = {
+		"crime": crime, "region": region, "days": days, "fine": fine,
+		"evidence": evidence, "minute": now_minutes(), "appealed": false,
+	}
 	if days > 0:
 		_prison = prison_sys.new_inmate(String(player().get("name", "我")), crime, days)
 		_prison["convicted_minute"] = now_minutes()
@@ -5217,6 +5275,51 @@ func crime_trial() -> Dictionary:
 	_sync_legal()
 	return {"ok": true, "convicted": true, "crime": crime, "name": String(c.get("name", crime)), "days": days, "fine": fine, "evidence": evidence, "lawyer_discount": discount}
 
+
+## 刑事上诉：对已生效判决在 10 日内申请二审；改判无罪则退罚金并释放。
+func crime_appeal() -> Dictionary:
+	_ensure_crime_state()
+	var judgment: Dictionary = _crime_state.get("last_judgment", {})
+	if judgment.is_empty():
+		return {"ok": false, "reason": "no_judgment"}
+	if bool(judgment.get("appealed", false)):
+		return {"ok": false, "reason": "already_appealed"}
+	if now_minutes() - int(judgment.get("minute", 0)) > 10 * MINUTES_PER_DAY:
+		return {"ok": false, "reason": "appeal_expired"}
+	var evidence: float = clampf(float(judgment.get("evidence", 0.6)), 0.0, 1.0)
+	var chance: float = clampf(0.5 - evidence * 0.4, 0.1, 0.4)
+	if rng.next_float() >= chance:
+		judgment["appealed"] = true
+		judgment["outcome"] = "upheld"
+		_crime_state["last_judgment"] = judgment
+		_persist_crime()
+		_sync_legal()
+		return {"ok": true, "acquitted": false, "upheld": true, "chance": chance}
+	var fine: int = maxi(0, int(judgment.get("fine", 0)))
+	if fine > 0:
+		economy.add_money(account_id(), fine, "crime_appeal_refund")
+		sync_finances()
+	var crime: String = String(judgment.get("crime", ""))
+	var kept: Array = []
+	var removed: bool = false
+	for rec in (_crime_state.get("records", []) as Array):
+		if not removed and rec is Dictionary and String((rec as Dictionary).get("crime", "")) == crime:
+			removed = true
+			continue
+		kept.append(rec)
+	_crime_state["records"] = kept
+	if not _prison.is_empty() and not bool(_prison.get("released", false)):
+		_prison["released"] = true
+		_prison["released_minute"] = now_minutes()
+		_prison["days_remaining"] = 0
+		_persist_prison()
+	judgment["appealed"] = true
+	judgment["outcome"] = "acquitted"
+	_crime_state["last_judgment"] = judgment
+	_crime_state["last"] = {"crime": crime, "convicted": false, "days": 0, "fine": 0, "appealed": true}
+	_persist_crime()
+	_sync_legal()
+	return {"ok": true, "acquitted": true, "upheld": false, "refund": fine, "chance": chance}
 
 ## 自首：撤销当前区域通缉并获得量刑折扣。
 func crime_self_surrender() -> Dictionary:

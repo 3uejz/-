@@ -27,6 +27,7 @@ const CRIMES: Dictionary = {
 	"framing": {"name": "陷害", "category": "criminal", "difficulty": 12.0, "detect": 0.35, "penalty": {"days": [180, 1825], "fine": [100000, 1000000]}, "statute_years": 10},
 	"deceive": {"name": "欺诈", "category": "civil", "difficulty": 7.0, "detect": 0.25, "penalty": {"days": [0, 0], "fine": [10000, 500000]}, "statute_years": 3},
 	"disturbance": {"name": "寻衅滋事", "category": "public_order", "difficulty": 4.0, "detect": 0.5, "penalty": {"days": [1, 15], "fine": [5000, 50000]}, "statute_years": 2},
+	"major_accident": {"name": "重大责任事故", "category": "criminal", "difficulty": 9.0, "detect": 0.7, "penalty": {"days": [180, 1095], "fine": [200000, 2000000]}, "statute_years": 10},
 }
 
 

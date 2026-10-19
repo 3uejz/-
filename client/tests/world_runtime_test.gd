@@ -1004,12 +1004,28 @@ func _test_ip_media_runtime() -> void:
 	# 诉讼判定返回。
 	var sue: Dictionary = host.sue_ip_infringer(ip_id, {"roll": 1.0})
 	check(bool(sue.get("ok", false)), "维权诉讼返回判定")
+	# 职务发明：费用与许可收益归公司账户。
+	host.economy.add_money(host.account_id(), 2000000, "test_company_ip")
+	check(bool(host.company_register("company", "职务发明公司", 1000000).get("ok", false)), "注册公司用于职务发明")
+	var company_account: String = String(host._company.get("account", ""))
+	var company_cash_before: int = int(host.economy.cash(company_account))
+	var cip: Dictionary = host.company_file_ip("patent")
+	check(bool(cip.get("ok", false)), "公司登记职务发明专利")
+	check(String((cip.get("ip", {}) as Dictionary).get("owner", "")).begins_with("company:"), "职务发明权属归公司")
+	check(int(host.economy.cash(company_account)) < company_cash_before, "职务发明登记费由公司承担")
+	var company_ip_id: String = String((cip.get("ip", {}) as Dictionary).get("id", ""))
+	var company_cash_after_reg: int = int(host.economy.cash(company_account))
+	var player_cash_before: int = int(host.economy.cash(host.account_id()))
+	var co_lic: Dictionary = host.license_ip_asset(company_ip_id, 1000000.0, true)
+	check(bool(co_lic.get("ok", false)), "公司 IP 可对外授权")
+	check(int(host.economy.cash(company_account)) > company_cash_after_reg, "公司 IP 许可费入公司账户")
+	check(int(host.economy.cash(host.account_id())) == player_cash_before, "公司 IP 许可费不进个人账户")
 	# 持久化并读档恢复。
 	host._persist_ip_media()
 	check(state.sim_runtime.get("ip_media", null) is Dictionary, "知识产权运行态写入 sim_runtime")
 	var reloaded = SimHostScript.new(state, 88)
 	reloaded.bind(state)
-	check((reloaded.ip_media_state().get("ips", []) as Array).size() == 1, "读档恢复 IP")
+	check((reloaded.ip_media_state().get("ips", []) as Array).size() == 2, "读档恢复 IP")
 	check((reloaded.ip_media_state().get("outlets", []) as Array).size() == 1, "读档恢复媒体机构")
 
 
@@ -1117,6 +1133,18 @@ func _test_mining_runtime() -> void:
 	# 新能源项目。
 	var proj: Dictionary = host.build_energy_project("solar", 100.0)
 	check(bool(proj.get("ok", false)), "建设光伏项目成功")
+	# 矿难刑事追责：低安全 + 大量工人时强制触发一次事故。
+	host._mine["safety"] = 0.0
+	host._mine["workers"] = 300
+	var accident: Dictionary = {}
+	for _i in range(200):
+		accident = host.check_mine_accident()
+		if bool(accident.get("occurred", false)) and int(accident.get("injured", 0)) >= 3:
+			break
+	check(bool(accident.get("occurred", false)), "低安全矿场发生矿难")
+	check(bool(accident.get("criminal_record", false)), "重大矿难追究刑事责任")
+	check(host.crime_sys.has_record(host._crime_state), "矿难写入案底")
+	check(int(host.crime_sys.wanted_level(host._crime_state, host.current_region_id())) >= 2, "矿难产生通缉")
 	# 能源价格按年演化。
 	host.advance(525960)
 	var energy: Dictionary = host.mining_state().get("energy", {})
@@ -1233,6 +1261,11 @@ func _test_sports_runtime() -> void:
 	check(bool(tr.get("ok", false)) and int(tr.get("fee", 0)) == 5000000, "转会结算成功")
 	var sp: Dictionary = host.sports_sponsorship("测试品牌", 800000)
 	check(bool(sp.get("ok", false)), "签订代言合同成功")
+	check(bool(host.sports_national_callup("中国").get("ok", false)), "入选国家队成功")
+	var form_before_camp: float = float(host.sports_state()["player"].get("form", 0.0))
+	var camp: Dictionary = host.sports_national_camp(10.0)
+	check(bool(camp.get("ok", false)) and float(camp.get("gain", 0.0)) > 0.0, "国家队集训提升状态")
+	check(float(host.sports_state()["player"].get("form", 0.0)) > form_before_camp, "集训后状态上升")
 	var inj: Dictionary = host.sports_injure("minor")
 	check(bool(inj.get("ok", false)) and float(host.sports_state()["player"].get("injury_days", 0.0)) > 0.0, "伤病施加成功")
 	var no_play: Dictionary = host.sports_play_match()

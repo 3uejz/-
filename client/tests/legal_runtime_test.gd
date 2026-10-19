@@ -139,3 +139,13 @@ func _test_surrender_then_trial() -> void:
 	check(bool(t.get("ok", false)), "自首后仍可受审")
 	check(bool(t.get("convicted", false)), "自首后证据充分可定罪")
 	check(bool(host.player().get("legal", {}).get("in_prison", false)), "自首受审后可入监")
+	# 刑事上诉：重试直到改判无罪，验证退罚金与释放。
+	var ap: Dictionary = {}
+	for _i in range(200):
+		host._crime_state["last_judgment"]["appealed"] = false
+		ap = host.crime_appeal()
+		if bool(ap.get("acquitted", false)):
+			break
+	check(bool(ap.get("acquitted", false)), "刑事上诉可改判无罪")
+	check(not host._prison_active(), "改判后释放出狱")
+	check_eq(int(host.player().get("legal", {}).get("wanted_level", 0)), 0, "改判后仍无通缉")

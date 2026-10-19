@@ -409,6 +409,25 @@ func national_callup(player: Dictionary, nation: String, opts: Dictionary = {}) 
 	return {"ok": true, "nation": nation, "form": float(player.get("form", 0.0))}
 
 
+## 国家队长期集训：需已入选国家队，按天数提升状态，伤病/禁赛期间不可参加。
+func national_camp(player: Dictionary, days: float, opts: Dictionary = {}) -> Dictionary:
+	if String(player.get("national_team", "")) == "":
+		return {"ok": false, "reason": "not_called_up"}
+	if bool(player.get("disabled", false)):
+		return {"ok": false, "reason": "disabled"}
+	if float(player.get("ban_days", 0.0)) > 0.0:
+		return {"ok": false, "reason": "banned"}
+	if float(player.get("injury_days", 0.0)) > 0.0:
+		return {"ok": false, "reason": "injured"}
+	var d: float = maxf(0.0, days)
+	var before: float = clampf(float(player.get("form", 60.0)), 0.0, 100.0)
+	var gain: float = minf(float(opts.get("max_gain", 8.0)), d * 0.08)
+	player["form"] = clampf(before + gain, 0.0, 100.0)
+	player["national_camp_days"] = float(player.get("national_camp_days", 0.0)) + d
+	return {"ok": true, "nation": String(player.get("national_team", "")), "days": d,
+		"form_before": before, "form": float(player["form"]), "gain": float(player["form"]) - before}
+
+
 ## 国际赛事（简化）：按实力推演名次，返回冠军与奖励。
 func international_tournament(competition: String, teams: Array, rng = null, opts: Dictionary = {}) -> Dictionary:
 	if not COMPETITIONS.has(competition):

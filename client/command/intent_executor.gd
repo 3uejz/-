@@ -300,6 +300,8 @@ func _dispatch(intent) -> Dictionary:
 		# 知识产权与媒体（D25）
 		"登记知识产权":
 			return _register_ip(intent)
+		"职务发明":
+			return _company_file_ip(intent)
 		"知识产权授权":
 			return _license_ip(intent)
 		"知识产权转让":
@@ -452,6 +454,8 @@ func _dispatch(intent) -> Dictionary:
 			return _sports_retire(intent)
 		"国家队征召":
 			return _sports_national(intent)
+		"国家队集训":
+			return _sports_national_camp(intent)
 		"国际赛事":
 			return _sports_tournament(intent)
 		"球迷冲突":
@@ -654,6 +658,8 @@ func _dispatch(intent) -> Dictionary:
 			return _crime_trial(intent)
 		"自首":
 			return _crime_surrender(intent)
+		"刑事上诉":
+			return _crime_appeal(intent)
 		"潜逃":
 			return _crime_flee(intent)
 		"化名":
@@ -2014,6 +2020,16 @@ func _register_ip(intent) -> Dictionary:
 	var ip: Dictionary = r.get("ip", {})
 	return _ok(["你登记了%s「%s」，登记费 %d。" % [_ip_type_name(ip_type), String(ip.get("title", "")), int(r.get("fee", 0))]], 0, "")
 
+func _company_file_ip(intent) -> Dictionary:
+	var ip_type := _object_id(intent, "ip_type")
+	if ip_type.is_empty():
+		return _fail("未指定知识产权类型；可选版权、专利、商标或商业秘密。")
+	var r: Dictionary = host.company_file_ip(ip_type)
+	if not bool(r.get("ok", false)):
+		return _fail("无法办理职务发明（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var ip: Dictionary = r.get("ip", {})
+	return _ok(["公司登记职务发明%s「%s」，费用 %d。" % [_ip_type_name(ip_type), String(ip.get("title", "")), int(r.get("fee", 0))]], 0, "")
+
 func _license_ip(intent) -> Dictionary:
 	var ip_id := _resolve_by_name("ip_asset", String(intent.params.get("method", "")))
 	if ip_id.is_empty():
@@ -2701,6 +2717,13 @@ func _sports_national(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法入选国家队（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你入选了%s国家队。" % nation], 0, "")
+
+func _sports_national_camp(intent) -> Dictionary:
+	var days: float = maxf(0.0, float(_param_number(intent, "number", 10)))
+	var r: Dictionary = host.sports_national_camp(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法参加国家队集训（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["国家队集训 %.0f 天，状态 %0.1f → %0.1f。" % [days, float(r.get("form_before", 0.0)), float(r.get("form", 0.0))]], 0, "")
 
 func _sports_tournament(intent) -> Dictionary:
 	var competition := _object_id(intent, "competition")
@@ -3480,6 +3503,14 @@ func _crime_trial(intent) -> Dictionary:
 		return _ok(["定罪：%s，判处 %d 日，罚金 %d，已入监。" % [String(r.get("name", "")), days, fine]], 0, "")
 	return _ok(["定罪：%s，罚金 %d，免予监禁。" % [String(r.get("name", "")), fine]], 0, "")
 
+
+func _crime_appeal(intent) -> Dictionary:
+	var r: Dictionary = host.crime_appeal()
+	if not bool(r.get("ok", false)):
+		return _fail("无法上诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("acquitted", false)):
+		return _ok(["二审改判无罪，罚金退还 %d。" % int(r.get("refund", 0))], 0, "")
+	return _ok(["二审维持原判。"], 0, "")
 
 func _crime_surrender(intent) -> Dictionary:
 	var r: Dictionary = host.crime_self_surrender()
