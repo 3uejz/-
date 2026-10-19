@@ -7553,6 +7553,20 @@ func content_register_ip() -> Dictionary:
 	var r: Dictionary = content_industry.register_ip(_content_studio, _content_work, {"id": "ip.%s" % String(_content_work.get("id", "w"))})
 	if bool(r.get("ok", false)):
 		_content_ip_id = String((r["ip"] as Dictionary).get("id", ""))
+		# 与 D25 知识产权系统互通：作品版权同步登记为可授权、可维权资产。
+		var legal_id: String = "ip.media.%s" % _content_ip_id
+		var existing: bool = false
+		for item in _ips:
+			if String((item as Dictionary).get("id", "")) == legal_id:
+				existing = true
+				break
+		if not existing:
+			var legal: Dictionary = ip_media.register_ip("copyright", "player", String(_content_work.get("title", "")), {
+				"id": legal_id, "created_minute": now_minutes(), "evidence": 0.8})
+			if bool(legal.get("ok", false)):
+				_ips.append(legal["ip"])
+				(r["ip"] as Dictionary)["legal_ip_id"] = legal_id
+				_persist_ip_media()
 	_persist_content()
 	return r
 

@@ -1966,7 +1966,9 @@ func _test_content_industry_runtime() -> void:
 	check(bool(host.content_release().get("ok", false)), "作品发行")
 	check(bool(host.content_monetize("platform_share").get("ok", false)), "平台分成")
 	# IP 运营。
-	check(bool(host.content_register_ip().get("ok", false)), "登记版权")
+	var ipr: Dictionary = host.content_register_ip()
+	check(bool(ipr.get("ok", false)), "登记版权")
+	check(String((ipr.get("ip", {}) as Dictionary).get("legal_ip_id", "")).begins_with("ip.media."), "作品版权同步登记知识产权")
 	check(bool(host.content_adapt("anime").get("ok", false)), "IP 改编")
 	check(bool(host.content_operate_ip("merchandise", 1000000.0).get("ok", false)), "IP 运营")
 	# 风险。
