@@ -4101,6 +4101,61 @@ func emergency_new_incident(type: String, severity: float = 0.5) -> Dictionary:
 	_persist_emergency()
 	return {"ok": true, "incident": _incident}
 
+## 天气灾害接警：读取当前区域当日灾害，生成应急事件并结算设施损毁与人身伤害。
+func emergency_weather_disaster() -> Dictionary:
+	var rid: String = current_region_id()
+	if rid == "" or weather == null:
+		return {"ok": false, "reason": "no_disaster"}
+	var day: int = WeatherScript.day_of_minute(now_minutes())
+	var events: Array = weather.disasters_on(rid, day)
+	if events.is_empty():
+		return {"ok": false, "reason": "no_disaster"}
+	if not _incident.is_empty() and int(_incident.get("disaster_day", -1)) == day:
+		return {"ok": false, "reason": "already_reported"}
+	var ev: Dictionary = events[0]
+	var key: String = String(ev.get("key", ""))
+	var name: String = String(ev.get("name", key))
+	var prof_map: Dictionary = {
+		"earthquake": "earthquake_rescue", "flood": "flood_rescue", "tsunami": "flood_rescue",
+		"typhoon": "fire", "wildfire": "fire", "mudslide": "mountain_rescue",
+		"drought": "flood_rescue", "blizzard": "mountain_rescue",
+		"hailstorm": "fire", "locust": "flood_rescue",
+	}
+	var sev_map: Dictionary = {
+		"earthquake": 0.9, "tsunami": 0.85, "flood": 0.7, "typhoon": 0.8,
+		"wildfire": 0.65, "mudslide": 0.7, "drought": 0.5, "blizzard": 0.65,
+		"hailstorm": 0.45, "locust": 0.4,
+	}
+	var prof: String = String(prof_map.get(key, "fire"))
+	var severity: float = float(sev_map.get(key, 0.5))
+	var base: Dictionary = emergency_new_incident(prof, severity)
+	if not bool(base.get("ok", false)):
+		return base
+	_incident["disaster"] = key
+	_incident["disaster_name"] = name
+	_incident["disaster_day"] = day
+	_incident["at_risk"] = int(round(120.0 + severity * 280.0))
+	_incident["trapped"] = int(round(20.0 + severity * 60.0))
+	var fac_types: Dictionary = {
+		"earthquake": ["road", "bridge", "sewage", "lighting"],
+		"flood": ["road", "bridge", "sewage", "sanitation"],
+		"tsunami": ["road", "bridge", "sewage", "sanitation"],
+		"typhoon": ["road", "bridge", "lighting", "park"],
+		"wildfire": ["park", "sanitation", "lighting"],
+		"mudslide": ["road", "bridge"],
+		"drought": ["park", "sanitation"],
+		"blizzard": ["road", "bridge", "lighting", "park"],
+		"hailstorm": ["road", "bridge", "park"],
+		"locust": ["park", "sanitation"],
+	}
+	var damage: Dictionary = municipal.damage_facilities(_city_municipal, severity, {"types": fac_types.get(key, ["road", "bridge"])})
+	var injury: float = clampf(round(severity * 6.0 + 1.0), 1.0, 8.0)
+	_damage_health(injury)
+	_persist_municipal()
+	_incident["applied"] = {"injury": injury, "facility_losses": damage.get("losses", {})}
+	_persist_emergency()
+	return {"ok": true, "incident": _incident, "disaster": key, "disaster_name": name, "injury": injury, "facility_losses": damage.get("losses", {})}
+
 func emergency_dispatch(distance_km: float = 5.0) -> Dictionary:
 	if _incident.is_empty():
 		return {"ok": false, "reason": "no_incident"}
@@ -4187,6 +4242,7 @@ func emergency_panel_data() -> Dictionary:
 		var tri: Dictionary = _incident.get("triage", {})
 		out["incident"] = {
 			"type": String((emergency.profession_def(String(_incident.get("type", ""))) as Dictionary).get("name", _incident.get("type", ""))),
+			"disaster_name": String(_incident.get("disaster_name", "")),
 			"stage": String(emergency.STAGE_NAMES.get(String(_incident.get("stage", "")), _incident.get("stage", ""))),
 			"severity": float(_incident.get("severity", 0.0)),
 			"at_risk": int(_incident.get("at_risk", 0)),
@@ -4264,12 +4320,28 @@ func env_carbon_account() -> Dictionary:
 	return {"ok": true, "balance": environment_sys.carbon_balance(_env_enterprise), "footprint": footprint, "esg": esg}
 
 func env_carbon_trade(credits: float) -> Dictionary:
+	var price: int = int(_env_enterprise.get("carbon_price", 100))
+	var cash: int = int(round(credits * float(price)))
+	if cash > 0 and int(economy.cash(account_id())) < cash:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cash}
 	var r: Dictionary = environment_sys.carbon_trade(_env_enterprise, credits)
+	if bool(r.get("ok", false)) and cash != 0:
+		economy.add_money(account_id(), -cash, "carbon_trade")
+		r["paid"] = cash
 	_persist_environment()
 	return r
 
 func env_carbon_compliance(mode: String) -> Dictionary:
+	var balance: float = environment_sys.carbon_balance(_env_enterprise)
+	var cost: int = 0
+	if balance > 0.0 and mode != "fine":
+		cost = int(round(balance * float(_env_enterprise.get("carbon_price", 100))))
+		if int(economy.cash(account_id())) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
 	var r: Dictionary = environment_sys.compliance(_env_enterprise, {"mode": mode})
+	cost = int(r.get("cost", 0))
+	if bool(r.get("ok", false)) and cost > 0:
+		economy.add_money(account_id(), -cost, "carbon_compliance")
 	_persist_environment()
 	return r
 
@@ -4307,6 +4379,11 @@ func env_expose_pollution() -> Dictionary:
 
 func env_lawsuit() -> Dictionary:
 	var r: Dictionary = environment_sys.environmental_lawsuit(_city_env)
+	if bool(r.get("ok", false)) and bool(r.get("liable", false)):
+		var compensation: int = int(r.get("compensation", 0))
+		if compensation > 0:
+			economy.add_money(account_id(), -compensation, "environment_lawsuit")
+			r["paid"] = compensation
 	_persist_environment()
 	return r
 
@@ -4318,12 +4395,23 @@ func env_green_subsidy(amount: int) -> Dictionary:
 	return r
 
 func env_low_carbon_transition(investment: int) -> Dictionary:
+	if investment <= 0:
+		return {"ok": false, "reason": "bad_amount"}
+	if int(economy.cash(account_id())) < investment:
+		return {"ok": false, "reason": "insufficient_funds", "cost": investment}
 	var r: Dictionary = environment_sys.low_carbon_transition(_env_enterprise, investment)
+	if bool(r.get("ok", false)):
+		economy.add_money(account_id(), -investment, "low_carbon_transition")
 	_persist_environment()
 	return r
 
 func env_illegal_discharge(amount: float) -> Dictionary:
+	var before: int = int(_env_enterprise.get("fines", 0))
 	var r: Dictionary = environment_sys.illegal_discharge(_env_enterprise, amount, {"roll": -1.0}, rng)
+	var fine: int = maxi(0, int(_env_enterprise.get("fines", 0)) - before)
+	if bool(r.get("ok", false)) and fine > 0:
+		economy.add_money(account_id(), -fine, "illegal_discharge_fine")
+		r["fine_paid"] = fine
 	_persist_environment()
 	return r
 

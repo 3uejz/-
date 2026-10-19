@@ -514,6 +514,8 @@ func _dispatch(intent) -> Dictionary:
 			return _security_resolve(intent)
 		"接警":
 			return _emergency_new(intent)
+		"天气灾害":
+			return _emergency_weather(intent)
 		"出警":
 			return _emergency_dispatch(intent)
 		"现场救援":
@@ -2939,6 +2941,13 @@ func _emergency_new(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法接警（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["已接警并建立事件档案。"], 0, "")
+
+func _emergency_weather(intent) -> Dictionary:
+	var r: Dictionary = host.emergency_weather_disaster()
+	if not bool(r.get("ok", false)):
+		return _fail("无法建立天气灾害事件（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var losses: Dictionary = r.get("facility_losses", {})
+	return _ok(["%s灾害事件已建立，人身伤害 %.0f，设施受损 %d 类。" % [String(r.get("disaster_name", "")), float(r.get("injury", 0.0)), losses.size()]], 0, "")
 
 func _emergency_dispatch(intent) -> Dictionary:
 	var distance: float = float(_param_number(intent, "number", 5))
@@ -5475,6 +5484,10 @@ func _reason_cn(reason: String) -> String:
 			return "案件已终结"
 		"no_incident":
 			return "当前无处置中的应急事件"
+		"no_disaster":
+			return "当前区域今日无天气灾害"
+		"already_reported":
+			return "今日灾害已接警"
 		"no_org":
 			return "尚未组建志愿救援队"
 		"already_org":

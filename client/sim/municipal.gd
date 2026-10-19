@@ -183,6 +183,23 @@ func age_facilities(city: Dictionary, years: float) -> Dictionary:
 	return {"ok": true, "neglected_parks": inspect_parks(city)}
 
 
+## 灾害损毁：按严重度削减指定设施健康度，返回各类设施损失。
+func damage_facilities(city: Dictionary, severity: float, opts: Dictionary = {}) -> Dictionary:
+	var sev: float = clampf(severity, 0.0, 1.0)
+	var types: Array = opts.get("types", FACILITY_TYPES)
+	var factor: float = maxf(0.0, float(opts.get("factor", 0.12)))
+	var losses: Dictionary = {}
+	var facilities: Dictionary = city.get("facilities", {})
+	for t in types:
+		if not facilities.has(String(t)):
+			continue
+		var f: Dictionary = facilities[String(t)]
+		var loss: float = sev * factor * (1.5 if String(t) == "bridge" else 1.0)
+		f["condition"] = clampf(float(f.get("condition", 0.0)) - loss, 0.0, 1.0)
+		losses[String(t)] = loss
+	city["nuisance"] = clampf(float(city.get("nuisance", 0.0)) + sev * 0.05, 0.0, 1.0)
+	return {"ok": true, "severity": sev, "losses": losses}
+
 ## 巡检公园：长期未养护且健康度低于阈值的公园判定为维护缺位。
 func inspect_parks(city: Dictionary) -> Array:
 	var out: Array = []

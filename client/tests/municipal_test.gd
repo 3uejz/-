@@ -13,6 +13,7 @@ func _suite_name() -> String:
 func run_tests() -> void:
 	_test_tables()
 	_test_facility_and_maintenance()
+	_test_facility_damage()
 	_test_construction_and_commute()
 	_test_boundaries()
 	_test_postal_delivery_and_claim()
@@ -43,6 +44,17 @@ func _test_facility_and_maintenance() -> void:
 	sys.age_facilities(city, 5.0)
 	check(sys.facility_condition(city, "road") < before, "老化降低健康度")
 	check(not bool(sys.maintain_facility(city, "bogus", 1000)["ok"]), "未知设施被拒")
+
+
+func _test_facility_damage() -> void:
+	var sys = MunicipalScript.new()
+	var city: Dictionary = sys.new_city(500000)
+	var before: float = sys.facility_condition(city, "bridge")
+	var d: Dictionary = sys.damage_facilities(city, 0.5, {"types": ["road", "bridge"]})
+	check(bool(d["ok"]), "灾损结算成功")
+	check(sys.facility_condition(city, "bridge") < before, "灾损降低桥梁健康度")
+	check((d["losses"] as Dictionary).has("road"), "灾损记录道路损失")
+	check(sys.facility_condition(city, "bridge") >= 0.0, "设施健康度不低于零")
 
 
 func _test_construction_and_commute() -> void:

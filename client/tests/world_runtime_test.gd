@@ -1352,6 +1352,25 @@ func _test_emergency_runtime() -> void:
 	check(bool(host.volunteer_recruit(10).get("ok", false)), "招募志愿者成功")
 	check(bool(host.volunteer_purchase("救援装备", 100).get("ok", false)), "采购装备成功")
 	check(bool(host.volunteer_dispatch_incident().get("ok", false)), "志愿出警成功")
+	# 天气灾害：找到当前区域未来确有灾害的一日，触发 D19→D36/D18/D1 联动。
+	var rid: String = host.current_region_id()
+	if not host.weather.has_region(rid):
+		host.weather.register_region(rid, host._zone_for_region(rid))
+	var disaster_day: int = -1
+	for d in range(1, 100000):
+		if not host.weather.disasters_on(rid, d).is_empty():
+			disaster_day = d
+			break
+	check(disaster_day > 0, "未来存在天气灾害日")
+	if disaster_day > 0:
+		state.clock["absolute_minutes"] = disaster_day * 1440 + 720
+		var road_before: float = host.municipal.facility_condition(host._city_municipal, "road")
+		var health_before: float = float(host.player().get("attrs", {}).get("physiological", {}).get("health", 100.0))
+		var wd: Dictionary = host.emergency_weather_disaster()
+		check(bool(wd.get("ok", false)), "天气灾害接警成功")
+		check(String(host._incident.get("disaster", "")) != "", "事件记录灾种")
+		check(host.municipal.facility_condition(host._city_municipal, "road") < road_before, "灾害损毁市政设施")
+		check(float(host.player().get("attrs", {}).get("physiological", {}).get("health", 100.0)) < health_before, "灾害造成人身伤害")
 	# 持久化与读档恢复。
 	host._persist_emergency()
 	check(state.sim_runtime.get("emergency", null) is Dictionary, "应急运行态写入 sim_runtime")
@@ -1366,6 +1385,7 @@ func _test_environment_runtime() -> void:
 	state.new_game(111)
 	var host = SimHostScript.new(state, 111)
 	host.bind(state)
+	host.economy.add_money(host.account_id(), 5000000, "test")
 	check(host.environment_careers_catalog().size() >= 4, "环保职业表含环保企业/NGO等")
 	check(bool(host.env_set_garbage_sorting(0.8).get("ok", false)), "设定垃圾分类率")
 	check(float(host.env_recycle(1000.0).get("recovered", 0.0)) > 0.0, "回收资源有产出")
@@ -1374,22 +1394,31 @@ func _test_environment_runtime() -> void:
 	check(bool(host.env_issue_permit("factory", 200.0).get("ok", false)), "发放排污许可")
 	var acct: Dictionary = host.env_carbon_account()
 	check(bool(acct.get("ok", false)), "碳核算完成")
+	var cash_before: int = int(host.economy.cash(host.account_id()))
 	check(bool(host.env_carbon_trade(-50.0).get("ok", false)), "碳交易完成")
+	check_eq(int(host.economy.cash(host.account_id())), cash_before + 5000, "碳信用卖出资金入账")
 	var comp: Dictionary = host.env_carbon_compliance("buy")
 	check(bool(comp.get("ok", false)) and bool(comp.get("compliant", false)), "碳履约合规")
+	check_eq(int(host.economy.cash(host.account_id())), cash_before, "碳履约购配额扣款")
 	check(bool(host.env_report_carbon(100.0).get("ok", false)), "碳申报完成")
 	# 环保从业组织。
 	check(bool(host.start_env_org("env_company").get("ok", false)), "开办环保企业成功")
 	check(bool(host.start_env_org("env_ngo").get("reason", "") == "already_org"), "重复开办被拒")
 	check(bool(host.env_run_project("污水厂", 1000000).get("ok", false)), "承接环保项目成功")
 	check(bool(host.env_green_subsidy(100000).get("ok", false)), "申请绿色补贴完成")
+	var cash_green: int = int(host.economy.cash(host.account_id()))
 	check(bool(host.env_low_carbon_transition(1000000).get("ok", false)), "低碳转型完成")
+	check_eq(int(host.economy.cash(host.account_id())), cash_green - 1000000, "低碳转型投入扣款")
 	check(bool(host.env_illegal_discharge(20.0).get("ok", false)), "偷排结算完成")
 	check(bool(host.env_nimby(0.5).get("ok", false)), "邻避评估完成")
 	# 污染与诉讼。
 	check(bool(host.env_pollute(0.8).get("ok", false)), "污染事件结算")
 	check(bool(host.env_expose_pollution().get("ok", false)), "污染曝光结算")
-	check(bool(host.env_lawsuit().get("ok", false)), "环境诉讼完成")
+	var cash_suit: int = int(host.economy.cash(host.account_id()))
+	var suit: Dictionary = host.env_lawsuit()
+	check(bool(suit.get("ok", false)), "环境诉讼完成")
+	if bool(suit.get("liable", false)):
+		check_eq(int(host.economy.cash(host.account_id())), cash_suit - int(suit.get("compensation", 0)), "环境赔偿扣款")
 	# 持久化与读档恢复。
 	host._persist_environment()
 	check(state.sim_runtime.get("environment", null) is Dictionary, "环保运行态写入 sim_runtime")

@@ -1126,12 +1126,16 @@ static func rescue(player: Dictionary, context: Dictionary, name_resolver: Calla
 		var rows: Array = [
 			{"label": "类型", "value": String(ei.get("type", ""))},
 			{"label": "阶段", "value": String(ei.get("stage", ""))},
+		]
+		if String(ei.get("disaster_name", "")) != "":
+			rows.append({"label": "灾种", "value": String(ei.get("disaster_name", ""))})
+		rows.append_array([
 			{"label": "严重度", "value": "%.2f" % float(ei.get("severity", 0.0))},
 			{"label": "响应时间", "value": "%.1f 分钟" % float(ei.get("response_minutes", -1.0))},
 			{"label": "需救治", "value": str(int(ei.get("injured", 0)))},
 			{"label": "死亡", "value": str(int(ei.get("deaths", 0)))},
 			{"label": "获救", "value": str(int(ei.get("rescued", 0)))},
-		]
+		])
 		if String(ei.get("fault", "")) != "":
 			rows.append({"label": "责任认定", "value": String(ei.get("fault", ""))})
 		if float(ei.get("stress_added", 0.0)) > 0.0:
