@@ -2917,6 +2917,11 @@ func _persist_mining() -> void:
 func _mfg_tick(before_minutes: int, after_minutes: int) -> void:
 	if _factory.is_empty():
 		return
+	var outage_until: int = int(_factory.get("power_outage_until", 0))
+	if outage_until > 0 and after_minutes >= outage_until:
+		_factory["power_outage_until"] = 0
+		manufacturing.set_disruption(_factory, "power_outage", false)
+		_persist_manufacturing()
 	var months: int = _month_ordinal(after_minutes) - _month_ordinal(before_minutes)
 	if months <= 0:
 		return
@@ -3003,6 +3008,20 @@ func reforest(amount: float) -> Dictionary:
 	if _forest.is_empty():
 		return {"ok": false, "reason": "no_forest"}
 	var r: Dictionary = primary_industry.reforest(_forest, maxf(0.0, amount))
+	_persist_primary()
+	return r
+
+## 林业碳汇：核证林分碳汇并售出，收益入玩家现金。
+func forest_carbon_sink(years: float = 1.0, price: int = 100) -> Dictionary:
+	if _forest.is_empty():
+		return {"ok": false, "reason": "no_forest"}
+	var before_money: int = int(_forest.get("money", 0))
+	var r: Dictionary = primary_industry.carbon_sink(_forest, price, {"years": maxf(0.0, years)})
+	var revenue: int = int(r.get("revenue", 0))
+	_forest["money"] = before_money
+	if revenue > 0:
+		economy.add_money(account_id(), revenue, "forest_carbon")
+	r["paid"] = revenue
 	_persist_primary()
 	return r
 
@@ -3733,6 +3752,15 @@ func events_hold() -> Dictionary:
 	if not bool(_event.get("approved", false)):
 		return {"ok": false, "reason": "not_approved"}
 	var r: Dictionary = events_expo.hold_event(_event, 0.1)
+	var attendance: int = int(r.get("attendance", 0))
+	if bool(r.get("ok", false)) and attendance > 0 and not _city_municipal.is_empty():
+		var complaint: Dictionary = municipal.report_nuisance(_city_municipal, {
+			"source": "large_event",
+			"severity": clampf(float(attendance) / 50000.0, 0.1, 0.8),
+			"day": WeatherScript.day_of_minute(now_minutes()),
+		})
+		_persist_municipal()
+		r["nuisance"] = complaint.get("severity", 0.0)
 	_persist_events()
 	return r
 
@@ -3741,6 +3769,10 @@ func events_review() -> Dictionary:
 	if _event.is_empty():
 		return {"ok": false, "reason": "no_event"}
 	var r: Dictionary = events_expo.after_action_review(_event)
+	var profit: int = int(r.get("profit", 0))
+	if profit != 0:
+		economy.add_money(account_id(), profit, "event_review")
+	r["settled"] = profit
 	if not _planner.is_empty():
 		var cp: Dictionary = events_expo.career_progress(_planner, r)
 		r["planner"] = cp
@@ -4152,9 +4184,16 @@ func emergency_weather_disaster() -> Dictionary:
 	var injury: float = clampf(round(severity * 6.0 + 1.0), 1.0, 8.0)
 	_damage_health(injury)
 	_persist_municipal()
-	_incident["applied"] = {"injury": injury, "facility_losses": damage.get("losses", {})}
+	var outage: bool = false
+	var outage_types: Array = ["earthquake", "flood", "tsunami", "typhoon", "blizzard", "hailstorm", "mudslide"]
+	if not _factory.is_empty() and key in outage_types and severity >= 0.5:
+		manufacturing.set_disruption(_factory, "power_outage", true)
+		_factory["power_outage_until"] = now_minutes() + 2880
+		_persist_manufacturing()
+		outage = true
+	_incident["applied"] = {"injury": injury, "facility_losses": damage.get("losses", {}), "power_outage": outage}
 	_persist_emergency()
-	return {"ok": true, "incident": _incident, "disaster": key, "disaster_name": name, "injury": injury, "facility_losses": damage.get("losses", {})}
+	return {"ok": true, "incident": _incident, "disaster": key, "disaster_name": name, "injury": injury, "facility_losses": damage.get("losses", {}), "power_outage": outage}
 
 func emergency_dispatch(distance_km: float = 5.0) -> Dictionary:
 	if _incident.is_empty():
@@ -6796,7 +6835,29 @@ func medtech_counterfeit(scale: float = 0.5) -> Dictionary:
 	return r
 
 func medtech_dispute(severity: float = 0.5) -> Dictionary:
-	return medtech.doctor_patient_dispute(severity)
+	var r: Dictionary = medtech.doctor_patient_dispute(severity)
+	if not bool(r.get("litigation", false)):
+		return r
+	if not (_civil.get("claim", {}) as Dictionary).is_empty():
+		r["civil_filed"] = false
+		r["reason"] = "existing_claim"
+		return r
+	var amount: int = maxi(0, int(r.get("compensation", 0)))
+	var claim: Dictionary = civil_sys.new_claim("tort", amount, "player", "hospital")
+	claim["type_name"] = "医疗纠纷"
+	claim["title"] = "医患损害赔偿"
+	claim["evidence"] = 0.6
+	_civil = {"claim": claim, "judgment": {}, "enforced": false, "appealed": false}
+	var cid: String = "civil:%d:%d" % [now_minutes(), domain_wake.entry_count()]
+	var due: int = now_minutes() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
+	domain_register(cid, DomainWakeScript.KIND_CASE, {
+		"region_id": current_region_id(), "due_minute": due, "total": due - now_minutes(), "civil_id": cid,
+	})
+	_persist_civil()
+	r["civil_filed"] = true
+	r["case_id"] = cid
+	r["amount"] = amount
+	return r
 
 func medtech_over_treatment(cost: int = 100000) -> Dictionary:
 	return medtech.over_treatment(cost)

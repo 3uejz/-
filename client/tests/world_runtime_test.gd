@@ -1149,6 +1149,10 @@ func _test_primary_runtime() -> void:
 	var log_r: Dictionary = host.log_trees(100.0)
 	check(bool(log_r.get("ok", false)) and float(log_r.get("timber", 0.0)) > 0.0, "采伐产出木材")
 	check(bool(host.reforest(50.0).get("ok", false)), "造林成功")
+	var cash_carbon: int = int(host.economy.cash(host.account_id()))
+	var sink: Dictionary = host.forest_carbon_sink(1.0)
+	check(bool(sink.get("ok", false)) and float(sink.get("credits", 0.0)) > 0.0, "林业碳汇核证")
+	check(int(host.economy.cash(host.account_id())) > cash_carbon, "碳汇收入入账")
 	# 狩猎。
 	check(bool(host.apply_hunting_license().get("ok", false)), "申请狩猎许可成功")
 	var hunt_r: Dictionary = host.hunt("deer", 1.0)
@@ -1258,10 +1262,13 @@ func _test_events_runtime() -> void:
 	check(bool(host.events_sponsor("title").get("ok", false)), "招商成功")
 	check(int(host.events_sell_tickets(5000).get("revenue", 0)) > 0, "售票取得收入")
 	check(bool(host.events_set_security(0.8).get("ok", false)), "配置安保成功")
+	var cash_before_event: int = int(host.economy.cash(host.account_id()))
 	var hold: Dictionary = host.events_hold()
 	check(bool(hold.get("ok", false)) and int(hold.get("attendance", 0)) == 5000, "举办活动到场 5000")
+	check(float(hold.get("nuisance", 0.0)) > 0.0, "大型活动计入市政扰动")
 	var rv: Dictionary = host.events_review()
 	check(bool(rv.get("ok", false)), "活动复盘成功")
+	check(int(host.economy.cash(host.account_id())) != cash_before_event, "活动净利回写现金")
 	check(bool((rv.get("planner", {}) as Dictionary).get("ok", false)), "策划职业累计经验")
 	# 持久化与读档恢复。
 	host._persist_events()
@@ -1353,6 +1360,7 @@ func _test_emergency_runtime() -> void:
 	check(bool(host.volunteer_purchase("救援装备", 100).get("ok", false)), "采购装备成功")
 	check(bool(host.volunteer_dispatch_incident().get("ok", false)), "志愿出警成功")
 	# 天气灾害：找到当前区域未来确有灾害的一日，触发 D19→D36/D18/D1 联动。
+	check(bool(host.found_factory("own_factory").get("ok", false)), "灾害前已办厂")
 	var rid: String = host.current_region_id()
 	if not host.weather.has_region(rid):
 		host.weather.register_region(rid, host._zone_for_region(rid))
@@ -1371,6 +1379,10 @@ func _test_emergency_runtime() -> void:
 		check(String(host._incident.get("disaster", "")) != "", "事件记录灾种")
 		check(host.municipal.facility_condition(host._city_municipal, "road") < road_before, "灾害损毁市政设施")
 		check(float(host.player().get("attrs", {}).get("physiological", {}).get("health", 100.0)) < health_before, "灾害造成人身伤害")
+		if bool(wd.get("power_outage", false)):
+			check(host.manufacturing.has_disruption(host._factory, "power_outage"), "灾害导致工厂停电停产")
+			_advance_alive(host, 3)
+			check(not host.manufacturing.has_disruption(host._factory, "power_outage"), "停电在 2 天后恢复")
 	# 持久化与读档恢复。
 	host._persist_emergency()
 	check(state.sim_runtime.get("emergency", null) is Dictionary, "应急运行态写入 sim_runtime")
@@ -1790,6 +1802,13 @@ func _test_medical_runtime() -> void:
 	check(host.medtech_over_treatment(100000).has("excess_cost"), "过度医疗结算")
 	check(host.medtech_insurance_fraud(100000).has("detected"), "医保欺诈结算")
 	check(bool(host.medtech_trial_scandal("药A").get("ok", false)), "试验丑闻结算")
+	# 医患纠纷：达到诉讼阈值即进入民事侵权案件。
+	host._civil = {}
+	var disp: Dictionary = host.medtech_dispute(0.9)
+	check(bool(disp.get("litigation", false)), "医患纠纷达到诉讼阈值")
+	check(bool(disp.get("civil_filed", false)), "医患纠纷自动立案")
+	check_eq(String((host._civil.get("claim", {}) as Dictionary).get("type_name", "")), "医疗纠纷", "民事案件类型为医疗纠纷")
+	check(bool(state.sim_runtime.get("civil", {}).get("claim", {}).has("title")), "医患诉讼写入 sim_runtime.civil")
 	# 持久化与读档恢复。
 	host._persist_medical()
 	check(state.sim_runtime.get("medical", null) is Dictionary, "医疗运行态写入 sim_runtime")

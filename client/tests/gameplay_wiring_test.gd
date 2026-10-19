@@ -827,6 +827,7 @@ func _test_medical_commands() -> void:
 	_main.submit("医药代表 药A 20")
 	_main.submit("假药查缉 50")
 	_main.submit("医疗纠纷 50")
+	check(not (sim._civil.get("claim", {}) as Dictionary).is_empty(), "「医疗纠纷」自动立民事案件")
 	_main.submit("过度医疗 100000")
 	_main.submit("医疗保险欺诈 100000")
 	_main.submit("试验丑闻 药A")

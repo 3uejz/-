@@ -392,6 +392,8 @@ func _dispatch(intent) -> Dictionary:
 			return _log_trees(intent)
 		"造林":
 			return _reforest(intent)
+		"林业碳汇":
+			return _forest_carbon(intent)
 		"申请狩猎许可":
 			return _apply_hunting_license(intent)
 		"狩猎":
@@ -2446,6 +2448,13 @@ func _reforest(intent) -> Dictionary:
 		return _fail("无法造林（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["补植林木，现有 %.0f 株。" % float(r.get("trees", 0.0))], 0, "")
 
+func _forest_carbon(intent) -> Dictionary:
+	var years: float = maxf(0.0, float(_param_number(intent, "number", 1)))
+	var r: Dictionary = host.forest_carbon_sink(years)
+	if not bool(r.get("ok", false)):
+		return _fail("无法核证林业碳汇（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["核证碳汇 %.1f 吨，售出收入 %d。" % [float(r.get("credits", 0.0)), int(r.get("paid", 0))]], 0, "")
+
 func _apply_hunting_license(intent) -> Dictionary:
 	var r: Dictionary = host.apply_hunting_license()
 	if not bool(r.get("ok", false)):
@@ -4480,7 +4489,14 @@ func _medical_counterfeit(intent) -> Dictionary:
 func _medical_dispute(intent) -> Dictionary:
 	var severity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.0, 1.0)
 	var r: Dictionary = host.medtech_dispute(severity)
-	return _ok(["医患纠纷等级 %d%%，%s。" % [int(round(float(r.get("conflict_level", 0.0)) * 100.0)), "已进入诉讼" if bool(r.get("litigation", false)) else "协商处理"]], 0, "")
+	var line := "医患纠纷等级 %d%%。" % int(round(float(r.get("conflict_level", 0.0)) * 100.0))
+	if bool(r.get("civil_filed", false)):
+		line += " 已立案，标的 %d。" % int(r.get("amount", 0))
+	elif bool(r.get("litigation", false)):
+		line += " 已进入诉讼，但当前已有在审民事案件。"
+	else:
+		line += " 协商处理。"
+	return _ok([line], 0, "")
 
 func _medical_over(intent) -> Dictionary:
 	var cost: int = int(_param_number(intent, "number", 100000))
