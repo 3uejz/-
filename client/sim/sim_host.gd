@@ -7169,6 +7169,12 @@ func anomaly_accept_mission(mission_id: String, faction: String) -> Dictionary:
 
 func anomaly_complete_mission(mission_id: String, success: bool = true) -> Dictionary:
 	var r: Dictionary = anomaly.complete_mission(_anomaly_state, mission_id, {"success": success})
+	# 与传承系统联动：成功任务写入家族史，供跨代叙事回放。
+	if bool(r.get("ok", false)) and success and state != null:
+		var hist: Array = state.legacy.get("history", [])
+		hist.append({"kind": "anomaly_mission", "mission_id": mission_id,
+			"faction": String(_anomaly_state.get("faction", "")), "minute": now_minutes()})
+		state.legacy["history"] = hist
 	_persist_anomaly()
 	return r
 
