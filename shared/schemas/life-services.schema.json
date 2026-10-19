@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/life-services.schema.json",
+  "title": "LifeServices",
+  "description": "家庭与生活服务业运行态：服务者与服务单（D49）。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "provider": { "$ref": "#/$defs/provider" },
+    "order": { "$ref": "#/$defs/order" }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "trust": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rating": { "type": "number", "minimum": 0, "maximum": 1 },
+        "flagged": { "type": "boolean" },
+        "orders": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "order": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "service": { "type": "string" },
+        "price": { "type": "integer", "minimum": 0 },
+        "status": { "type": "string" },
+        "accident": { "type": "boolean" },
+        "incident": { "type": "boolean" }
+      }
+    }
+  }
+}

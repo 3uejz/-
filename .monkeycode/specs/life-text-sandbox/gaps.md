@@ -186,23 +186,23 @@
 
 ### D46 文娱内容产业（已收敛）
 - 已接线：`sim/content_industry.gd` 创作（游戏/动漫/网文/影视/综艺/音乐六类、团队雇佣/裁撤与加权技能、进度与项目管理、完成结算质量）、发行与变现（平台分成/票务/订阅/广告/销量五渠道、平台抽成、口碑反馈）、IP 运营（登记/改编/周边/授权/版权交易/宇宙联动）、风险（抄袭检测/内容合规/下架处罚/翻车）、经营边界（融资轮次/爆款扑街/挖角/版号审查延误/粉丝饭圈）；`SimHost` 公开方法与 `_persist_content()`、20 条指令与「文娱」面板、`sim_runtime.content` 白名单、3 套接线测试齐备。
-- **残留待办**：作品/团队/发行的独立 schema（当前以 `sim_runtime.content` 内联字典承载）；作品版权登记已同步写入 D25 知识产权资产（`legal_ip_id`，可授权/质押/维权）；内容合规已联动 D25 平台审查动作，版权原因下架会调用版权下架；饭圈演化、翻车与下架会生成社交平台舆情动态（D10/D23 联动）。
+- **残留待办**：已补 `content-industry.schema.json`（工作室/作品/IP/饭圈），运行时仍以 `sim_runtime.content` 承载；作品版权登记已同步写入 D25 知识产权资产（`legal_ip_id`，可授权/质押/维权）；内容合规已联动 D25 平台审查动作，版权原因下架会调用版权下架；饭圈演化、翻车与下架会生成社交平台舆情动态（D10/D23 联动）。
 
 ### D47 建筑、工程与城市规划（已收敛）
 - 已接线：`sim/engineering.gd` 资质分级与承接（特级/一级/二级、规模与资本门槛、投标加成）、工程链条（勘察→设计→造价→施工→监理→验收，质量按阶段权重融合、不达标返工）、风险（事故风险对偷工/转包深度/资质缺口单调、事故损失与致死追责、偷工减料、挂靠转包判定）、招投标（评分加权定标、围标、腐败查处）、欠款与三角债（利息/停工、有序债权链传染）、城市规划（`rezone` 联动地价/交通/人口、交通工程、规划腐败、拆迁纠纷）、房地产（开发商/预售/施工/烂尾）；`SimHost` 公开 `eng_*()` 与 `_persist_engineering()`、20 条指令与「工程与基建」面板、`sim_runtime.engineering` 白名单、4 套接线测试齐备。
-- **残留待办**：工程/招投标/规划实体的独立 schema（当前以 `sim_runtime.engineering` 内联字典承载）；规划人口、地价、交通与可达性已回写所在区域快照；与 D50 交通基建的深接入仍为最小实现。
+- **残留待办**：已补 `engineering.schema.json`（承包商/工程/城市/开发商），运行时仍以 `sim_runtime.engineering` 承载；规划人口、地价、交通与可达性已回写所在区域快照；与 D50 交通基建的深接入仍为最小实现。
 
 ### D48 专业服务业（已收敛）
 - **已收敛**：`sim/professional_services.gd` `ProfessionalServicesSystem` 覆盖执业类型 8（必需资质/基准费用/风险度/审计独立性）、专业资质 cpa/cfa/lawyer（付费应试按技能与难度判定、通过抬升声誉、`gatekeep_capacity` 接单能力）、事务所在籍（`new_firm`/`add_partner`/`partner_split` 合伙人份额与客户随迁）、客户与项目（`client_acquisition`/`new_project`/`due_diligence`/`ma_advisory`）、执业风险（`false_report`/`insider_trading`/`commercial_bribery`/`independence_conflict`）、边界（`non_compete_violation`/`client_churn`）；`SimHost` 公开 `prof_*()` 与 `_persist_professional()`、14 条指令与「专业与生活服务」面板、`sim_runtime.professional` 白名单、4 套接线测试齐备。
-- **残留待办**：事务所/合伙人/客户/项目的独立 schema（当前以 `sim_runtime.professional` 内联字典承载）；并购顾问在未指定交易额时按玩家文娱工作室估值撮合；与 D9 区域权威的深接入仍为最小实现。
+- **残留待办**：已补 `professional-services.schema.json`（事务所/项目），运行时仍以 `sim_runtime.professional` 承载；并购顾问在未指定交易额时按玩家文娱工作室估值撮合；与 D9 区域权威的深接入仍为最小实现。
 
 ### D49 家庭与生活服务业（已收敛）
 - **已收敛**：`sim/life_services.gd` `LifeServicesSystem` 覆盖服务类别 8（平台抽成/固有风险）、服务者与信任（`new_provider`/`background_check` 背景标记与信任调整）、订单（`new_order`）、婚恋（`matchmaking` 候选择优、`wedding_plan` 品质与信任决定成本与事故）、家政（`housekeeping_order` 盗窃/失职）、宠物链（`pet_service_order` 寄养/美容/医疗/训练/殡葬）、风险与纠纷（`service_incident`/`resolve_dispute`）、平台（`platform_commission`/`standardization`）；`SimHost` 公开 `life_*()` 与 `_persist_life_services()`、12 条指令与「专业与生活服务」面板、`sim_runtime.life_services` 白名单、4 套接线测试齐备。
-- **残留待办**：服务者/订单/纠纷的独立 schema（当前以 `sim_runtime.life_services` 内联字典承载）；宠物服务已落到玩家实际宠物（寄养/美容/医疗/训练/殡葬改写情绪、健康、技能与存活）；与 D11 婚育、D9 区域权威的深接入仍为最小实现。
+- **残留待办**：已补 `life-services.schema.json`（服务者/服务单），运行时仍以 `sim_runtime.life_services` 承载；宠物服务已落到玩家实际宠物（寄养/美容/医疗/训练/殡葬改写情绪、健康、技能与存活）；婚礼已扣费并写入配偶家庭档案、提升亲密度；与 D9 区域权威的深接入仍为最小实现。
 
 ### D50 交通基建与航运（已收敛）
 - **已收敛**：`sim/transport_infra.gd` `TransportInfraSystem` 覆盖基建类型 7（基准成本/工期/运力/公益性）、建设（`new_infra_project` 规模缩放、`tender_infra` 加权定标、`build` 超支/延期/建成）、运营（`operate` 票价/需求/运力→盈亏与准点率）、区域影响（`regional_impact` 可达性/地价/GDP/人口、`network_effect` 换乘与物流）、结算与风险（`subsidy`/`settle`/`infra_accident`/`monopoly_regulation`/`international_disruption`）；`SimHost` 公开 `tin_*()` 与 `_persist_transport_infra()`、11 条指令与「交通基建」面板、`sim_runtime.transport_infra` 白名单、4 套接线测试齐备。
-- **残留待办**：基建项目/线路/网络的独立 schema（当前以 `sim_runtime.transport_infra` 内联字典承载）；区域影响已从所在区域初始化并回写人口、经济与可达性快照；与 D47 工程招投标的深接入仍为最小实现。
+- **残留待办**：已补 `transport-infra.schema.json`（项目/线路/区域影响），运行时仍以 `sim_runtime.transport_infra` 承载；区域影响已从所在区域初始化并回写人口、经济与可达性快照；与 D47 工程招投标的深接入仍为最小实现。
 
 ## 3. 修复路线（横切优先）
 

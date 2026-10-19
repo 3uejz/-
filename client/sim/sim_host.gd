@@ -8446,6 +8446,22 @@ func life_wedding(budget: int = 50000, quality: float = 0.6) -> Dictionary:
 	if _life_order.is_empty():
 		return {"ok": false, "reason": "no_order"}
 	var r: Dictionary = life_services.wedding_plan(_life_provider, _life_order, {"budget": maxi(0, budget), "quality": clampf(quality, 0.0, 1.0), "roll": -1.0}, rng)
+	if bool(r.get("ok", false)):
+		var cost: int = int(r.get("cost", 0))
+		if cost > 0:
+			economy.add_money(account_id(), -cost, "wedding")
+		# 与 D11 婚姻联动：婚礼记录写入 player.family，并增进配偶关系。
+		var p: Dictionary = player()
+		var fam: Dictionary = p.get("family", {})
+		if not String(fam.get("spouse_id", "")).is_empty():
+			fam["wedding"] = {"budget": maxi(0, budget), "cost": cost,
+				"quality": float(r.get("quality", 0.0)), "accident": bool(r.get("accident", false)),
+				"minute": now_minutes()}
+			p["family"] = fam
+			var rel: Dictionary = relations.ensure_relation(p, String(fam["spouse_id"]))
+			rel["favor"] = clampf(float(rel.get("favor", 0.0)) + 10.0, -100.0, 100.0)
+			rel["intimacy"] = clampf(float(rel.get("intimacy", 0.0)) + 8.0, 0.0, 100.0)
+			r["spouse_id"] = String(fam["spouse_id"])
 	_persist_life_services()
 	return r
 

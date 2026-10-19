@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/transport-infra.schema.json",
+  "title": "TransportInfra",
+  "description": "交通基建与航运运行态：项目、线路与区域影响（D50）。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "project": { "$ref": "#/$defs/project" },
+    "route": { "$ref": "#/$defs/route" },
+    "region": { "$ref": "#/$defs/region" }
+  },
+  "$defs": {
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "scale": { "type": "number", "minimum": 0 },
+        "region": { "type": "string" },
+        "cost_estimate": { "type": "number", "minimum": 0 },
+        "capacity": { "type": "number", "minimum": 0 },
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "status": { "type": "string" },
+        "subsidy": { "type": "integer" }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": { "type": "string" },
+        "fare": { "type": "number", "minimum": 0 },
+        "profit": { "type": "integer" },
+        "on_time_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "suspended": { "type": "boolean" }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "region": { "type": "string" },
+        "accessibility": { "type": "number", "minimum": 0, "maximum": 1 },
+        "land_price": { "type": "number", "minimum": 0 },
+        "gdp": { "type": "number", "minimum": 0 },
+        "population": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

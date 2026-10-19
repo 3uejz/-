@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/content-industry.schema.json",
+  "title": "ContentIndustry",
+  "description": "文娱内容产业运行态：工作室、在研作品、竞品与 IP（D46）。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "studio": { "$ref": "#/$defs/studio" },
+    "work": { "$ref": "#/$defs/work" },
+    "rival": { "$ref": "#/$defs/studio" },
+    "ip_id": { "type": "string" },
+    "seq": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "team_member": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "role": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 },
+        "skill": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "studio": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "money": { "type": "integer" },
+        "reputation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "team": { "type": "object", "additionalProperties": true },
+        "catalog": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "ip_library": { "type": "object", "additionalProperties": { "$ref": "#/$defs/ip" } },
+        "fandom": { "$ref": "#/$defs/fandom" },
+        "financing_stage": { "type": "string" }
+      }
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "progress": { "type": "number" },
+        "required": { "type": "number" },
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "revenue": { "type": "integer" },
+        "controversy": { "type": "number", "minimum": 0, "maximum": 1 },
+        "violations": { "type": "array", "items": { "type": "string" } },
+        "ip_id": { "type": "string" },
+        "takedown_reason": { "type": "string" }
+      }
+    },
+    "ip": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "source_work": { "type": "string" },
+        "type": { "type": "string" },
+        "power": { "type": "number", "minimum": 0, "maximum": 1 },
+        "adaptations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "licenses": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "universe": { "type": "string" },
+        "legal_ip_id": { "type": "string" }
+      }
+    },
+    "fandom": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "size": { "type": "integer", "minimum": 0 },
+        "loyalty": { "type": "number", "minimum": 0, "maximum": 1 },
+        "toxicity": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

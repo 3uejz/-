@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/engineering.schema.json",
+  "title": "Engineering",
+  "description": "建筑、工程与城市规划运行态：承包商、在建工程、城市与开发商（D47）。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "contractor": { "$ref": "#/$defs/contractor" },
+    "project": { "$ref": "#/$defs/project" },
+    "city": { "$ref": "#/$defs/city" },
+    "developer": { "$ref": "#/$defs/developer" }
+  },
+  "$defs": {
+    "contractor": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "qualification": { "type": "string" },
+        "capital": { "type": "integer" },
+        "workmanship": { "type": "number", "minimum": 0, "maximum": 1 },
+        "relationship": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reputation": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "stage": { "type": "string" },
+        "stage_index": { "type": "integer", "minimum": 0 },
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cost": { "type": "number" },
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cut_corners": { "type": "number", "minimum": 0, "maximum": 1 },
+        "subcontracted": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string" },
+        "land_price": { "type": "number", "minimum": 0 },
+        "traffic_demand": { "type": "number" }
+      }
+    },
+    "city": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "population": { "type": "integer", "minimum": 0 },
+        "land_price": { "type": "number", "minimum": 0 },
+        "traffic": { "type": "number", "minimum": 0, "maximum": 1 },
+        "corruption": { "type": "number", "minimum": 0, "maximum": 1 },
+        "zones": { "type": "object", "additionalProperties": { "$ref": "#/$defs/zone" } }
+      }
+    },
+    "developer": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "cash": { "type": "integer" },
+        "projects": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "pre_sold": { "type": "integer", "minimum": 0 },
+        "stalled": { "type": "boolean" }
+      }
+    }
+  }
+}

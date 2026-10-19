@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/professional-services.schema.json",
+  "title": "ProfessionalServices",
+  "description": "专业服务业运行态：事务所、合伙人与项目（D48）。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "firm": { "$ref": "#/$defs/firm" },
+    "project": { "$ref": "#/$defs/project" }
+  },
+  "$defs": {
+    "firm": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "money": { "type": "integer" },
+        "reputation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "qualifications": { "type": "object", "additionalProperties": true },
+        "partners": { "type": "object", "additionalProperties": true },
+        "clients": { "type": "object", "additionalProperties": true },
+        "projects": { "type": "array", "items": { "$ref": "#/$defs/project" } },
+        "violations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "practice": { "type": "string" },
+        "client": { "type": "string" },
+        "fee": { "type": "integer", "minimum": 0 },
+        "findings": { "type": "array", "items": { "type": "string" } },
+        "risk": { "type": "number", "minimum": 0, "maximum": 1 },
+        "status": { "type": "string", "enum": ["open", "closed"] }
+      }
+    }
+  }
+}
