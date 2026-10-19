@@ -46,6 +46,16 @@ func _test_securities_trading() -> void:
 	check(not b.security_quote("stock.tech").is_empty(), "内置证券可查询")
 	check(b.security_keys().size() >= 20, "证券池覆盖 20+ 标的")
 	check(float(b.security_quote("crypto.eth")["price"]) > 0.0, "加密资产报价存在")
+	var bad_sec: Array = []
+	var seen_names: Dictionary = {}
+	for key in b.security_keys():
+		var q: Dictionary = b.security_quote(String(key))
+		if float(q.get("price", 0.0)) <= 0.0 or String(q.get("name", "")) == "":
+			bad_sec.append(key)
+		if seen_names.has(String(q.get("name", ""))):
+			bad_sec.append(key)
+		seen_names[String(q.get("name", ""))] = true
+	check(bad_sec.is_empty(), "证券报价为正且名称唯一")
 	var first: Dictionary = b.buy_security(e, "s", "stock.tech", 10)
 	check(bool(first.get("ok", false)), "买入成功")
 	check_eq(b.holding_qty("stock.tech"), 10, "买入后持仓 10")
