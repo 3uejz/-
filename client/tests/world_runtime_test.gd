@@ -1973,7 +1973,9 @@ func _test_content_industry_runtime() -> void:
 	check(bool(host.content_operate_ip("merchandise", 1000000.0).get("ok", false)), "IP 运营")
 	# 风险。
 	check(host.content_plagiarism(0.9, 0.9).has("exposed"), "抄袭检测结算")
-	check(host.content_compliance(0.9, 0.9).has("approved"), "内容合规结算")
+	var compliance: Dictionary = host.content_compliance(0.9, 0.9)
+	check(compliance.has("approved"), "内容合规结算")
+	check(compliance.has("platform_action"), "内容合规联动平台审查")
 	check(host.content_scandal(0.9, 0.9).has("occurred"), "翻车事件结算")
 	# 经营边界。
 	check(bool(host.content_funding("seed").get("ok", false)), "种子轮融资")

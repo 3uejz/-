@@ -7610,6 +7610,12 @@ func content_compliance(risk: float = 0.3, strictness: float = 0.5) -> Dictionar
 	if _content_work.is_empty():
 		return {"ok": false, "reason": "no_work"}
 	var r: Dictionary = content_industry.content_compliance(_content_work, {"risk": risk, "strictness": strictness})
+	# 与 D25 平台审查互通：同一风险与尺度给出版权/合规审核动作。
+	var review: Dictionary = ip_media.moderate_content(String(_content_work.get("title", "")), {
+		"risk": risk, "policy_strictness": strictness,
+		"copyright_infringement": String(_content_work.get("takedown_reason", "")) == "copyright"})
+	r["platform_approved"] = bool(review.get("approved", false))
+	r["platform_action"] = String(review.get("action", "allow"))
 	_persist_content()
 	return r
 
@@ -7617,6 +7623,13 @@ func content_takedown(reason: String = "content_violation", severity: float = 0.
 	if _content_work.is_empty():
 		return {"ok": false, "reason": "no_work"}
 	var r: Dictionary = content_industry.take_down(_content_studio, _content_work, reason, {"severity": severity})
+	if reason.contains("copyright"):
+		var ip: Dictionary = _content_ip()
+		var legal_id: String = String(ip.get("legal_ip_id", ""))
+		for item in _ips:
+			if String((item as Dictionary).get("id", "")) == legal_id:
+				r["copyright_takedown"] = ip_media.copyright_takedown(String(_content_work.get("title", "")), item)
+				break
 	_persist_content()
 	return r
 
