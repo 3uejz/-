@@ -486,6 +486,8 @@ func _dispatch(intent) -> Dictionary:
 			return _events_sell(intent)
 		"布置安保":
 			return _events_security(intent)
+		"二级市场":
+			return _events_secondary(intent)
 		"举办活动":
 			return _events_hold(intent)
 		"活动复盘":
@@ -2845,6 +2847,16 @@ func _events_sell(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法售票（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["售出 %d 张，票务收入 %d。" % [int(r.get("sold", 0)), int(r.get("revenue", 0))]], 0, "")
+
+func _events_secondary(intent) -> Dictionary:
+	var qty: int = int(_param_number(intent, "number", 500))
+	var r: Dictionary = host.events_secondary_market(qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法进入二级市场（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var line := "二级市场成交 %d 张，溢价 %.2f，平台佣金 %d。" % [int(r.get("listed", 0)), float(r.get("premium", 1.0)), int(r.get("commission", 0))]
+	if bool(r.get("regulatory_risk", false)):
+		line += " 溢价过高，存在监管风险。"
+	return _ok([line], 0, "")
 
 func _events_security(intent) -> Dictionary:
 	var level: float = float(_param_number(intent, "number", 60)) / 100.0

@@ -203,6 +203,27 @@ func sell_tickets(event: Dictionary, qty: int, opts: Dictionary = {}) -> Diction
 	return {"ok": true, "sold": int(event["sold"]), "revenue": revenue, "oversold": int(event["sold"]) > int(event["capacity"])}
 
 
+## 二级市场：持票人转售，平台按成交额抽佣并计入活动收入；溢价过高提示监管风险。
+func secondary_market(event: Dictionary, qty: int, opts: Dictionary = {}) -> Dictionary:
+	var amount: int = mini(maxi(0, qty), int(event.get("sold", 0)))
+	if amount <= 0:
+		return {"ok": false, "reason": "no_held_tickets"}
+	var face: int = amount * int(event.get("ticket_price", 0))
+	var premium: float = clampf(float(opts.get("premium", 1.4)), 1.0, 5.0)
+	var gross: int = int(round(float(face) * premium))
+	var rate: float = clampf(float(opts.get("commission_rate", 0.10)), 0.0, 0.5)
+	var commission: int = int(round(float(gross) * rate))
+	event["resales"] = int(event.get("resales", 0)) + amount
+	event["resale_gross"] = int(event.get("resale_gross", 0)) + gross
+	event["resale_commission"] = int(event.get("resale_commission", 0)) + commission
+	event["budget"] = int(event.get("budget", 0)) + commission
+	event["revenue"] = int(event.get("revenue", 0)) + commission
+	return {
+		"ok": true, "listed": amount, "premium": premium, "gross": gross,
+		"commission": commission, "seller_proceeds": gross - commission,
+		"regulatory_risk": premium >= float(opts.get("risk_premium", 3.0)),
+	}
+
 ## 明星效应与主办方声誉决定预期上座率。
 func expected_fill_rate(event: Dictionary) -> float:
 	var star: float = clampf(float(event.get("star_power", 50.0)), 0.0, 100.0)

@@ -3861,6 +3861,15 @@ func events_sell_tickets(qty: int) -> Dictionary:
 	_persist_events()
 	return r
 
+## 票务二级市场：持票人转售，平台佣金进入活动收入。
+func events_secondary_market(qty: int, premium: float = 1.4) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var r: Dictionary = events_expo.secondary_market(_event, maxi(0, qty), {"premium": premium})
+	if bool(r.get("ok", false)):
+		_persist_events()
+	return r
+
 func events_set_security(level: float) -> Dictionary:
 	if _event.is_empty():
 		return {"ok": false, "reason": "no_event"}
@@ -3927,6 +3936,8 @@ func events_panel_data() -> Dictionary:
 			"attendance": int(_event.get("attendance", 0)),
 			"sponsors": (_event.get("sponsors", []) as Array).size(),
 			"incidents": (_event.get("incidents", []) as Array).size(),
+			"resales": int(_event.get("resales", 0)),
+			"resale_commission": int(_event.get("resale_commission", 0)),
 		}
 	if not _planner.is_empty():
 		out["planner_level"] = int(_planner.get("level", 1))
