@@ -678,6 +678,18 @@ func _test_police_panel() -> void:
 			"name": "测试安保", "staff": 4, "funds": 100000, "reputation": 0.5,
 			"contracts": [{"name": "押运", "fee": 200000, "resolved": false, "failure": false}],
 		},
+	}, "law": {
+		"crime": {
+			"records": [{"name": "偷窃", "region": "beijing", "evidence": 0.6}],
+			"wanted": [{"name": "偷窃", "region": "beijing", "level": 2}],
+			"aliases": 1, "fled": true,
+		},
+		"prison": {
+			"name": "偷窃", "active": true, "days_remaining": 60, "sentence_days": 120,
+			"behavior": 55.0, "reduction": 0, "violations": 1, "gang_name": "秩序帮",
+			"escaped": false, "released": false, "parole": false,
+			"reintegration": {"employment_discrimination": 0.2, "recidivism_risk": 0.3},
+		},
 	}}
 	var d: Dictionary = PanelContentScript.build("legal", GameStateScript.default_player(), Callable(), ctx)
 	check(not bool(d.get("empty", true)), "有警务上下文非空")
@@ -685,6 +697,10 @@ func _test_police_panel() -> void:
 	check(_find_section(d, "证据链").get("rows", []).size() >= 1, "证据链分区有行")
 	check(_find_section(d, "安保公司").get("rows", []).size() >= 1, "安保公司分区有行")
 	check(_find_section(d, "安保业务").get("rows", []).size() >= 1, "安保业务分区有行")
+	check(_find_section(d, "通缉").get("rows", []).size() >= 1, "通缉分区有行")
+	check(_find_section(d, "案底").get("rows", []).size() >= 1, "案底分区有行")
+	check(_find_section(d, "监狱").get("rows", []).size() >= 1, "监狱分区有行")
+	check(_find_section(d, "出狱融入").get("rows", []).size() >= 1, "出狱融入分区有行")
 
 func _test_emergency_panel() -> void:
 	var ctx: Dictionary = {"emergency": {

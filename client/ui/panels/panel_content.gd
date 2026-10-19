@@ -1013,6 +1013,47 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 		if lg.has("release_minutes"):
 			st.append({"label": "预计释放", "value": "%d 分钟" % int(lg["release_minutes"])})
 		sections.append(_section("法律状态", st))
+	var law: Dictionary = context.get("law", {}) if context.get("law") is Dictionary else {}
+	var cr: Dictionary = law.get("crime", {}) if law.get("crime") is Dictionary else {}
+	if not cr.is_empty():
+		var wrows: Array = []
+		for w in (cr.get("wanted", []) as Array):
+			if w is Dictionary:
+				var wd: Dictionary = w
+				wrows.append({"label": String(wd.get("name", "")), "value": "%s（通缉 %d 级）" % [String(wd.get("region", "")), int(wd.get("level", 1))]})
+		if cr.has("aliases") and int(cr.get("aliases", 0)) > 0:
+			wrows.append({"label": "化名次数", "value": str(int(cr.get("aliases", 0)))})
+		if bool(cr.get("fled", false)):
+			wrows.append({"label": "潜逃状态", "value": "已潜逃"})
+		if not wrows.is_empty():
+			sections.append(_section("通缉", wrows))
+		var recrows: Array = []
+		for rec in (cr.get("records", []) as Array):
+			if rec is Dictionary:
+				var rd: Dictionary = rec
+				recrows.append({"label": String(rd.get("name", "")), "value": "%s · 证据 %.2f" % [String(rd.get("region", "")), float(rd.get("evidence", 0.0))]})
+		if not recrows.is_empty():
+			sections.append(_section("案底", recrows))
+	var pr: Dictionary = law.get("prison", {}) if law.get("prison") is Dictionary else {}
+	if not pr.is_empty():
+		var prows: Array = [
+			{"label": "状态", "value": "在押" if bool(pr.get("active", false)) else ("已越狱" if bool(pr.get("escaped", false)) else "已出狱")},
+			{"label": "罪名", "value": String(pr.get("name", ""))},
+			{"label": "剩余刑期", "value": "%d 日 / 原判 %d 日" % [int(pr.get("days_remaining", 0)), int(pr.get("sentence_days", 0))]},
+			{"label": "服刑表现", "value": "%.0f" % float(pr.get("behavior", 0.0))},
+			{"label": "减刑", "value": "%d 日" % int(pr.get("reduction", 0))},
+			{"label": "违纪", "value": "%d 次" % int(pr.get("violations", 0))},
+			{"label": "狱帮", "value": String(pr.get("gang_name", ""))},
+		]
+		if bool(pr.get("parole", false)):
+			prows.append({"label": "假释", "value": "已获准"})
+		sections.append(_section("监狱", prows))
+		var rein: Dictionary = pr.get("reintegration", {}) if pr.get("reintegration") is Dictionary else {}
+		if not rein.is_empty():
+			sections.append(_section("出狱融入", [
+				{"label": "就业歧视", "value": "%.0f%%" % (float(rein.get("employment_discrimination", 0.0)) * 100.0)},
+				{"label": "再犯风险", "value": "%.0f%%" % (float(rein.get("recidivism_risk", 0.0)) * 100.0)},
+			]))
 	var cases: Array = _items_of(player.get("cases", [])) + _items_of(_world(context).get("cases", []))
 	if not cases.is_empty():
 		sections.append(_section("案件", _rows_from(cases, ["type", "stage", "status"], name_resolver)))

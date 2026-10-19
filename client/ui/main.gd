@@ -1032,6 +1032,9 @@ func _panel_context() -> Dictionary:
 		var cvp: Dictionary = _sim.civil_panel_data()
 		if not cvp.is_empty():
 			context["civil"] = cvp
+		var lawp: Dictionary = _sim.law_panel_data()
+		if not lawp.is_empty():
+			context["law"] = lawp
 		var wsp: Dictionary = _sim.welfare_panel_data()
 		if not wsp.is_empty():
 			context["welfare"] = wsp

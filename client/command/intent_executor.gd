@@ -644,6 +644,36 @@ func _dispatch(intent) -> Dictionary:
 			return _civil_appeal(intent)
 		"民事执行":
 			return _civil_enforce(intent)
+		"实施犯罪":
+			return _crime_attempt(intent)
+		"刑事受审":
+			return _crime_trial(intent)
+		"自首":
+			return _crime_surrender(intent)
+		"潜逃":
+			return _crime_flee(intent)
+		"化名":
+			return _crime_alias(intent)
+		"司法行贿":
+			return _crime_bribe(intent)
+		"监狱劳动":
+			return _prison_labor(intent)
+		"监狱探视":
+			return _prison_visit(intent)
+		"狱友交流":
+			return _prison_interact(intent)
+		"加入狱帮":
+			return _prison_gang(intent)
+		"监狱违纪":
+			return _prison_violation(intent)
+		"减刑":
+			return _prison_reduce(intent)
+		"假释":
+			return _prison_parole(intent)
+		"越狱":
+			return _prison_escape(intent)
+		"出狱融入":
+			return _prison_reintegrate(intent)
 		"质量事故":
 			return _consumer_incident_quality(intent)
 		"食安事故":
@@ -3401,6 +3431,169 @@ func _civil_enforce(intent) -> Dictionary:
 		return _ok(["执行不能，已回收 %d，未清偿 %d。" % [int(r.get("recovered", 0)), int(r.get("outstanding", 0))]], 0, "")
 	return _ok(["执行到位 %d。" % int(r.get("recovered", 0))], 0, "")
 
+func _crime_attempt(intent) -> Dictionary:
+	var crime: String = _object_id(intent, "crime")
+	if crime.is_empty():
+		crime = String(intent.params.get("method", "")).strip_edges()
+	if crime.is_empty():
+		return _fail("请指明罪名。")
+	var r: Dictionary = host.crime_attempt(crime)
+	if not bool(r.get("ok", false)):
+		return _fail("无法实施犯罪（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var name: String = String(r.get("name", crime))
+	if bool(r.get("success", false)):
+		if bool(r.get("detected", false)):
+			return _ok(["%s得手，但被察觉，通缉等级 %d。" % [name, int(r.get("wanted_level", 0))]], 0, "")
+		return _ok(["%s得手，未被察觉。" % name], 0, "")
+	if bool(r.get("detected", false)):
+		return _ok(["%s未遂并被察觉，通缉等级 %d。" % [name, int(r.get("wanted_level", 0))]], 0, "")
+	return _ok(["%s未遂，且未被察觉。" % name], 0, "")
+
+
+func _crime_trial(intent) -> Dictionary:
+	var r: Dictionary = host.crime_trial()
+	if not bool(r.get("ok", false)):
+		return _fail("无法受审（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("convicted", false)):
+		return _ok(["证据不足，宣告无罪，通缉解除。"], 0, "")
+	var fine: int = int(r.get("fine", 0))
+	var days: int = int(r.get("days", 0))
+	if days > 0:
+		return _ok(["定罪：%s，判处 %d 日，罚金 %d，已入监。" % [String(r.get("name", "")), days, fine]], 0, "")
+	return _ok(["定罪：%s，罚金 %d，免予监禁。" % [String(r.get("name", "")), fine]], 0, "")
+
+
+func _crime_surrender(intent) -> Dictionary:
+	var r: Dictionary = host.crime_self_surrender()
+	if not bool(r.get("ok", false)):
+		return _fail("无法自首（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已自首，通缉解除，量刑折扣 %.0f%%。" % (float(r.get("discount", 0.0)) * 100.0)], 0, "")
+
+
+func _crime_flee(intent) -> Dictionary:
+	var target: String = String(intent.params.get("method", "")).strip_edges()
+	if target.is_empty():
+		return _fail("请指明潜逃目的地。")
+	var region: String = _find_region_id(target)
+	var r: Dictionary = host.crime_flee(region)
+	if not bool(r.get("ok", false)):
+		return _fail("无法潜逃（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已潜逃至 %s，通缉随行转移。" % region], 0, "")
+
+
+func _crime_alias(intent) -> Dictionary:
+	var r: Dictionary = host.crime_change_identity()
+	if not bool(r.get("ok", false)):
+		return _fail("无法化名（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已使用化名，追缉强度下降（累计 %d 次）。" % int(r.get("aliases", 0))], 0, "")
+
+
+func _crime_bribe(intent) -> Dictionary:
+	var amount: int = maxi(1, _param_number(intent, "number", 1000000))
+	var r: Dictionary = host.crime_bribe(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法行贿（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var tail: String = "，但被查处并加罪" if bool(r.get("exposed", false)) else ""
+	if bool(r.get("success", false)):
+		return _ok(["行贿 %d 奏效，通缉解除%s。" % [int(r.get("paid", 0)), tail]], 0, "")
+	return _ok(["行贿 %d 未奏效%s。" % [int(r.get("paid", 0)), tail]], 0, "")
+
+
+func _prison_labor(intent) -> Dictionary:
+	var hours: int = maxi(1, _param_number(intent, "number", 8))
+	var r: Dictionary = host.prison_labor(float(hours))
+	if not bool(r.get("ok", false)):
+		return _fail("无法劳动（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["劳动 %d 小时，收入 %d，表现 %.0f。" % [hours, int(r.get("income", 0)), float(r.get("behavior", 0.0))]], 0, "")
+
+
+func _prison_visit(intent) -> Dictionary:
+	var visitor: String = String(intent.params.get("method", "")).strip_edges()
+	var r: Dictionary = host.prison_visit(visitor)
+	if not bool(r.get("ok", false)):
+		return _fail("无法探视（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s 前来探视，表现 %.0f。" % [String(r.get("visitor", "家人")), float(r.get("behavior", 0.0))]], 0, "")
+
+
+func _prison_interact(intent) -> Dictionary:
+	var r: Dictionary = host.prison_interact()
+	if not bool(r.get("ok", false)):
+		return _fail("无法交流（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if String(r.get("event", "")) == "conflict":
+		return _ok(["与狱友发生冲突，表现降至 %.0f。" % float(r.get("behavior", 0.0))], 0, "")
+	return _ok(["与狱友结交，关系 %.0f。" % float(r.get("gang_relation", 0.0))], 0, "")
+
+
+func _prison_gang(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	var gang: String = raw
+	match raw:
+		"秩序帮", "秩序": gang = "order"
+		"兄弟会", "兄弟": gang = "brotherhood"
+		"独行": gang = "lone"
+		"中立": gang = "none"
+		_: pass
+	if gang.is_empty():
+		return _fail("请指明要加入的狱帮。")
+	var r: Dictionary = host.prison_join_gang(gang)
+	if not bool(r.get("ok", false)):
+		return _fail("无法加入狱帮（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已加入%s。" % String(r.get("name", gang))], 0, "")
+
+
+func _prison_violation(intent) -> Dictionary:
+	var r: Dictionary = host.prison_violation()
+	if not bool(r.get("ok", false)):
+		return _fail("无法违纪（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["违纪 1 次，表现降至 %.0f。" % float(r.get("behavior", 0.0))], 0, "")
+
+
+func _prison_reduce(intent) -> Dictionary:
+	var days: int = maxi(1, _param_number(intent, "number", 30))
+	var r: Dictionary = host.prison_reduce_sentence(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法减刑（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["减刑 %d 日，剩余 %d 日。" % [days, int(r.get("days_remaining", 0))]], 0, "")
+
+
+func _prison_parole(intent) -> Dictionary:
+	var r: Dictionary = host.prison_parole()
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请假释（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("granted", false)):
+		return _ok(["假释获批，已出狱。"], 0, "")
+	return _ok(["假释未获批，继续服刑。"], 0, "")
+
+
+func _prison_escape(intent) -> Dictionary:
+	var r: Dictionary = host.prison_escape()
+	if not bool(r.get("ok", false)):
+		return _fail("无法越狱（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("escaped", false)):
+		return _ok(["越狱成功，重新被通缉。"], 0, "")
+	return _ok(["越狱失败，表现降至 %.0f。" % float(r.get("behavior", 0.0))], 0, "")
+
+
+func _prison_reintegrate(intent) -> Dictionary:
+	var support: int = clampi(_param_number(intent, "number", 30), 0, 100)
+	var r: Dictionary = host.prison_reintegrate(float(support))
+	if not bool(r.get("ok", false)):
+		return _fail("无法融入社会（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["出狱融入：就业歧视 %.0f%%，再犯风险 %.0f%%%s。" % [
+		float(r.get("employment_discrimination", 0.0)) * 100.0,
+		float(r.get("recidivism_risk", 0.0)) * 100.0,
+		"，存在再犯倾向" if bool(r.get("reoffends", false)) else "",
+	]], 0, "")
+
+
+func _find_region_id(text: String) -> String:
+	for r in host.regions_view():
+		if r is Dictionary:
+			var rid: String = String(r.get("region_key", ""))
+			if rid == text or rid.to_lower() == text.to_lower():
+				return rid
+	return text
+
 func _consumer_class_action(intent) -> Dictionary:
 	var r: Dictionary = host.consumer_class_action(0.5)
 	if not bool(r.get("ok", false)):
@@ -5016,6 +5209,24 @@ func _tin_disruption(intent) -> Dictionary:
 
 func _reason_cn(reason: String) -> String:
 	match reason:
+		"dead":
+			return "角色已死亡"
+		"in_prison":
+			return "你正在服刑"
+		"not_inside":
+			return "当前不在押"
+		"still_inside":
+			return "仍在服刑中"
+		"not_wanted":
+			return "当前未被通缉"
+		"unknown_crime":
+			return "未知罪名"
+		"unknown_region":
+			return "未知区域"
+		"behavior_too_low":
+			return "服刑表现不足"
+		"unknown_gang":
+			return "未知狱帮"
 		"insufficient_cash":
 			return "现金不足"
 		"insufficient_holding":
@@ -5587,6 +5798,8 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_hack_target_by_name(text)
 		"security_job":
 			return _find_security_job_by_name(text)
+		"crime":
+			return _find_catalog_by_name(host.police_crimes_catalog(), text)
 		"late_tech_career":
 			return _find_late_tech_career_by_name(text)
 		"late_tech_mission":

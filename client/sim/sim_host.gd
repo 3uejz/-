@@ -52,6 +52,14 @@ const EventsExpoScript = preload("res://sim/events_expo.gd")
 const HonorsScript = preload("res://sim/honors.gd")
 const PoliceScript = preload("res://sim/police.gd")
 const CrimeScript = preload("res://sim/crime.gd")
+const PrisonScript = preload("res://sim/prison.gd")
+## 犯罪罪名 → 判定技能（犯罪技能树）。
+const CRIME_SKILLS: Dictionary = {
+	"theft": "theft", "robbery": "robbery", "fraud": "fraud", "assault": "crime_disguise",
+	"injury": "crime_disguise", "smuggling": "smuggling", "tax_evasion": "forgery",
+	"corruption": "bribery", "bribery": "bribery", "framing": "forgery",
+	"deceive": "fraud", "disturbance": "crime_disguise",
+}
 const EmergencyScript = preload("res://sim/emergency.gd")
 const EnvironmentScript = preload("res://sim/environment.gd")
 const MunicipalScript = preload("res://sim/municipal.gd")
@@ -184,6 +192,11 @@ var _hall: Dictionary = {}           ## 名人堂，入档 sim_runtime.honors.ha
 var police                      ## 安保、警务与刑侦（PoliceSystem）
 var _police_case: Dictionary = {}     ## 当前经办案件，入档 sim_runtime.police.case
 var _security_firm: Dictionary = {}   ## 民营安保公司，入档 sim_runtime.police.firm
+var crime_sys                    ## 玩家犯罪、案底与通缉（CrimeSystem）
+var prison_sys                   ## 监狱生活与社会融入（PrisonSystem）
+var _crime_state: Dictionary = {}  ## 玩家犯罪运行态（records/wanted/aliases），入档 sim_runtime.crime
+var _prison: Dictionary = {}       ## 在押/出狱运行态，入档 sim_runtime.prison
+var _prison_last_day: int = -1     ## 上次监狱刑期结算日
 var emergency                    ## 应急、消防与灾害救援（EmergencySystem）
 var _incident: Dictionary = {}        ## 当前处置中的应急事件，入档 sim_runtime.emergency.incident
 var _volunteer_org: Dictionary = {}   ## 志愿救援组织，入档 sim_runtime.emergency.org
@@ -325,6 +338,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	honors = HonorsScript.new()
 	_hall = honors.new_hall()
 	police = PoliceScript.new()
+	crime_sys = CrimeScript.new()
+	prison_sys = PrisonScript.new()
 	emergency = EmergencyScript.new()
 	environment_sys = EnvironmentScript.new()
 	_city_env = environment_sys.new_city_env(1000000)
@@ -482,6 +497,14 @@ func _ensure_world_geo() -> void:
 		var cv: Variant = (state.sim_runtime as Dictionary).get("civil", {})
 		if cv is Dictionary and not (cv as Dictionary).is_empty():
 			_civil = (cv as Dictionary).duplicate(true)
+		# 恢复玩家犯罪与监狱运行时。
+		var crm: Variant = (state.sim_runtime as Dictionary).get("crime", {})
+		if crm is Dictionary and not (crm as Dictionary).is_empty():
+			_crime_state = (crm as Dictionary).duplicate(true)
+		var prs: Variant = (state.sim_runtime as Dictionary).get("prison", {})
+		if prs is Dictionary and not (prs as Dictionary).is_empty():
+			_prison = (prs as Dictionary).duplicate(true)
+		_prison_last_day = now_minutes() / MINUTES_PER_DAY
 		# 恢复职场状态与公司/股权。
 		var wp: Variant = (state.sim_runtime as Dictionary).get("workplace", {})
 		if wp is Dictionary and not (wp as Dictionary).is_empty():
@@ -4952,6 +4975,407 @@ func _persist_civil() -> void:
 	(state.sim_runtime as Dictionary)["civil"] = _civil.duplicate(true)
 
 
+# --- D12 犯罪、通缉与监狱 ---
+
+func _crime_new_state() -> Dictionary:
+	return {"records": [], "wanted": {}, "surrendered": false, "surrender_case": {}, "fled": false, "aliases": 0, "last": {}}
+
+
+func _ensure_crime_state() -> void:
+	if _crime_state.is_empty():
+		_crime_state = _crime_new_state()
+
+
+func crime_state() -> Dictionary:
+	_ensure_crime_state()
+	return _crime_state.duplicate(true)
+
+
+## 实施犯罪：按犯罪技能树判定成败与是否暴露，暴露即立案底并通缉。
+func crime_attempt(crime: String) -> Dictionary:
+	if is_dead():
+		return {"ok": false, "reason": "dead"}
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	if not CrimeScript.CRIMES.has(crime):
+		return {"ok": false, "reason": "unknown_crime"}
+	_ensure_crime_state()
+	var c: Dictionary = CrimeScript.CRIMES[crime]
+	var skill_id: String = String(CRIME_SKILLS.get(crime, "crime_disguise"))
+	var skill: float = float(_skill_level(skill_id))
+	var r: Dictionary = crime_sys.attempt(crime, skill, rng, {})
+	var region: String = current_region_id()
+	if bool(r.get("detected", false)):
+		var level: int = clampi(1 + int(float(c.get("difficulty", 0.0)) / 4.0), 1, 5)
+		var rec: Dictionary = crime_sys.add_record(_crime_state, crime, region, now_minutes(), clampf(0.4 + skill / 40.0, 0.3, 0.95))
+		crime_sys.add_wanted(_crime_state, crime, region, level)
+		_crime_state["surrendered"] = false
+		_crime_state["surrender_case"] = {}
+		_crime_state["last"] = {"crime": crime, "detected": true, "record": rec}
+	else:
+		_crime_state["last"] = {"crime": crime, "detected": false}
+	_persist_crime()
+	_sync_legal()
+	return {
+		"ok": true, "crime": crime, "name": String(c.get("name", crime)),
+		"success": bool(r.get("success", false)), "detected": bool(r.get("detected", false)),
+		"probability": float(r.get("probability", 0.0)), "wanted_level": crime_sys.wanted_level(_crime_state, region),
+	}
+
+
+## 刑事受审：按案底证据与通缉等级定罪量刑，刑期入监、罚金从现金扣除。
+func crime_trial() -> Dictionary:
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	_ensure_crime_state()
+	var wanted: Dictionary = _crime_state.get("wanted", {})
+	var surrender_case: Dictionary = _crime_state.get("surrender_case", {})
+	if wanted.is_empty() and surrender_case.is_empty():
+		return {"ok": false, "reason": "not_wanted"}
+	var region: String = current_region_id()
+	var entry: Dictionary = {}
+	if not wanted.is_empty():
+		if not wanted.has(region):
+			region = String((wanted.keys() as Array)[0])
+		entry = wanted.get(region, {})
+	else:
+		region = String(surrender_case.get("region", region))
+		entry = surrender_case
+	var crime: String = String(entry.get("crime", ""))
+	var c: Dictionary = CrimeScript.CRIMES.get(crime, {})
+	if c.is_empty():
+		wanted.erase(region)
+		_crime_state["wanted"] = wanted
+		_persist_crime()
+		_sync_legal()
+		return {"ok": false, "reason": "unknown_crime"}
+	var records: Array = _crime_state.get("records", [])
+	var evidence: float = clampf(0.5 + float(records.size()) * 0.05 + float(entry.get("level", 1)) * 0.05, 0.3, 0.95)
+	var discount: float = 0.3 if bool(_crime_state.get("surrendered", false)) else 1.0
+	if rng.next_float() >= evidence:
+		wanted.erase(region)
+		_crime_state["wanted"] = wanted
+		_crime_state["surrendered"] = false
+		_persist_crime()
+		_sync_legal()
+		return {"ok": true, "convicted": false, "acquitted": true, "crime": crime, "evidence": evidence}
+	var penalty: Dictionary = c.get("penalty", {})
+	var days_range: Array = penalty.get("days", [0, 0])
+	var fine_range: Array = penalty.get("fine", [0, 0])
+	var low_days: int = int(days_range[0]) if days_range.size() > 0 else 0
+	var high_days: int = int(days_range[1]) if days_range.size() > 1 else low_days
+	var low_fine: int = int(fine_range[0]) if fine_range.size() > 0 else 0
+	var high_fine: int = int(fine_range[1]) if fine_range.size() > 1 else low_fine
+	var days: int = 0
+	if high_days > 0:
+		days = maxi(1, int(round(lerpf(float(low_days), float(high_days), rng.next_float()) * discount)))
+	var fine: int = 0
+	if high_fine > 0:
+		fine = maxi(0, int(round(lerpf(float(low_fine), float(high_fine), rng.next_float()) * discount)))
+	fine = mini(fine, economy.cash(account_id()))
+	if fine > 0:
+		economy.add_money(account_id(), -fine, "crime_fine")
+		sync_finances()
+	wanted.erase(region)
+	_crime_state["wanted"] = wanted
+	_crime_state["surrendered"] = false
+	_crime_state["surrender_case"] = {}
+	_crime_state["last"] = {"crime": crime, "convicted": true, "days": days, "fine": fine}
+	if days > 0:
+		_prison = prison_sys.new_inmate(String(player().get("name", "我")), crime, days)
+		_prison["convicted_minute"] = now_minutes()
+		_prison_last_day = now_minutes() / MINUTES_PER_DAY
+		_persist_prison()
+	_persist_crime()
+	_sync_legal()
+	return {"ok": true, "convicted": true, "crime": crime, "name": String(c.get("name", crime)), "days": days, "fine": fine, "evidence": evidence, "lawyer_discount": discount}
+
+
+## 自首：撤销当前区域通缉并获得量刑折扣。
+func crime_self_surrender() -> Dictionary:
+	_ensure_crime_state()
+	var wanted: Dictionary = _crime_state.get("wanted", {})
+	if wanted.is_empty():
+		return {"ok": false, "reason": "not_wanted"}
+	var region: String = current_region_id()
+	if not wanted.has(region):
+		region = String((wanted.keys() as Array)[0])
+	var r: Dictionary = crime_sys.self_surrender(_crime_state, region)
+	if bool(r.get("ok", false)):
+		_crime_state["surrender_case"] = {"crime": String(r.get("crime", "")), "region": region, "level": 1}
+	_persist_crime()
+	_sync_legal()
+	return r
+
+
+## 潜逃：转移通缉并实际迁往目标区域。
+func crime_flee(region: String) -> Dictionary:
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	if region.is_empty() or (geo != null and geo.count() > 0 and not geo.has_node(region)):
+		return {"ok": false, "reason": "unknown_region"}
+	_ensure_crime_state()
+	var from_region: String = current_region_id()
+	var r: Dictionary = crime_sys.flee(_crime_state, from_region, region)
+	if not set_home_region(region):
+		return {"ok": false, "reason": "unknown_region"}
+	_crime_state["fled"] = true
+	_persist_crime()
+	_sync_legal()
+	return r
+
+
+## 化名：降低追缉强度，不改动真实身份档案。
+func crime_change_identity() -> Dictionary:
+	_ensure_crime_state()
+	var r: Dictionary = crime_sys.change_name(_crime_state)
+	_persist_crime()
+	_sync_legal()
+	return r
+
+
+## 司法行贿：付款撤销通缉，但可能被查处并加罪。
+func crime_bribe(amount_minor: int) -> Dictionary:
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	_ensure_crime_state()
+	if (_crime_state.get("wanted", {}) as Dictionary).is_empty():
+		return {"ok": false, "reason": "not_wanted"}
+	var paid: int = mini(maxi(0, amount_minor), economy.cash(account_id()))
+	if paid <= 0:
+		return {"ok": false, "reason": "insufficient_cash"}
+	economy.add_money(account_id(), -paid, "crime_bribe")
+	sync_finances()
+	var r: Dictionary = crime_sys.bribe(0.4, float(paid), rng)
+	if bool(r.get("success", false)):
+		_crime_state["wanted"] = {}
+		_crime_state["surrendered"] = false
+	if bool(r.get("exposed", false)):
+		crime_sys.add_record(_crime_state, "bribery", current_region_id(), now_minutes(), 0.8)
+		crime_sys.add_wanted(_crime_state, "bribery", current_region_id(), 3)
+	_persist_crime()
+	_sync_legal()
+	return {"ok": true, "success": bool(r.get("success", false)), "exposed": bool(r.get("exposed", false)), "paid": paid}
+
+
+func _prison_active() -> bool:
+	if _prison.is_empty():
+		return false
+	return not bool(_prison.get("released", false)) and not bool(_prison.get("escaped", false))
+
+
+func prison_state() -> Dictionary:
+	return _prison.duplicate(true)
+
+
+## 监狱劳动：提升表现并发放少量报酬。
+func prison_labor(hours: float) -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.labor(_prison, maxf(0.0, hours), 500)
+	if bool(r.get("ok", false)):
+		economy.add_money(account_id(), int(r.get("income", 0)), "prison_labor")
+		sync_finances()
+	_persist_prison()
+	return r
+
+
+func prison_visit(visitor: String) -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.visit(_prison, visitor if visitor != "" else "家人")
+	_persist_prison()
+	return r
+
+
+func prison_interact() -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.interact(_prison, {"name": "狱友"}, rng)
+	_persist_prison()
+	return r
+
+
+func prison_join_gang(gang: String) -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.join_gang(_prison, gang)
+	_persist_prison()
+	return r
+
+
+func prison_violation() -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.violation(_prison)
+	_persist_prison()
+	return r
+
+
+func prison_reduce_sentence(days: int) -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var r: Dictionary = prison_sys.reduce_sentence(_prison, maxi(0, days))
+	if bool(r.get("ok", false)):
+		_sync_legal()
+		_persist_prison()
+	return r
+
+
+func prison_parole() -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var total: float = float(maxi(1, int(_prison.get("sentence_days", 1))))
+	var served: float = clampf(1.0 - float(_prison.get("days_remaining", 0)) / total, 0.0, 1.0)
+	var r: Dictionary = prison_sys.parole(_prison, served, rng)
+	if bool(r.get("granted", false)):
+		_prison["released_minute"] = now_minutes()
+		_sync_legal()
+		_persist_prison()
+	return r
+
+
+func prison_escape() -> Dictionary:
+	if not _prison_active():
+		return {"ok": false, "reason": "not_inside"}
+	var skill: float = float(_skill_level("crime_disguise"))
+	var r: Dictionary = prison_sys.attempt_escape(_prison, skill, rng)
+	if bool(r.get("escaped", false)):
+		_ensure_crime_state()
+		crime_sys.add_wanted(_crime_state, String(_prison.get("crime", "theft")), current_region_id(), 4)
+		_prison["escaped_minute"] = now_minutes()
+		_persist_crime()
+	_sync_legal()
+	_persist_prison()
+	return r
+
+
+## 出狱融入：支持度越高，就业歧视与再犯风险越低。
+func prison_reintegrate(support: float = 30.0) -> Dictionary:
+	if _prison.is_empty() or _prison_active():
+		return {"ok": false, "reason": "still_inside"}
+	var r: Dictionary = prison_sys.reintegrate(_prison, clampf(support, 0.0, 100.0), rng)
+	r["ok"] = true
+	_prison["reintegration"] = r.duplicate(true)
+	_sync_legal()
+	_persist_prison()
+	return r
+
+
+func _prison_tick(before_minutes: int, after_minutes: int) -> void:
+	if not _prison_active():
+		return
+	var day: int = after_minutes / MINUTES_PER_DAY
+	if _prison_last_day < 0:
+		_prison_last_day = before_minutes / MINUTES_PER_DAY
+	var days: int = day - _prison_last_day
+	if days <= 0:
+		return
+	_prison_last_day = day
+	var r: Dictionary = prison_sys.advance(_prison, days)
+	if bool(r.get("released", false)):
+		_prison["released_minute"] = after_minutes
+	_sync_legal()
+	_persist_prison()
+
+
+## 犯罪与监狱面板数据（供法律面板展示通缉、案底、在押与融入）。
+func law_panel_data() -> Dictionary:
+	var out: Dictionary = {}
+	if not _crime_state.is_empty():
+		var records: Array = []
+		for rec in (_crime_state.get("records", []) as Array):
+			if rec is Dictionary:
+				var rd: Dictionary = rec
+				var cid: String = String(rd.get("crime", ""))
+				records.append({
+					"crime": cid,
+					"name": String((CrimeScript.CRIMES.get(cid, {}) as Dictionary).get("name", cid)),
+					"region": String(rd.get("region", "")),
+					"minute": int(rd.get("minute", 0)),
+					"evidence": float(rd.get("evidence", 0.0)),
+				})
+		var wanted: Array = []
+		for region in (_crime_state.get("wanted", {}) as Dictionary).keys():
+			var entry: Dictionary = (_crime_state.get("wanted", {}) as Dictionary)[region]
+			var wid: String = String(entry.get("crime", ""))
+			wanted.append({
+				"region": String(region),
+				"crime": wid,
+				"name": String((CrimeScript.CRIMES.get(wid, {}) as Dictionary).get("name", wid)),
+				"level": int(entry.get("level", 1)),
+			})
+		if not records.is_empty() or not wanted.is_empty():
+			out["crime"] = {
+				"records": records, "wanted": wanted,
+				"aliases": int(_crime_state.get("aliases", 0)),
+				"surrendered": bool(_crime_state.get("surrendered", false)),
+				"fled": bool(_crime_state.get("fled", false)),
+			}
+	if not _prison.is_empty():
+		out["prison"] = {
+			"crime": String(_prison.get("crime", "")),
+			"name": String((CrimeScript.CRIMES.get(String(_prison.get("crime", "")), {}) as Dictionary).get("name", _prison.get("crime", ""))),
+			"sentence_days": int(_prison.get("sentence_days", 0)),
+			"days_remaining": int(_prison.get("days_remaining", 0)),
+			"behavior": float(_prison.get("behavior", 50.0)),
+			"reduction": int(_prison.get("reduction", 0)),
+			"violations": int(_prison.get("violations", 0)),
+			"gang": String(_prison.get("gang", "none")),
+			"gang_name": String(PrisonScript.GANG_NAMES.get(String(_prison.get("gang", "none")), "中立")),
+			"active": _prison_active(),
+			"escaped": bool(_prison.get("escaped", false)),
+			"released": bool(_prison.get("released", false)),
+			"parole": bool(_prison.get("parole", false)),
+			"reintegration": (_prison.get("reintegration", {}) as Dictionary).duplicate(true),
+		}
+	return out
+
+
+## 把犯罪/监狱运行态同步到 player.legal（展示与外部系统消费）。
+func _sync_legal() -> void:
+	if state == null:
+		return
+	var legal: Dictionary = player().get("legal", {})
+	if not (legal is Dictionary):
+		legal = {}
+	var records: Array = _crime_state.get("records", [])
+	var wanted_level: int = 0
+	for region in (_crime_state.get("wanted", {}) as Dictionary).keys():
+		wanted_level = maxi(wanted_level, int((_crime_state["wanted"] as Dictionary)[region].get("level", 1)))
+	legal["wanted_level"] = wanted_level
+	legal["criminal_record"] = not records.is_empty()
+	legal["record_entries"] = records.duplicate(true)
+	var active: bool = _prison_active()
+	legal["in_prison"] = active
+	if active:
+		legal["release_minutes"] = now_minutes() + int(_prison.get("days_remaining", 0)) * MINUTES_PER_DAY
+	else:
+		legal.erase("release_minutes")
+	var effects: Dictionary = crime_sys.record_effects(_crime_state)
+	var extra_emp: float = 0.0
+	var extra_soc: float = 0.0
+	var reintegration: Dictionary = _prison.get("reintegration", {})
+	if not reintegration.is_empty():
+		extra_emp = float(reintegration.get("employment_discrimination", 0.0)) * 100.0
+		extra_soc = extra_emp * 0.5
+	legal["employment_penalty"] = clampf(float(effects.get("employment_penalty", 0.0)) + extra_emp, 0.0, 100.0)
+	legal["social_penalty"] = clampf(float(effects.get("social_penalty", 0.0)) + extra_soc, 0.0, 100.0)
+	player()["legal"] = legal
+
+
+func _persist_crime() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["crime"] = _crime_state.duplicate(true)
+
+
+func _persist_prison() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["prison"] = _prison.duplicate(true)
+
+
 # --- D7 军旅、职场与融资 ---
 
 ## 入伍：校验年龄/健康/学历/政审/兵种技能，成功后军籍写入 player.military。
@@ -8530,6 +8954,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		var born: Dictionary = _check_delivery()
 		if not born.is_empty():
 			events.append({"type": "birth", "name": String(born.get("name", ""))})
+		# 监狱刑期按日推进（刑满/假释/越狱后同步法律状态）。
+		_prison_tick(before_minutes, now_minutes())
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
 		# 工厂工资按月结算（资金不足拖欠并罢工）。
