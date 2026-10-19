@@ -34,6 +34,8 @@ func run_tests() -> void:
 	_test_eat_generic()
 	_test_buy_and_sell()
 	_test_deposit_withdraw()
+	_test_securities_commands()
+	_test_bank_loan_commands()
 	_test_study()
 	_test_exercise()
 	_test_job_apply_unqualified()
@@ -104,6 +106,30 @@ func _test_deposit_withdraw() -> void:
 	var r2: Dictionary = _run("取钱 200 元")
 	check(bool(r2["ok"]), "取钱成功")
 	check(float(host.player()["finances"]["cash"]) > 0.0, "现金回升")
+
+func _test_securities_commands() -> void:
+	_setup()
+	host.economy.issue_money(host.account_id(), 2000000, "test_fund")
+	host.sync_finances()
+	var buy: Dictionary = _run("买股票 科技成长 3")
+	check(bool(buy["ok"]), "买股票指令可执行")
+	check_eq(host.bank.holding_qty("stock.tech"), 3, "指令买入写入持仓")
+	var sell: Dictionary = _run("卖股票 科技成长 1")
+	check(bool(sell["ok"]), "卖股票指令可执行")
+	check_eq(host.bank.holding_qty("stock.tech"), 2, "指令卖出减少持仓")
+	var over: Dictionary = _run("卖股票 科技成长 99")
+	check(not bool(over["ok"]), "超卖指令被拒绝")
+	var bad: Dictionary = _run("买股票 不存在 1")
+	check(not bool(bad["ok"]), "未知证券指令被拒绝")
+
+func _test_bank_loan_commands() -> void:
+	_setup()
+	var loan: Dictionary = _run("贷款 5000元 1年")
+	check(bool(loan["ok"]), "贷款指令可执行")
+	check_eq(host.economy.debt(host.account_id()), 500000, "贷款计入负债")
+	var repay: Dictionary = _run("还款 2000元")
+	check(bool(repay["ok"]), "还款指令可执行")
+	check_eq(host.economy.debt(host.account_id()), 300000, "还款冲抵负债")
 
 func _test_study() -> void:
 	_setup()

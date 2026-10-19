@@ -836,6 +836,19 @@ func _test_finance() -> void:
 	player["assets"] = [{"content_key": "asset.house", "kind": "real_estate", "value": 500000.0, "mortgaged": true}]
 	var asset_sec: Dictionary = _find_section(PanelContentScript.finance(player), "资产")
 	check_eq(_row_value(asset_sec, "house"), "500000 · 已抵押", "资产与抵押")
+	var ctx: Dictionary = {"finance": {
+		"credit": 720, "demand_rate": 0.012, "fixed_rate": 0.025, "loan_rate": 0.055,
+		"debt_minor": 500000,
+		"fixed_deposits": [{"principal": 1000000, "rate": 0.025, "term_days": 365, "matured": false}],
+		"portfolio": {"items": [{"name": "科技成长", "qty": 10, "value": 600.0, "profit": 120.0}], "value": 600.0, "profit": 120.0},
+		"securities": [{"key": "stock.tech", "name": "科技成长", "price": 60.0}],
+	}}
+	var d2: Dictionary = PanelContentScript.finance(player, Callable(), ctx)
+	check_eq(_row_value(_find_section(d2, "信用与利率"), "银行信用"), "720", "信用分展示")
+	check_eq(_row_value(_find_section(d2, "信用与利率"), "当前负债"), "5000", "负债主单位换算")
+	check_eq(_row_value(_find_section(d2, "定期存款"), "365天 · 年息2.50%"), "10000", "定期存款展示")
+	check_eq(_row_value(_find_section(d2, "证券持仓"), "科技成长 ×10"), "600（+120）", "持仓与盈亏")
+	check_eq(_row_value(_find_section(d2, "行情"), "科技成长（stock.tech）"), "60.00", "行情报价")
 
 func _test_relations() -> void:
 	check(bool(PanelContentScript.relations(GameStateScript.default_player()).get("empty", false)), "无关系空态")

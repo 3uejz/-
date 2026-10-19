@@ -79,7 +79,7 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 		"company":
 			data = company(player, context, name_resolver)
 		"finance":
-			data = finance(player, name_resolver)
+			data = finance(player, name_resolver, context)
 		"relations":
 			data = relations(player, name_resolver)
 		"achievements":
@@ -342,7 +342,7 @@ static func _credential_rows(items: Array, name_resolver: Callable) -> Array:
 
 # --- 资产与财务 ---
 
-static func finance(player: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
+static func finance(player: Dictionary, name_resolver: Callable = Callable(), context: Dictionary = {}) -> Dictionary:
 	if player.is_empty():
 		return _empty("资产与财务", "尚未生成角色数据")
 	var fin: Dictionary = player.get("finances", {})
@@ -368,6 +368,51 @@ static func finance(player: Dictionary, name_resolver: Callable = Callable()) ->
 				value += " · 已抵押"
 			asset_rows.append({"label": _resolve(String(a.get("content_key", "?")), name_resolver), "value": value})
 		sections.append({"title": "资产", "rows": asset_rows})
+	var fc: Dictionary = context.get("finance", {}) if context.get("finance", {}) is Dictionary else {}
+	if not fc.is_empty():
+		var minor := 100.0
+		var bank_rows: Array = [
+			{"label": "银行信用", "value": str(int(fc.get("credit", 0)))},
+			{"label": "活期利率", "value": "%.2f%%" % (float(fc.get("demand_rate", 0.0)) * 100.0)},
+			{"label": "定期利率", "value": "%.2f%%" % (float(fc.get("fixed_rate", 0.0)) * 100.0)},
+			{"label": "贷款年利率", "value": "%.2f%%" % (float(fc.get("loan_rate", 0.0)) * 100.0)},
+			{"label": "当前负债", "value": _money(float(fc.get("debt_minor", 0)) / minor)},
+		]
+		sections.append({"title": "信用与利率", "rows": bank_rows})
+		var dep_rows: Array = []
+		for d in (fc.get("fixed_deposits", []) as Array):
+			var status: String = "已到期" if bool(d.get("matured", false)) else "%d天" % int(d.get("term_days", 0))
+			dep_rows.append({
+				"label": "%s · 年息%.2f%%" % [status, float(d.get("rate", 0.0)) * 100.0],
+				"value": _money(float(d.get("principal", 0)) / minor),
+			})
+		if not dep_rows.is_empty():
+			sections.append({"title": "定期存款", "rows": dep_rows})
+		var pf: Dictionary = fc.get("portfolio", {}) if fc.get("portfolio", {}) is Dictionary else {}
+		var hold_rows: Array = []
+		for item in (pf.get("items", []) as Array):
+			var pnl: float = float(item.get("profit", 0))
+			hold_rows.append({
+				"label": "%s ×%d" % [String(item.get("name", "?")), int(item.get("qty", 0))],
+				"value": "%s（%s%s）" % [
+					_money(float(item.get("value", 0))),
+					"+" if pnl >= 0.0 else "",
+					_money(pnl),
+				],
+			})
+		if not hold_rows.is_empty():
+			hold_rows.append({"label": "组合市值", "value": _money(float(pf.get("value", 0)))})
+			hold_rows.append({"label": "累计盈亏", "value": "%s%s" % [
+				"+" if float(pf.get("profit", 0)) >= 0.0 else "", _money(float(pf.get("profit", 0)))]})
+			sections.append({"title": "证券持仓", "rows": hold_rows})
+		var quote_rows: Array = []
+		for q in (fc.get("securities", []) as Array):
+			quote_rows.append({
+				"label": "%s（%s）" % [String(q.get("name", "?")), String(q.get("key", ""))],
+				"value": "%.2f" % float(q.get("price", 0.0)),
+			})
+		if not quote_rows.is_empty():
+			sections.append({"title": "行情", "rows": quote_rows})
 	return {"empty": false, "empty_hint": "", "sections": sections}
 
 # --- 关系与人脉 ---

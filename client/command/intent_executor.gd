@@ -84,6 +84,14 @@ func _dispatch(intent) -> Dictionary:
 			return _deposit(intent)
 		"取钱":
 			return _withdraw(intent)
+		"贷款":
+			return _bank_loan(intent)
+		"还款":
+			return _bank_repay(intent)
+		"买股票":
+			return _security_buy(intent)
+		"卖股票":
+			return _security_sell(intent)
 		# 职业
 		"求职", "面试":
 			return _job_apply(intent)
@@ -1070,6 +1078,57 @@ func _deposit(intent) -> Dictionary:
 	host.sync_finances()
 	return _ok([FlavorScript.time_line("bank", host.now_minutes()),
 		"存入 %.0f 元。" % (float(minor) / 100.0)], 0, "")
+
+func _bank_loan(intent) -> Dictionary:
+	var minor := _amount_minor(intent)
+	if minor <= 0:
+		return _fail("请指定贷款金额。")
+	var days: int = maxi(1, _duration_minutes(intent, 365 * DAY) / DAY)
+	var r: Dictionary = host.bank_loan(minor, days)
+	if not bool(r.get("ok", false)):
+		return _fail("贷款未获批。")
+	return _ok(["贷款 %.0f 元，期限 %d 天，信用 %d。" % [
+		float(r.get("principal", 0)) / 100.0, days, int(r.get("rating", 0))]], 0, "")
+
+func _bank_repay(intent) -> Dictionary:
+	var minor := _amount_minor(intent)
+	if minor <= 0:
+		minor = host.economy.debt(host.account_id())
+	var r: Dictionary = host.repay_bank_loan(minor)
+	if not bool(r.get("ok", false)):
+		return _fail("没有需要偿还的贷款。")
+	return _ok(["还款 %.0f 元，剩余负债 %.0f 元。" % [
+		float(r.get("paid", 0)) / 100.0, float(r.get("remaining", 0)) / 100.0]], 0, "")
+
+func _security_key(intent) -> String:
+	var key := _object_id(intent, "asset")
+	if key.is_empty():
+		key = String(intent.params.get("method", ""))
+	if key.is_empty():
+		key = String(intent.params.get("name", ""))
+	return key
+
+func _security_buy(intent) -> Dictionary:
+	var key := _security_key(intent)
+	if key.is_empty():
+		return _fail("请指定证券代码，如「买股票 科技成长 10」。")
+	var r: Dictionary = host.buy_security(key, _quantity(intent))
+	if not bool(r.get("ok", false)):
+		return _fail("买入失败：%s。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["买入 %s %d 份，成交价 %.2f，支出 %.0f 元。" % [
+		String(r.get("key", key)), int(r.get("qty", 0)), float(r.get("price", 0.0)),
+		float(r.get("cost", 0)) / 100.0]], 0, "")
+
+func _security_sell(intent) -> Dictionary:
+	var key := _security_key(intent)
+	if key.is_empty():
+		return _fail("请指定证券代码，如「卖股票 科技成长 10」。")
+	var r: Dictionary = host.sell_security(key, _quantity(intent))
+	if not bool(r.get("ok", false)):
+		return _fail("卖出失败：%s。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["卖出 %s %d 份，成交价 %.2f，回款 %.0f 元。" % [
+		String(r.get("key", key)), int(r.get("qty", 0)), float(r.get("price", 0.0)),
+		float(r.get("proceeds", 0)) / 100.0]], 0, "")
 
 func _withdraw(intent) -> Dictionary:
 	var minor := _amount_minor(intent)
@@ -4704,6 +4763,14 @@ func _tin_disruption(intent) -> Dictionary:
 
 func _reason_cn(reason: String) -> String:
 	match reason:
+		"insufficient_cash":
+			return "现金不足"
+		"insufficient_holding":
+			return "持仓不足"
+		"unknown_security":
+			return "未知证券"
+		"bad_order":
+			return "交易参数无效"
 		"not_listed", "unavailable":
 			return "此房源不可交易"
 		"not_owned":

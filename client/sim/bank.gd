@@ -23,15 +23,21 @@ var _rng = null
 var _lottery_tickets: int = 0
 var _lottery_pool: int = 0
 var _pos_seq: int = 0
+var _securities: Dictionary = {}   # key -> {name, kind, price, mu, sigma, crypto}
+var _holdings: Dictionary = {}     # key -> {qty, cost}
 
 
 func _init(seed: int = 0) -> void:
 	_rng = RngScript.new(seed)
+	seed_securities()
 
 
 # =====================================================================
 # 存款与贷款
 # =====================================================================
+
+func fixed_deposits(id: String) -> Array:
+	return (_fixed_deposits.get(id, []) as Array).duplicate(true)
 
 func credit_rating(id: String) -> int:
 	return int(_credit.get(id, BaselineScript.BANK_CREDIT_START))
@@ -234,6 +240,125 @@ func lottery_tickets() -> int:
 	return _lottery_tickets
 
 
+# --- 证券投资 ---
+
+## 内置证券池：股票/基金/债券/黄金/加密资产，价格与漂移按风险分层。
+const SECURITIES: Dictionary = {
+	"stock.tech": {"name": "科技成长", "kind": "stock", "price": 58.0, "mu": 0.12, "sigma": 0.32},
+	"stock.bank": {"name": "银行蓝筹", "kind": "stock", "price": 22.0, "mu": 0.07, "sigma": 0.22},
+	"stock.energy": {"name": "能源周期", "kind": "stock", "price": 35.0, "mu": 0.09, "sigma": 0.28},
+	"fund.index": {"name": "宽基指数", "kind": "fund", "price": 4.2, "mu": 0.06, "sigma": 0.14},
+	"fund.bond": {"name": "债券基金", "kind": "fund", "price": 1.8, "mu": 0.03, "sigma": 0.05},
+	"bond.gov": {"name": "国债", "kind": "bond", "price": 100.0, "mu": 0.025, "sigma": 0.03},
+	"gold": {"name": "黄金", "kind": "commodity", "price": 520.0, "mu": 0.05, "sigma": 0.12},
+	"crypto.btc": {"name": "比特币", "kind": "crypto", "price": 42000.0, "mu": 0.18, "sigma": 0.65, "crypto": true},
+}
+
+## 填充证券池（幂等）；已存在报价不覆盖，避免读档后重置。
+func seed_securities() -> void:
+	for key in SECURITIES.keys():
+		if _securities.has(key):
+			continue
+		var def: Dictionary = SECURITIES[key]
+		_securities[key] = {
+			"name": String(def.get("name", key)), "kind": String(def.get("kind", "stock")),
+			"price": maxf(0.01, float(def.get("price", 1.0))),
+			"mu": float(def.get("mu", BaselineScript.GBM_DRIFT_DEFAULT)),
+			"sigma": float(def.get("sigma", BaselineScript.GBM_VOLATILITY_DEFAULT)),
+			"crypto": bool(def.get("crypto", false)),
+		}
+
+func security_keys() -> Array:
+	return _securities.keys()
+
+func security_quote(key: String) -> Dictionary:
+	var sec: Dictionary = _securities.get(key, {})
+	if sec.is_empty():
+		return {}
+	return {
+		"key": key, "name": String(sec.get("name", key)), "kind": String(sec.get("kind", "stock")),
+		"price": float(sec.get("price", 0.0)), "crypto": bool(sec.get("crypto", false)),
+	}
+
+## 推进全部证券报价；dt_years 为经过年数。价格恒为正且可复现。
+func advance_securities(dt_years: float) -> void:
+	if dt_years <= 0.0:
+		return
+	seed_securities()
+	for key in _securities.keys():
+		var sec: Dictionary = _securities[key]
+		var stepped: float = quote_next(float(sec.get("price", 1.0)), float(sec.get("mu", 0.0)), float(sec.get("sigma", 0.0)), dt_years)
+		sec["price"] = maxf(BaselineScript.GBM_PRICE_FLOOR, stepped)
+		_securities[key] = sec
+
+func holding_qty(key: String) -> int:
+	return int((_holdings.get(key, {}) as Dictionary).get("qty", 0))
+
+func holding_cost(key: String) -> float:
+	return float((_holdings.get(key, {}) as Dictionary).get("cost", 0.0))
+
+## 买入：按当前报价从现金扣款，均价成本按加权平均更新。返回成交明细。
+func buy_security(economy, id: String, key: String, qty: int) -> Dictionary:
+	seed_securities()
+	if qty <= 0 or not _securities.has(key):
+		return {"ok": false, "reason": "bad_order"}
+	var price: float = float((_securities[key] as Dictionary).get("price", 0.0))
+	var cost: int = int(round(price * float(BaselineScript.MONEY_MINOR_SCALE) * float(qty)))
+	if cost <= 0 or economy.cash(id) < cost:
+		return {"ok": false, "reason": "insufficient_cash", "cost": cost}
+	economy.add_money(id, -cost, "security_buy", "cash")
+	var held: Dictionary = _holdings.get(key, {"qty": 0, "cost": 0.0})
+	var old_qty: int = int(held.get("qty", 0))
+	var old_cost: float = float(held.get("cost", 0.0))
+	var new_qty: int = old_qty + qty
+	held["qty"] = new_qty
+	held["cost"] = (old_cost * float(old_qty) + price * float(qty)) / float(new_qty)
+	_holdings[key] = held
+	return {"ok": true, "key": key, "qty": qty, "price": price, "cost": cost, "avg_cost": float(held["cost"])}
+
+## 卖出：按当前报价回款，卖出部分不改变剩余持仓均价。
+func sell_security(economy, id: String, key: String, qty: int) -> Dictionary:
+	seed_securities()
+	if qty <= 0 or not _securities.has(key):
+		return {"ok": false, "reason": "bad_order"}
+	var held: Dictionary = _holdings.get(key, {})
+	if int(held.get("qty", 0)) < qty:
+		return {"ok": false, "reason": "insufficient_holding"}
+	var price: float = float((_securities[key] as Dictionary).get("price", 0.0))
+	var proceeds: int = int(round(price * float(BaselineScript.MONEY_MINOR_SCALE) * float(qty)))
+	economy.add_money(id, proceeds, "security_sell", "cash")
+	held["qty"] = int(held.get("qty", 0)) - qty
+	if int(held["qty"]) <= 0:
+		_holdings.erase(key)
+	else:
+		_holdings[key] = held
+	return {"ok": true, "key": key, "qty": qty, "price": price, "proceeds": proceeds}
+
+## 组合市值与浮动盈亏（按当前报价；金额为主币单位）。
+func portfolio() -> Dictionary:
+	seed_securities()
+	var items: Array = []
+	var total_value: float = 0.0
+	var total_cost: float = 0.0
+	for key in _holdings.keys():
+		var qty: int = int((_holdings[key] as Dictionary).get("qty", 0))
+		if qty <= 0 or not _securities.has(key):
+			continue
+		var price: float = float((_securities[key] as Dictionary).get("price", 0.0))
+		var avg: float = float((_holdings[key] as Dictionary).get("cost", 0.0))
+		var value: float = price * float(qty)
+		var cost: float = avg * float(qty)
+		total_value += value
+		total_cost += cost
+		items.append({
+			"key": key, "name": String((_securities[key] as Dictionary).get("name", key)),
+			"kind": String((_securities[key] as Dictionary).get("kind", "stock")),
+			"qty": qty, "price": price, "avg_cost": avg,
+			"value": value, "profit": value - cost,
+		})
+	return {"items": items, "value": total_value, "cost": total_cost, "profit": total_value - total_cost}
+
+
 # --- 序列化 ---
 
 func to_dict() -> Dictionary:
@@ -243,4 +368,21 @@ func to_dict() -> Dictionary:
 		"positions": _positions.duplicate(true),
 		"lottery_tickets": _lottery_tickets,
 		"lottery_pool": _lottery_pool,
+		"securities": _securities.duplicate(true),
+		"holdings": _holdings.duplicate(true),
 	}
+
+func from_dict(data: Dictionary) -> void:
+	var credit: Variant = data.get("credit", {})
+	_credit = (credit as Dictionary).duplicate(true) if credit is Dictionary else {}
+	var fixed: Variant = data.get("fixed_deposits", {})
+	_fixed_deposits = (fixed as Dictionary).duplicate(true) if fixed is Dictionary else {}
+	var positions: Variant = data.get("positions", {})
+	_positions = (positions as Dictionary).duplicate(true) if positions is Dictionary else {}
+	_lottery_tickets = int(data.get("lottery_tickets", 0))
+	_lottery_pool = int(data.get("lottery_pool", 0))
+	var sec: Variant = data.get("securities", {})
+	_securities = (sec as Dictionary).duplicate(true) if sec is Dictionary and not (sec as Dictionary).is_empty() else {}
+	var hold: Variant = data.get("holdings", {})
+	_holdings = (hold as Dictionary).duplicate(true) if hold is Dictionary else {}
+	seed_securities()

@@ -62,7 +62,8 @@
         "transport_infra": { "type": "object", "additionalProperties": true },
         "domain_wake": { "type": "object", "additionalProperties": true },
         "research": { "type": "object", "additionalProperties": true },
-        "civil": { "type": "object", "additionalProperties": true }
+        "civil": { "type": "object", "additionalProperties": true },
+        "finance": { "type": "object", "additionalProperties": true }
       }
     },
     "save_meta": {

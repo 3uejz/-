@@ -932,6 +932,9 @@ func _panel_context() -> Dictionary:
 	if _sim != null:
 		if _sim.economy != null:
 			context["macro"] = _sim.economy.macro
+		var fin: Dictionary = _sim.finance_panel_data()
+		if not fin.is_empty():
+			context["finance"] = fin
 		var regions_view: Array = _sim.regions_view()
 		if not regions_view.is_empty():
 			context["regions"] = regions_view

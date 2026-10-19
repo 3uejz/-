@@ -33,6 +33,7 @@ func run_tests() -> void:
 	_test_military_bindings()
 	_test_workplace_bindings()
 	_test_company_financing_bindings()
+	_test_finance_runtime()
 	_test_acquaintances_and_marriage()
 	_test_property_market_and_purchase()
 	_test_inheritance_settles()
@@ -480,6 +481,26 @@ func _test_company_financing_bindings() -> void:
 	check(not panel2.is_empty(), "读档恢复公司")
 	check(bool((panel2.get("cap_table", {}) as Dictionary).get("exited", false)), "读档恢复退出状态")
 
+
+## D8 金融运行态：证券买卖经主机写入 sim_runtime，读档恢复持仓与报价。
+func _test_finance_runtime() -> void:
+	var h = _setup(121)
+	h.economy.issue_money(h.account_id(), 5000000, "test_fund")
+	h.sync_finances()
+	var r: Dictionary = h.buy_security("科技成长", 4)
+	check(bool(r.get("ok", false)), "主机买入证券成功")
+	check_eq(h.bank.holding_qty("stock.tech"), 4, "主机持仓正确")
+	check(h.state.sim_runtime.get("finance", {}) is Dictionary, "金融运行态写入 sim_runtime")
+	var price_before: float = float(h.bank.security_quote("stock.tech")["price"])
+	h.advance(30 * 24 * 60)
+	check(float(h.bank.security_quote("stock.tech")["price"]) != price_before, "时间推进后报价变化")
+	var price_after: float = float(h.bank.security_quote("stock.tech")["price"])
+	var reloaded = SimHostScript.new(h.state, 121)
+	check_eq(reloaded.bank.holding_qty("stock.tech"), 4, "读档恢复证券持仓")
+	check(abs(float(reloaded.bank.security_quote("stock.tech")["price"]) - price_after) < 1e-9, "读档恢复证券报价")
+	var sell: Dictionary = reloaded.sell_security("科技成长", 4)
+	check(bool(sell.get("ok", false)), "读档后卖出成功")
+	check_eq(reloaded.bank.holding_qty("stock.tech"), 0, "卖出后清仓")
 
 func _test_acquaintances_and_marriage() -> void:
 	var state = GameStateScript.new()

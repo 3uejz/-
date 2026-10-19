@@ -487,6 +487,10 @@ func _ensure_world_geo() -> void:
 				_company = (cod["company"] as Dictionary).duplicate(true)
 			if cod.get("cap_table", null) is Dictionary:
 				_cap_table = (cod["cap_table"] as Dictionary).duplicate(true)
+		# 恢复银行信用、定期存款、证券持仓与报价。
+		var fin_state: Variant = (state.sim_runtime as Dictionary).get("finance", {})
+		if fin_state is Dictionary and not (fin_state as Dictionary).is_empty():
+			bank.from_dict(fin_state)
 		# 恢复形象档案与医美运行态。
 		var ap: Variant = (state.sim_runtime as Dictionary).get("appearance", {})
 		if ap is Dictionary and not (ap as Dictionary).is_empty():
@@ -7963,6 +7967,98 @@ func _short_date(day_index: int) -> String:
 	var cal: Dictionary = GregorianScript.from_absolute_minutes(day_index * MINUTES_PER_DAY)
 	return "%d/%d" % [int(cal.get("month", 1)), int(cal.get("day", 1))]
 
+# --- D8 个人金融：证券投资与银行存贷 ---
+
+## 证券行情目录（含玩家持仓数量）。
+func securities_catalog() -> Array:
+	var out: Array = []
+	for key in bank.security_keys():
+		var q: Dictionary = bank.security_quote(String(key))
+		q["qty"] = bank.holding_qty(String(key))
+		out.append(q)
+	return out
+
+## 买入证券：key 支持代码或中文名；qty 为份数。返回成交明细。
+func buy_security(key: String, qty: int) -> Dictionary:
+	var sid: String = _resolve_security(key)
+	if sid == "":
+		return {"ok": false, "reason": "unknown_security"}
+	var r: Dictionary = bank.buy_security(economy, account_id(), sid, qty)
+	if bool(r.get("ok", false)):
+		sync_finances()
+		_persist_finance()
+	return r
+
+## 卖出证券：返回成交明细。
+func sell_security(key: String, qty: int) -> Dictionary:
+	var sid: String = _resolve_security(key)
+	if sid == "":
+		return {"ok": false, "reason": "unknown_security"}
+	var r: Dictionary = bank.sell_security(economy, account_id(), sid, qty)
+	if bool(r.get("ok", false)):
+		sync_finances()
+		_persist_finance()
+	return r
+
+func _resolve_security(key: String) -> String:
+	var raw: String = key.strip_edges()
+	if raw == "":
+		return ""
+	if bank.security_quote(raw).size() > 0:
+		return raw
+	for item in bank.security_keys():
+		var q: Dictionary = bank.security_quote(String(item))
+		if String(q.get("name", "")) == raw:
+			return String(item)
+	return ""
+
+## 银行贷款：按金额与期限发放，计入负债并回写资产镜像。
+func bank_loan(amount_minor: int, term_days: int = 365) -> Dictionary:
+	if amount_minor <= 0:
+		return {"ok": false, "reason": "bad_amount"}
+	var principal: int = bank.take_loan(economy, account_id(), amount_minor, term_days)
+	if principal <= 0:
+		return {"ok": false, "reason": "rejected"}
+	sync_finances()
+	_persist_finance()
+	return {"ok": true, "principal": principal, "term_days": term_days, "rating": bank.credit_rating(account_id())}
+
+## 偿还银行贷款：金额上限为现金与负债的较小值。
+func repay_bank_loan(amount_minor: int) -> Dictionary:
+	if amount_minor <= 0:
+		return {"ok": false, "reason": "bad_amount"}
+	var paid: int = bank.repay_loan(economy, account_id(), amount_minor)
+	if paid <= 0:
+		return {"ok": false, "reason": "nothing_to_repay"}
+	sync_finances()
+	_persist_finance()
+	return {"ok": true, "paid": paid, "remaining": economy.debt(account_id())}
+
+## 金融面板数据：信用/利率/定期/贷款/持仓与组合盈亏。
+func finance_panel_data() -> Dictionary:
+	var id: String = account_id()
+	var deposits: Array = []
+	for entry in bank.fixed_deposits(id):
+		var d: Dictionary = entry
+		deposits.append({
+			"principal": int(d.get("principal", 0)), "rate": float(d.get("rate", 0.0)),
+			"start_day": int(d.get("start_day", 0)), "term_days": int(d.get("term_days", 0)),
+			"matured": bool(d.get("matured", false)),
+		})
+	return {
+		"credit": bank.credit_rating(id),
+		"demand_rate": bank.demand_rate(), "fixed_rate": bank.fixed_rate(), "loan_rate": bank.loan_rate(),
+		"debt_minor": economy.debt(id), "cash_minor": economy.cash(id), "bank_minor": economy.bank(id),
+		"fixed_deposits": deposits,
+		"portfolio": bank.portfolio(),
+		"securities": securities_catalog(),
+	}
+
+func _persist_finance() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["finance"] = bank.to_dict()
+
 ## 把经济运行账户余额回写到 player.finances（最小货币单位 → 主单位）。
 func sync_finances() -> void:
 	var id := account_id()
@@ -7989,6 +8085,9 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	clock["absolute_minutes"] = int(clock.get("absolute_minutes", 0)) + minutes
 	# 活动区域随分钟推进（人口/经济日级结算）并写回存档增量；天气按当前时刻查询式演化，无需 tick。
 	regions.tick_minute(int(clock["absolute_minutes"]))
+	# 证券市场报价随游戏内时间连续演化（GBM，同种子可复现）。
+	bank.advance_securities(float(minutes) / MINUTES_PER_YEAR)
+	_persist_finance()
 	# 领域实体（案件/工程/灾害/催收/异常/手术）离线补算，随游戏内时钟推进并回写领域状态。
 	domain_wake.advance_to(int(clock["absolute_minutes"]))
 	_apply_wake_results()

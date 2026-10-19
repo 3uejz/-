@@ -31,9 +31,58 @@ func run_tests() -> void:
 	_test_macro_bounded_and_transmission()
 	_test_bank_loan_and_credit()
 	_test_margin_liquidation()
+	_test_securities_trading()
+	_test_securities_persistence()
 	_test_insurance_and_lottery()
 	_test_remote_override()
 	BaselineScript.clear_overrides()
+
+
+## 证券买卖：资金扣减、加权均价、卖出不摊薄、超卖拒绝、报价恒正。
+func _test_securities_trading() -> void:
+	var e = EconomyScript.new(7)
+	e.open_account("s", 10000000)
+	var b = BankScript.new(7)
+	check(not b.security_quote("stock.tech").is_empty(), "内置证券可查询")
+	var first: Dictionary = b.buy_security(e, "s", "stock.tech", 10)
+	check(bool(first.get("ok", false)), "买入成功")
+	check_eq(b.holding_qty("stock.tech"), 10, "买入后持仓 10")
+	check_eq(e.cash("s"), 10000000 - int(first["cost"]), "买入扣减现金")
+	var avg0: float = b.holding_cost("stock.tech")
+	b.advance_securities(0.5)
+	var second: Dictionary = b.buy_security(e, "s", "stock.tech", 5)
+	check(bool(second.get("ok", false)), "加仓成功")
+	var expect_avg: float = (avg0 * 10.0 + float(second["price"]) * 5.0) / 15.0
+	check(abs(b.holding_cost("stock.tech") - expect_avg) < 1e-6, "持仓均价按加权平均")
+	var avg1: float = b.holding_cost("stock.tech")
+	var sold: Dictionary = b.sell_security(e, "s", "stock.tech", 4)
+	check(bool(sold.get("ok", false)), "卖出成功")
+	check_eq(b.holding_qty("stock.tech"), 11, "卖出后剩余 11")
+	check(abs(b.holding_cost("stock.tech") - avg1) < 1e-6, "卖出不改变剩余均价")
+	check(not bool(b.sell_security(e, "s", "stock.tech", 999).get("ok", true)), "超卖被拒绝")
+	check(not bool(b.buy_security(e, "s", "gold", 0).get("ok", true)), "零份买入被拒绝")
+	check(not bool(b.buy_security(e, "s", "no.such", 1).get("ok", true)), "未知证券被拒绝")
+	var pf: Dictionary = b.portfolio()
+	check_eq((pf["items"] as Array).size(), 1, "组合仅一项持仓")
+	check(abs(float(pf["value"]) - float(b.security_quote("stock.tech")["price"]) * 11.0) < 1e-6, "组合市值随报价")
+	b.advance_securities(2.0)
+	check(float(b.security_quote("gold")["price"]) > 0.0, "推进后报价恒正")
+
+## 证券报价与持仓可存档恢复；无报价时回填内置池。
+func _test_securities_persistence() -> void:
+	var e = EconomyScript.new(11)
+	e.open_account("p", 5000000)
+	var b = BankScript.new(11)
+	b.buy_security(e, "p", "fund.index", 100)
+	b.advance_securities(0.3)
+	var saved: Dictionary = b.to_dict()
+	var b2 = BankScript.new(99)
+	b2.from_dict(saved)
+	check_eq(b2.holding_qty("fund.index"), 100, "读档恢复持仓")
+	check(abs(float(b2.security_quote("fund.index")["price"]) - float(b.security_quote("fund.index")["price"])) < 1e-9, "读档恢复报价")
+	var empty = BankScript.new(3)
+	empty.from_dict({"holdings": {}})
+	check(empty.security_quote("stock.tech").size() > 0, "缺省报价自动回填")
 
 
 # --- 10.1 金钱守恒 ---
