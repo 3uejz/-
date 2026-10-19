@@ -130,7 +130,32 @@ const CORE_ENTRIES: Dictionary = {
 const GEN_PREFIX: Array = ["缄默", "灰烬", "倒映", "低语", "锈蚀", "织梦", "潮汐", "静默", "无面", "暖", "归乡", "影"]
 const GEN_SUFFIX: Array = ["之物", "之面", "之钟", "之藤", "之信", "之罩", "之蛛", "之门", "之书", "之偶", "之客", "之石"]
 
+## 四阵营各三条任务线：id/标题/目标/奖励声望。
+const FACTION_MISSIONS: Dictionary = {
+	"foundation": [
+		{"id": "fd-01", "name": "回收失窃档案", "objective": "追回外流的收容文档并完成记忆删除", "reward": 20.0},
+		{"id": "fd-02", "name": "临时站点值守", "objective": "在低危异常站点连续值守三个夜晚", "reward": 25.0},
+		{"id": "fd-03", "name": "收容失效处置", "objective": "协助重收容并提交事故复盘", "reward": 40.0},
+	],
+	"cult": [
+		{"id": "ct-01", "name": "寻找降临时刻", "objective": "根据异象推算下一次仪式窗口", "reward": 20.0},
+		{"id": "ct-02", "name": "护送圣物", "objective": "将圣物安全转移至指定地点", "reward": 30.0},
+		{"id": "ct-03", "name": "见证归乡门", "objective": "在门前完成见证并记录异变", "reward": 45.0},
+	],
+	"black_lab": [
+		{"id": "bl-01", "name": "采集活体样本", "objective": "从低危异常处取得可用组织样本", "reward": 25.0},
+		{"id": "bl-02", "name": "违规人体试验", "objective": "招募志愿者完成一轮耐受测试", "reward": 35.0},
+		{"id": "bl-03", "name": "销毁实验记录", "objective": "在稽查前清理关键实验数据", "reward": 40.0},
+	],
+	"hunter": [
+		{"id": "ht-01", "name": "追踪异常踪迹", "objective": "循线索找到游荡异常的巢穴", "reward": 20.0},
+		{"id": "ht-02", "name": "夺取异常核心", "objective": "击败守护者并带回核心材料", "reward": 35.0},
+		{"id": "ht-03", "name": "猎杀高阶实体", "objective": "独立完成一次高危异常猎杀", "reward": 50.0},
+	],
+}
+
 var state: Dictionary = {}
+var _generated_catalog: Array = []
 
 
 func _init() -> void:
@@ -620,7 +645,7 @@ func generate_entry(seed: int) -> Dictionary:
 	var number: int = int(absf(float(seed))) % TOTAL_CATALOG_SIZE + 1
 	var clearance: int = clampi(int(rng.next_float() * 6.0), 0, 5)
 	return {
-		"id": "异-%04d" % number,
+		"id": "异-G%04d" % number,
 		"name": str(GEN_PREFIX[pi]) + str(GEN_SUFFIX[si]),
 		"containment": str(CONTAINMENT_KEYS[ci]),
 		"threat": str(THREAT_KEYS[ti]),
@@ -632,6 +657,60 @@ func generate_entry(seed: int) -> Dictionary:
 		"unlocked": false,
 		"generated": true,
 	}
+
+
+## 生成条目全量目录：按 seed 0..count-1 确定性展开并缓存。
+func generated_catalog(count: int = -1) -> Array:
+	var total: int = count if count > 0 else TOTAL_CATALOG_SIZE
+	if count <= 0 and _generated_catalog.size() == total:
+		return _generated_catalog
+	var out: Array = []
+	for i in range(total):
+		out.append(generate_entry(i))
+	if count <= 0:
+		_generated_catalog = out
+	return out
+
+
+## 按 id 查询核心或生成条目。
+func catalog_entry(entry_id: String) -> Dictionary:
+	var core: Dictionary = entry(entry_id)
+	if not core.is_empty():
+		return core
+	for e in generated_catalog():
+		if String(e.get("id", "")) == entry_id:
+			return (e as Dictionary).duplicate(true)
+	return {}
+
+
+## 全量目录校验：条目数、唯一 id、必填字段与枚举合法性。
+func validate_catalog(count: int = -1) -> Dictionary:
+	var rows: Array = generated_catalog(count)
+	var errors: Array = []
+	var seen: Dictionary = {}
+	for e in rows:
+		var entry_row: Dictionary = e
+		var id: String = String(entry_row.get("id", ""))
+		if seen.has(id):
+			errors.append("duplicate:%s" % id)
+		seen[id] = true
+		var v: Dictionary = validate_entry(entry_row)
+		if not bool(v.get("ok", false)):
+			errors.append("%s:%s" % [id, ",".join(v.get("errors", []))])
+	return {"ok": errors.is_empty(), "count": rows.size(), "unique": seen.size(), "errors": errors}
+
+
+## 阵营任务线目录（可按阵营过滤）。
+func faction_mission_catalog(faction: String = "") -> Array:
+	var out: Array = []
+	var keys: Array = [faction] if FACTION_MISSIONS.has(faction) else FACTION_MISSIONS.keys()
+	for key in keys:
+		for m in (FACTION_MISSIONS[key] as Array):
+			var row: Dictionary = (m as Dictionary).duplicate(true)
+			row["faction"] = String(key)
+			row["faction_name"] = faction_name(String(key))
+			out.append(row)
+	return out
 
 
 ## 人工校验钩子：缺字段或非法枚举返回错误。

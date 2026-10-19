@@ -1833,6 +1833,8 @@ func _test_anomaly_runtime() -> void:
 	# 分级与目录。
 	check(host.anomaly_gate_catalog().size() >= 5, "门闩途径≥5")
 	check(host.anomaly_entry_catalog().size() >= 13, "核心异常条目≥13")
+	check(host.anomaly_catalog_validate(50).get("ok", false), "异常生成目录抽样校验")
+	check(host.anomaly_mission_catalog().size() >= 12, "异常阵营任务线目录")
 	check(host.anomaly_ability_catalog().size() >= 4, "能力线≥4")
 	check(host.anomaly_faction_catalog().size() >= 4, "阵营≥4")
 	check(host.anomaly_identity_catalog().size() >= 5, "身份≥5")

@@ -7052,6 +7052,17 @@ func anomaly_entry_catalog() -> Array:
 		out.append({"id": String(e.get("id", "")), "name": String(e.get("name", ""))})
 	return out
 
+## 生成条目目录：可按数量截取，默认全量 2000。
+func anomaly_generated_catalog(count: int = -1) -> Array:
+	return anomaly.generated_catalog(count)
+
+## 全量目录 schema 校验（字段/枚举/唯一 id）。
+func anomaly_catalog_validate(count: int = -1) -> Dictionary:
+	return anomaly.validate_catalog(count)
+
+func anomaly_mission_catalog(faction: String = "") -> Array:
+	return anomaly.faction_mission_catalog(faction)
+
 func anomaly_ability_catalog() -> Array:
 	var out: Array = []
 	for key in anomaly.ability_keys():
@@ -7169,6 +7180,8 @@ func anomaly_panel_data() -> Dictionary:
 		"amnestics": anomaly.amnestic_status(a),
 		"known_count": anomaly.known_entries(a).size(),
 		"known": anomaly.known_entries(a),
+		"catalog_size": anomaly.catalog_size(),
+		"missions": anomaly.faction_mission_catalog(String(a.get("faction", ""))),
 	}
 
 func _persist_anomaly() -> void:

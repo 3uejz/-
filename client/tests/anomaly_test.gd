@@ -212,6 +212,12 @@ func _test_entry_generation_and_validation() -> void:
 	var invalid: Dictionary = sys.generate_entry(7)
 	invalid["containment"] = "bogus"
 	check(not bool(sys.validate_entry(invalid)["ok"]), "非法收容等级校验失败")
+	var cat: Dictionary = sys.validate_catalog()
+	check(bool(cat["ok"]), "生成目录 2000 条全量校验通过")
+	check_eq(int(cat["count"]), 2000, "生成目录总量 2000")
+	check_eq(int(cat["unique"]), 2000, "生成目录 id 唯一")
+	var missions: Array = sys.faction_mission_catalog()
+	check_eq(missions.size(), 12, "四阵营各三条任务线")
 
 
 func _test_faction_missions() -> void:
