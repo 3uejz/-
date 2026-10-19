@@ -209,16 +209,32 @@ func allocate_organs(state: Dictionary, recipients: Array, opts: Dictionary = {}
 	var organs: Array = (d.get("organs", []) as Array).duplicate()
 	var pool: Array = recipients.duplicate(true)
 	var allocated: Array = []
+	var local_region: String = String(opts.get("local_region", ""))
+	var now_day: int = int(opts.get("now_day", 0))
+	var allow_cross: bool = bool(opts.get("allow_cross_region", true))
 	for organ in organs:
 		var best: Dictionary = {}
+		var best_score: float = -1.0
 		for r in pool:
 			var rec: Dictionary = r
 			if str(rec.get("organ", "")) != str(organ):
 				continue
-			if best.is_empty() or float(rec.get("urgency", 0.0)) > float(best.get("urgency", 0.0)):
+			var region: String = String(rec.get("region", ""))
+			var cross: bool = local_region != "" and region != "" and region != local_region
+			if cross and not allow_cross:
+				continue
+			var wait_days: float = maxf(0.0, float(now_day - int(rec.get("available_day", now_day))))
+			var match_bonus: float = 0.0 if cross else (0.1 if local_region != "" else 0.0)
+			var score: float = float(rec.get("urgency", 0.0)) * 0.7 + minf(wait_days, 365.0) / 365.0 * 0.2 + match_bonus
+			if best.is_empty() or score > best_score:
 				best = rec
+				best_score = score
 		if not best.is_empty():
-			allocated.append({"organ": str(organ), "recipient_id": str(best.get("id", "")), "urgency": float(best.get("urgency", 0.0))})
+			allocated.append({
+				"organ": str(organ), "recipient_id": str(best.get("id", "")),
+				"urgency": float(best.get("urgency", 0.0)), "region": str(best.get("region", "")),
+				"score": best_score,
+			})
 			pool.erase(best)
 	d["allocated"] = allocated
 	return {"ok": true, "allocated": allocated, "count": allocated.size()}

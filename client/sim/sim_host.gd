@@ -4986,6 +4986,11 @@ func consumer_class_action(evidence: float) -> Dictionary:
 
 func consumer_incident(kind: String, severity: float, victims: int) -> Dictionary:
 	var r: Dictionary = consumer.regulate_incident(_consumer_merchant, kind, {"severity": severity, "victims": victims})
+	if kind == "food_safety" and not _restaurant.is_empty():
+		var dr: Dictionary = dining.food_safety_incident(_restaurant, "contamination", severity, {"recall_qty": float(maxi(1, victims))})
+		if bool(dr.get("ok", false)):
+			r["restaurant_incident"] = (dr.get("incident", {}) as Dictionary).duplicate(true)
+			_persist_dining()
 	_persist_consumer()
 	return r
 
@@ -6181,13 +6186,57 @@ func welfare_apply(kind: String, amount: int = 0) -> Dictionary:
 	var applicant: Dictionary = welfare_applicant()
 	_welfare_application = social_welfare.new_application(kind, applicant, {"amount": amount})
 	var r: Dictionary = social_welfare.review_qualification(_welfare_application, applicant)
+	if bool(r.get("approved", false)) and (kind == "adoption" or kind == "foster"):
+		var wait_days: int = 30 if kind == "adoption" else 15
+		_welfare_application["status"] = "pending"
+		_welfare_application["eligible"] = true
+		_welfare_application["waiting_days"] = wait_days
+		_welfare_application["placement_day"] = now_minutes() / MINUTES_PER_DAY + wait_days
+		r["waiting_days"] = wait_days
 	_persist_welfare()
 	if not bool(r.get("ok", false)):
 		return r
 	return {
 		"ok": true, "approved": bool(r.get("approved", false)),
 		"reasons": r.get("reasons", []), "application": _welfare_application,
+		"waiting_days": int(r.get("waiting_days", 0)),
 	}
+
+## 收养/寄养等待期满后生效，记录生效日供撤销判断。
+func welfare_finalize_placement() -> Dictionary:
+	if _welfare_application.is_empty():
+		return {"ok": false, "reason": "no_application"}
+	var kind: String = String(_welfare_application.get("kind", ""))
+	if kind != "adoption" and kind != "foster":
+		return {"ok": false, "reason": "not_placement"}
+	if str(_welfare_application.get("status", "")) != "pending":
+		return {"ok": false, "reason": "not_pending"}
+	var placement_day: int = int(_welfare_application.get("placement_day", 0))
+	var today: int = now_minutes() / MINUTES_PER_DAY
+	if today < placement_day:
+		return {"ok": false, "reason": "waiting", "days_left": placement_day - today}
+	_welfare_application["status"] = "approved"
+	_welfare_application["finalized"] = true
+	_welfare_application["finalized_day"] = today
+	_persist_welfare()
+	return {"ok": true, "kind": kind, "finalized_day": today, "application": _welfare_application}
+
+## 收养生效后 30 日内可撤销；撤销后转为可重新申请状态。
+func welfare_revoke_placement() -> Dictionary:
+	if _welfare_application.is_empty():
+		return {"ok": false, "reason": "no_application"}
+	if str(_welfare_application.get("kind", "")) != "adoption":
+		return {"ok": false, "reason": "not_adoption"}
+	if not bool(_welfare_application.get("finalized", false)):
+		return {"ok": false, "reason": "not_finalized"}
+	var finalized_day: int = int(_welfare_application.get("finalized_day", 0))
+	var today: int = now_minutes() / MINUTES_PER_DAY
+	if today - finalized_day > 30:
+		return {"ok": false, "reason": "revoke_expired"}
+	_welfare_application["revoked"] = true
+	_welfare_application["status"] = "revoked"
+	_persist_welfare()
+	return {"ok": true, "revoked": true, "day": today}
 
 func welfare_disburse(days: int = 30) -> Dictionary:
 	if _welfare_application.is_empty():
@@ -6401,12 +6450,14 @@ func funeral_revoke_donation(deceased: bool = true) -> Dictionary:
 	return r
 
 func funeral_allocate_organs() -> Dictionary:
+	var region: String = current_region_id()
+	var now_day: int = now_minutes() / MINUTES_PER_DAY
 	var recipients: Array = [
-		{"id": "recipient-1", "organ": "heart", "urgency": 0.9},
-		{"id": "recipient-2", "organ": "kidney", "urgency": 0.7},
-		{"id": "recipient-3", "organ": "cornea", "urgency": 0.5},
+		{"id": "recipient-1", "organ": "heart", "urgency": 0.9, "region": region, "available_day": now_day - 120},
+		{"id": "recipient-2", "organ": "kidney", "urgency": 0.7, "region": "cn.shanghai", "available_day": now_day - 300},
+		{"id": "recipient-3", "organ": "cornea", "urgency": 0.5, "region": region, "available_day": now_day - 30},
 	]
-	var r: Dictionary = funeral.allocate_organs(_funeral_state, recipients)
+	var r: Dictionary = funeral.allocate_organs(_funeral_state, recipients, {"local_region": region, "now_day": now_day})
 	_persist_funeral()
 	return r
 

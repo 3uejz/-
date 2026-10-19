@@ -1209,6 +1209,10 @@ func _test_dining_runtime() -> void:
 	check(bool(host.restaurant_hire("chef", 1).get("ok", false)), "聘用主厨成功")
 	var cert: Dictionary = host.restaurant_certify("hygiene_a")
 	check(bool(cert.get("ok", false)), "取得卫生 A 级认证")
+	var rep_before_incident: float = float(host.dining_state().get("reputation", 0.0))
+	var food_incident: Dictionary = host.consumer_incident("food_safety", 0.8, 50)
+	check(bool(food_incident.get("ok", false)) and food_incident.has("restaurant_incident"), "食安事故联动餐厅处罚")
+	check(float(host.dining_state().get("reputation", 0.0)) < rep_before_incident, "餐厅声誉因食安事故下降")
 	check(bool(host.restaurant_expand("single_shop").get("ok", false)), "扩张校验通过（单店）")
 	# 持久化与读档恢复。
 	host._persist_dining()
@@ -1622,6 +1626,13 @@ func _test_welfare_runtime() -> void:
 	var rej: Dictionary = host.welfare_apply("adoption")
 	check(not bool(rej.get("approved", true)), "低龄收养被拒")
 	check((rej.get("reasons", []) as Array).size() > 0, "驳回原因逐条可查")
+	# 收养等待期、生效与撤销。
+	p["age"] = 40
+	check(bool(host.welfare_apply("adoption").get("approved", false)), "收养资格再次通过")
+	check(not bool(host.welfare_finalize_placement().get("ok", false)), "等待期内不可生效")
+	state.clock["absolute_minutes"] = int(state.clock.get("absolute_minutes", 0)) + 31 * 1440
+	check(bool(host.welfare_finalize_placement().get("ok", false)), "等待期满收养生效")
+	check(bool(host.welfare_revoke_placement().get("ok", false)), "生效后可撤销收养")
 	# 低保资格与救助发放。
 	p["age"] = 40
 	p["income"] = 6000.0
@@ -1677,7 +1688,9 @@ func _test_funeral_runtime() -> void:
 	# 器官捐献：登记、伦理、分配、移植、撤销。
 	check(bool(host.funeral_register_donation().get("ok", false)), "登记器官捐献")
 	check(bool(host.funeral_review_ethics().get("approved", false)), "伦理审查通过")
-	check(bool(host.funeral_allocate_organs().get("ok", false)), "器官分配")
+	var organ_alloc: Dictionary = host.funeral_allocate_organs()
+	check(bool(organ_alloc.get("ok", false)), "器官分配")
+	check((organ_alloc.get("allocated", []) as Array).size() >= 2, "器官分配覆盖多受体")
 	check(bool(host.funeral_transplant("heart").get("ok", false)), "器官移植结算")
 	check(bool(host.funeral_revoke_donation(true).get("ok", false)), "家属撤销捐献")
 	# 纪念：立碑、祭扫、数字纪念。

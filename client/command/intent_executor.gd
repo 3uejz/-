@@ -698,6 +698,10 @@ func _dispatch(intent) -> Dictionary:
 			return _welfare_apply(intent, "adoption")
 		"寄养申请":
 			return _welfare_apply(intent, "foster")
+		"收养生效":
+			return _welfare_finalize(intent)
+		"撤销收养":
+			return _welfare_revoke_adoption(intent)
 		"低保申请":
 			return _welfare_apply(intent, "dibao")
 		"医疗救助":
@@ -3700,6 +3704,20 @@ func _welfare_apply(intent, kind: String) -> Dictionary:
 	for reason in reasons:
 		cn.append(_reason_cn(String(reason)))
 	return _fail("%s申请被拒（%s）。" % [label, "、".join(cn)])
+
+func _welfare_finalize(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_finalize_placement()
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "waiting":
+			return _fail("安置等待期未满，还需 %d 天。" % int(r.get("days_left", 0)))
+		return _fail("无法生效（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["收养/寄养安置已生效。"], 0, "")
+
+func _welfare_revoke_adoption(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_revoke_placement()
+	if not bool(r.get("ok", false)):
+		return _fail("无法撤销收养（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["收养关系已撤销。"], 0, "")
 
 func _welfare_disburse(intent) -> Dictionary:
 	var days: int = int(_param_number(intent, "number", 30))
