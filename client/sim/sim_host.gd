@@ -7180,6 +7180,10 @@ func anomaly_complete_mission(mission_id: String, success: bool = true) -> Dicti
 			"black_lab": delta = 5.0
 		if delta != 0.0:
 			anomaly.add_exposure(_anomaly_state, delta)
+		if faction == "black_lab":
+			_bump_region_stat("crime_rate", 2)
+		elif faction == "cult":
+			_bump_region_stat("crime_rate", 1)
 	# 与传承系统联动：成功任务写入家族史，供跨代叙事回放。
 	if bool(r.get("ok", false)) and success and state != null:
 		var hist: Array = state.legacy.get("history", [])
