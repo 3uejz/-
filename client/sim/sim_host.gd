@@ -224,6 +224,7 @@ var _welfare_fund: Dictionary = {}         ## 慈善基金，入档 sim_runtime.
 var _welfare_worker: Dictionary = {}       ## 社工，入档 sim_runtime.welfare.worker
 var _welfare_case: Dictionary = {}         ## 当前个案，入档 sim_runtime.welfare.case
 var _welfare_child: Dictionary = {}        ## 变故儿童，入档 sim_runtime.welfare.child
+var _welfare_recognition: Dictionary = {}  ## 跨区资格互认凭证，入档 sim_runtime.welfare.recognition
 var funeral                       ## 殡葬、器官捐献与纪念（FuneralSystem）
 var _funeral_state: Dictionary = {}        ## 殡葬运行态，入档 sim_runtime.funeral.state
 var _funeral_home: Dictionary = {}         ## 殡葬行业经营体，入档 sim_runtime.funeral.home
@@ -663,6 +664,8 @@ func _ensure_world_geo() -> void:
 				_welfare_case = social_welfare.from_dict(wfd["case"])
 			if wfd.get("child", null) is Dictionary and not (wfd["child"] as Dictionary).is_empty():
 				_welfare_child = social_welfare.from_dict(wfd["child"])
+			if wfd.get("recognition", null) is Dictionary and not (wfd["recognition"] as Dictionary).is_empty():
+				_welfare_recognition = (wfd["recognition"] as Dictionary).duplicate(true)
 		# 恢复殡葬运行时（殡葬状态/经营体）。
 		var fn: Variant = (state.sim_runtime as Dictionary).get("funeral", {})
 		if fn is Dictionary and not (fn as Dictionary).is_empty():
@@ -6326,6 +6329,16 @@ func welfare_apply(kind: String, amount: int = 0) -> Dictionary:
 		"waiting_days": int(r.get("waiting_days", 0)),
 	}
 
+## 跨区资格互认：把当前已通过的申请凭证互认到所在区域。
+func welfare_recognize(origin_region: String) -> Dictionary:
+	if _welfare_application.is_empty():
+		return {"ok": false, "reason": "no_application"}
+	var r: Dictionary = social_welfare.recognize_qualification(_welfare_application, origin_region, current_region_id(), {"issued_day": now_minutes() / MINUTES_PER_DAY})
+	if bool(r.get("ok", false)):
+		_welfare_recognition = (r.get("certificate", {}) as Dictionary).duplicate(true)
+		_persist_welfare()
+	return r
+
 ## 收养/寄养等待期满后生效，记录生效日供撤销判断。
 func welfare_finalize_placement() -> Dictionary:
 	if _welfare_application.is_empty():
@@ -6508,6 +6521,7 @@ func _persist_welfare() -> void:
 		"worker": social_welfare.to_dict(_welfare_worker),
 		"case": social_welfare.to_dict(_welfare_case),
 		"child": social_welfare.to_dict(_welfare_child),
+		"recognition": _welfare_recognition.duplicate(true),
 	}
 
 

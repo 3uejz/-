@@ -750,6 +750,8 @@ func _dispatch(intent) -> Dictionary:
 			return _welfare_abuse(intent)
 		"救助依赖":
 			return _welfare_dependency(intent)
+		"资格互认":
+			return _welfare_recognize(intent)
 		"殡葬安排":
 			return _funeral_arrange(intent)
 		"殡葬执行":
@@ -3831,6 +3833,16 @@ func _route_cn(route: String) -> String:
 			return "救助体系"
 		_:
 			return "寄养家庭"
+
+func _welfare_recognize(intent) -> Dictionary:
+	var origin := String(intent.params.get("method", "")).strip_edges()
+	if origin == "":
+		return _fail("请给出原资格所在区域。")
+	var r: Dictionary = host.welfare_recognize(origin)
+	if not bool(r.get("ok", false)):
+		return _fail("无法办理资格互认（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var cert: Dictionary = r.get("certificate", {})
+	return _ok(["资格互认成功：%s → %s，有效期 %d 天。" % [String(cert.get("origin", "")), String(cert.get("target", "")), int(cert.get("valid_days", 0))]], 0, "")
 
 func _welfare_fund_new(intent) -> Dictionary:
 	var name := String(intent.params.get("method", "公益基金"))

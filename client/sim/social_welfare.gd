@@ -126,6 +126,29 @@ func review_qualification(application: Dictionary, applicant: Dictionary, opts: 
 	}
 
 
+## 跨区资格互认：已通过的救助/收养资格在原区域与目标区域间生成互认凭证。
+## opts: issued_day/valid_days。
+func recognize_qualification(application: Dictionary, origin_region: String, target_region: String, opts: Dictionary = {}) -> Dictionary:
+	var origin: String = origin_region.strip_edges()
+	var target: String = target_region.strip_edges()
+	if origin == "" or target == "":
+		return {"ok": false, "reason": "missing_region"}
+	if origin == target:
+		return {"ok": false, "reason": "same_region"}
+	if String(application.get("status", "")) != "approved" and String(application.get("status", "")) != "pending":
+		return {"ok": false, "reason": "not_qualified"}
+	var valid_days: int = maxi(1, int(opts.get("valid_days", 30)))
+	var issued: int = int(opts.get("issued_day", 0))
+	var certificate: Dictionary = {
+		"origin": origin, "target": target,
+		"kind": String(application.get("kind", "")),
+		"issued_day": issued, "valid_days": valid_days,
+		"expires_day": issued + valid_days,
+	}
+	application["recognition"] = certificate
+	return {"ok": true, "certificate": certificate}
+
+
 func _review_adoption(applicant: Dictionary, opts: Dictionary) -> Array:
 	var reasons: Array = []
 	var age: int = int(applicant.get("age", 0))

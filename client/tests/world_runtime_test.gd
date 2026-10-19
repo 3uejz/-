@@ -1658,6 +1658,8 @@ func _test_welfare_runtime() -> void:
 	p["criminal_record"] = false
 	p["major_illness"] = false
 	check(bool(host.welfare_apply("adoption").get("approved", false)), "收养资格通过")
+	var recog: Dictionary = host.welfare_recognize("region-a")
+	check(bool(recog.get("ok", false)) and String((recog.get("certificate", {}) as Dictionary).get("target", "")) != "", "跨区资格互认生成凭证")
 	# 不符合门槛被拒，原因逐条可查。
 	p["age"] = 20
 	var rej: Dictionary = host.welfare_apply("adoption")
