@@ -44,6 +44,8 @@ func _test_securities_trading() -> void:
 	e.open_account("s", 10000000)
 	var b = BankScript.new(7)
 	check(not b.security_quote("stock.tech").is_empty(), "内置证券可查询")
+	check(b.security_keys().size() >= 20, "证券池覆盖 20+ 标的")
+	check(float(b.security_quote("crypto.eth")["price"]) > 0.0, "加密资产报价存在")
 	var first: Dictionary = b.buy_security(e, "s", "stock.tech", 10)
 	check(bool(first.get("ok", false)), "买入成功")
 	check_eq(b.holding_qty("stock.tech"), 10, "买入后持仓 10")

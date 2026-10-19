@@ -252,6 +252,18 @@ const SECURITIES: Dictionary = {
 	"bond.gov": {"name": "国债", "kind": "bond", "price": 100.0, "mu": 0.025, "sigma": 0.03},
 	"gold": {"name": "黄金", "kind": "commodity", "price": 520.0, "mu": 0.05, "sigma": 0.12},
 	"crypto.btc": {"name": "比特币", "kind": "crypto", "price": 42000.0, "mu": 0.18, "sigma": 0.65, "crypto": true},
+	"stock.consumer": {"name": "消费龙头股", "kind": "stock", "price": 32.0, "mu": 0.09, "sigma": 0.22},
+	"stock.pharma": {"name": "医药白马股", "kind": "stock", "price": 46.0, "mu": 0.10, "sigma": 0.24},
+	"stock.finance": {"name": "金融蓝筹股", "kind": "stock", "price": 18.0, "mu": 0.07, "sigma": 0.18},
+	"stock.realestate": {"name": "地产板块股", "kind": "stock", "price": 12.0, "mu": 0.06, "sigma": 0.30},
+	"fund.manufacturing": {"name": "制造业指数基金", "kind": "fund", "price": 3.6, "mu": 0.07, "sigma": 0.16},
+	"fund.money": {"name": "货币基金", "kind": "fund", "price": 1.0, "mu": 0.02, "sigma": 0.01},
+	"bond.corporate": {"name": "企业债", "kind": "bond", "price": 98.0, "mu": 0.04, "sigma": 0.05},
+	"bond.convertible": {"name": "可转债", "kind": "bond", "price": 112.0, "mu": 0.06, "sigma": 0.16},
+	"crypto.eth": {"name": "以太坊", "kind": "crypto", "price": 2200.0, "mu": 0.20, "sigma": 0.75, "crypto": true},
+	"crypto.usdt": {"name": "稳定币", "kind": "crypto", "price": 7.2, "mu": 0.005, "sigma": 0.005, "crypto": true},
+	"commodity.oil": {"name": "原油", "kind": "commodity", "price": 78.0, "mu": 0.05, "sigma": 0.35},
+	"wealth.reit": {"name": "REITs", "kind": "wealth", "price": 9.5, "mu": 0.05, "sigma": 0.10},
 }
 
 ## 填充证券池（幂等）；已存在报价不覆盖，避免读档后重置。
