@@ -638,6 +638,12 @@ func _dispatch(intent) -> Dictionary:
 			return _debt_lend(intent)
 		"信用评估":
 			return _debt_credit(intent)
+		"贷款台账":
+			return _debt_ledger(intent)
+		"征信报告":
+			return _debt_credit_report(intent)
+		"还贷款":
+			return _debt_repay(intent)
 		"合法催收":
 			return _debt_collect_legal(intent)
 		"暴力催收":
@@ -3473,6 +3479,33 @@ func _debt_lend(intent) -> Dictionary:
 	if bool(reg.get("illegal", false)):
 		return _ok(["放贷登记，但存在合规问题：%s。" % "、".join(PackedStringArray(reg.get("violations", [])))], 0, "")
 	return _ok(["放贷登记完成。"], 0, "")
+
+func _debt_ledger(intent) -> Dictionary:
+	var r: Dictionary = host.debt_ledger()
+	var lines: Array = ["借款 %d 笔，余额 %d；放贷 %d 笔，余额 %d。" % [
+		int(r.get("borrow_count", 0)), int(r.get("borrow_outstanding", 0)),
+		int(r.get("lend_count", 0)), int(r.get("lend_outstanding", 0))]]
+	for row in r.get("loans", []):
+		lines.append("借款 %s：%s，余额 %d，状态 %s。" % [String(row.get("business", "")), String(row.get("lender", "")), int(row.get("outstanding", 0)), String(row.get("status", ""))])
+	return _ok(lines, 0, "")
+
+func _debt_credit_report(intent) -> Dictionary:
+	var r: Dictionary = host.debt_credit_report()
+	if not bool(r.get("ok", false)):
+		return _fail("无法生成征信报告。")
+	return _ok(["征信评分 %.1f（%s），机构 %d 家，在贷 %d 笔，逾期 %d 笔，违约 %d 笔，负债余额 %d。" % [
+		float(r.get("score", 0.0)), String(r.get("grade", "")), int(r.get("institutions", 0)),
+		int(r.get("active_loans", 0)), int(r.get("overdue_loans", 0)),
+		int(r.get("defaulted_loans", 0)), int(r.get("total_outstanding", 0))]], 0, "")
+
+func _debt_repay(intent) -> Dictionary:
+	var amount: int = int(_param_number(intent, "number", 0))
+	if amount <= 0:
+		amount = 1 << 30
+	var r: Dictionary = host.debt_repay(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法还款（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["还款 %d，剩余余额 %d，状态 %s。" % [int(r.get("paid", 0)), int(r.get("outstanding", 0)), String(r.get("status", ""))]], 0, "")
 
 func _debt_credit(intent) -> Dictionary:
 	var r: Dictionary = host.debt_assess_credit()

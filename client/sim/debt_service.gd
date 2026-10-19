@@ -278,6 +278,57 @@ func approve_loan(borrower: Dictionary, loan: Dictionary, lender: Dictionary = {
 	return {"ok": true, "approved": true, "credit": credit, "disbursement": disb}
 
 
+## 还款：按金额冲减余额，结清后状态转 repaid。
+func repay_loan(loan: Dictionary, amount: int) -> Dictionary:
+	if str(loan.get("status", LOAN_ACTIVE)) != LOAN_ACTIVE:
+		return {"ok": false, "reason": "bad_status"}
+	var paid: int = mini(maxi(0, int(loan.get("outstanding", 0))), maxi(0, amount))
+	loan["outstanding"] = maxi(0, int(loan.get("outstanding", 0)) - paid)
+	if int(loan["outstanding"]) <= 0:
+		loan["status"] = LOAN_REPAID
+	return {"ok": true, "paid": paid, "outstanding": int(loan["outstanding"]), "status": String(loan["status"])}
+
+
+## 跨机构征信报告：汇总多笔贷款的机构数、逾期/违约与负债收入比。
+func credit_report(borrower: Dictionary, loans: Array, opts: Dictionary = {}) -> Dictionary:
+	var institutions: Array = []
+	var active: int = 0
+	var overdue: int = 0
+	var defaulted: int = 0
+	var total_outstanding: int = 0
+	for l in loans:
+		var loan: Dictionary = l
+		var lender: String = String(loan.get("lender", ""))
+		if lender != "" and not institutions.has(lender):
+			institutions.append(lender)
+		var st: String = String(loan.get("status", LOAN_ACTIVE))
+		if st == LOAN_ACTIVE or st == LOAN_RESTRUCTURED:
+			active += 1
+			total_outstanding += int(loan.get("outstanding", 0))
+			if int(loan.get("overdue_days", 0)) > 0:
+				overdue += 1
+		elif st == LOAN_DEFAULTED:
+			defaulted += 1
+	var income: float = maxf(1.0, float(borrower.get("income", 0.0)))
+	var history: float = clampf(float(borrower.get("credit_history", 0.7)), 0.0, 1.0)
+	var ratio: float = clampf(income / maxf(1.0, income + float(total_outstanding)), 0.0, 1.0)
+	var score: float = ratio * 50.0 + history * 40.0
+	score -= float(maxi(0, institutions.size() - 1)) * 5.0
+	score -= float(defaulted) * 20.0
+	score -= float(overdue) * 6.0
+	if bool(borrower.get("defaulted", false)):
+		score -= 20.0
+	score = clampf(score, 0.0, 100.0)
+	var grade: String = "A" if score >= 80.0 else ("B" if score >= 65.0 else ("C" if score >= 45.0 else "D"))
+	return {
+		"ok": true, "score": score, "grade": grade,
+		"institutions": institutions.size(), "active_loans": active,
+		"overdue_loans": overdue, "defaulted_loans": defaulted,
+		"total_outstanding": total_outstanding,
+		"multi_institution": institutions.size() > 1,
+	}
+
+
 ## 坏账：逾期转入违约，按抵押/担保回收部分损失。
 func default_loan(loan: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	var recovered: int = mini(int(loan.get("outstanding", 0)), int(loan.get("collateral_value", 0)))

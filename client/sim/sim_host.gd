@@ -211,8 +211,10 @@ var _courier: Dictionary = {}         ## 快递员职业，入档 sim_runtime.mu
 var _municipal_license: bool = false  ## 公用事业特许资质，入档 sim_runtime.municipal.license
 var debt                         ## 债务服务、当铺与小贷（DebtServiceSystem）
 var _debt_lender: Dictionary = {}    ## 玩家作为放贷人，入档 sim_runtime.debt.lender
-var _debt_loan: Dictionary = {}      ## 玩家作为借款人的贷款，入档 sim_runtime.debt.loan
-var _debt_lend: Dictionary = {}      ## 玩家放出的贷款（供催收），入档 sim_runtime.debt.lend
+var _debt_loan: Dictionary = {}      ## 玩家当前借款（兼容单笔视图），入档 sim_runtime.debt.loan
+var _debt_lend: Dictionary = {}      ## 玩家当前放贷（兼容单笔视图），入档 sim_runtime.debt.lend
+var _debt_loans: Array = []          ## 借款人贷款台账，入档 sim_runtime.debt.loans
+var _debt_lends: Array = []          ## 放贷人贷款台账，入档 sim_runtime.debt.lends
 var _debt_pawns: Array = []          ## 典当物，入档 sim_runtime.debt.pawns
 var consumer                     ## 消费者保护与产品质量（ConsumerProtectionSystem）
 var _consumer_order: Dictionary = {}    ## 当前消费订单，入档 sim_runtime.consumer.order
@@ -639,6 +641,12 @@ func _ensure_world_geo() -> void:
 				_debt_loan = debt.from_dict(dbd["loan"])
 			if dbd.get("lend", null) is Dictionary and not (dbd["lend"] as Dictionary).is_empty():
 				_debt_lend = debt.from_dict(dbd["lend"])
+			_debt_loans = (dbd.get("loans", []) as Array).duplicate(true)
+			_debt_lends = (dbd.get("lends", []) as Array).duplicate(true)
+			if _debt_loans.is_empty() and not _debt_loan.is_empty():
+				_debt_loans.append(_debt_loan.duplicate(true))
+			if _debt_lends.is_empty() and not _debt_lend.is_empty():
+				_debt_lends.append(_debt_lend.duplicate(true))
 			_debt_pawns = (dbd.get("pawns", []) as Array).duplicate(true)
 		# 恢复消费者保护运行时（订单/商品/商家）。
 		var cs: Variant = (state.sim_runtime as Dictionary).get("consumer", {})
@@ -4996,17 +5004,18 @@ func _wake_close_loan(side: String) -> void:
 	domain_wake.set_progress(entry_id, float(entry.get("progress", 0.0)), "resolved")
 	_persist_domain_wake()
 
-func debt_borrow(business: String, principal: int, rate: float) -> Dictionary:
+func debt_borrow(business: String, principal: int, rate: float, lender_id: String = "market") -> Dictionary:
 	if not debt.business_available(business, _current_year()):
 		return {"ok": false, "reason": "business_unavailable"}
 	var loan: Dictionary = debt.new_loan("loan-%d" % Time.get_ticks_msec(), business, principal, {
-		"lender": "market", "borrower": "player", "rate": rate,
+		"lender": lender_id, "borrower": "player", "rate": rate,
 	})
 	var credit: Dictionary = debt.assess_credit(player(), loan)
 	if not bool(credit.get("approved", false)):
 		return {"ok": true, "approved": false, "credit": credit}
 	var disb: Dictionary = debt.disburse(loan, {"license": true})
 	_debt_loan = loan
+	_debt_loans.append(loan)
 	_wake_track_loan(loan, "borrow")
 	_persist_debt()
 	return {"ok": true, "approved": true, "credit": credit, "disbursement": disb, "loan": loan}
@@ -5019,9 +5028,67 @@ func debt_lend(business: String, principal: int, rate: float) -> Dictionary:
 	})
 	var reg: Dictionary = debt.regulate(loan, _debt_lender)
 	_debt_lend = loan
+	_debt_lends.append(loan)
 	_wake_track_loan(loan, "lend")
 	_persist_debt()
 	return {"ok": true, "loan": loan, "regulation": reg}
+
+## 多笔贷款台账：借款人/放贷人两侧的逐笔状态与汇总。
+func debt_ledger() -> Dictionary:
+	var borrow_rows: Array = []
+	var lend_rows: Array = []
+	var total_out: int = 0
+	var total_in: int = 0
+	for l in _debt_loans:
+		var loan: Dictionary = l
+		borrow_rows.append({"id": String(loan.get("id", "")), "business": String(loan.get("business", "")),
+			"lender": String(loan.get("lender", "")), "principal": int(loan.get("principal", 0)),
+			"outstanding": int(loan.get("outstanding", 0)), "status": String(loan.get("status", "")),
+			"overdue_days": int(loan.get("overdue_days", 0))})
+		if String(loan.get("status", "")) == debt.LOAN_ACTIVE:
+			total_out += int(loan.get("outstanding", 0))
+	for l in _debt_lends:
+		var loan: Dictionary = l
+		lend_rows.append({"id": String(loan.get("id", "")), "business": String(loan.get("business", "")),
+			"borrower": String(loan.get("borrower", "")), "principal": int(loan.get("principal", 0)),
+			"outstanding": int(loan.get("outstanding", 0)), "status": String(loan.get("status", ""))})
+		if String(loan.get("status", "")) == debt.LOAN_ACTIVE:
+			total_in += int(loan.get("outstanding", 0))
+	return {"ok": true, "borrow_count": borrow_rows.size(), "lend_count": lend_rows.size(),
+		"borrow_outstanding": total_out, "lend_outstanding": total_in,
+		"loans": borrow_rows, "lends": lend_rows}
+
+## 跨机构征信报告：汇总多笔借款的机构分布、逾期与违约。
+func debt_credit_report() -> Dictionary:
+	var loans: Array = _debt_loans.duplicate(true)
+	if loans.is_empty() and not _debt_loan.is_empty():
+		loans.append(_debt_loan.duplicate(true))
+	return debt.credit_report(player(), loans)
+
+## 还款：默认冲减最近一笔在贷借款，可指定台账序号。
+func debt_repay(amount: int, index: int = -1) -> Dictionary:
+	if _debt_loans.is_empty():
+		return {"ok": false, "reason": "no_loan"}
+	var idx: int = index
+	if idx < 0:
+		for i in range(_debt_loans.size() - 1, -1, -1):
+			if String((_debt_loans[i] as Dictionary).get("status", "")) == debt.LOAN_ACTIVE:
+				idx = i
+				break
+	if idx < 0 or idx >= _debt_loans.size():
+		return {"ok": false, "reason": "no_active_loan"}
+	var loan: Dictionary = _debt_loans[idx]
+	var due: int = maxi(0, int(loan.get("outstanding", 0)))
+	var paid: int = mini(due, maxi(0, amount))
+	if paid <= 0:
+		return {"ok": false, "reason": "nothing_to_repay"}
+	if int(economy.cash(account_id())) < paid:
+		return {"ok": false, "reason": "insufficient_funds", "cost": paid}
+	economy.add_money(account_id(), -paid, "debt_repay")
+	var r: Dictionary = debt.repay_loan(loan, paid)
+	_debt_loan = loan
+	_persist_debt()
+	return r
 
 func debt_assess_credit() -> Dictionary:
 	var loan: Dictionary = _debt_loan if not _debt_loan.is_empty() else debt.new_loan("probe", "micro_loan", 500000, {"rate": 0.12})
@@ -5104,6 +5171,8 @@ func debt_panel_data() -> Dictionary:
 		"reputation": float(_debt_lender.get("reputation", 0.0)),
 	}
 	out["pawns"] = _debt_pawns.duplicate(true)
+	out["ledger"] = debt_ledger()
+	out["credit_report"] = debt_credit_report()
 	return out
 
 func _persist_debt() -> void:
@@ -5113,6 +5182,8 @@ func _persist_debt() -> void:
 		"lender": debt.to_dict(_debt_lender),
 		"loan": debt.to_dict(_debt_loan),
 		"lend": debt.to_dict(_debt_lend),
+		"loans": _debt_loans.duplicate(true),
+		"lends": _debt_lends.duplicate(true),
 		"pawns": _debt_pawns.duplicate(true),
 	}
 

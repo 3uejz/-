@@ -1588,6 +1588,14 @@ func _test_debt_runtime() -> void:
 	host.player()["credit_history"] = 1.0
 	var b: Dictionary = host.debt_borrow("micro_loan", 100000, 0.12)
 	check(bool(b.get("ok", false)) and bool(b.get("approved", false)), "借贷获批")
+	var b2: Dictionary = host.debt_borrow("consumer_finance", 80000, 0.10, "bank_b")
+	check(bool(b2.get("ok", false)) and bool(b2.get("approved", false)), "第二笔跨机构借贷获批")
+	var ledger: Dictionary = host.debt_ledger()
+	check(int(ledger.get("borrow_count", 0)) >= 2, "多笔贷款台账逐笔登记")
+	var report: Dictionary = host.debt_credit_report()
+	check(int(report.get("institutions", 0)) >= 2 and bool(report.get("multi_institution", false)), "跨机构征信汇总")
+	host.economy.add_money(host.account_id(), 500000, "test")
+	check(bool(host.debt_repay(50000).get("ok", false)), "按笔还款成功")
 	check(bool(host.debt_assess_credit().get("approved", false)), "信用评估通过")
 	# 放贷与双路径催收。
 	check(bool(host.debt_lend("private_lending", 500000, 0.12).get("ok", false)), "放贷登记")
