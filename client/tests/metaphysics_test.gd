@@ -27,7 +27,7 @@ func _test_tables() -> void:
 	check_eq(sys.services().size(), 7, "七类玄学服务")
 	check_eq(str(sys.service_def("fengshui")["name"]), "风水", "风水名称")
 	check_eq(sys.modes().size(), 2, "线上/线下两种模式")
-	check_eq(sys.folk_practices().size(), 4, "四类民俗信仰活动")
+	check_eq(sys.folk_practices().size(), 8, "八类民俗信仰活动")
 
 
 func _test_fake_is_random_and_causality_neutral() -> void:

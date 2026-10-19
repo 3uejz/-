@@ -72,6 +72,10 @@ const FOLK_PRACTICES: Dictionary = {
 	"festival_ritual": {"name": "节日仪式", "mood": 4.0, "social": 3.0},
 	"amulet": {"name": "护身符", "mood": 3.0, "social": 0.0},
 	"wish": {"name": "许愿", "mood": 3.0, "social": 1.0},
+	"ancestor_worship": {"name": "祭祖", "mood": 3.5, "social": 2.0},
+	"wedding_funeral": {"name": "婚丧嫁娶", "mood": 2.0, "social": 4.0},
+	"temple_fair": {"name": "庙会", "mood": 4.0, "social": 3.5},
+	"solar_term": {"name": "节气习俗", "mood": 2.5, "social": 1.5},
 }
 
 ## 安慰剂/确认偏误带来的心情与决策倾向上限。

@@ -1793,7 +1793,7 @@ func _test_metaphysics_runtime() -> void:
 	check(host.metaphysics_phrases_catalog().size() >= 56, "玄学话术库按服务/结果分档")
 	check(host.metaphysics_services_catalog().size() >= 7, "玄学服务表含算命/风水等")
 	check(host.metaphysics_modes_catalog().size() >= 2, "线上/线下模式")
-	check(host.metaphysics_folk_practices_catalog().size() >= 4, "民俗活动表")
+	check(host.metaphysics_folk_practices_catalog().size() >= 8, "民俗活动表")
 	# 咨询不改变属性与事件结果（硬约束）。
 	var c: Dictionary = host.metaphysics_consult("fortune", "online")
 	check(bool(c.get("ok", false)), "玄学咨询结算")
@@ -1801,6 +1801,8 @@ func _test_metaphysics_runtime() -> void:
 	check(not bool(c.get("event_outcome_changed", true)), "咨询不改变事件结果")
 	# 民俗信仰。
 	check(bool(host.metaphysics_folk("festival_ritual").get("ok", false)), "民俗仪式")
+	check(bool(host.metaphysics_folk("ancestor_worship").get("ok", false)), "祭祖仪式")
+	check(bool(host.metaphysics_folk("temple_fair").get("ok", false)), "庙会活动")
 	# 经营与风险。
 	check(bool(host.metaphysics_new_business("青云观").get("ok", false)), "开办玄学馆")
 	check(int(host.metaphysics_operate().get("earned", 0)) > 0, "玄学营业入账")
