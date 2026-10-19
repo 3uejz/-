@@ -594,9 +594,12 @@ func _test_death_summary() -> void:
 	var host = SimHostScript.new(state, 77)
 	var npc: Dictionary = host.acquaintances()[0]
 	host.marry_with(String(npc.get("id", "")))
+	host.funeral_arrange("cremation", "", 1000000)
 	host.advance(1, {"fatal": true})
 	check(host.is_dead(), "致命事件导致死亡")
 	check(host.inheritance_settled(), "死亡触发继承结算")
+	var fst: Dictionary = (host.funeral_state().get("state", {}) as Dictionary).get("funeral", {})
+	check(bool(fst.get("executed", false)), "死亡自动执行生前殡葬安排")
 	var s: Dictionary = host.death_summary()
 	check(String(s.get("name", "")) != "", "人生结算含姓名")
 	check(float(s.get("estate_minor", 0.0)) >= 0.0, "人生结算含遗产估算")

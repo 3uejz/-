@@ -5719,6 +5719,18 @@ func funeral_execute(public_assistance: bool = false) -> Dictionary:
 	_persist_funeral()
 	return r
 
+## 死亡自动衔接：生前已安排则立即执行，遗产不足时走公益救助。
+func _auto_execute_funeral() -> void:
+	if _funeral_state.is_empty():
+		return
+	var f: Dictionary = _funeral_state.get("funeral", {})
+	if not bool(f.get("arranged", false)) or bool(f.get("executed", false)):
+		return
+	var r: Dictionary = funeral.execute_funeral(_funeral_state, {"public_assistance": not bool(f.get("affordable", false))})
+	if bool(r.get("ok", false)):
+		_funeral_state["auto_executed"] = true
+		_persist_funeral()
+
 func funeral_register_donation() -> Dictionary:
 	var r: Dictionary = funeral.register_donation(_funeral_state)
 	_persist_funeral()
@@ -8509,6 +8521,7 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 	if bool(r.get("dead", false)) and not _inheritance_settled:
 		settle_inheritance()
 	if bool(r.get("dead", false)):
+		_auto_execute_funeral()
 		events.append({"type": "death"})
 	elif bool(r.get("dying", false)):
 		events.append({"type": "dying"})
