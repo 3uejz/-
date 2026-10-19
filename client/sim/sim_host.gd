@@ -8352,6 +8352,29 @@ func life_pet_service(service: String) -> Dictionary:
 		return {"ok": false, "reason": "unknown_pet_stage"}
 	_life_order["service"] = service
 	var r: Dictionary = life_services.pet_service_order(_life_provider, _life_order, {"roll": -1.0}, rng)
+	# 与 D11 宠物系统联动：服务结果落到玩家实际宠物身上。
+	var target: Dictionary = {}
+	for p in pets():
+		if p is Dictionary and bool(p.get("alive", true)):
+			target = p
+			break
+	if not target.is_empty() and bool(r.get("ok", false)) and not bool(r.get("incident", false)):
+		match service:
+			"boarding":
+				target["mood"] = clampf(float(target.get("mood", 50.0)) + 8.0, 0.0, 100.0)
+				target["bond"] = clampf(float(target.get("bond", 0.0)) + 3.0, 0.0, 100.0)
+			"grooming":
+				target["mood"] = clampf(float(target.get("mood", 50.0)) + 10.0, 0.0, 100.0)
+			"medical":
+				target["health"] = clampf(float(target.get("health", 50.0)) + 30.0, 0.0, 100.0)
+				economy.add_money(account_id(), -50000, "pet:vet")
+			"training":
+				target["skill"] = clampf(float(target.get("skill", 0.0)) + 5.0, 0.0, 100.0)
+				target["bond"] = clampf(float(target.get("bond", 0.0)) + 4.0, 0.0, 100.0)
+			"funeral":
+				target["alive"] = false
+				target["health"] = 0.0
+		(r as Dictionary)["pet_name"] = String(target.get("name", ""))
 	_persist_life_services()
 	return r
 

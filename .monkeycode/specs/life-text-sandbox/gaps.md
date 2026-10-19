@@ -198,7 +198,7 @@
 
 ### D49 家庭与生活服务业（已收敛）
 - **已收敛**：`sim/life_services.gd` `LifeServicesSystem` 覆盖服务类别 8（平台抽成/固有风险）、服务者与信任（`new_provider`/`background_check` 背景标记与信任调整）、订单（`new_order`）、婚恋（`matchmaking` 候选择优、`wedding_plan` 品质与信任决定成本与事故）、家政（`housekeeping_order` 盗窃/失职）、宠物链（`pet_service_order` 寄养/美容/医疗/训练/殡葬）、风险与纠纷（`service_incident`/`resolve_dispute`）、平台（`platform_commission`/`standardization`）；`SimHost` 公开 `life_*()` 与 `_persist_life_services()`、12 条指令与「专业与生活服务」面板、`sim_runtime.life_services` 白名单、4 套接线测试齐备。
-- **残留待办**：服务者/订单/纠纷的独立 schema（当前以 `sim_runtime.life_services` 内联字典承载）；与 D11 婚育/宠物、D9 区域权威的深接入仍为最小实现。
+- **残留待办**：服务者/订单/纠纷的独立 schema（当前以 `sim_runtime.life_services` 内联字典承载）；宠物服务已落到玩家实际宠物（寄养/美容/医疗/训练/殡葬改写情绪、健康、技能与存活）；与 D11 婚育、D9 区域权威的深接入仍为最小实现。
 
 ### D50 交通基建与航运（已收敛）
 - **已收敛**：`sim/transport_infra.gd` `TransportInfraSystem` 覆盖基建类型 7（基准成本/工期/运力/公益性）、建设（`new_infra_project` 规模缩放、`tender_infra` 加权定标、`build` 超支/延期/建成）、运营（`operate` 票价/需求/运力→盈亏与准点率）、区域影响（`regional_impact` 可达性/地价/GDP/人口、`network_effect` 换乘与物流）、结算与风险（`subsidy`/`settle`/`infra_accident`/`monopoly_regulation`/`international_disruption`）；`SimHost` 公开 `tin_*()` 与 `_persist_transport_infra()`、11 条指令与「交通基建」面板、`sim_runtime.transport_infra` 白名单、4 套接线测试齐备。
