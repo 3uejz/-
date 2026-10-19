@@ -6617,6 +6617,27 @@ func funeral_digital_memorial() -> Dictionary:
 	_persist_funeral()
 	return r
 
+## 数字纪念平台：首期扣开通费与捐赠，会员订阅净收入回写玩家账户。
+func funeral_digital_platform(members: int = 50, donation: int = 0) -> Dictionary:
+	if _funeral_state.is_empty():
+		return {"ok": false, "reason": "no_state"}
+	var platform: Dictionary = (_funeral_state.get("digital", {}) as Dictionary).get("platform", {})
+	var setup_cost: int = 0 if not platform.is_empty() else 50000
+	var upfront: int = setup_cost + maxi(0, donation)
+	if int(economy.cash(account_id())) < upfront:
+		return {"ok": false, "reason": "insufficient_funds", "cost": upfront}
+	economy.add_money(account_id(), -upfront, "digital_platform")
+	var r: Dictionary = funeral.operate_digital_platform(_funeral_state, {
+		"members": maxi(0, members), "donation": maxi(0, donation),
+		"setup_cost": setup_cost, "monthly_fee": 1200, "hosting_cost": 300, "subsidy_per_member": 200,
+	})
+	if bool(r.get("ok", false)):
+		var net: int = int(r.get("net", 0))
+		if net != 0:
+			economy.add_money(account_id(), net, "digital_platform_net")
+		_persist_funeral()
+	return r
+
 func funeral_execute_will() -> Dictionary:
 	var will: Dictionary = player().get("will", {})
 	var r: Dictionary = funeral.execute_will(will, {"id": "player"}, _funeral_state)

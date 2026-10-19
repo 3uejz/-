@@ -1736,6 +1736,10 @@ func _test_funeral_runtime() -> void:
 	check(bool(host.funeral_build_memorial("monument").get("ok", false)), "立纪念碑")
 	check(bool(host.funeral_tomb_sweeping("monument").get("ok", false)), "祭扫纪念")
 	check(bool(host.funeral_digital_memorial().get("ok", false)), "数字纪念")
+	host.economy.add_money(host.account_id(), 500000, "test")
+	var platform: Dictionary = host.funeral_digital_platform(100, 1000)
+	check(bool(platform.get("ok", false)) and int(platform.get("net", 0)) > 0, "数字纪念平台订阅结算")
+	check(int(platform.get("fund", 0)) > 0, "平台公益基金入账")
 	# 遗嘱执行（无效遗嘱仅建议）。
 	check(bool(host.funeral_execute_will().get("ok", false)), "遗嘱执行结算")
 	# 殡葬行业：开办、报价、成交、监管、改革。

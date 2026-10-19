@@ -291,6 +291,38 @@ func create_digital_memorial(state: Dictionary, opts: Dictionary = {}) -> Dictio
 	return {"ok": true, "created": true, "visits": int(d["visits"])}
 
 
+## 数字纪念平台：开通后按会员订阅结算运营收支，捐赠与政府补贴进入公益基金。
+## opts: members/setup_cost/monthly_fee/hosting_cost/subsidy_per_member/donation。
+func operate_digital_platform(state: Dictionary, opts: Dictionary = {}) -> Dictionary:
+	var d: Dictionary = state.get("digital", {})
+	if not bool(d.get("created", false)):
+		return {"ok": false, "reason": "no_digital_memorial"}
+	var platform: Dictionary = d.get("platform", {})
+	var setup_cost: int = maxi(0, int(opts.get("setup_cost", 0)))
+	var members: int = maxi(0, int(opts.get("members", 0)))
+	var monthly_fee: int = maxi(0, int(opts.get("monthly_fee", 1200)))
+	var hosting_cost: int = maxi(0, int(opts.get("hosting_cost", 300)))
+	var subsidy: int = maxi(0, int(opts.get("subsidy_per_member", 200))) * members
+	var donation: int = maxi(0, int(opts.get("donation", 0)))
+	if platform.is_empty():
+		platform = {"members": 0, "fund": 0, "revenue": 0, "cost": setup_cost, "subsidy": 0}
+	platform["members"] = int(platform.get("members", 0)) + members
+	var revenue: int = members * monthly_fee
+	var cost: int = members * hosting_cost
+	platform["revenue"] = int(platform.get("revenue", 0)) + revenue
+	platform["cost"] = int(platform.get("cost", 0)) + cost
+	platform["subsidy"] = int(platform.get("subsidy", 0)) + subsidy
+	platform["fund"] = int(platform.get("fund", 0)) + donation + subsidy
+	d["platform"] = platform
+	d["visits"] = int(d.get("visits", 0)) + members
+	return {
+		"ok": true, "setup_cost": setup_cost, "members": members,
+		"revenue": revenue, "cost": cost, "net": revenue - cost,
+		"donation": donation, "subsidy": subsidy,
+		"fund": int(platform["fund"]), "platform": platform.duplicate(true),
+	}
+
+
 # --- 遗嘱执行 ---
 
 ## 按生前意愿执行殡葬与捐献；无效遗嘱仅返回建议。

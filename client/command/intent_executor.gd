@@ -772,6 +772,8 @@ func _dispatch(intent) -> Dictionary:
 			return _funeral_sweep(intent)
 		"数字纪念":
 			return _funeral_digital(intent)
+		"数字纪念平台":
+			return _funeral_digital_platform(intent)
 		"遗嘱执行":
 			return _funeral_will(intent)
 		"开殡仪馆":
@@ -3984,6 +3986,13 @@ func _funeral_digital(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法创建数字纪念。")
 	return _ok(["数字纪念已创建，访问 %d 次。" % int(r.get("visits", 0))], 0, "")
+
+func _funeral_digital_platform(intent) -> Dictionary:
+	var members: int = int(_param_number(intent, "number", 50))
+	var r: Dictionary = host.funeral_digital_platform(members)
+	if not bool(r.get("ok", false)):
+		return _fail("无法运营数字纪念平台（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["数字纪念平台会员 %d，净收入 %d，公益基金 %d。" % [int(r.get("members", 0)), int(r.get("net", 0)), int(r.get("fund", 0))]], 0, "")
 
 func _funeral_will(intent) -> Dictionary:
 	var r: Dictionary = host.funeral_execute_will()
