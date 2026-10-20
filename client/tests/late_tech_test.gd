@@ -17,6 +17,7 @@ func run_tests() -> void:
 	_test_risk_mission()
 	_test_automation_impact()
 	_test_extreme_environment_and_biotech()
+	_test_equipment_and_places()
 	_test_climate_and_ai()
 
 
@@ -129,3 +130,20 @@ func _test_climate_and_ai() -> void:
 	var ai: Dictionary = sys.ai_ethics_incident(state, 1.0, {"roll": 0.0, "critical": true})
 	check(bool(ai["loss_of_control"]), "高自主性触发 AI 失控")
 	check_eq((ai["chain"] as Array).size(), 2, "关键技术事故连锁")
+
+
+func _test_equipment_and_places() -> void:
+	var sys = LateTechScript.new()
+	var state: Dictionary = sys.new_state()
+	var locked: Dictionary = sys.purchase_equipment(state, "space_station")
+	check(not bool(locked["ok"]), "信息阶段无法购置空间站")
+	sys.unlock_stage(state, "intelligent")
+	check(float(sys.equipment_protection(state, "weightless")) == 0.0, "未购装备无防护")
+	var bought: Dictionary = sys.purchase_equipment(state, "space_suit")
+	check(bool(bought["ok"]), "智能阶段购置航天服")
+	check_near(sys.equipment_protection(state, "weightless"), 0.6, 1e-6, "航天服提供失重防护")
+	check(int(bought["cost"]) > 0, "装备有费用")
+	check(not bool(sys.purchase_equipment(state, "space_suit")["ok"]), "重复购置被拒")
+	check(bool(sys.build_place(state, "spaceport")["ok"]), "建设航天港")
+	check(not bool(sys.build_place(state, "mars_colony")["ok"]), "星际场所未解锁")
+	check((state["places_built"] as Array).size() == 1, "场所登记")

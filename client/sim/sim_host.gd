@@ -1952,13 +1952,59 @@ func apply_late_tech_career(career_key: String) -> Dictionary:
 	return r
 
 ## 执行高风险科技任务。技能等级取任务环境对应的技能树等级（用最高职业技能近似）。
-func risk_late_tech_mission(mission_key: String) -> Dictionary:
+func risk_late_tech_mission(mission_key: String, roll: float = -1.0, casualty_roll: float = -1.0) -> Dictionary:
 	if not late_tech.MISSIONS.has(mission_key):
 		return {"ok": false, "reason": "unknown_mission"}
 	var skill_level: int = _late_tech_best_skill()
-	var r: Dictionary = late_tech.risk_mission(_late_tech, mission_key, skill_level)
-	if bool(r.get("ok", false)) and int(r.get("reward", 0)) > 0:
+	var r: Dictionary = late_tech.risk_mission(_late_tech, mission_key, skill_level, {"roll": roll, "casualty_roll": casualty_roll})
+	if not bool(r.get("ok", false)):
+		return r
+	if int(r.get("reward", 0)) > 0:
 		economy.add_money(account_id(), int(r["reward"]), "late_tech_mission")
+	# 极端环境伤害联动健康与伤残鉴定。
+	if bool(r.get("accident", false)):
+		var effect: Dictionary = r.get("environment_effect", {})
+		var penalty: float = float(effect.get("health_penalty", 0.0))
+		var loss: float = clampf(penalty * 200.0 + (30.0 if bool(r.get("casualty", false)) else 0.0), 0.0, 60.0)
+		if loss > 0.0:
+			_damage_health(loss)
+		r["health_loss"] = loss
+		if loss > 0.0:
+			var env_key: String = String((late_tech.MISSIONS[mission_key] as Dictionary).get("environment", ""))
+			var injury_type: String = "physical"
+			if env_key == "radiation":
+				injury_type = "sensory"
+			var severity: String = "heavy" if bool(r.get("casualty", false)) else ("medium" if loss >= 8.0 else "light")
+			r["injury"] = acquire_disability(injury_type, "accident", severity)
+			_late_tech["last_injury"] = {"mission": mission_key, "type": injury_type, "severity": severity, "health_loss": loss}
+	_persist_late_tech()
+	return r
+
+## 购置科技装备：扣费并登记，防护降低极端环境伤害。
+func purchase_late_tech_equipment(key: String) -> Dictionary:
+	var r: Dictionary = late_tech.purchase_equipment(_late_tech, key)
+	if not bool(r.get("ok", false)):
+		return r
+	var cost: int = int(r.get("cost", 0))
+	if economy.cash(account_id()) < cost:
+		(_late_tech["equipment_owned"] as Array).erase(key)
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	economy.add_money(account_id(), -cost, "late_tech_equipment:%s" % key)
+	sync_finances()
+	_persist_late_tech()
+	return r
+
+## 建设科技场所：扣费并登记入科技运行态。
+func build_late_tech_place(key: String) -> Dictionary:
+	var r: Dictionary = late_tech.build_place(_late_tech, key)
+	if not bool(r.get("ok", false)):
+		return r
+	var cost: int = int(r.get("cost", 0))
+	if economy.cash(account_id()) < cost:
+		(_late_tech["places_built"] as Array).erase(key)
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	economy.add_money(account_id(), -cost, "late_tech_place:%s" % key)
+	sync_finances()
 	_persist_late_tech()
 	return r
 
@@ -2058,6 +2104,10 @@ func late_tech_panel_data() -> Dictionary:
 		"jobs": (def.get("jobs", []) as Array).duplicate(),
 		"equipment": (def.get("equipment", []) as Array).duplicate(),
 		"places": (def.get("places", []) as Array).duplicate(),
+		"equipment_catalog": late_tech.EQUIPMENT.duplicate(true),
+		"places_catalog": late_tech.PLACES.duplicate(true),
+		"equipment_owned": (_late_tech.get("equipment_owned", []) as Array).duplicate(),
+		"places_built": (_late_tech.get("places_built", []) as Array).duplicate(),
 		"lifespan_bonus": snappedf(float(_late_tech.get("lifespan_bonus", 0.0)), 0.1),
 		"unemployment_rate": snappedf(float(_late_tech.get("unemployment_rate", 0.0)), 0.001),
 		"careers": careers,

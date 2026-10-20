@@ -75,6 +75,24 @@ const MISSIONS: Dictionary = {
 }
 
 ## 极端环境健康影响基线（每次暴露单位）。
+## 科技装备：费用、所属阶段与对极端环境的防护（tolerance 0..1）。
+const EQUIPMENT: Dictionary = {
+	"space_station": {"name": "空间站", "cost": 50000000, "stage": "intelligent", "protection": {"weightless": 0.7, "radiation": 0.5}},
+	"deep_submersible": {"name": "深潜器", "cost": 8000000, "stage": "intelligent", "protection": {"high_pressure": 0.7}},
+	"space_suit": {"name": "舱外航天服", "cost": 800000, "stage": "intelligent", "protection": {"weightless": 0.6, "radiation": 0.4}},
+	"deep_dive_suit": {"name": "深海作业服", "cost": 1200000, "stage": "intelligent", "protection": {"high_pressure": 0.6}},
+	"mars_habitat": {"name": "火星栖息舱", "cost": 80000000, "stage": "interstellar", "protection": {"radiation": 0.8, "weightless": 0.4}},
+	"bioreactor": {"name": "生物反应器", "cost": 3000000, "stage": "intelligent", "protection": {"radiation": 0.2}},
+}
+
+## 科技场所：建设费用、所属阶段与容量。
+const PLACES: Dictionary = {
+	"spaceport": {"name": "航天港", "cost": 30000000, "stage": "intelligent", "capacity": 20},
+	"deep_sea_base": {"name": "深海基地", "cost": 20000000, "stage": "intelligent", "capacity": 12},
+	"biotech_lab": {"name": "生物科技实验室", "cost": 5000000, "stage": "intelligent", "capacity": 8},
+	"mars_colony": {"name": "火星殖民地", "cost": 120000000, "stage": "interstellar", "capacity": 500},
+}
+
 const ENVIRONMENTS: Dictionary = {
 	"weightless": {"name": "失重", "bone_loss": 0.02, "muscle_loss": 0.02, "radiation": 0.0, "pressure": 0.0},
 	"radiation": {"name": "辐射", "bone_loss": 0.0, "muscle_loss": 0.005, "radiation": 0.05, "pressure": 0.0},
@@ -98,6 +116,8 @@ func new_state(opts: Dictionary = {}) -> Dictionary:
 		"stage_index": start,
 		"unlocked_stages": STAGES.slice(0, start + 1),
 		"lifespan_bonus": 0.0,
+		"equipment_owned": [],
+		"places_built": [],
 		"unemployment_rate": 0.0,
 		"warming": 0.0,
 		"events": [],
@@ -222,6 +242,8 @@ func risk_mission(state: Dictionary, mission_key: String, skill_level: int, opts
 	if skill_level < int(def["min_skill"]):
 		return {"ok": false, "reason": "skill_too_low", "required": int(def["min_skill"])}
 	var mitigation: float = clampf(float(skill_level) / 20.0, 0.0, 1.0)
+	var env_key: String = str(def["environment"])
+	var protection: float = equipment_protection(state, env_key)
 	var accident_prob: float = clampf(float(def["accident"]) * (1.0 - mitigation * 0.5), 0.01, 0.95)
 	var roll: float = _roll(float(opts.get("roll", -1.0)), rng)
 	var accident: bool = roll < accident_prob
@@ -232,7 +254,9 @@ func risk_mission(state: Dictionary, mission_key: String, skill_level: int, opts
 	var reward: int = int(def["reward"]) if not casualty else 0
 	var env_effect: Dictionary = {}
 	if accident:
-		env_effect = extreme_environment_effect(str(def["environment"]), 1.0, opts)
+		var env_opts: Dictionary = opts.duplicate()
+		env_opts["tolerance"] = maxf(float(opts.get("tolerance", 0.0)), protection)
+		env_effect = extreme_environment_effect(env_key, 1.0, env_opts)
 	return {
 		"ok": true, "mission": mission_key, "accident": accident, "casualty": casualty,
 		"accident_probability": accident_prob, "reward": reward,
@@ -261,6 +285,48 @@ func automation_impact(state: Dictionary, efficiency: float, opts: Dictionary = 
 		"net_jobs": net, "unemployment_rate": rate,
 		"social_security_issue": issue, "events": events,
 	}
+
+
+## 已购装备对指定环境的最高防护。
+func equipment_protection(state: Dictionary, environment: String) -> float:
+	var best: float = 0.0
+	for key in (state.get("equipment_owned", []) as Array):
+		var def: Dictionary = EQUIPMENT.get(str(key), {})
+		var prot: Dictionary = def.get("protection", {})
+		best = maxf(best, clampf(float(prot.get(environment, 0.0)), 0.0, 1.0))
+	return best
+
+
+## 购置科技装备：阶段达标后登记为已拥有。
+func purchase_equipment(state: Dictionary, key: String) -> Dictionary:
+	if not EQUIPMENT.has(key):
+		return {"ok": false, "reason": "unknown_equipment"}
+	if not unlocked(state, "equipment", key) and not _stage_reached(state, str((EQUIPMENT[key] as Dictionary).get("stage", "intelligent"))):
+		return {"ok": false, "reason": "stage_locked"}
+	var owned: Array = state.get("equipment_owned", [])
+	if owned.has(key):
+		return {"ok": false, "reason": "already_owned"}
+	owned.append(key)
+	state["equipment_owned"] = owned
+	return {"ok": true, "equipment": key, "cost": int((EQUIPMENT[key] as Dictionary).get("cost", 0))}
+
+
+## 建设科技场所：阶段达标后登记为已建成。
+func build_place(state: Dictionary, key: String) -> Dictionary:
+	if not PLACES.has(key):
+		return {"ok": false, "reason": "unknown_place"}
+	if not _stage_reached(state, str((PLACES[key] as Dictionary).get("stage", "intelligent"))):
+		return {"ok": false, "reason": "stage_locked"}
+	var built: Array = state.get("places_built", [])
+	if built.has(key):
+		return {"ok": false, "reason": "already_built"}
+	built.append(key)
+	state["places_built"] = built
+	return {"ok": true, "place": key, "cost": int((PLACES[key] as Dictionary).get("cost", 0))}
+
+
+func _stage_reached(state: Dictionary, stage: String) -> bool:
+	return int(STAGE_INDEX.get(stage, 99)) <= int(state.get("stage_index", 0))
 
 
 # --- 极端环境 ---

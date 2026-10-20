@@ -1931,6 +1931,24 @@ static func late_tech(player: Dictionary, context: Dictionary, name_resolver: Ca
 			mrows.append({"label": String(md.get("name", "?")), "value": "技能 %d · 报酬 %d" % [int(md.get("min_skill", 0)), int(md.get("reward", 0))]})
 	if not mrows.is_empty():
 		sections.append(_section("高风险任务", mrows))
+	var equip_catalog: Dictionary = d.get("equipment_catalog", {}) if d.get("equipment_catalog") is Dictionary else {}
+	var owned: Array = _items_of(d.get("equipment_owned", []))
+	var erows: Array = []
+	for key in equip_catalog.keys():
+		var ed: Dictionary = equip_catalog[key]
+		var mark: String = "已购置" if owned.has(key) else "可购置"
+		erows.append({"label": String(ed.get("name", key)), "value": "%s · 费用 %d" % [mark, int(ed.get("cost", 0))]})
+	if not erows.is_empty():
+		sections.append(_section("科技装备", erows))
+	var place_catalog: Dictionary = d.get("places_catalog", {}) if d.get("places_catalog") is Dictionary else {}
+	var built: Array = _items_of(d.get("places_built", []))
+	var prows: Array = []
+	for key in place_catalog.keys():
+		var pd: Dictionary = place_catalog[key]
+		var mark: String = "已建成" if built.has(key) else "可建设"
+		prows.append({"label": String(pd.get("name", key)), "value": "%s · 费用 %d · 容量 %d" % [mark, int(pd.get("cost", 0)), int(pd.get("capacity", 0))]})
+	if not prows.is_empty():
+		sections.append(_section("科技场所", prows))
 	var report: Dictionary = d.get("last_report", {}) if d.get("last_report") is Dictionary else {}
 	if not report.is_empty():
 		var rr: Dictionary = report.get("result", {}) if report.get("result") is Dictionary else {}

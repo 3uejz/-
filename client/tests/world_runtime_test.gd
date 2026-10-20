@@ -964,9 +964,22 @@ func _test_late_tech_runtime() -> void:
 	var bio: Dictionary = host.invest_biotech_lifespan(1000000.0)
 	check(bool(bio.get("ok", false)), "生物延寿投资成功")
 	check(float(host.late_tech_state().get("lifespan_bonus", 0.0)) > before, "延寿加成累积")
-	# 高风险任务（技能 10 满足太空旅行门槛 8）。
-	var mission: Dictionary = host.risk_late_tech_mission("space_travel")
+	# 高风险任务（技能 10 满足太空旅行门槛 8）；强制事故验证极端环境伤害与伤残。
+	var mission: Dictionary = host.risk_late_tech_mission("space_travel", 0.0, 0.0)
 	check(bool(mission.get("ok", false)), "执行太空旅行任务返回")
+	check(bool(mission.get("accident", false)) and bool(mission.get("casualty", false)), "强制事故与伤亡")
+	check(float(mission.get("health_loss", 0.0)) > 0.0, "极端环境扣减健康")
+	check(bool((mission.get("injury", {}) as Dictionary).get("ok", false)), "事故触发伤残鉴定")
+	check_eq((host.disability_state().get("conditions", []) as Array).size(), 1, "伤残进入残障状态")
+	# 购置装备降低同类事故伤害。
+	host.economy.add_money(host.account_id(), 40000000, "test")
+	var buy: Dictionary = host.purchase_late_tech_equipment("space_suit")
+	check(bool(buy.get("ok", false)), "购置舱外航天服")
+	check(not (host.late_tech_panel_data().get("equipment_owned", []) as Array).is_empty(), "装备进入科技面板")
+	var guarded: Dictionary = host.risk_late_tech_mission("space_travel", 0.0, 0.9)
+	check(float(guarded.get("health_loss", 99.0)) < 8.0, "装备降低失重伤害")
+	var build: Dictionary = host.build_late_tech_place("spaceport")
+	check(bool(build.get("ok", false)), "建设航天港")
 	# 持久化并读档恢复。
 	host._persist_late_tech()
 	check(state.sim_runtime.get("late_tech", null) is Dictionary, "后期科技运行态写入 sim_runtime")

@@ -293,6 +293,10 @@ func _dispatch(intent) -> Dictionary:
 			return _tech_mission(intent)
 		"生物延寿":
 			return _biotech(intent)
+		"购置科技装备":
+			return _buy_tech_equipment(intent)
+		"建设科技场所":
+			return _build_tech_place(intent)
 		"自动化评估":
 			return _late_tech_automation(intent)
 		"极端环境":
@@ -1112,7 +1116,7 @@ func _help() -> Dictionary:
 		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
 		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
 		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
-		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入]",
+		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入] / 购置科技装备 <装备> / 建设科技场所 <场所>",
 		"· 知识产权与媒体：登记知识产权 <类型> / 知识产权授权 <IP> [规模] / 知识产权转让 <IP> [价格] / 知识产权质押 <IP> [金额] / 知识产权维权 <IP> / 开办媒体 <类型> / 发行作品 <标题>",
 		"· 制造业与供应链：开办工厂 [模式] / 招工 <岗位> [人数] / 采购原料 <原料> [数量] / 生产 <配方> [批次] / 接单 <配方> [数量] / 交付订单 [序号] / 改进经营模式 <模式>",
 		"· 国际贸易与物流：出口 <商品> [货值] / 规划运输 <方式> / 签订外贸合同 <术语> / 报关 / 清关 / 外贸交付 / 结汇",
@@ -2056,6 +2060,26 @@ func _biotech(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法进行生物延寿投资（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你投入 %d 于生物科技，延寿 %+.1f 年（累计 %+.1f 年）。" % [int(amount), float(r.get("lifespan_gain", 0.0)), float(r.get("total_bonus", 0.0))]], 0, "")
+
+func _buy_tech_equipment(intent) -> Dictionary:
+	var key := _object_id(intent, "late_tech_equipment")
+	if key.is_empty():
+		return _fail("未指定装备；可先「看科技」查看可购置装备。")
+	var r: Dictionary = host.purchase_late_tech_equipment(key)
+	if not bool(r.get("ok", false)):
+		return _fail("无法购置该装备（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var def: Dictionary = host.late_tech.EQUIPMENT.get(key, {})
+	return _ok(["你购置了%s，花费 %d。" % [String(def.get("name", key)), int(r.get("cost", 0))]], 0, "")
+
+func _build_tech_place(intent) -> Dictionary:
+	var key := _object_id(intent, "late_tech_place")
+	if key.is_empty():
+		return _fail("未指定场所；可先「看科技」查看可建设场所。")
+	var r: Dictionary = host.build_late_tech_place(key)
+	if not bool(r.get("ok", false)):
+		return _fail("无法建设该场所（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var def: Dictionary = host.late_tech.PLACES.get(key, {})
+	return _ok(["你建成了%s，花费 %d。" % [String(def.get("name", key)), int(r.get("cost", 0))]], 0, "")
 
 func _late_tech_automation(intent) -> Dictionary:
 	var efficiency: float = float(_param_number(intent, "number", 100)) / 100.0
