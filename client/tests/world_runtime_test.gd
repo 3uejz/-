@@ -1677,6 +1677,10 @@ func _test_consumer_runtime() -> void:
 	var inc: Dictionary = host.consumer_incident("food_safety", 0.9, 5)
 	check(bool(inc.get("ok", false)) and bool(inc.get("delisted", false)), "食安事故下架")
 	check(bool(host.consumer_recall(100).get("ok", false)), "召回结算")
+	host._consumer_product["batch"] = "B2026"
+	check(String(host.consumer_recall_batch("B2025", 10).get("reason", "")) == "batch_mismatch", "批次不符拒绝召回")
+	check(bool(host.consumer_recall_batch("B2026", 10).get("ok", false)), "批次召回成功")
+	check(int(host.consumer_trace().get("count", 0)) >= 3, "商品溯源三环")
 	# 职业打假与恶意索赔。
 	host.consumer_new_order(100000, "general", true, false)
 	check(bool(host.consumer_professional_fraud().get("ok", false)), "职业打假结算")

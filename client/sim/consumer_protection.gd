@@ -97,6 +97,8 @@ func new_product(name: String, opts: Dictionary = {}) -> Dictionary:
 		"defect_rate": clampf(float(opts.get("defect_rate", 0.05)), 0.0, 1.0),
 		"recalled": false,
 		"price": maxi(0, int(opts.get("price", 10000))),
+		"batch": str(opts.get("batch", "")),
+		"trace": [],
 	}
 
 
@@ -286,6 +288,34 @@ func recall(product: Dictionary, affected: int, opts: Dictionary = {}) -> Dictio
 		"ok": true, "affected": maxi(0, affected), "cost": cost,
 		"recalled": true, "brand_damage": clampf(float(opts.get("brand_damage", 0.2)), 0.0, 1.0),
 	}
+
+
+## 批次召回：批次不匹配时拒绝，匹配则按数量结算。
+func recall_batch(product: Dictionary, batch: String, affected: int, opts: Dictionary = {}) -> Dictionary:
+	var have: String = String(product.get("batch", ""))
+	if not have.is_empty() and have != batch:
+		return {"ok": false, "reason": "batch_mismatch", "batch": batch, "product_batch": have}
+	var r: Dictionary = recall(product, affected, opts)
+	r["batch"] = batch
+	product["recalled_batch"] = batch
+	return r
+
+
+## 供应链溯源：追加或读取生产、流通环节记录。
+func add_trace(product: Dictionary, stage: String, actor: String, opts: Dictionary = {}) -> Dictionary:
+	var trace: Array = product.get("trace", [])
+	trace.append({"stage": stage, "actor": actor, "day": int(opts.get("day", 0))})
+	product["trace"] = trace
+	return {"ok": true, "stage": stage, "count": trace.size()}
+
+
+func trace_product(product: Dictionary) -> Dictionary:
+	var trace: Array = product.get("trace", [])
+	var chain: Array = []
+	for t in trace:
+		if t is Dictionary:
+			chain.append({"stage": String((t as Dictionary).get("stage", "")), "actor": String((t as Dictionary).get("actor", "")), "day": int((t as Dictionary).get("day", 0))})
+	return {"ok": true, "batch": String(product.get("batch", "")), "chain": chain, "count": chain.size()}
 
 
 # --- 职业打假与边界 ---

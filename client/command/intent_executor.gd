@@ -744,6 +744,10 @@ func _dispatch(intent) -> Dictionary:
 			return _consumer_incident_quality(intent)
 		"食安事故":
 			return _consumer_incident_food(intent)
+		"批次召回":
+			return _consumer_recall_batch(intent)
+		"商品溯源":
+			return _consumer_trace(intent)
 		"商品召回":
 			return _consumer_recall(intent)
 		"职业打假":
@@ -3977,6 +3981,24 @@ func _consumer_incident(intent, kind: String) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法处理事故（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["监管处罚 %d，赔偿 %d%s。" % [int(r.get("fine", 0)), int(r.get("compensation", 0)), "，产品下架" if bool(r.get("delisted", false)) else ""]], 0, "")
+
+func _consumer_recall_batch(intent) -> Dictionary:
+	var batch := String(intent.params.get("method", ""))
+	var qty: int = int(_param_number(intent, "number", 100))
+	var r: Dictionary = host.consumer_recall_batch(batch, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法召回（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["批次 %s 已召回 %d 件。" % [batch, int(r.get("affected", 0))]], 0, "")
+
+func _consumer_trace(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_trace()
+	if not bool(r.get("ok", false)):
+		return _fail("无法溯源（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var names: Array = []
+	for c in (r.get("chain", []) as Array):
+		if c is Dictionary:
+			names.append("%s:%s" % [String((c as Dictionary).get("stage", "")), String((c as Dictionary).get("actor", ""))])
+	return _ok(["批次 %s 溯源：%s。" % [String(r.get("batch", "")), " → ".join(names)]], 0, "")
 
 func _consumer_recall(intent) -> Dictionary:
 	var affected: int = int(_param_number(intent, "number", 100))

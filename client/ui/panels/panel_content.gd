@@ -1358,6 +1358,8 @@ static func consumer(player: Dictionary, context: Dictionary, name_resolver: Cal
 				{"label": "价格", "value": _money(int(pr.get("price", 0)))},
 				{"label": "质保天数", "value": str(int(pr.get("warranty_days", 0)))},
 				{"label": "已召回", "value": _yes_no(bool(pr.get("recalled", false)))},
+				{"label": "批次", "value": String(pr.get("batch", ""))},
+				{"label": "溯源环节", "value": str(int(pr.get("trace_count", 0)))},
 			]))
 		if cs.has("merchant"):
 			var m: Dictionary = cs["merchant"]

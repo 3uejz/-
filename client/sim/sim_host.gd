@@ -5495,6 +5495,26 @@ func consumer_recall(affected: int) -> Dictionary:
 	_persist_consumer()
 	return r
 
+## 批次召回：批次不匹配时拒绝。
+func consumer_recall_batch(batch: String, affected: int) -> Dictionary:
+	if _consumer_product.is_empty():
+		_consumer_product = consumer.new_product("商品", {"merchant": "merchant", "batch": batch})
+	var r: Dictionary = consumer.recall_batch(_consumer_product, batch, affected)
+	if bool(r.get("ok", false)):
+		_persist_consumer()
+	return r
+
+## 商品溯源：首次读取时补齐生产/流通/零售三环。
+func consumer_trace() -> Dictionary:
+	if _consumer_product.is_empty():
+		return {"ok": false, "reason": "no_product"}
+	if (_consumer_product.get("trace", []) as Array).is_empty():
+		consumer.add_trace(_consumer_product, "生产", "工厂", {"day": day_index() - 30})
+		consumer.add_trace(_consumer_product, "流通", "经销商", {"day": day_index() - 10})
+		consumer.add_trace(_consumer_product, "零售", "门店", {"day": day_index()})
+		_persist_consumer()
+	return consumer.trace_product(_consumer_product)
+
 func consumer_professional_fraud() -> Dictionary:
 	if _consumer_order.is_empty():
 		return {"ok": false, "reason": "no_order"}
@@ -5523,6 +5543,8 @@ func consumer_panel_data() -> Dictionary:
 			"price": int(_consumer_product.get("price", 0)),
 			"warranty_days": int(_consumer_product.get("warranty_days", 0)),
 			"recalled": bool(_consumer_product.get("recalled", false)),
+			"batch": String(_consumer_product.get("batch", "")),
+			"trace_count": (_consumer_product.get("trace", []) as Array).size(),
 		}
 	out["merchant"] = {
 		"name": String(_consumer_merchant.get("name", "")),
