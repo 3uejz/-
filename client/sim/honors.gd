@@ -120,6 +120,8 @@ func new_candidate(id: String, opts: Dictionary = {}) -> Dictionary:
 		"scandals": [],
 		"jury_relations": {},
 		"privileges": [],
+		"political_pressure": 0.0,
+		"last_vote": {},
 	}
 
 
@@ -187,7 +189,7 @@ func evaluate(candidate: Dictionary, award_key: String, jury: Dictionary = {}, o
 	if has_revealed_scandal(candidate, SCANDAL_ACADEMIC_FRAUD):
 		score -= 0.30
 	# 奖项政治化：外部压力压低评审得分。
-	var political: float = clampf(float(opts.get("political_pressure", 0.0)), 0.0, 1.0)
+	var political: float = clampf(float(opts.get("political_pressure", candidate.get("political_pressure", 0.0))), 0.0, 1.0)
 	score *= 1.0 - 0.35 * political
 	score = clampf(score, 0.0, 1.0)
 	return {
@@ -221,6 +223,41 @@ func award(candidate: Dictionary, award_key: String, jury: Dictionary = {}, opts
 	var hall: Variant = opts.get("hall", null)
 	if bool(opts.get("enshrine", true)) and hall is Dictionary and float(def["prestige"]) >= ENSHRINE_MIN_PRESTIGE:
 		result["enshrined"] = enshrine(hall as Dictionary, candidate, honor, opts)
+	return result
+
+
+## 奖项政治化：外部舆论压力累积，压低评审得分。
+func apply_political_pressure(candidate: Dictionary, delta: float) -> Dictionary:
+	var v: float = clampf(float(candidate.get("political_pressure", 0.0)) + delta, 0.0, 1.0)
+	candidate["political_pressure"] = v
+	return {"ok": true, "political_pressure": v}
+
+
+## 评委会多主体投票：综合分与票数加权，同分进入并列决选。
+func panel_vote(entries: Array, opts: Dictionary = {}) -> Dictionary:
+	if entries.is_empty():
+		return {"ok": false, "reason": "no_candidates"}
+	var eps: float = float(opts.get("epsilon", TIE_EPSILON))
+	var total_votes: int = 0
+	for e in entries:
+		total_votes += maxi(0, int((e as Dictionary).get("votes", 0)))
+	var ranked: Array = []
+	for e in entries:
+		var d: Dictionary = e
+		var score: float = clampf(float(d.get("score", 0.0)), 0.0, 1.0)
+		var votes: int = maxi(0, int(d.get("votes", 0)))
+		var vote_share: float = float(votes) / float(maxi(1, total_votes))
+		var combined: float = score * 0.75 + vote_share * 0.25
+		ranked.append({"id": String(d.get("id", "")), "name": String(d.get("name", d.get("id", ""))),
+			"score": score, "votes": votes, "combined": combined})
+	ranked.sort_custom(func(a, b): return float(a["combined"]) > float(b["combined"]))
+	var top: float = float(ranked[0]["combined"])
+	var tied: Array = []
+	for r in ranked:
+		if absf(float((r as Dictionary)["combined"]) - top) <= eps:
+			tied.append((r as Dictionary).duplicate(true))
+	var result: Dictionary = {"ok": true, "winner": String(ranked[0]["id"]), "ranked": ranked,
+		"tie": tied.size() > 1, "tied": tied, "resolution": "runoff"}
 	return result
 
 

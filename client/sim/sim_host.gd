@@ -4194,6 +4194,36 @@ func honors_evaluate(award_key: String) -> Dictionary:
 		return {"ok": false, "reason": "no_profile"}
 	return honors.evaluate(_honor_candidate, award_key)
 
+## 舆论施压：奖项政治化压力累积，压低评审得分。
+func honors_pressure(intensity: float = 0.3) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	var r: Dictionary = honors.apply_political_pressure(_honor_candidate, clampf(intensity, 0.0, 1.0))
+	_persist_honors()
+	return r
+
+## 评委会投票：玩家与三名虚构竞争者按综合分与票数决选。
+func honors_panel_vote(award_key: String) -> Dictionary:
+	if _honor_candidate.is_empty():
+		return {"ok": false, "reason": "no_profile"}
+	var ev: Dictionary = honors.evaluate(_honor_candidate, award_key)
+	if not bool(ev.get("ok", false)):
+		return ev
+	var entries: Array = [{"id": "player", "name": String(_honor_candidate.get("name", "本人")), "score": float(ev.get("score", 0.0)), "votes": 2}]
+	var rivals: Array = [
+		{"id": "rival.a", "name": "殷若水", "score": 0.58, "votes": 2},
+		{"id": "rival.b", "name": "周慕白", "score": 0.66, "votes": 3},
+		{"id": "rival.c", "name": "顾长庚", "score": 0.72, "votes": 1},
+	]
+	for r in rivals:
+		entries.append(r)
+	var vote: Dictionary = honors.panel_vote(entries)
+	vote["award"] = award_key
+	vote["won"] = String(vote.get("winner", "")) == "player"
+	_honor_candidate["last_vote"] = vote.duplicate(true)
+	_persist_honors()
+	return vote
+
 ## 领奖：完成评定并（达标时）登记荣誉与入名人堂。
 func honors_award(award_key: String, corrupt: bool = false) -> Dictionary:
 	if _honor_candidate.is_empty():
@@ -4241,6 +4271,9 @@ func honors_panel_data() -> Dictionary:
 		out["relations"] = float(_honor_candidate.get("relations", 0.0))
 		out["reputation"] = float(_honor_candidate.get("reputation", 0.0))
 		out["privileges"] = (_honor_candidate.get("privileges", []) as Array).size()
+		out["political_pressure"] = float(_honor_candidate.get("political_pressure", 0.0))
+		if _honor_candidate.get("last_vote", null) is Dictionary:
+			out["last_vote"] = (_honor_candidate["last_vote"] as Dictionary).duplicate(true)
 		var honor_rows: Array = []
 		for h in (_honor_candidate.get("honors", []) as Array):
 			var hd: Dictionary = h

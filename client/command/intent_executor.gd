@@ -518,6 +518,10 @@ func _dispatch(intent) -> Dictionary:
 			return _honor_evaluate(intent)
 		"领奖":
 			return _honor_award(intent)
+		"评审团投票":
+			return _honor_panel_vote(intent)
+		"舆论施压":
+			return _honor_pressure(intent)
 		"买奖":
 			return _honor_buy(intent)
 		"揭露黑幕":
@@ -3030,6 +3034,21 @@ func _honor_evaluate(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法评审（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["评审得分 %.2f（通过线 %.2f）——%s。" % [float(r.get("score", 0.0)), float(r.get("pass_line", 0.0)), ("通过" if bool(r.get("passed", false)) else "未通过")]], 0, "")
+
+func _honor_panel_vote(intent) -> Dictionary:
+	var award := _object_id(intent, "award")
+	var r: Dictionary = host.honors_panel_vote(award)
+	if not bool(r.get("ok", false)):
+		return _fail("无法投票（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var winner: String = "本人" if bool(r.get("won", false)) else "竞争者"
+	return _ok(["评委会投票完成，胜出：%s。" % winner], 0, "")
+
+func _honor_pressure(intent) -> Dictionary:
+	var intensity: float = clampf(float(_param_number(intent, "number", 30)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.honors_pressure(intensity)
+	if not bool(r.get("ok", false)):
+		return _fail("无法施压（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["舆论压力升至 %.0f%%。" % (float(r.get("political_pressure", 0.0)) * 100.0)], 0, "")
 
 func _honor_award(intent) -> Dictionary:
 	var award := _object_id(intent, "award")

@@ -2397,7 +2397,16 @@ static func _honors_sections(hn: Dictionary) -> Array:
 			{"label": "关系", "value": "%.2f" % float(hn.get("relations", 0.0))},
 			{"label": "声望", "value": "%.0f" % float(hn.get("reputation", 0.0))},
 			{"label": "特权", "value": "%d 项" % int(hn.get("privileges", 0))},
+			{"label": "舆论压力", "value": "%.0f%%" % (float(hn.get("political_pressure", 0.0)) * 100.0)},
 		]))
+	var vote: Dictionary = hn.get("last_vote", {}) if hn.get("last_vote") is Dictionary else {}
+	if not vote.is_empty():
+		var vrows: Array = []
+		for r in (vote.get("ranked", []) as Array):
+			if r is Dictionary:
+				var rd: Dictionary = r
+				vrows.append({"label": String(rd.get("name", "?")), "value": "综合 %.2f · 票 %d" % [float(rd.get("combined", 0.0)), int(rd.get("votes", 0))]})
+		sections.append(_section("评委会投票", vrows))
 	var honors: Array = _items_of(hn.get("honors", []))
 	if not honors.is_empty():
 		var rows: Array = []

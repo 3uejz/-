@@ -1373,6 +1373,13 @@ func _test_honors_runtime() -> void:
 	var exp: Dictionary = host.honors_expose()
 	check(bool(exp.get("exposed", false)), "黑幕可揭露")
 	check((host.honors_state()["candidate"].get("honors", []) as Array).is_empty(), "揭露后荣誉撤销")
+	var score_before: float = float(host.honors_evaluate("academic_prize").get("score", 0.0))
+	check(bool(host.honors_pressure(0.5).get("ok", false)), "奖项舆论施压")
+	check(float(host.honors_evaluate("academic_prize").get("score", 0.0)) < score_before, "政治化压力压低评审得分")
+	var vote: Dictionary = host.honors_panel_vote("academic_prize")
+	check(bool(vote.get("ok", false)) and (vote.get("ranked", []) as Array).size() == 4, "评委会多主体投票")
+	check(not String(vote.get("winner", "")).is_empty(), "投票产生胜出者")
+	check(not (host.honors_panel_data().get("last_vote", {}) as Dictionary).is_empty(), "投票进入荣誉面板")
 	check(bool(host.honors_inherit().get("ok", false)), "传承评价可计算")
 	state.legacy["generation"] = 2
 	state.legacy["lineage"] = [{"name": "长子", "summary": "出生于本地"}]
