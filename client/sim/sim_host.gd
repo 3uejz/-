@@ -4946,6 +4946,24 @@ func municipal_government_purchase(service: String, budget: int) -> Dictionary:
 	_persist_municipal()
 	return r
 
+func municipal_tender(project: String, budget: int = 10000000) -> Dictionary:
+	var cap: int = maxi(1, budget)
+	var bids: Array = [
+		{"id": "bid.a", "price": int(cap * 0.92), "qualification": 0.62, "relationship": 0.2},
+		{"id": "bid.b", "price": int(cap * 0.85), "qualification": 0.55, "relationship": 0.1},
+		{"id": "bid.c", "price": int(cap * 0.98), "qualification": 0.88, "relationship": 0.0},
+	]
+	var r: Dictionary = municipal.tender_project(_city_municipal, project, cap, bids)
+	if bool(r.get("ok", false)):
+		_persist_municipal()
+	return r
+
+func municipal_hearing(project: String, support: float = 0.6) -> Dictionary:
+	var r: Dictionary = municipal.hold_hearing(_city_municipal, project, support)
+	if bool(r.get("ok", false)):
+		_persist_municipal()
+	return r
+
 func municipal_panel_data() -> Dictionary:
 	var out: Dictionary = {}
 	if not _city_municipal.is_empty():
@@ -4963,6 +4981,10 @@ func municipal_panel_data() -> Dictionary:
 			"unresolved_complaints": municipal.unresolved_complaints(_city_municipal),
 			"franchises": (_city_municipal.get("franchises", []) as Array).size(),
 		}
+		if _city_municipal.get("tender", null) is Dictionary:
+			out["tender"] = (_city_municipal["tender"] as Dictionary).duplicate(true)
+		if _city_municipal.get("hearing", null) is Dictionary:
+			out["hearing"] = (_city_municipal["hearing"] as Dictionary).duplicate(true)
 	if not _postal_hub.is_empty():
 		out["hub"] = {
 			"pending": (_postal_hub.get("pending", []) as Array).size(),

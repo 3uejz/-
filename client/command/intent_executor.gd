@@ -632,6 +632,10 @@ func _dispatch(intent) -> Dictionary:
 			return _municipal_utility(intent)
 		"政府购买":
 			return _municipal_purchase(intent)
+		"项目招标":
+			return _municipal_tender(intent)
+		"项目听证":
+			return _municipal_hearing(intent)
 		"典当":
 			return _debt_pawn(intent)
 		"赎回":
@@ -3466,6 +3470,23 @@ func _municipal_purchase(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法政府购买（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["政府购买服务完成，预算 %d。" % int(r.get("budget", 0))], 0, "")
+
+func _municipal_tender(intent) -> Dictionary:
+	var project := String(intent.params.get("method", "市政工程"))
+	var budget: int = int(_param_number(intent, "number", 10000000))
+	var r: Dictionary = host.municipal_tender(project, budget)
+	if not bool(r.get("ok", false)):
+		return _fail("无法招标（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var c: Dictionary = r.get("contract", {})
+	return _ok(["「%s」定标，成交 %d，得分 %.2f。" % [project, int(c.get("price", 0)), float(c.get("score", 0.0))]], 0, "")
+
+func _municipal_hearing(intent) -> Dictionary:
+	var project := String(intent.params.get("method", "市政工程"))
+	var support: float = clampf(float(_param_number(intent, "number", 60)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.municipal_hearing(project, support)
+	if not bool(r.get("ok", false)):
+		return _fail("无法召开听证（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["「%s」听证%s，风险 %.2f。" % [project, ("通过" if bool(r.get("approved", false)) else "未通过"), float(r.get("risk", 0.0))]], 0, "")
 
 func _debt_pawn(intent) -> Dictionary:
 	var item := String(intent.params.get("method", ""))

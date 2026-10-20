@@ -1223,6 +1223,24 @@ static func municipal(player: Dictionary, context: Dictionary, name_resolver: Ca
 			{"label": "未处理投诉", "value": str(int(c.get("unresolved_complaints", 0)))},
 			{"label": "特许合同", "value": str(int(c.get("franchises", 0)))},
 		]))
+	if mu.has("tender"):
+		var t: Dictionary = mu["tender"]
+		sections.append(_section("项目招标", [
+			{"label": "项目", "value": String(t.get("project", ""))},
+			{"label": "预算", "value": _money(int(t.get("budget", 0)))},
+			{"label": "成交", "value": _money(int(t.get("price", 0)))},
+			{"label": "投标数", "value": str(int(t.get("bidders", 0)))},
+			{"label": "得分", "value": "%.2f" % float(t.get("score", 0.0))},
+		]))
+	if mu.has("hearing"):
+		var h2: Dictionary = mu["hearing"]
+		sections.append(_section("项目听证", [
+			{"label": "项目", "value": String(h2.get("project", ""))},
+			{"label": "支持率", "value": "%.0f%%" % (float(h2.get("support", 0.0)) * 100.0)},
+			{"label": "反对率", "value": "%.0f%%" % (float(h2.get("opposition", 0.0)) * 100.0)},
+			{"label": "风险", "value": "%.2f" % float(h2.get("risk", 0.0))},
+			{"label": "结论", "value": ("通过" if bool(h2.get("approved", false)) else "未通过")},
+		]))
 	if mu.has("hub"):
 		var h: Dictionary = mu["hub"]
 		sections.append(_section("邮政枢纽", [

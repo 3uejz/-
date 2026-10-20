@@ -583,6 +583,49 @@ func government_purchase(city: Dictionary, service: String, budget: int, opts: D
 	return {"ok": true, "contract": contract, "budget": maxi(0, budget)}
 
 
+## 市政项目招标：预算内按报价、资质与关系加权定标。
+func tender_project(city: Dictionary, project: String, budget: int, bids: Array) -> Dictionary:
+	var cap: int = maxi(1, budget)
+	var qualified: Array = []
+	for b in bids:
+		if not (b is Dictionary):
+			continue
+		var price: int = int((b as Dictionary).get("price", 0))
+		var qual: float = clampf(float((b as Dictionary).get("qualification", 0.0)), 0.0, 1.0)
+		if price <= 0 or price > cap or qual < 0.5:
+			continue
+		var rel: float = clampf(float((b as Dictionary).get("relationship", 0.0)), 0.0, 1.0)
+		var score: float = 0.5 * (1.0 - float(price) / float(cap)) + 0.3 * qual + 0.2 * rel
+		qualified.append({"bid": (b as Dictionary).duplicate(true), "score": score})
+	if qualified.is_empty():
+		return {"ok": false, "reason": "no_qualified_bid"}
+	qualified.sort_custom(func(a, b): return float(a["score"]) > float(b["score"]))
+	var winner: Dictionary = qualified[0]["bid"]
+	var contract: Dictionary = {
+		"project": project, "budget": cap, "price": int(winner.get("price", 0)),
+		"qualification": float(winner.get("qualification", 0.0)),
+		"score": float(qualified[0]["score"]), "bidders": bids.size(),
+	}
+	city["tender"] = contract
+	return {"ok": true, "contract": contract, "reason": ""}
+
+
+## 市政项目听证：支持率、扰民与反对意见决定是否通过。
+func hold_hearing(city: Dictionary, project: String, support: float, opts: Dictionary = {}) -> Dictionary:
+	var sup: float = clampf(support, 0.0, 1.0)
+	var nuisance: float = clampf(float(city.get("nuisance", 0.0)), 0.0, 1.0)
+	var opposition: float = clampf(1.0 - sup + 0.3 * nuisance + float(opts.get("extra_opposition", 0.0)), 0.0, 1.0)
+	var risk: float = clampf(opposition * 0.8, 0.0, 1.0)
+	var approved: bool = risk < 0.6
+	var record: Dictionary = {
+		"project": project, "support": sup, "opposition": opposition,
+		"risk": risk, "approved": approved,
+		"conditions": [] if approved else ["补充环评", "缩小规模", "增加补偿"],
+	}
+	city["hearing"] = record
+	return {"ok": true, "approved": approved, "risk": risk, "record": record}
+
+
 # --- 序列化 ---
 
 func to_dict(state: Dictionary) -> Dictionary:

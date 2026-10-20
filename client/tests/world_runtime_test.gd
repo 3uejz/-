@@ -1563,6 +1563,9 @@ func _test_municipal_runtime() -> void:
 	var utility: Dictionary = host.municipal_utility_report(30.0)
 	check(bool(utility.get("ok", false)) and int(utility.get("revenue", 0)) > 0, "公用事业报表结算营收")
 	check(bool(host.municipal_government_purchase("park_maintenance", 800000).get("ok", false)), "政府购买服务完成")
+	check(bool(host.municipal_tender("滨江步道", 5000000).get("ok", false)), "市政项目招标定标")
+	check(bool(host.municipal_hearing("滨江步道", 0.7).get("ok", false)), "市政项目听证")
+	check(not host.municipal_panel_data().get("tender", {}).is_empty(), "招标结果进入市政面板")
 	# 持久化与读档恢复。
 	host._persist_municipal()
 	check(state.sim_runtime.get("municipal", null) is Dictionary, "市政运行态写入 sim_runtime")
