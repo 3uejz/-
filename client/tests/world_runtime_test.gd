@@ -1208,6 +1208,11 @@ func _test_primary_runtime() -> void:
 	check(int(host.economy.cash(host.account_id())) > cash_carbon, "碳汇收入入账")
 	# 狩猎。
 	check(bool(host.apply_hunting_license().get("ok", false)), "申请狩猎许可成功")
+	var eco0: float = float(host.primary_panel_data().get("ecology", {}).get("resource_ratio", 1.0))
+	var dev: Dictionary = host.primary_over_develop(0.5)
+	check(bool(dev.get("ok", false)), "过度开发结算")
+	check(float(host.primary_panel_data().get("ecology", {}).get("resource_ratio", 1.0)) < eco0, "生态资源比例下降")
+	check(float(dev.get("pollution", 0.0)) > 0.0, "生态退化反馈区域污染")
 	var hunt_r: Dictionary = host.hunt("deer", 1.0)
 	check(bool(hunt_r.get("ok", false)) and bool(hunt_r.get("legal", false)), "持证合法狩猎")
 	# 持久化与读档恢复。

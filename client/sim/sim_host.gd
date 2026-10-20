@@ -3263,6 +3263,25 @@ func apply_hunting_license() -> Dictionary:
 	_persist_primary()
 	return r
 
+## 生态过度开发：资源与土壤退化，并反馈区域污染与农田肥力。
+func primary_over_develop(intensity: float) -> Dictionary:
+	var amount: float = clampf(intensity, 0.0, 1.0)
+	var r: Dictionary = primary_industry.over_develop(_ecology, amount)
+	# 反馈 D22 农业：地块肥力下降。
+	var lost: float = amount * 0.1
+	for land in (_farm.get("land", []) as Array):
+		if land is Dictionary:
+			(land as Dictionary)["fertility"] = clampf(float((land as Dictionary).get("fertility", 0.8)) - lost, 0.1, 1.0)
+	# 反馈 D41 环境：区域污染与下风向扩散。
+	if amount > 0.0:
+		var pollute: Dictionary = env_pollute(amount * 0.5)
+		r["pollution"] = float(pollute.get("pollution", 0.0))
+		r["diffusion"] = pollute.get("diffusion", {})
+	_bump_region_stat("ecological_degradation", int(round(amount * 10.0)))
+	_persist_primary()
+	_persist_farm()
+	return r
+
 func hunt(species: String, amount: float) -> Dictionary:
 	if _hunter.is_empty():
 		_hunter = primary_industry.new_hunter()
@@ -3294,7 +3313,8 @@ func primary_panel_data() -> Dictionary:
 	if not _hunter.is_empty():
 		out["hunter"] = {"license": bool(_hunter.get("license", false)), "wanted_level": int(_hunter.get("wanted_level", 0)), "money": int(_hunter.get("money", 0))}
 	if not _ecology.is_empty():
-		out["ecology"] = {"resource_ratio": float(_ecology.get("resource_ratio", 1.0)), "soil_quality": float(_ecology.get("soil_quality", 1.0)), "erosion": float(_ecology.get("erosion", 0.0))}
+		out["ecology"] = {"resource_ratio": float(_ecology.get("resource_ratio", 1.0)), "soil_quality": float(_ecology.get("soil_quality", 1.0)),
+			"erosion": float(_ecology.get("erosion", 0.0)), "restoration_needed": float(_ecology.get("restoration_needed", 0.0))}
 	return out
 
 func _primary_tick(before_minutes: int, after_minutes: int) -> void:

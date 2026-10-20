@@ -416,6 +416,8 @@ func _dispatch(intent) -> Dictionary:
 			return _apply_hunting_license(intent)
 		"狩猎":
 			return _hunt(intent)
+		"过度开发":
+			return _primary_over_develop(intent)
 		# 餐饮与食品工业（D30）
 		"建餐厅":
 			return _build_restaurant(intent)
@@ -2637,6 +2639,15 @@ func _hunt(intent) -> Dictionary:
 	if not bool(r.get("legal", true)):
 		return _ok(["无证狩猎，被查获，通缉等级升至 %d。" % int((r.get("violation", {}) as Dictionary).get("wanted_level", 0))], 0, "")
 	return _ok(["猎获%s %.1f，收入 %d。" % [_game_species_name(species), float(r.get("harvested", 0.0)), int(r.get("revenue", 0))]], 0, "")
+
+func _primary_over_develop(intent) -> Dictionary:
+	var raw: float = float(_param_number(intent, "number", 50))
+	var intensity: float = raw / 100.0 if raw > 1.0 else raw
+	var r: Dictionary = host.primary_over_develop(intensity)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开发该资源（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["过度开发强度 %.2f：资源 %.2f，水土流失 %.2f，污染 %.2f。" % [intensity,
+		float(r.get("resource_ratio", 0.0)), float(r.get("erosion", 0.0)), float(r.get("pollution", 0.0))]], 0, "")
 
 func _fish_species_name(species: String) -> String:
 	return String(host.primary_industry.FISH_SPECIES.get(species, {}).get("name", species))
