@@ -1529,7 +1529,13 @@ func _test_environment_runtime() -> void:
 	check(bool(host.env_illegal_discharge(20.0).get("ok", false)), "偷排结算完成")
 	check(bool(host.env_nimby(0.5).get("ok", false)), "邻避评估完成")
 	# 污染与诉讼。
-	check(bool(host.env_pollute(0.8).get("ok", false)), "污染事件结算")
+	if host.regions.region_ids().size() < 2:
+		host.regions.register_region("region.neighbor", {"name": "邻区"})
+	var hp_before: float = float((host.player().get("attrs", {}) as Dictionary).get("physiological", {}).get("health", 100.0))
+	var pollute: Dictionary = host.env_pollute(0.8)
+	check(bool(pollute.get("ok", false)), "污染事件结算")
+	check(int((pollute.get("diffusion", {}) as Dictionary).get("regions", 0)) > 0, "污染向下风向区域扩散")
+	check(float((host.player().get("attrs", {}) as Dictionary).get("physiological", {}).get("health", 100.0)) < hp_before, "长期污染损害健康")
 	check(bool(host.env_expose_pollution().get("ok", false)), "污染曝光结算")
 	var cash_suit: int = int(host.economy.cash(host.account_id()))
 	var suit: Dictionary = host.env_lawsuit()

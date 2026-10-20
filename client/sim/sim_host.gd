@@ -4847,8 +4847,31 @@ func env_run_project(name: String, budget: int) -> Dictionary:
 
 func env_pollute(severity: float) -> Dictionary:
 	var r: Dictionary = environment_sys.pollute(_city_env, severity)
+	r["diffusion"] = _env_diffuse(float(r.get("pollution", 0.0)))
 	_persist_environment()
 	return r
+
+## 区域污染跨域扩散：按污染指数向下风向区域输送，并长期损害居民健康。
+func _env_diffuse(idx: float) -> Dictionary:
+	var amount: float = clampf(idx, 0.0, 1.0) * 0.15
+	if amount <= 0.0:
+		return {"ok": true, "amount": 0.0, "regions": 0}
+	var rid: String = current_region_id()
+	var targets: Array = []
+	if regions != null:
+		for other in regions.region_ids():
+			if String(other) != rid:
+				targets.append(String(other))
+	targets.sort()
+	var spread: Array = targets.slice(0, 2)
+	for t in spread:
+		var reg = regions.get_region(String(t))
+		reg.snapshot["pollution"] = clampf(float(reg.snapshot.get("pollution", 0.0)) + amount, 0.0, 1.0)
+	if not spread.is_empty():
+		_persist_regions()
+	# 健康长期建模：按污染指数扣减玩家健康。
+	_damage_health(amount * 20.0)
+	return {"ok": true, "amount": amount, "regions": spread.size()}
 
 func env_expose_pollution() -> Dictionary:
 	var r: Dictionary = environment_sys.expose_pollution(_city_env)
