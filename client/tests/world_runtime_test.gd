@@ -1908,6 +1908,14 @@ func _test_medical_runtime() -> void:
 	check(host.medtech_organ_source_catalog().size() >= 4, "器官来源≥4")
 	# 就医与治疗。
 	host.economy.add_money(host.account_id(), 5000000, "test")
+	# 年度预算跨年重置。
+	host._medical_region["fiscal_year"] = host._current_year() - 1
+	host._medical_region["annual_budget"] = 500000
+	host._medical_region["insurance_fund"] = 0
+	host._medical_region["budget_spent"] = 500000
+	host._medical_ensure_fiscal_year()
+	check(int(host._medical_region.get("insurance_fund", 0)) == 500000, "医保年度预算跨年重置")
+	check(int(host._medical_region.get("budget_spent", -1)) == 0, "年度支出清零")
 	var fund_before: int = int(host._medical_region.get("insurance_fund", 0))
 	var visit: Dictionary = host.medical_visit("hospital", "surgery", "")
 	check(bool(visit.get("ok", false)), "手术结算")

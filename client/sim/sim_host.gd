@@ -369,6 +369,9 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	medical = MedicalScript.new(seed)
 	medtech = MedTechScript.new()
 	_medical_region = medtech.new_region(1000000, {"medical_level": 1.5})
+	_medical_region["annual_budget"] = int(_medical_region.get("insurance_fund", 0))
+	_medical_region["budget_spent"] = 0
+	_medical_region["fiscal_year"] = 0
 	medtech.region_metrics(_medical_region)
 	content_industry = ContentIndustryScript.new()
 	_content_rival = content_industry.new_studio({"id": "studio.rival", "name": "竞品工作室", "money": 8000000})
@@ -400,6 +403,8 @@ func _init(state_obj = null, seed: int = 0) -> void:
 func bind(state_obj) -> void:
 	state = state_obj
 	_seeded = false
+	if not _medical_region.is_empty():
+		_medical_region["fiscal_year"] = _current_year()
 	_ensure_world()
 
 func player() -> Dictionary:
@@ -7324,7 +7329,19 @@ func medtech_organ_source_catalog() -> Array:
 		out.append({"id": String(key), "name": String(names[key])})
 	return out
 
+## 医保基金按自然年重置为年度预算；跨年首次就医时惰性结算。
+func _medical_ensure_fiscal_year() -> void:
+	if _medical_region.is_empty():
+		return
+	var y: int = _current_year()
+	if int(_medical_region.get("fiscal_year", y)) == y:
+		return
+	_medical_region["fiscal_year"] = y
+	_medical_region["budget_spent"] = 0
+	_medical_region["insurance_fund"] = maxi(0, int(_medical_region.get("annual_budget", 0)))
+
 func medical_visit(facility: String, service: String, disease: String = "") -> Dictionary:
+	_medical_ensure_fiscal_year()
 	var fund: int = int(_medical_region.get("insurance_fund", 0))
 	var cost_estimate: int = 0
 	if medical.FACILITIES.has(facility):
@@ -7340,6 +7357,7 @@ func medical_visit(facility: String, service: String, disease: String = "") -> D
 	r["reimbursed"] = reimburse
 	r["self_pay"] = int(r.get("cost", 0)) - reimburse
 	_medical_region["insurance_fund"] = maxi(0, fund - reimburse)
+	_medical_region["budget_spent"] = int(_medical_region.get("budget_spent", 0)) + reimburse
 	(economy.macro as Dictionary)["medical_spending"] = int(economy.macro.get("medical_spending", 0)) + reimburse
 	_bump_region_stat("medical_spending", reimburse)
 	if int(r.get("self_pay", 0)) != 0:
@@ -7502,6 +7520,9 @@ func medical_panel_data() -> Dictionary:
 		}
 	out["drug_resistance"] = float((player().get("health", {}) as Dictionary).get("drug_resistance", 0.0))
 	out["insurance_fund"] = int(_medical_region.get("insurance_fund", 0))
+	out["annual_budget"] = int(_medical_region.get("annual_budget", 0))
+	out["budget_spent"] = int(_medical_region.get("budget_spent", 0))
+	out["fiscal_year"] = int(_medical_region.get("fiscal_year", 0))
 	return out
 
 func _persist_medical() -> void:
