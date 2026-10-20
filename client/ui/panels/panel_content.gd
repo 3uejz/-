@@ -1164,6 +1164,7 @@ static func rescue(player: Dictionary, context: Dictionary, name_resolver: Calla
 			{"label": "名称", "value": String(eo.get("name", ""))},
 			{"label": "志愿者", "value": str(int(eo.get("volunteers", 0)))},
 			{"label": "装备", "value": str(int(eo.get("equipment", 0)))},
+			{"label": "装备损耗", "value": "%.0f%%" % (float(eo.get("wear", 0.0)) * 100.0)},
 			{"label": "资金", "value": _money(int(eo.get("funds", 0)))},
 			{"label": "声誉", "value": "%.2f" % float(eo.get("reputation", 0.0))},
 		]))

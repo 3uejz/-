@@ -294,6 +294,7 @@ func new_volunteer_org(name: String, opts: Dictionary = {}) -> Dictionary:
 		"equipment": maxi(0, int(opts.get("equipment", 0))),
 		"funds": maxi(0, int(opts.get("funds", 0))),
 		"reputation": clampf(float(opts.get("reputation", 0.3)), 0.0, 1.0),
+		"wear": 0.0,
 	}
 
 
@@ -310,6 +311,18 @@ func purchase_equipment(org: Dictionary, item: String, cost: int) -> Dictionary:
 	return {"ok": true, "equipment": int(org["equipment"]), "funds": int(org["funds"])}
 
 
+## 装备维护：按预算恢复损耗，维护后效率回升。
+func maintain_equipment(org: Dictionary, cost: int) -> Dictionary:
+	var c: int = maxi(0, cost)
+	if int(org.get("funds", 0)) < c:
+		return {"ok": false, "reason": "insufficient_funds"}
+	org["funds"] = int(org["funds"]) - c
+	var restored: float = clampf(0.25 + float(c) / 1000000.0, 0.0, 0.8)
+	org["wear"] = clampf(float(org.get("wear", 0.0)) - restored, 0.0, 1.0)
+	org["last_maintenance"] = c
+	return {"ok": true, "wear": float(org["wear"]), "restored": restored, "funds": int(org["funds"])}
+
+
 func recruit_volunteers(org: Dictionary, count: int) -> Dictionary:
 	org["volunteers"] = maxi(0, int(org.get("volunteers", 0)) + count)
 	return {"ok": true, "volunteers": int(org["volunteers"])}
@@ -319,8 +332,10 @@ func recruit_volunteers(org: Dictionary, count: int) -> Dictionary:
 func volunteer_dispatch(org: Dictionary, incident: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	var merged: Dictionary = opts.duplicate()
 	merged["volunteers"] = int(opts.get("volunteers", org.get("volunteers", 0)))
-	merged["equipment_level"] = clampf(float(incident.get("equipment_level", 0.5)) + float(org.get("equipment", 0)) * 0.02, 0.0, 1.0)
+	var wear: float = clampf(float(org.get("wear", 0.0)), 0.0, 1.0)
+	merged["equipment_level"] = clampf(float(incident.get("equipment_level", 0.5)) + float(org.get("equipment", 0)) * 0.02 * (1.0 - 0.5 * wear), 0.0, 1.0)
 	incident["equipment_level"] = float(merged["equipment_level"])
+	org["wear"] = clampf(wear + 0.06, 0.0, 1.0)
 	return dispatch(incident, merged)
 
 

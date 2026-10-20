@@ -4616,6 +4616,14 @@ func volunteer_purchase(item: String, cost: int) -> Dictionary:
 	_persist_emergency()
 	return r
 
+func volunteer_maintain(cost: int = 50000) -> Dictionary:
+	if _volunteer_org.is_empty():
+		return {"ok": false, "reason": "no_org"}
+	var r: Dictionary = emergency.maintain_equipment(_volunteer_org, cost)
+	if bool(r.get("ok", false)):
+		_persist_emergency()
+	return r
+
 func volunteer_recruit(count: int) -> Dictionary:
 	if _volunteer_org.is_empty():
 		return {"ok": false, "reason": "no_org"}

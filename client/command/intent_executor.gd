@@ -570,6 +570,8 @@ func _dispatch(intent) -> Dictionary:
 			return _volunteer_recruit(intent)
 		"志愿出警":
 			return _volunteer_dispatch(intent)
+		"装备维护":
+			return _volunteer_maintain(intent)
 		"垃圾分类":
 			return _env_garbage(intent)
 		"回收":
@@ -3236,6 +3238,13 @@ func _volunteer_recruit(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法招募志愿者（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["已招募志愿者，当前 %d 人。" % int(r.get("volunteers", 0))], 0, "")
+
+func _volunteer_maintain(intent) -> Dictionary:
+	var cost: int = int(_param_number(intent, "number", 50000))
+	var r: Dictionary = host.volunteer_maintain(cost)
+	if not bool(r.get("ok", false)):
+		return _fail("无法维护装备（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["装备维护完成，损耗降至 %.0f%%。" % (float(r.get("wear", 0.0)) * 100.0)], 0, "")
 
 func _volunteer_dispatch(intent) -> Dictionary:
 	var r: Dictionary = host.volunteer_dispatch_incident()

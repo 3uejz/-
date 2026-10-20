@@ -1447,6 +1447,10 @@ func _test_emergency_runtime() -> void:
 	check(bool(host.volunteer_recruit(10).get("ok", false)), "招募志愿者成功")
 	check(bool(host.volunteer_purchase("救援装备", 100).get("ok", false)), "采购装备成功")
 	check(bool(host.volunteer_dispatch_incident().get("ok", false)), "志愿出警成功")
+	check(float(host._volunteer_org.get("wear", 0.0)) > 0.0, "出警造成装备损耗")
+	var wear_before: float = float(host._volunteer_org.get("wear", 0.0))
+	check(bool(host.volunteer_maintain(50000).get("ok", false)), "装备维护成功")
+	check(float(host._volunteer_org.get("wear", 1.0)) < wear_before, "维护降低装备损耗")
 	# 天气灾害：找到当前区域未来确有灾害的一日，触发 D19→D36/D18/D1 联动。
 	check(bool(host.found_factory("own_factory").get("ok", false)), "灾害前已办厂")
 	var rid: String = host.current_region_id()
