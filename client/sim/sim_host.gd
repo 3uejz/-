@@ -5476,6 +5476,13 @@ func consumer_burden(days_since: int) -> Dictionary:
 func consumer_dispute(channel: String, evidence: float) -> Dictionary:
 	if _consumer_order.is_empty():
 		return {"ok": false, "reason": "no_order"}
+	if channel == "litigation":
+		# 诉讼渠道委托民事系统立案，由开庭/上诉/执行程序继续推进。
+		var sued: Dictionary = consumer_sue(evidence)
+		if not bool(sued.get("ok", false)):
+			return {"ok": false, "reason": String(sued.get("reason", "civil_failed")), "channel": channel}
+		return {"ok": true, "channel": channel, "success": false, "outcome": "litigation_filed",
+			"delegated": true, "litigation": sued, "claim": sued.get("claim", {})}
 	if channel == "platform":
 		consumer.file_complaint(_consumer_order, "platform", {"evidence": evidence})
 	var r: Dictionary = consumer.resolve_dispute(_consumer_order, _consumer_merchant, {"channel": channel, "evidence": evidence}, rng)
