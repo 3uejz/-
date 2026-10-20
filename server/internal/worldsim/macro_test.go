@@ -70,3 +70,23 @@ func TestIssueTransmitsToInflation(t *testing.T) {
 		t.Fatalf("货币投放未推高通胀: %v -> %v", base, s.Inflation)
 	}
 }
+
+// 能源价格作为宏观输入：高能源价格推升通胀并压低 PMI。
+func TestEnergyPriceTransmitsToMacro(t *testing.T) {
+	base := worldsim.NewSimulator(7, 1000000)
+	shock := worldsim.NewSimulator(7, 1000000)
+	shock.SetEnergyPrice(2.0)
+	if shock.EnergyPrice != 2.0 {
+		t.Fatalf("能源价格未注入: %v", shock.EnergyPrice)
+	}
+	for i := 0; i < 12; i++ {
+		base.Tick()
+		shock.Tick()
+	}
+	if shock.Inflation <= base.Inflation {
+		t.Fatalf("高能源价格应推升通胀: base=%v shock=%v", base.Inflation, shock.Inflation)
+	}
+	if shock.PMI >= base.PMI {
+		t.Fatalf("高能源价格应压低 PMI: base=%v shock=%v", base.PMI, shock.PMI)
+	}
+}

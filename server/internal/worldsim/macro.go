@@ -105,6 +105,7 @@ type Simulator struct {
 	Phase        string
 	QuartersLeft int
 	MoneySupply  float64
+	EnergyPrice  float64
 
 	// 人口队列与宏观时钟。
 	PopulationF    float64
@@ -131,6 +132,7 @@ func NewSimulator(seed uint64, population int64) *Simulator {
 		Phase:          "recovery",
 		QuartersLeft:   8,
 		MoneySupply:    1.0,
+		EnergyPrice:    1.0,
 		PopulationF:    float64(population),
 		BirthRate:      MacroBirthRate,
 		DeathRate:      MacroDeathRate,
@@ -138,6 +140,11 @@ func NewSimulator(seed uint64, population int64) *Simulator {
 		AbsoluteMinute: 0,
 		rng:            sim.NewSplitMix64(seed),
 	}
+}
+
+// SetEnergyPrice 注入能源价格指数（1.0 为基准），作为宏观输入。
+func (s *Simulator) SetEnergyPrice(price float64) {
+	s.EnergyPrice = clamp(price, 0.2, 5.0)
 }
 
 // Tick 推进一个季度并返回最新全球指标。
@@ -156,10 +163,12 @@ func (s *Simulator) Tick() GlobalIndicators {
 	if s.Phase == "boom" || s.Phase == "recovery" {
 		cyclePressure = 0.01
 	}
+	// 能源价格向通胀与景气传导：高能源价格抬升通胀、压低 PMI。
+	energyShock := 0.05 * (s.EnergyPrice - 1.0)
 	targetInflation := MacroBaseInflation +
 		0.8*moneyGrowth -
 		0.3*(s.BaseRate-MacroBaseRate) +
-		cyclePressure
+		cyclePressure + energyShock
 	s.Inflation = clamp(moveToward(s.Inflation, targetInflation, 0.01), MacroInflationMin, MacroInflationMax)
 
 	rateTarget := MacroBaseRate + 0.5*(s.Inflation-MacroBaseInflation)
@@ -171,7 +180,7 @@ func (s *Simulator) Tick() GlobalIndicators {
 	s.Unemployment = clamp(moveToward(s.Unemployment, unemploymentTarget, 0.01), MacroUnemploymentLo, MacroUnemploymentHi)
 
 	s.PriceIndex *= 1.0 + s.Inflation/float64(MacroQuartersPerYear)
-	s.PMI = clamp(MacroPMIBase+50.0*(s.Inflation-MacroBaseInflation)-100.0*(s.Unemployment-MacroUnemployment), MacroPMIMin, MacroPMIMax)
+	s.PMI = clamp(MacroPMIBase+50.0*(s.Inflation-MacroBaseInflation)-100.0*(s.Unemployment-MacroUnemployment)-100.0*energyShock, MacroPMIMin, MacroPMIMax)
 
 	s.Global.GdpEst = s.GDP
 	s.Global.InflationRate = s.Inflation
