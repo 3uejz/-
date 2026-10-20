@@ -1735,6 +1735,8 @@ func _test_welfare_runtime() -> void:
 	check(int(host.welfare_fund_settle().get("to_cause", 0)) > 0, "募捐结算")
 	check(bool(host.welfare_fund_spend("助学", 100000).get("ok", false)), "公益支出")
 	check(int(host.welfare_fund_audit().get("transparency", 0)) >= 0, "善款审计")
+	check(bool(host.welfare_fund_publish("年度").get("ok", false)), "慈善信息公开公示")
+	check((host.welfare_panel_data().get("fund", {}).get("reports", []) as Array).size() > 0, "公示进入福利面板")
 	check(bool(host.welfare_fund_misappropriate(50000).get("ok", false)), "善款挪用登记")
 	# 社工与个案。
 	check(bool(host.welfare_worker_start().get("ok", false)), "社工入职")

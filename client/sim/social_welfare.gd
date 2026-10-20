@@ -370,6 +370,29 @@ func audit_transparency(fund: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	return {"ok": true, "transparency": score, "grade": "A" if score >= 80.0 else ("B" if score >= 60.0 else "C")}
 
 
+## 慈善信息公开：发布季度/年度公示，记录收支与透明度。
+func publish_report(fund: Dictionary, period: String = "年度", opts: Dictionary = {}) -> Dictionary:
+	var raised: int = int(fund.get("raised", 0))
+	var spent: int = int(fund.get("spent", 0))
+	var balance: int = int(fund.get("balance", 0))
+	var transparency: float = clampf(float(fund.get("transparency", 0.0)), 0.0, 1.0)
+	var record: Dictionary = {
+		"period": period, "raised": raised, "spent": spent, "balance": balance,
+		"transparency": transparency,
+		"expenditures": (_fund_expenditures(fund) as Array).size(),
+		"misappropriated": bool(fund.get("misappropriated", false)),
+		"published_minute": int(opts.get("minute", 0)),
+	}
+	var reports: Array = fund.get("reports", [])
+	reports.append(record)
+	fund["reports"] = reports
+	return {"ok": true, "report": record, "count": reports.size()}
+
+
+func _fund_expenditures(fund: Dictionary) -> Array:
+	return fund.get("expenditures", [])
+
+
 ## 善款挪用：隐蔽标记，可能被审计查获并反噬声誉。
 func misappropriate(fund: Dictionary, amount: int, opts: Dictionary = {}, rng = null) -> Dictionary:
 	var a: int = maxi(0, amount)

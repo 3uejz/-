@@ -1420,6 +1420,14 @@ static func _welfare_sections(wf: Dictionary) -> Array:
 			{"label": "透明度", "value": "%d%%" % int(round(float(fund.get("transparency", 0.0)) * 100.0))},
 		]
 		sections.append(_section("慈善基金", frows))
+		var reports: Array = _items_of(fund.get("reports", []))
+		if not reports.is_empty():
+			var rrows: Array = []
+			for rep in reports:
+				if rep is Dictionary:
+					var rd: Dictionary = rep
+					rrows.append({"label": String(rd.get("period", "?")), "value": "募得 %d · 支出 %d · 透明度 %.0f%%" % [int(rd.get("raised", 0)), int(rd.get("spent", 0)), float(rd.get("transparency", 0.0)) * 100.0]})
+			sections.append(_section("信息公开", rrows))
 	var worker: Dictionary = wf.get("worker", {})
 	if not worker.is_empty():
 		var wrows: Array = [

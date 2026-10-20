@@ -6808,6 +6808,14 @@ func welfare_fund_misappropriate(amount: int) -> Dictionary:
 	_persist_welfare()
 	return r
 
+## 慈善信息公开：发布公示并挂到基金档案。
+func welfare_fund_publish(period: String = "年度") -> Dictionary:
+	if _welfare_fund.is_empty():
+		return {"ok": false, "reason": "no_fund"}
+	var r: Dictionary = social_welfare.publish_report(_welfare_fund, period, {"minute": now_minutes()})
+	_persist_welfare()
+	return r
+
 func welfare_worker_start() -> Dictionary:
 	_welfare_worker = social_welfare.new_social_worker("player", {"name": "本人"})
 	_persist_welfare()
@@ -6856,6 +6864,7 @@ func welfare_panel_data() -> Dictionary:
 			"spent": int(_welfare_fund.get("spent", 0)),
 			"transparency": float(_welfare_fund.get("transparency", 0.0)),
 			"reputation": float(_welfare_fund.get("reputation", 0.0)),
+			"reports": (_welfare_fund.get("reports", []) as Array).duplicate(true),
 		}
 	if not _welfare_worker.is_empty():
 		out["worker"] = {

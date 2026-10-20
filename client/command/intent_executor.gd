@@ -776,6 +776,8 @@ func _dispatch(intent) -> Dictionary:
 			return _welfare_donate(intent)
 		"公益支出":
 			return _welfare_spend(intent)
+		"慈善公示":
+			return _welfare_publish(intent)
 		"善款审计":
 			return _welfare_audit(intent)
 		"善款挪用":
@@ -4085,6 +4087,13 @@ func _welfare_spend(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法支出（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["公益支出 %d（%s），结余 %d。" % [amount, purpose, int(r.get("balance", 0))]], 0, "")
+
+func _welfare_publish(intent) -> Dictionary:
+	var r: Dictionary = host.welfare_fund_publish("年度")
+	if not bool(r.get("ok", false)):
+		return _fail("无法公示（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var rep: Dictionary = r.get("report", {})
+	return _ok(["慈善公示已发布：募得 %d，支出 %d，结余 %d。" % [int(rep.get("raised", 0)), int(rep.get("spent", 0)), int(rep.get("balance", 0))]], 0, "")
 
 func _welfare_audit(intent) -> Dictionary:
 	var r: Dictionary = host.welfare_fund_audit()
