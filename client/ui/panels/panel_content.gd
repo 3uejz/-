@@ -2352,6 +2352,19 @@ static func _events_sections(ev: Dictionary) -> Array:
 			{"label": "赞助", "value": "%d 家" % int(ev.get("sponsors", 0))},
 			{"label": "事故", "value": "%d 起" % int(ev.get("incidents", 0))},
 		]))
+	var artists: Array = _items_of(ev.get("artists", []))
+	if not artists.is_empty():
+		var arows: Array = []
+		for a in artists:
+			if a is Dictionary:
+				var ad: Dictionary = a
+				arows.append({"label": String(ad.get("name", "?")), "value": "热度 %.0f · 出场费 %d · 排期 %d" % [float(ad.get("fame", 0.0)), int(ad.get("fee", 0)), int(ad.get("bookings", 0))]})
+		sections.append(_section("签约艺人", arows))
+	if not String(ev.get("booked_artist", "")).is_empty():
+		sections.append(_section("当前活动艺人", [
+			{"label": "艺人", "value": String(ev.get("booked_artist", ""))},
+			{"label": "出场费", "value": _money(int(ev.get("artist_fee", 0)))},
+		]))
 	if ev.has("planner_level"):
 		sections.append(_section("策划职业", [
 			{"label": "等级", "value": str(int(ev.get("planner_level", 1)))},

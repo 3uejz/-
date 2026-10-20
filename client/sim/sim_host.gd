@@ -188,6 +188,7 @@ var _sports_league: Dictionary = {}  ## 地区联赛，入档 sim_runtime.sports
 var events_expo                 ## 会展、演出与大型活动（EventsExpoSystem）
 var _event: Dictionary = {}          ## 当前筹办中的活动，入档 sim_runtime.events.event
 var _planner: Dictionary = {}        ## 活动策划职业，入档 sim_runtime.events.planner
+var _artists: Array = []             ## 签约艺人名册，入档 sim_runtime.events.artists
 var honors                      ## 荣誉、奖项与名人堂（HonorsSystem）
 var _honor_candidate: Dictionary = {} ## 玩家荣誉候选人档案，入档 sim_runtime.honors.candidate
 var _hall: Dictionary = {}           ## 名人堂，入档 sim_runtime.honors.hall
@@ -598,6 +599,8 @@ func _ensure_world_geo() -> void:
 				_event = events_expo.from_dict(evd["event"])
 			if evd.get("planner", null) is Dictionary and not (evd["planner"] as Dictionary).is_empty():
 				_planner = (evd["planner"] as Dictionary).duplicate(true)
+			if evd.get("artists", null) is Array:
+				_artists = (evd["artists"] as Array).duplicate(true)
 		# 恢复荣誉运行时（候选人/名人堂）。
 		var ho: Variant = (state.sim_runtime as Dictionary).get("honors", {})
 		if ho is Dictionary and not (ho as Dictionary).is_empty():
@@ -3989,6 +3992,30 @@ func events_new(event_type: String) -> Dictionary:
 	_persist_events()
 	return {"ok": true, "type": event_type, "name": String(_event.get("name", ""))}
 
+## 签约艺人：热度越高出场费越高，可多次排期。
+func events_sign_artist(name: String, fame: float = 50.0) -> Dictionary:
+	if name.is_empty():
+		return {"ok": false, "reason": "empty_name"}
+	var a: Dictionary = events_expo.new_artist("artist.%d" % (_artists.size() + 1), name, fame, {"base_fee": 500000})
+	_artists.append(a)
+	_persist_events()
+	return {"ok": true, "artist": a, "fee": events_expo.artist_fee(a)}
+
+func events_book_artist(name: String, day: int = 0) -> Dictionary:
+	if _event.is_empty():
+		return {"ok": false, "reason": "no_event"}
+	var target: Dictionary = {}
+	for a in _artists:
+		if a is Dictionary and String((a as Dictionary).get("name", "")) == name:
+			target = a
+			break
+	if target.is_empty():
+		return {"ok": false, "reason": "unknown_artist"}
+	var r: Dictionary = events_expo.book_artist(target, _event, now_minutes() / 1440 + day)
+	if bool(r.get("ok", false)):
+		_persist_events()
+	return r
+
 func events_rent_venue(cost: int) -> Dictionary:
 	if _event.is_empty():
 		return {"ok": false, "reason": "no_event"}
@@ -4099,6 +4126,15 @@ func events_panel_data() -> Dictionary:
 			"resales": int(_event.get("resales", 0)),
 			"resale_commission": int(_event.get("resale_commission", 0)),
 		}
+	if not _artists.is_empty():
+		var rows: Array = []
+		for a in _artists:
+			if a is Dictionary:
+				rows.append({"name": String((a as Dictionary).get("name", "")), "fame": float((a as Dictionary).get("fame", 0.0)), "fee": events_expo.artist_fee(a), "bookings": ((a as Dictionary).get("schedule", []) as Array).size()})
+		out["artists"] = rows
+	if not _event.is_empty() and not String(_event.get("artist_name", "")).is_empty():
+		out["booked_artist"] = String(_event.get("artist_name", ""))
+		out["artist_fee"] = int(_event.get("artist_fee", 0))
 	if not _planner.is_empty():
 		out["planner_level"] = int(_planner.get("level", 1))
 		out["planner_exp"] = int(_planner.get("exp", 0))
@@ -4111,6 +4147,7 @@ func _persist_events() -> void:
 	(state.sim_runtime as Dictionary)["events"] = {
 		"event": events_expo.to_dict(_event),
 		"planner": _planner.duplicate(true),
+		"artists": _artists.duplicate(true),
 	}
 
 

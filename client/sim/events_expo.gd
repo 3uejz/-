@@ -303,6 +303,40 @@ func hold_event(event: Dictionary, roll: float, opts: Dictionary = {}) -> Dictio
 
 
 ## 艺人违约：取消或迟到，触发退票与声誉下滑。
+## 艺人名册：声量影响出场费与票房号召，档期用于冲突检测。
+func new_artist(id: String, name: String, fame: float = 50.0, opts: Dictionary = {}) -> Dictionary:
+	return {
+		"id": id, "name": name if not name.is_empty() else id,
+		"fame": clampf(fame, 0.0, 100.0),
+		"base_fee": maxi(0, int(opts.get("base_fee", 500000))),
+		"schedule": [], "breaches": 0,
+	}
+
+
+func artist_fee(artist: Dictionary) -> int:
+	var fame: float = clampf(float(artist.get("fame", 0.0)), 0.0, 100.0)
+	return int(round(float(artist.get("base_fee", 0)) * (1.0 + fame / 50.0)))
+
+
+## 排期：同一艺人同日不可重复出场；成功后排入活动并计入成本。
+func book_artist(artist: Dictionary, event: Dictionary, day: int, opts: Dictionary = {}) -> Dictionary:
+	if artist.is_empty() or event.is_empty():
+		return {"ok": false, "reason": "missing_artist_or_event"}
+	var schedule: Array = artist.get("schedule", [])
+	if schedule.has(day):
+		return {"ok": false, "reason": "schedule_conflict", "day": day}
+	var fee: int = artist_fee(artist)
+	if bool(opts.get("charge", true)):
+		var budget: int = int(event.get("cost", 0))
+		event["cost"] = budget + fee
+	schedule.append(day)
+	artist["schedule"] = schedule
+	event["artist_id"] = String(artist.get("id", ""))
+	event["artist_name"] = String(artist.get("name", ""))
+	event["artist_fee"] = fee
+	return {"ok": true, "fee": fee, "day": day, "artist": String(artist.get("name", ""))}
+
+
 func artist_breach(event: Dictionary, roll: float, opts: Dictionary = {}) -> Dictionary:
 	var risk: float = clampf(float(opts.get("risk", 0.15)), 0.0, 1.0)
 	if roll >= risk and not bool(opts.get("force", false)):

@@ -506,6 +506,10 @@ func _dispatch(intent) -> Dictionary:
 			return _events_hold(intent)
 		"活动复盘":
 			return _events_review(intent)
+		"签约艺人":
+			return _events_sign_artist(intent)
+		"艺人排期":
+			return _events_book_artist(intent)
 		"荣誉档案":
 			return _honor_profile(intent)
 		"提名":
@@ -2976,6 +2980,22 @@ func _events_hold(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法举办（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["活动举办，到场 %d 人，周边收入 %d，事故 %d 起。" % [int(r.get("attendance", 0)), int(r.get("merchandise", 0)), (r.get("incidents", []) as Array).size()]], 0, "")
+
+func _events_sign_artist(intent) -> Dictionary:
+	var name := String(intent.params.get("method", ""))
+	var fame: float = clampf(float(_param_number(intent, "number", 50)), 0.0, 100.0)
+	var r: Dictionary = host.events_sign_artist(name, fame)
+	if not bool(r.get("ok", false)):
+		return _fail("无法签约（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已签约艺人 %s，出场费 %d。" % [name, int(r.get("fee", 0))]], 0, "")
+
+func _events_book_artist(intent) -> Dictionary:
+	var name := String(intent.params.get("method", ""))
+	var day: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.events_book_artist(name, day)
+	if not bool(r.get("ok", false)):
+		return _fail("无法排期（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已排期 %s，出场费 %d。" % [String(r.get("artist", "")), int(r.get("fee", 0))]], 0, "")
 
 func _events_review(intent) -> Dictionary:
 	var r: Dictionary = host.events_review()
