@@ -18,6 +18,7 @@ func run_tests() -> void:
 	_test_incoterms_and_settlement()
 	_test_barriers_and_risks()
 	_test_services_and_edges()
+	_test_fx_macro()
 
 
 func _test_tables() -> void:
@@ -149,3 +150,13 @@ func _test_services_and_edges() -> void:
 	sys.quarantine_inspect(s, {"passed": false})
 	check_eq(str(s["stage"]), "inspection", "检验检疫阶段")
 	check(bool(sys.to_dict(s).has("goods_value")), "序列化快照")
+
+
+func _test_fx_macro() -> void:
+	var sys = TradeScript.new()
+	var base: float = sys.fx_rate("CNY")
+	var hot: float = sys.fx_rate("CNY", {"inflation": 0.1, "base_rate": 0.03})
+	check(hot > base, "高通胀使本币汇率贬值")
+	var tight: float = sys.fx_rate("CNY", {"inflation": 0.02, "base_rate": 0.1})
+	check(tight < base, "高利率使本币汇率升值")
+	check_near(sys.fx_rate("USD", {"inflation": 0.1}), 1.0, 1e-9, "美元基准不受本币宏观影响")

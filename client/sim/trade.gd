@@ -179,11 +179,19 @@ func declare_customs(shipment: Dictionary, opts: Dictionary = {}) -> Dictionary:
 
 # --- 汇率与结算 ---
 
-func fx_rate(code: String) -> float:
+func fx_rate(code: String, macro: Dictionary = {}) -> float:
 	var def: Dictionary = BaselineScript.CURRENCIES.get(code, {})
 	if def.is_empty():
 		return 0.0
-	return maxf(1e-9, float(def.get("rate", 1.0)))
+	var rate: float = float(def.get("rate", 1.0))
+	# 世界宏观联动：本币通胀高于目标时贬值，利差走阔时升值。
+	if code != "USD" and not macro.is_empty():
+		var inflation: float = float(macro.get("inflation", BaselineScript.MACRO_BASE_INFLATION))
+		var base_rate: float = float(macro.get("base_rate", BaselineScript.MACRO_BASE_RATE))
+		var inflation_gap: float = inflation - BaselineScript.MACRO_BASE_INFLATION
+		var rate_gap: float = base_rate - BaselineScript.MACRO_BASE_RATE
+		rate *= clampf(1.0 + inflation_gap * 2.0 - rate_gap * 1.5, 0.5, 2.0)
+	return maxf(1e-9, rate)
 
 
 func has_currency(code: String) -> bool:

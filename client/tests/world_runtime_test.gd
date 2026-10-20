@@ -1092,6 +1092,10 @@ func _test_trade_runtime() -> void:
 	check(host.trade_transport_modes_catalog().size() >= 5, "运输方式含海运/空运/铁路/快递/管道")
 	check(host.trade_incoterms_catalog().size() >= 6, "贸易术语含 EXW/FOB/CFR/CIF/DAP/DDP")
 	check(host.trade_settlements_catalog().size() >= 4, "结算方式含信用证/汇付/保理/赊销")
+	var base_fx: float = host.trade_fx_rate("CNY")
+	host.economy.macro["inflation"] = 0.1
+	check(host.trade_fx_rate("CNY") > base_fx, "贸易汇率联动当前通胀")
+	host.economy.macro["inflation"] = 0.02
 	# 建出口单据
 	var ex: Dictionary = host.export_shipment("钢材", 50000)
 	check(bool(ex.get("ok", false)), "建立出口单据成功")

@@ -2622,6 +2622,10 @@ func _persist_manufacturing() -> void:
 
 # --- 国际贸易、海关与物流（D27） ---
 
+## 汇率联动世界宏观：按当前通胀与基准利率给出动态报价。
+func trade_fx_rate(code: String) -> float:
+	return trade.fx_rate(code, economy.macro)
+
 func trade_state() -> Dictionary:
 	return {"shipments": _shipments}
 
