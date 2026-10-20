@@ -450,6 +450,10 @@ func _dispatch(intent) -> Dictionary:
 			return _fashion_marketing(intent)
 		"品牌复兴":
 			return _fashion_renew(intent)
+		"二手寄售":
+			return _fashion_resell(intent)
+		"奢侈品拍卖":
+			return _fashion_auction(intent)
 		"品牌传承":
 			return _fashion_inherit(intent)
 		"仿品侵权":
@@ -2768,6 +2772,28 @@ func _fashion_counterfeit(intent) -> Dictionary:
 		var suit: Dictionary = r.get("lawsuit", {})
 		return _ok(["仿品造成损失 %d，已发起 IP 维权（胜诉 %s）。" % [int(r.get("loss", 0)), "是" if bool(suit.get("win", false)) else "否"]], 0, "")
 	return _ok(["仿品造成损失 %d，品牌声誉下降。" % int(r.get("loss", 0))], 0, "")
+
+func _fashion_resell(intent) -> Dictionary:
+	var item := String(intent.params.get("luxury_item", ""))
+	if item.is_empty():
+		item = String(intent.params.get("method", ""))
+	var cond: float = clampf(float(_param_number(intent, "number", 80)) / 100.0, 0.0, 1.0)
+	var r: Dictionary = host.fashion_resell(item, cond)
+	if not bool(r.get("ok", false)):
+		return _fail("无法寄售（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["寄售成交，货款 %d。" % int(r.get("price", 0))], 0, "")
+
+func _fashion_auction(intent) -> Dictionary:
+	var item := String(intent.params.get("luxury_item", ""))
+	if item.is_empty():
+		item = String(intent.params.get("method", ""))
+	var reserve: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.fashion_auction(item, reserve)
+	if not bool(r.get("ok", false)):
+		return _fail("无法拍卖（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if not bool(r.get("sold", false)):
+		return _ok(["拍卖流拍，保留价 %d。" % int(r.get("reserve", 0))], 0, "")
+	return _ok(["拍卖成交，成交价 %d。" % int(r.get("price", 0))], 0, "")
 
 func _fashion_authenticate(intent) -> Dictionary:
 	var item := _object_id(intent, "luxury_item")

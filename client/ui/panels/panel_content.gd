@@ -697,6 +697,13 @@ static func _fashion_sections(fsh: Dictionary) -> Array:
 				var id: Dictionary = it
 				irows.append({"label": String(id.get("key", "?")), "value": "%d 件 · 单价 %d" % [int(id.get("qty", 0)), int(id.get("price", 0))]})
 		sections.append(_section("库存", irows))
+	var sale: Dictionary = fsh.get("last_resale", {}) if fsh.get("last_resale") is Dictionary else {}
+	if not sale.is_empty():
+		sections.append(_section("二手与拍卖", [
+			{"label": "品类", "value": String(sale.get("item", ""))},
+			{"label": "方式", "value": ("拍卖" if String(sale.get("mode", "")) == "auction" else "寄售")},
+			{"label": "成交价", "value": _money(int(sale.get("price", 0)))},
+		]))
 	return sections
 
 ## 体育面板分区：球员生涯、所属球会、积分榜。

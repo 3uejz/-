@@ -3540,6 +3540,51 @@ func fashion_limited_edition(item: String, qty: int) -> Dictionary:
 	_persist_fashion()
 	return r
 
+## 二手寄售：按成色折价卖出一件库存，货款入品牌账户。
+func fashion_resell(item_key: String, condition: float = 0.8) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var inv: Dictionary = _brand.get("inventory", {})
+	if not inv.has(item_key):
+		return {"ok": false, "reason": "no_stock"}
+	var entry: Dictionary = inv[item_key]
+	if int(entry.get("qty", 0)) <= 0:
+		return {"ok": false, "reason": "no_stock"}
+	var q: Dictionary = fashion.secondhand_price({"value": int(entry.get("price", 0))}, condition)
+	var price: int = int(q.get("price", 0))
+	entry["qty"] = int(entry["qty"]) - 1
+	if int(entry["qty"]) <= 0:
+		inv.erase(item_key)
+	else:
+		inv[item_key] = entry
+	_brand["money"] = int(_brand.get("money", 0)) + price
+	_brand["last_resale"] = {"item": item_key, "mode": "resale", "price": price, "condition": condition}
+	_persist_fashion()
+	return {"ok": true, "price": price, "condition": condition}
+
+## 奢侈品拍卖：生成三档出价，达到保留价则成交并扣减库存。
+func fashion_auction(item_key: String, reserve: int = 0) -> Dictionary:
+	if _brand.is_empty():
+		return {"ok": false, "reason": "no_brand"}
+	var inv: Dictionary = _brand.get("inventory", {})
+	if not inv.has(item_key) or int((inv[item_key] as Dictionary).get("qty", 0)) <= 0:
+		return {"ok": false, "reason": "no_stock"}
+	var value: int = int((inv[item_key] as Dictionary).get("price", 0))
+	var floor_price: int = reserve if reserve > 0 else value
+	var bids: Array = [int(value * 0.8), int(value * 1.05), int(value * 1.2)]
+	var r: Dictionary = fashion.auction({"value": value}, bids, {"reserve": floor_price})
+	if bool(r.get("sold", false)):
+		var entry: Dictionary = inv[item_key]
+		entry["qty"] = int(entry["qty"]) - 1
+		if int(entry["qty"]) <= 0:
+			inv.erase(item_key)
+		else:
+			inv[item_key] = entry
+		_brand["money"] = int(_brand.get("money", 0)) + int(r.get("price", 0))
+		_brand["last_resale"] = {"item": item_key, "mode": "auction", "price": int(r.get("price", 0)), "reserve": floor_price}
+		_persist_fashion()
+	return r
+
 func fashion_open_store(cost: int) -> Dictionary:
 	if _brand.is_empty():
 		return {"ok": false, "reason": "no_brand"}
@@ -3632,6 +3677,8 @@ func fashion_panel_data() -> Dictionary:
 		var inv: Dictionary = (_brand["inventory"] as Dictionary)[key]
 		inv_rows.append({"key": String(key), "qty": int(inv.get("qty", 0)), "price": int(inv.get("price", 0))})
 	out["inventory"] = inv_rows
+	if _brand.get("last_resale", null) is Dictionary:
+		out["last_resale"] = (_brand["last_resale"] as Dictionary).duplicate(true)
 	return out
 
 func _persist_fashion() -> void:
