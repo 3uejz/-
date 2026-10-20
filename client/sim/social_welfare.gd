@@ -370,6 +370,22 @@ func audit_transparency(fund: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	return {"ok": true, "transparency": score, "grade": "A" if score >= 80.0 else ("B" if score >= 60.0 else "C")}
 
 
+## 政府购买社工服务：预算入基金并登记合同。
+func government_purchase(fund: Dictionary, service: String, budget: int, opts: Dictionary = {}) -> Dictionary:
+	var b: int = maxi(0, budget)
+	if b <= 0:
+		return {"ok": false, "reason": "invalid_budget"}
+	fund["balance"] = int(fund.get("balance", 0)) + b
+	fund["raised"] = int(fund.get("raised", 0)) + b
+	var record: Dictionary = {"service": service, "budget": b, "buyer": "government",
+		"quality_required": clampf(float(opts.get("quality_required", 0.6)), 0.0, 1.0),
+		"day": int(opts.get("day", 0))}
+	var contracts: Array = fund.get("purchases", [])
+	contracts.append(record)
+	fund["purchases"] = contracts
+	return {"ok": true, "contract": record, "balance": int(fund["balance"]), "count": contracts.size()}
+
+
 ## 慈善信息公开：发布季度/年度公示，记录收支与透明度。
 func publish_report(fund: Dictionary, period: String = "年度", opts: Dictionary = {}) -> Dictionary:
 	var raised: int = int(fund.get("raised", 0))

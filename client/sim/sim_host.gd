@@ -6853,6 +6853,15 @@ func welfare_fund_misappropriate(amount: int) -> Dictionary:
 	_persist_welfare()
 	return r
 
+## 政府购买社工服务：预算进入慈善基金并登记合同。
+func welfare_government_purchase(service: String, budget: int) -> Dictionary:
+	if _welfare_fund.is_empty():
+		_welfare_fund = social_welfare.new_charity_fund("公益基金")
+	var r: Dictionary = social_welfare.government_purchase(_welfare_fund, service, budget, {"day": day_index()})
+	if bool(r.get("ok", false)):
+		_persist_welfare()
+	return r
+
 ## 慈善信息公开：发布公示并挂到基金档案。
 func welfare_fund_publish(period: String = "年度") -> Dictionary:
 	if _welfare_fund.is_empty():
@@ -6910,6 +6919,7 @@ func welfare_panel_data() -> Dictionary:
 			"transparency": float(_welfare_fund.get("transparency", 0.0)),
 			"reputation": float(_welfare_fund.get("reputation", 0.0)),
 			"reports": (_welfare_fund.get("reports", []) as Array).duplicate(true),
+			"purchases": (_welfare_fund.get("purchases", []) as Array).size(),
 		}
 	if not _welfare_worker.is_empty():
 		out["worker"] = {

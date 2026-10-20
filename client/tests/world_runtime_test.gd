@@ -1747,6 +1747,8 @@ func _test_welfare_runtime() -> void:
 	check(int(host.welfare_fund_audit().get("transparency", 0)) >= 0, "善款审计")
 	check(bool(host.welfare_fund_publish("年度").get("ok", false)), "慈善信息公开公示")
 	check((host.welfare_panel_data().get("fund", {}).get("reports", []) as Array).size() > 0, "公示进入福利面板")
+	check(bool(host.welfare_government_purchase("社工服务", 300000).get("ok", false)), "承接政府购买社工服务")
+	check(int(host.welfare_panel_data().get("fund", {}).get("purchases", 0)) == 1, "政府购买合同进入面板")
 	check(bool(host.welfare_fund_misappropriate(50000).get("ok", false)), "善款挪用登记")
 	# 社工与个案。
 	check(bool(host.welfare_worker_start().get("ok", false)), "社工入职")

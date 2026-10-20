@@ -782,6 +782,8 @@ func _dispatch(intent) -> Dictionary:
 			return _welfare_spend(intent)
 		"慈善公示":
 			return _welfare_publish(intent)
+		"购买社工服务":
+			return _welfare_government_purchase(intent)
 		"善款审计":
 			return _welfare_audit(intent)
 		"善款挪用":
@@ -4109,6 +4111,14 @@ func _welfare_spend(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法支出（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["公益支出 %d（%s），结余 %d。" % [amount, purpose, int(r.get("balance", 0))]], 0, "")
+
+func _welfare_government_purchase(intent) -> Dictionary:
+	var service := String(intent.params.get("method", "社工服务"))
+	var budget: int = int(_param_number(intent, "number", 500000))
+	var r: Dictionary = host.welfare_government_purchase(service, budget)
+	if not bool(r.get("ok", false)):
+		return _fail("无法承接（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已承接政府购买「%s」，预算 %d。" % [service, budget]], 0, "")
 
 func _welfare_publish(intent) -> Dictionary:
 	var r: Dictionary = host.welfare_fund_publish("年度")

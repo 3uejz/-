@@ -1420,6 +1420,7 @@ static func _welfare_sections(wf: Dictionary) -> Array:
 			{"label": "累计募得", "value": str(int(fund.get("raised", 0)))},
 			{"label": "累计支出", "value": str(int(fund.get("spent", 0)))},
 			{"label": "透明度", "value": "%d%%" % int(round(float(fund.get("transparency", 0.0)) * 100.0))},
+			{"label": "政府购买", "value": "%d 单" % int(fund.get("purchases", 0))},
 		]
 		sections.append(_section("慈善基金", frows))
 		var reports: Array = _items_of(fund.get("reports", []))
