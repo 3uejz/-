@@ -7189,6 +7189,12 @@ func anomaly_complete_mission(mission_id: String, success: bool = true) -> Dicti
 			_bump_region_stat("crime_rate", 2)
 		elif faction == "cult":
 			_bump_region_stat("crime_rate", 1)
+		# 与 D4 警务联动：违法行为在无在办案件时自动立案。
+		if _police_case.is_empty():
+			if faction == "black_lab":
+				police_start_case("illegal_experiment")
+			elif faction == "cult":
+				police_start_case("cult_activity")
 	# 与传承系统联动：成功任务写入家族史，供跨代叙事回放。
 	if bool(r.get("ok", false)) and success and state != null:
 		var hist: Array = state.legacy.get("history", [])

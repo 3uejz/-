@@ -1849,6 +1849,7 @@ func _test_anomaly_runtime() -> void:
 	host.anomaly_accept_mission("bl-01", "black_lab")
 	host.anomaly_complete_mission("bl-01", true)
 	check(int(host.regions.get_region(host.current_region_id()).snapshot.get("crime_rate", 0)) == crime_before + 2, "黑实验室任务推高区域犯罪率")
+	check(String(host._police_case.get("crime", "")) == "illegal_experiment", "黑实验室任务触发警方立案")
 	check(int(state.legacy.get("history", []).size()) > 0, "任务完成写入家族史")
 	check(host.anomaly_ability_catalog().size() >= 4, "能力线≥4")
 	check(host.anomaly_faction_catalog().size() >= 4, "阵营≥4")
