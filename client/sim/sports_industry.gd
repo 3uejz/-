@@ -432,15 +432,105 @@ func national_camp(player: Dictionary, days: float, opts: Dictionary = {}) -> Di
 func international_tournament(competition: String, teams: Array, rng = null, opts: Dictionary = {}) -> Dictionary:
 	if not COMPETITIONS.has(competition):
 		return {"ok": false, "reason": "unknown_competition"}
-	var best: Dictionary = {}
-	var best_strength: float = -1.0
+	var roster: Array = []
 	for t in teams:
-		var strength: float = float((t as Dictionary).get("strength", 50.0)) + _noise(rng) * 8.0
-		if strength > best_strength:
-			best_strength = strength
-			best = (t as Dictionary).duplicate()
-	var champion: String = str(best.get("name", best.get("id", "")))
-	return {"ok": true, "competition": competition, "champion": champion, "reward": int(opts.get("reward", 30000000))}
+		if t is Dictionary:
+			roster.append((t as Dictionary).duplicate())
+	if roster.size() < 2:
+		return {"ok": false, "reason": "not_enough_teams"}
+	var groups: Array = []
+	var knockout: Array = []
+	var final: Dictionary = {}
+	if roster.size() == 2:
+		final = _play_tournament_match(roster[0], roster[1], rng)
+		knockout.append({"stage": "final", "match": final})
+	else:
+		# 小组赛：按名单顺序每 4 队一组，单循环积分，前二出线。
+		var group_count: int = maxi(1, int(ceil(float(roster.size()) / 4.0)))
+		var per_group: int = int(ceil(float(roster.size()) / float(group_count)))
+		for gi in range(group_count):
+			var members: Array = roster.slice(gi * per_group, mini(roster.size(), (gi + 1) * per_group))
+			if members.size() < 2:
+				continue
+			var table: Dictionary = {}
+			for m in members:
+				table[str((m as Dictionary).get("name", (m as Dictionary).get("id", "")))] = {"points": 0, "goals_for": 0, "goals_against": 0, "team": m}
+			for i in range(members.size()):
+				for j in range(i + 1, members.size()):
+					var match: Dictionary = _play_tournament_match(members[i], members[j], rng)
+					var home_name: String = str(match["home"])
+					var away_name: String = str(match["away"])
+					var hs: int = int(match["home_score"])
+					var as_: int = int(match["away_score"])
+					table[home_name]["goals_for"] = int(table[home_name]["goals_for"]) + hs
+					table[home_name]["goals_against"] = int(table[home_name]["goals_against"]) + as_
+					table[away_name]["goals_for"] = int(table[away_name]["goals_for"]) + as_
+					table[away_name]["goals_against"] = int(table[away_name]["goals_against"]) + hs
+					if hs > as_:
+						table[home_name]["points"] = int(table[home_name]["points"]) + 3
+					else:
+						table[away_name]["points"] = int(table[away_name]["points"]) + 3
+			var standings: Array = []
+			for key in table.keys():
+				standings.append({"name": key, "points": int(table[key]["points"]),
+					"goal_diff": int(table[key]["goals_for"]) - int(table[key]["goals_against"]),
+					"team": table[key]["team"]})
+			standings.sort_custom(func(a, b):
+				if int(a["points"]) != int(b["points"]):
+					return int(a["points"]) > int(b["points"])
+				return int(a["goal_diff"]) > int(b["goal_diff"]))
+			groups.append({"group": gi + 1, "standings": standings})
+			for k in range(mini(2, standings.size())):
+				knockout.append({"stage": "qualified", "team": (standings[k] as Dictionary)["team"]})
+		# 淘汰赛：出线队按强弱直接单场淘汰，直至决赛。
+		var bracket: Array = []
+		for e in knockout:
+			if String(e.get("stage", "")) == "qualified":
+				bracket.append((e as Dictionary)["team"])
+		knockout = []
+		var round_no: int = 1
+		while bracket.size() > 1:
+			var next_round: Array = []
+			var pairs: Array = []
+			var i: int = 0
+			while i < bracket.size():
+				var a: Dictionary = bracket[i]
+				if i + 1 < bracket.size():
+					var m: Dictionary = _play_tournament_match(a, bracket[i + 1], rng)
+					var winner_name: String = str(m["winner"])
+					var winner: Dictionary = a if str(a.get("name", a.get("id", ""))) == winner_name else bracket[i + 1]
+					next_round.append(winner)
+					pairs.append({"stage": "round_%d" % round_no, "match": m})
+				else:
+					next_round.append(a)
+				i += 2
+			knockout.append_array(pairs)
+			bracket = next_round
+			round_no += 1
+		final = (knockout[knockout.size() - 1] as Dictionary).get("match", {}) if not knockout.is_empty() else {}
+	var champion: String = str(final.get("winner", ""))
+	if champion == "" and roster.size() > 0:
+		champion = str((roster[0] as Dictionary).get("name", (roster[0] as Dictionary).get("id", "")))
+	return {"ok": true, "competition": competition, "champion": champion, "reward": int(opts.get("reward", 30000000)),
+		"groups": groups, "knockout": knockout, "final": final, "team_count": roster.size()}
+
+
+## 单场比赛：实力差决定胜率，比分由双方进攻强度抽样。
+func _play_tournament_match(a: Dictionary, b: Dictionary, rng = null) -> Dictionary:
+	var an: String = str(a.get("name", a.get("id", "")))
+	var bn: String = str(b.get("name", b.get("id", "")))
+	var as_: float = float(a.get("strength", 50.0)) + _noise(rng) * 6.0
+	var bs: float = float(b.get("strength", 50.0)) + _noise(rng) * 6.0
+	var prob: float = clampf(0.5 + (as_ - bs) / 60.0, 0.05, 0.95)
+	var home_win: bool = _roll(-1.0, rng) < prob
+	var hs: int = clampi(int(round(1.0 + (as_ - 50.0) / 25.0 + _noise(rng) * 1.2)), 0, 6)
+	var bs_score: int = clampi(int(round(1.0 + (bs - 50.0) / 25.0 + _noise(rng) * 1.2)), 0, 6)
+	if home_win and hs <= bs_score:
+		hs = bs_score + 1
+	elif not home_win and bs_score <= hs:
+		bs_score = hs + 1
+	var winner: String = an if hs > bs_score else bn
+	return {"home": an, "away": bn, "home_score": hs, "away_score": bs_score, "winner": winner}
 
 
 # --- 丑闻与合规 ---

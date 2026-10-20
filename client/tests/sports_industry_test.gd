@@ -113,6 +113,13 @@ func _test_national_and_international() -> void:
 	var it: Dictionary = sys.international_tournament("world_cup", [{"id": "cn", "strength": 80.0}, {"id": "br", "strength": 75.0}])
 	check_eq(str(it["champion"]), "cn", "世界杯冠军")
 	check(not bool(sys.international_tournament("bogus", [])["ok"]), "未知赛事被拒")
+	var full: Array = []
+	for i in range(8):
+		full.append({"name": "T%d" % i, "strength": 60.0 + i * 3.0})
+	var tour: Dictionary = sys.international_tournament("world_cup", full)
+	check_eq((tour.get("groups", []) as Array).size(), 2, "小组赛分两组")
+	check((tour.get("knockout", []) as Array).size() >= 3, "淘汰赛至决赛")
+	check_eq(str((tour.get("final", {}) as Dictionary).get("winner", "")), str(tour.get("champion", "")), "决赛胜者即冠军")
 
 
 func _test_scandals() -> void:

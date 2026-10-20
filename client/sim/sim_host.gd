@@ -3844,6 +3844,10 @@ func sports_international_tournament(competition: String = "world_cup") -> Dicti
 		{"name": rival_name, "strength": float(_sports_rival.get("strength", 50.0))},
 		{"name": "国家队", "strength": 72.0},
 		{"name": "海外劲旅", "strength": 78.0},
+		{"name": "欧洲冠军", "strength": 84.0},
+		{"name": "南美劲旅", "strength": 81.0},
+		{"name": "东道主", "strength": 68.0},
+		{"name": "非洲黑马", "strength": 70.0},
 	]
 	var r: Dictionary = sports_industry.international_tournament(competition, teams, rng, {"reward": 30000000})
 	if bool(r.get("ok", false)):
@@ -3852,7 +3856,8 @@ func sports_international_tournament(competition: String = "world_cup") -> Dicti
 			economy.add_money(account_id(), reward, "sports_tournament")
 		else:
 			r["reward"] = 0
-		_pro_player["last_tournament"] = {"competition": competition, "champion": String(r.get("champion", "")), "reward": int(r.get("reward", 0))}
+		_pro_player["last_tournament"] = {"competition": competition, "champion": String(r.get("champion", "")), "reward": int(r.get("reward", 0)),
+			"groups": (r.get("groups", []) as Array).size(), "rounds": (r.get("knockout", []) as Array).size()}
 		_persist_sports()
 	return r
 
