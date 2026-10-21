@@ -940,6 +940,9 @@ func _panel_context() -> Dictionary:
 		var fin: Dictionary = _sim.finance_panel_data()
 		if not fin.is_empty():
 			context["finance"] = fin
+		var propd: Dictionary = _sim.property_panel_data()
+		if not propd.is_empty():
+			context["property"] = propd
 		var regions_view: Array = _sim.regions_view()
 		if not regions_view.is_empty():
 			context["regions"] = regions_view

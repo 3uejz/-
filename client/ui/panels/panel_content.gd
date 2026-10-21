@@ -370,6 +370,36 @@ static func finance(player: Dictionary, name_resolver: Callable = Callable(), co
 				value += " · 已抵押"
 			asset_rows.append({"label": _resolve(String(a.get("content_key", "?")), name_resolver), "value": value})
 		sections.append({"title": "资产", "rows": asset_rows})
+	var pr: Dictionary = context.get("property", {}) if context.get("property") is Dictionary else {}
+	if not pr.is_empty():
+		var prows: Array = [
+			{"label": "房产数", "value": str(int(pr.get("count", 0)))},
+			{"label": "月租金合计", "value": _money(pr.get("total_rent", 0))},
+			{"label": "房贷余额合计", "value": _money(pr.get("total_debt", 0))},
+		]
+		sections.append({"title": "房产", "rows": prows})
+		for o in (pr.get("owned", []) as Array):
+			if o is Dictionary:
+				var od: Dictionary = o
+				var orows: Array = [
+					{"label": "估值", "value": _money(od.get("price", 0))},
+					{"label": "产权剩余", "value": "%d 年" % int(od.get("years_remaining", 0))},
+					{"label": "装修", "value": "%d 级" % int(od.get("renovation", 0))},
+				]
+				var mg: Dictionary = od.get("mortgage", {})
+				if not mg.is_empty():
+					orows.append({"label": "贷款余额", "value": _money(mg.get("remaining", 0))})
+					orows.append({"label": "年利率", "value": "%.2f%%" % (float(mg.get("annual_rate", 0.0)) * 100.0)})
+					orows.append({"label": "月供", "value": _money(mg.get("monthly_payment", 0))})
+					orows.append({"label": "已还期数", "value": "%d / %d" % [int(mg.get("months_paid", 0)), int(mg.get("term_years", 0)) * 12]})
+				if bool(od.get("rented", false)):
+					orows.append({"label": "租约", "value": "%s · 剩 %d 月" % [String(od.get("tenant", "租客")), int(od.get("lease_months", 0))]})
+					orows.append({"label": "月租", "value": _money(od.get("monthly_rent", 0))})
+				else:
+					orows.append({"label": "出租", "value": "未出租"})
+				if int(od.get("arrears_months", 0)) > 0:
+					orows.append({"label": "欠供", "value": "%d 个月" % int(od.get("arrears_months", 0))})
+				sections.append({"title": String(od.get("name", "房产")), "rows": orows})
 	var fc: Dictionary = context.get("finance", {}) if context.get("finance", {}) is Dictionary else {}
 	if not fc.is_empty():
 		var minor := 100.0

@@ -601,9 +601,16 @@ func _test_property_monthly_settlement() -> void:
 	var prop: Dictionary = host.find_owned(lid)
 	check(not (prop.get("mortgage", {}) as Dictionary).is_empty(), "首套房形成房贷")
 	var before := int((prop.get("mortgage", {}) as Dictionary).get("months_paid", 0))
+	check(bool(host.property_rent(lid, 5000, 12).get("ok", false)), "房产出租订立租约")
+	var pp: Dictionary = host.property_panel_data()
+	check_eq(int(pp.get("count", 0)), 1, "房产面板含名下房产")
+	var pod: Dictionary = (pp.get("owned", []) as Array)[0]
+	check(int((pod.get("mortgage", {}) as Dictionary).get("remaining", 0)) > 0, "面板含贷款余额")
+	check_eq(int(pod.get("lease_months", 0)), 12, "面板含租约剩余月数")
 	_advance_alive(host, 31)
 	var after := int((prop.get("mortgage", {}) as Dictionary).get("months_paid", 0))
 	check(after > before, "跨月结算推进房贷还款")
+	check_eq(int(host.find_owned(lid).get("lease_months", 0)), 11, "租约按月递减")
 
 func _test_death_summary() -> void:
 	var state = GameStateScript.new()

@@ -208,9 +208,12 @@ func renovate(player: Dictionary, economy, account: String, prop: Dictionary, le
 
 
 ## 出租/收租开关；设定月租。
-func set_rent(prop: Dictionary, monthly_rent: int, rented: bool = true) -> void:
+func set_rent(prop: Dictionary, monthly_rent: int, rented: bool = true, opts: Dictionary = {}) -> void:
 	prop["monthly_rent"] = maxi(0, monthly_rent)
 	prop["rented"] = rented
+	prop["tenant"] = String(opts.get("tenant", "租客")) if rented else ""
+	prop["lease_months"] = maxi(0, int(opts.get("lease_months", 12))) if rented else 0
+	prop["lease_start_day"] = int(opts.get("start_day", 0)) if rented else -1
 
 
 ## 出售：按估值成交，清偿剩余房贷后净收入入账；房产移出资产。
@@ -278,6 +281,12 @@ func monthly_settle(player: Dictionary, economy, account: String) -> Dictionary:
 			payment = interest + principal_part
 		var fee: int = int(prop.get("property_fee_month", 0)) + int(round(float(market_value(prop)) * MAINTENANCE_RATE_ANNUAL / 12.0))
 		var rent: int = estimated_monthly_rent(prop) if bool(prop.get("rented", false)) else 0
+		if bool(prop.get("rented", false)) and int(prop.get("lease_months", 0)) > 0:
+			prop["lease_months"] = int(prop["lease_months"]) - 1
+			if int(prop["lease_months"]) <= 0:
+				prop["rented"] = false
+				prop["tenant"] = ""
+				prop["lease_months"] = 0
 		var net_due: int = payment + fee - rent
 		if net_due > 0 and economy != null and economy.cash(account) < net_due:
 			prop["arrears_months"] = int(prop.get("arrears_months", 0)) + 1

@@ -1195,13 +1195,51 @@ func property_sell(prop_id: String, opts: Dictionary = {}) -> Dictionary:
 	return r
 
 ## 出租名下房产（设定月租并按月收租）。
-func property_rent(prop_id: String, monthly_rent: int = -1) -> Dictionary:
+func property_rent(prop_id: String, monthly_rent: int = -1, lease_months: int = 12) -> Dictionary:
 	var prop := find_owned(prop_id)
 	if prop.is_empty():
 		return {"ok": false, "reason": "not_owned"}
 	var rent: int = monthly_rent if monthly_rent >= 0 else int(property.estimated_monthly_rent(prop))
-	property.set_rent(prop, rent, true)
-	return {"ok": true, "monthly_rent": rent}
+	property.set_rent(prop, rent, true, {"tenant": "租客", "lease_months": lease_months, "start_day": day_index()})
+	return {"ok": true, "monthly_rent": rent, "lease_months": lease_months}
+
+
+## 房产面板：名下房产的贷款余额/利率/租约/产权年限/装修/欠供。
+func property_panel_data() -> Dictionary:
+	var owned: Array = []
+	for p in property.owned_properties(player()):
+		var prop: Dictionary = p
+		var mortgage: Dictionary = prop.get("mortgage", {})
+		owned.append({
+			"id": String(prop.get("id", "")),
+			"name": String(prop.get("name", "")),
+			"city": String(prop.get("city", "")),
+			"price": property.market_value(prop),
+			"years_remaining": int(prop.get("years_remaining", 0)),
+			"renovation": int(prop.get("renovation", 0)),
+			"property_fee_month": int(prop.get("property_fee_month", 0)),
+			"monthly_rent": int(prop.get("monthly_rent", 0)),
+			"rented": bool(prop.get("rented", false)),
+			"tenant": String(prop.get("tenant", "")),
+			"lease_months": int(prop.get("lease_months", 0)),
+			"arrears_months": int(prop.get("arrears_months", 0)),
+			"mortgage": {
+				"remaining": int(mortgage.get("remaining", 0)),
+				"annual_rate": float(mortgage.get("annual_rate", 0.0)),
+				"term_years": int(mortgage.get("term_years", 0)),
+				"months_paid": int(mortgage.get("months_paid", 0)),
+				"monthly_payment": int(mortgage.get("monthly_payment", 0)),
+			} if not mortgage.is_empty() else {},
+		})
+	if owned.is_empty():
+		return {}
+	var total_rent: int = 0
+	var total_debt: int = 0
+	for p in owned:
+		total_rent += int((p as Dictionary).get("monthly_rent", 0)) if bool((p as Dictionary).get("rented", false)) else 0
+		total_debt += int(((p as Dictionary).get("mortgage", {}) as Dictionary).get("remaining", 0))
+	return {"owned": owned, "total_rent": total_rent, "total_debt": total_debt,
+		"count": owned.size()}
 
 # --- 组织与社团（D19） ---
 
