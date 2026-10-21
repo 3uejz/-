@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://life-text-sandbox/shared/schemas/travel.schema.json",
+  "title": "Travel",
+  "description": "旅行预订、行程打卡与历史见闻（D14）。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "trip": { "$ref": "#/$defs/trip" },
+    "history": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/trip" }
+    }
+  },
+  "$defs": {
+    "trip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination", "transport", "lodging", "days", "day", "status"],
+      "properties": {
+        "destination": { "$ref": "common.schema.json#/$defs/content_key" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["local", "domestic", "abroad", "adventure", ""] },
+        "transport": { "type": "string", "enum": ["bus", "train", "car", "flight", "ship"] },
+        "lodging": { "type": "string", "enum": ["hostel", "guesthouse", "hotel", "luxury"] },
+        "days": { "type": "integer", "minimum": 1 },
+        "day": { "type": "integer", "minimum": 0 },
+        "visited": { "type": "array", "items": { "type": "string" } },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["day", "event"],
+            "properties": {
+              "day": { "type": "integer", "minimum": 1 },
+              "event": { "type": "string", "enum": ["delay", "cancel", "lost_luggage", "illness", "accident", "situation_change"] },
+              "extra": { "$ref": "common.schema.json#/$defs/money" },
+              "insured": { "type": "boolean" }
+            }
+          }
+        },
+        "insured": { "type": "boolean" },
+        "cost": { "$ref": "common.schema.json#/$defs/money" },
+        "status": { "type": "string", "enum": ["planned", "travelling", "finished"] },
+        "started_minute": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "finished_minute": { "$ref": "common.schema.json#/$defs/absolute_minutes" },
+        "sights": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

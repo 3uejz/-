@@ -160,6 +160,12 @@ func _dispatch(intent) -> Dictionary:
 			return _entertainment_side(intent)
 		"娱乐状态":
 			return _entertainment_status(intent)
+		"旅行":
+			return _travel_plan(intent)
+		"行程推进":
+			return _travel_advance(intent)
+		"结束旅行":
+			return _travel_end(intent)
 		"送礼":
 			return _interact(intent, "gift")
 		"约会":
@@ -1599,6 +1605,42 @@ func _entertainment_status(_intent) -> Dictionary:
 		int(d.get("times", 0)), float(d.get("addiction", 0.0)),
 		(d.get("circles", []) as Array).size(), (d.get("side_businesses", []) as Array).size()]
 	return _ok([msg], 0, "leisure")
+
+func _travel_plan(intent) -> Dictionary:
+	var dest := _object_id(intent, "travel_destination")
+	if dest.is_empty():
+		return _fail("请指定旅行目的地。")
+	var r: Dictionary = host.travel_plan(dest)
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "trip_in_progress":
+			return _fail("已有进行中的行程，请先推进或结束。")
+		if reason == "insufficient_funds":
+			return _fail("余额不足，该行程约需 %.0f 元。" % (float(r.get("cost", 0)) / 100.0))
+		return _fail("无法预订该行程。")
+	var t: Dictionary = r.get("trip", {})
+	var msg: String = "你预订了%s %d 天行程，共花费 %.0f 元。" % [
+		String(t.get("name", dest)), int(t.get("days", 1)), float(r.get("cost", 0)) / 100.0]
+	return _ok([msg], 0, "leisure")
+
+func _travel_advance(_intent) -> Dictionary:
+	var r: Dictionary = host.travel_advance_day()
+	if not bool(r.get("ok", false)):
+		return _fail("当前没有进行中的行程。")
+	var line: String = "行程第 %d 天，开销 %.0f 元。" % [int(r.get("day", 0)), float(r.get("cost", 0)) / 100.0]
+	var ev := String(r.get("event", ""))
+	if ev != "":
+		line += " 途中遇到：%s。" % ev
+	if r.has("finished"):
+		var f: Dictionary = r.get("finished", {})
+		line += " 行程结束，见闻 %d 处，心情 +%.0f。" % [(f.get("codex_entries", []) as Array).size(), float(f.get("mood", 0.0))]
+	return _ok([line], 1440, "leisure")
+
+func _travel_end(_intent) -> Dictionary:
+	var r: Dictionary = host.travel_end()
+	if not bool(r.get("ok", false)):
+		return _fail("当前没有进行中的行程。")
+	return _ok(["你结束了%s之旅，收获见闻 %d 处。" % [String(r.get("name", "")), (r.get("codex_entries", []) as Array).size()]], 0, "leisure")
 
 func _social_publish(intent) -> Dictionary:
 	var platform: String = String(intent.params.get("social_platform", ""))

@@ -44,6 +44,7 @@ const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
 const SocialNetworkScript = preload("res://sim/social_network.gd")
 const EntertainmentScript = preload("res://sim/entertainment.gd")
+const TravelScript = preload("res://sim/travel.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
@@ -167,6 +168,9 @@ var ip_media                    ## 知识产权与媒体（IpMediaSystem）
 var _social                          ## 网络社交平台（动态/关注/离线队列）
 var entertainment                    ## 娱乐与兴趣圈层（EntertainmentSystem）
 var _fun: Dictionary = {}            ## 娱乐运行时（次数/熟练/上瘾/圈层/副业），入档 sim_runtime.entertainment
+var travel                           ## 旅行与行程（TravelSystem）
+var _trip: Dictionary = {}           ## 当前行程，入档 sim_runtime.travel.trip
+var _trip_history: Array = []        ## 历史行程，入档 sim_runtime.travel.history
 var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 var manufacturing                ## 制造业与供应链（ManufacturingSystem）
@@ -340,6 +344,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	ip_media = IpMediaScript.new()
 	_social = SocialNetworkScript.new(seed)
 	entertainment = EntertainmentScript.new()
+	travel = TravelScript.new()
 	manufacturing = ManufacturingScript.new()
 	trade = TradeScript.new()
 	mining_energy = MiningScript.new()
@@ -506,6 +511,11 @@ func _ensure_world_geo() -> void:
 		var fun: Variant = (state.sim_runtime as Dictionary).get("entertainment", {})
 		if fun is Dictionary and not (fun as Dictionary).is_empty():
 			_fun = (fun as Dictionary).duplicate(true)
+		# 恢复旅行行程与历史。
+		var trv: Variant = (state.sim_runtime as Dictionary).get("travel", {})
+		if trv is Dictionary:
+			_trip = (trv.get("trip", {}) as Dictionary).duplicate(true)
+			_trip_history = (trv.get("history", []) as Array).duplicate(true)
 		# 恢复知识产权与媒体运行时（IP/媒体机构）。
 		var im: Variant = (state.sim_runtime as Dictionary).get("ip_media", {})
 		if im is Dictionary and not (im as Dictionary).is_empty():
@@ -2374,6 +2384,126 @@ func _persist_entertainment() -> void:
 	if state == null or not (state.sim_runtime is Dictionary):
 		return
 	(state.sim_runtime as Dictionary)["entertainment"] = _fun.duplicate(true)
+
+# --- 旅行预订与行程（D14） ---
+
+const TRAVEL_INSURANCE_RATE: float = 0.05
+
+func travel_destinations_catalog() -> Array:
+	var out: Array = []
+	for id in travel.destinations():
+		var d: Dictionary = travel.destination_info(String(id))
+		out.append({"id": String(id), "name": String(d.get("name", id)),
+			"category": String(d.get("category", "")), "base_days": int(d.get("base_days", 1)),
+			"visa_required": bool(d.get("visa_required", false))})
+	return out
+
+func travel_transport_catalog() -> Array:
+	var out: Array = []
+	for id in travel.transport_modes():
+		out.append({"id": String(id), "name": String(travel.TRANSPORT[id].get("name", id))})
+	return out
+
+func travel_lodging_catalog() -> Array:
+	var out: Array = []
+	for id in travel.lodging_options():
+		out.append({"id": String(id), "name": String(travel.LODGING[id].get("name", id))})
+	return out
+
+## 预订行程：校验目的地/交通/住宿，扣交通+住宿+每日预算（含可选保险），生成 itinerary。
+func travel_plan(destination_id: String, transport_id: String = "train", lodging_id: String = "guesthouse", days: int = 0, insured: bool = false) -> Dictionary:
+	if not _trip.is_empty():
+		return {"ok": false, "reason": "trip_in_progress"}
+	var plan: Dictionary = travel.plan_trip(destination_id, transport_id, lodging_id, days, insured)
+	if not bool(plan.get("ok", false)):
+		return plan
+	var d: Dictionary = travel.destination_info(destination_id)
+	var nights: int = int(plan.get("nights", 1))
+	var trips: int = 2
+	var transport_cost: int = int(round(float(d.get("distance_km", 0)) * float(travel.TRANSPORT[transport_id]["cost_per_km"]))) * trips
+	var lodging_cost: int = int(travel.LODGING[lodging_id]["cost_per_night"]) * nights
+	var day_cost: int = int(d.get("base_cost", 0)) * (nights + 1)
+	var subtotal: int = transport_cost + lodging_cost + day_cost
+	var insurance: int = int(round(float(subtotal) * TRAVEL_INSURANCE_RATE)) if insured else 0
+	var total: int = subtotal + insurance
+	if economy.liquid(account_id()) < total:
+		return {"ok": false, "reason": "insufficient_funds", "cost": total}
+	if total > 0:
+		economy.add_money(account_id(), -total, "旅行预订：%s" % String(d.get("name", destination_id)))
+	_trip = {
+		"destination": destination_id, "name": String(d.get("name", destination_id)),
+		"transport": transport_id, "lodging": lodging_id, "days": nights + 1,
+		"day": 0, "visited": [], "events": [], "insured": insured,
+		"cost": total, "status": "planned", "started_minute": now_minutes(),
+		"category": String(d.get("category", "")),
+	}
+	_persist_travel()
+	return {"ok": true, "trip": _trip.duplicate(true), "cost": total,
+		"transport_cost": transport_cost, "lodging_cost": lodging_cost, "insurance": insurance,
+		"sights": (d.get("sights", []) as Array).duplicate()}
+
+## 推进一天行程：按日结算开销与意外，逐日打卡景点；到期自动结束。
+func travel_advance_day() -> Dictionary:
+	if _trip.is_empty():
+		return {"ok": false, "reason": "no_trip"}
+	if String(_trip.get("status", "")) == "planned":
+		_trip["status"] = "travelling"
+	var s: Dictionary = travel.daily_settlement(_trip, economy.liquid(account_id()), rng)
+	var cost: int = int(s.get("day_cost", 0))
+	if cost > 0:
+		economy.add_money(account_id(), -cost, "旅行当日：%s" % String(_trip.get("name", "")))
+	_trip["day"] = int(_trip.get("day", 0)) + 1
+	if String(s.get("event", "")) != "":
+		(_trip["events"] as Array).append({"day": int(_trip["day"]), "event": String(s["event"]),
+			"extra": int(s.get("extra_cost", 0)), "insured": bool(s.get("covered_by_insurance", false))})
+	var d: Dictionary = travel.destination_info(String(_trip.get("destination", "")))
+	var sights: Array = d.get("sights", [])
+	var idx: int = int(_trip["day"]) - 1
+	if idx >= 0 and idx < sights.size():
+		(_trip["visited"] as Array).append(String(sights[idx]))
+	var done: bool = int(_trip["day"]) >= int(_trip.get("days", 1))
+	var result: Dictionary = {"ok": true, "day": int(_trip["day"]), "cost": cost,
+		"event": String(s.get("event", "")), "visited": (_trip["visited"] as Array).duplicate()}
+	if done:
+		result["finished"] = _finish_trip()
+	_persist_travel()
+	return result
+
+## 提前结束行程：结算见闻与心情/见识，写入历史。
+func travel_end() -> Dictionary:
+	if _trip.is_empty():
+		return {"ok": false, "reason": "no_trip"}
+	var r: Dictionary = _finish_trip()
+	_persist_travel()
+	return r
+
+func _finish_trip() -> Dictionary:
+	var r: Dictionary = travel.finish_trip(_trip)
+	if bool(r.get("ok", false)):
+		var attrs: Dictionary = player().get("attrs", {})
+		var psych: Dictionary = attrs.get("psychological", {})
+		psych["mood"] = clampf(float(psych.get("mood", 50.0)) + float(r.get("mood", 0.0)), 0.0, 100.0)
+		attrs["psychological"] = psych
+		player()["attrs"] = attrs
+		var hist: Array = _trip_history
+		var rec: Dictionary = _trip.duplicate(true)
+		rec["status"] = "finished"
+		rec["finished_minute"] = now_minutes()
+		rec["sights"] = (r.get("codex_entries", []) as Array).duplicate()
+		hist.append(rec)
+		_trip = {}
+		_sync_mental()
+	return r
+
+func travel_panel_data() -> Dictionary:
+	return {"current": _trip.duplicate(true), "history": _trip_history.duplicate(true),
+		"destinations": travel_destinations_catalog()}
+
+func _persist_travel() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["travel"] = {
+		"trip": _trip.duplicate(true), "history": _trip_history.duplicate(true)}
 
 # --- 知识产权与媒体（D25） ---
 

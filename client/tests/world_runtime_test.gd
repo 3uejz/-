@@ -81,6 +81,7 @@ func run_tests() -> void:
 	_test_transport_infra_runtime()
 	_test_social_runtime()
 	_test_entertainment_runtime()
+	_test_travel_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -2365,6 +2366,32 @@ func _test_entertainment_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 261)
 	reloaded.bind(state)
 	check_eq(int((reloaded.entertainment_panel_data().get("side_businesses", []) as Array).size()), 1, "读档恢复副业")
+
+
+func _test_travel_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(262)
+	var host = SimHostScript.new(state, 262)
+	host.bind(state)
+	host.economy.add_money(host.account_id(), 5000000, "test")
+	check(host.travel_destinations_catalog().size() >= 12, "旅行目的地≥12")
+	check(not host.travel_advance_day().get("ok", true), "无行程时推进被拒")
+	var r: Dictionary = host.travel_plan("city_park", "bus", "hostel", 1)
+	check(bool(r.get("ok", false)), "预订行程")
+	check(int(r.get("cost", 0)) > 0, "行程有成本")
+	check(bool(host.travel_plan("tokyo").get("reason", "") == "trip_in_progress"), "重复预订被拒")
+	var d1: Dictionary = host.travel_advance_day()
+	check(bool(d1.get("ok", false)), "推进第一天")
+	var d2: Dictionary = host.travel_advance_day()
+	check(bool(d2.get("ok", false)), "推进第二天")
+	check(d2.has("finished"), "到期自动结束")
+	check((host.travel_panel_data().get("history", []) as Array).size() == 1, "历史含已完成行程")
+	check((host.travel_panel_data().get("current", {}) as Dictionary).is_empty(), "当前行程清空")
+	host._persist_travel()
+	check(state.sim_runtime.get("travel", null) is Dictionary, "旅行运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 262)
+	reloaded.bind(state)
+	check_eq((reloaded.travel_panel_data().get("history", []) as Array).size(), 1, "读档恢复旅行历史")
 
 
 func _test_transport_infra_runtime() -> void:

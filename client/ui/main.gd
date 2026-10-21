@@ -85,6 +85,7 @@ const VERB_PANELS: Dictionary = {
 	"看家族史": "family", "族谱": "family",
 	"看动态": "social", "社交动态": "social",
 	"娱乐状态": "leisure", "看娱乐": "leisure", "兴趣圈": "leisure",
+	"旅行状态": "leisure", "行程": "leisure",
 	"看经营": "business", "经营": "business",
 	"看组织": "organizations", "组织": "organizations",
 	"看案件": "legal", "法律": "legal",
@@ -503,6 +504,9 @@ func _catalogs() -> Dictionary:
 		"content_type": _sim.content_types_catalog(),
 		"social_platform": _sim.social_platforms_catalog(),
 		"entertainment": _sim.entertainment_catalog(),
+		"travel_destination": _sim.travel_destinations_catalog(),
+		"travel_transport": _sim.travel_transport_catalog(),
+		"travel_lodging": _sim.travel_lodging_catalog(),
 		"content_channel": _sim.content_channels_catalog(),
 		"content_platform": _sim.content_platforms_catalog(),
 		"ip_operation": _sim.content_ip_operations_catalog(),
@@ -1073,6 +1077,7 @@ func _panel_context() -> Dictionary:
 			context["transport_infra"] = tip
 		context["social"] = _sim.social_panel_data()
 		context["leisure"] = _sim.entertainment_panel_data()
+		context["travel"] = _sim.travel_panel_data()
 		if _sim.is_dead():
 			context["death"] = _sim.death_summary()
 	return context

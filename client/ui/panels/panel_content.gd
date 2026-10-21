@@ -2123,8 +2123,9 @@ static func leisure(player: Dictionary, context: Dictionary = {}, name_resolver:
 	if player.is_empty():
 		return _empty("娱乐与兴趣", "尚未生成角色数据")
 	var d: Dictionary = context.get("leisure", {})
-	if d.is_empty() or int(d.get("times", 0)) == 0:
-		return _empty("娱乐与兴趣", "尚无娱乐记录；可先「娱乐 <活动>」")
+	var trip_now: Dictionary = context.get("travel", {}).get("current", {})
+	if (d.is_empty() or int(d.get("times", 0)) == 0) and trip_now.is_empty():
+		return _empty("娱乐与兴趣", "尚无娱乐记录；可先「娱乐 <活动>」或「旅行 <目的地>」")
 	var sections: Array = []
 	sections.append(_section("娱乐概况", [
 		{"label": "累计次数", "value": "%d 次" % int(d.get("times", 0))},
@@ -2151,6 +2152,21 @@ static func leisure(player: Dictionary, context: Dictionary = {}, name_resolver:
 			var sd: Dictionary = s
 			srows.append({"label": String(sd.get("name", "")), "value": "月入 %s" % _money(int(sd.get("monthly_income", 0)))})
 		sections.append(_section("兴趣副业", srows))
+	var trip: Dictionary = context.get("travel", {}).get("current", {})
+	if not trip.is_empty():
+		sections.append(_section("当前行程", [
+			{"label": "目的地", "value": String(trip.get("name", ""))},
+			{"label": "进度", "value": "第 %d/%d 天" % [int(trip.get("day", 0)), int(trip.get("days", 1))]},
+			{"label": "交通/住宿", "value": "%s / %s" % [String(trip.get("transport", "")), String(trip.get("lodging", ""))]},
+			{"label": "已游景点", "value": "%d 个" % (trip.get("visited", []) as Array).size()},
+		]))
+	var hist: Array = _items_of(context.get("travel", {}).get("history", []))
+	if not hist.is_empty():
+		var hrows: Array = []
+		for h in hist:
+			var hd: Dictionary = h
+			hrows.append({"label": String(hd.get("name", "")), "value": "%d 天 · 见闻 %d 处" % [int(hd.get("days", 0)), (hd.get("sights", []) as Array).size()]})
+		sections.append(_section("旅行足迹", hrows))
 	return _ok(sections)
 
 static func content_industry(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:

@@ -37,6 +37,7 @@
         "ip_media": { "type": "object", "additionalProperties": true },
         "social_network": { "type": "object", "additionalProperties": true },
         "entertainment": { "type": "object", "additionalProperties": true },
+        "travel": { "type": "object", "additionalProperties": true },
         "manufacturing": { "type": "object", "additionalProperties": true },
         "trade": { "type": "object", "additionalProperties": true },
         "mining": { "type": "object", "additionalProperties": true },
