@@ -92,6 +92,9 @@ const MilitaryScript = preload("res://sim/military.gd")
 const WorkplaceScript = preload("res://sim/workplace.gd")
 const CompanyScript = preload("res://sim/company.gd")
 const FinancingScript = preload("res://sim/financing.gd")
+const WarScript = preload("res://sim/war.gd")
+const EpidemicScript = preload("res://sim/epidemic.gd")
+const InfrastructureScript = preload("res://sim/infrastructure.gd")
 
 const MINUTES_PER_DAY: int = 1440
 ## 所在城市熟人名册容量（首发单城社交/婚恋链接）。
@@ -299,6 +302,15 @@ var military_sys                 ## 军旅生涯（MilitarySystem）
 var workplace_sys                ## 职场关系与派系（WorkplaceSystem）
 var company_sys                  ## 创业经营（CompanySystem）
 var financing_sys                ## 创业融资（FinancingSystem）
+var war                          ## 战争与征兵（WarSystem）
+var _war_state: Dictionary = {}  ## 世界战争状态（关系/战争/征兵/战时经济），入档 sim_runtime.war
+var epidemic                     ## 流行病与公共卫生（EpidemicSystem）
+var _epidemic_region: Dictionary = {}  ## 当前区域 SEIR 状态，入档 sim_runtime.epidemic.region
+var _epidemic_personal: Dictionary = {"protection": 0.0, "days": 0, "last_action": ""}  ## 个人防护，入档 sim_runtime.epidemic.personal
+var infrastructure               ## 基础设施与公用账单（InfrastructureSystem）
+var _infra_city: Dictionary = {}  ## 城市基础设施状态，入档 sim_runtime.infrastructure.city
+var _epidemic_last_day: int = -1
+var _infra_last_month: int = -1
 var _workplace: Dictionary = {}      ## 职场状态（关系/派系/事件），入档 sim_runtime.workplace
 var _company: Dictionary = {}        ## 玩家公司，入档 sim_runtime.company.company
 var _cap_table: Dictionary = {}      ## 股权结构，入档 sim_runtime.company.cap_table
@@ -427,6 +439,12 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	workplace_sys = WorkplaceScript.new()
 	company_sys = CompanyScript.new()
 	financing_sys = FinancingScript.new()
+	war = WarScript.new()
+	_war_state = war.new_world(["CN", "US", "JP", "GB", "RU", "IN"])
+	epidemic = EpidemicScript.new()
+	_epidemic_region = epidemic.new_region(1000000)
+	infrastructure = InfrastructureScript.new()
+	_infra_city = infrastructure.new_city(1000000)
 	skills.register_starter_catalog()
 	jobs.register_starter_catalog()
 	items.register_starter_catalog()
@@ -826,6 +844,24 @@ func _ensure_world_geo() -> void:
 				_tin_route = transport_infra.from_dict(tid["route"])
 			if tid.get("region", null) is Dictionary and not (tid["region"] as Dictionary).is_empty():
 				_tin_region = transport_infra.from_dict(tid["region"])
+		# 恢复世界战争、疫情与基础设施运行态。
+		var wr: Variant = (state.sim_runtime as Dictionary).get("war", {})
+		if wr is Dictionary and not (wr as Dictionary).is_empty():
+			_war_state = war.from_dict(wr)
+		var ep: Variant = (state.sim_runtime as Dictionary).get("epidemic", {})
+		if ep is Dictionary and not (ep as Dictionary).is_empty():
+			var epd: Dictionary = ep
+			if epd.get("region", null) is Dictionary and not (epd["region"] as Dictionary).is_empty():
+				_epidemic_region = epidemic.from_dict(epd["region"])
+			if epd.get("personal", null) is Dictionary:
+				_epidemic_personal = (epd["personal"] as Dictionary).duplicate(true)
+			_epidemic_last_day = int(epd.get("last_day", -1))
+		var it: Variant = (state.sim_runtime as Dictionary).get("infrastructure", {})
+		if it is Dictionary and not (it as Dictionary).is_empty():
+			var itd: Dictionary = it
+			if itd.get("city", null) is Dictionary and not (itd["city"] as Dictionary).is_empty():
+				_infra_city = infrastructure.from_dict(itd["city"])
+			_infra_last_month = int(itd.get("last_month", -1))
 	if geo.count() == 0:
 		geo.generate(_seed)
 	regions.configure_population(_seed)
@@ -5423,6 +5459,17 @@ func emergency_weather_disaster() -> Dictionary:
 	var injury: float = clampf(round(severity * 6.0 + 1.0), 1.0, 8.0)
 	_damage_health(injury)
 	_persist_municipal()
+	# 灾害同步打断公用设施：电力/供水/通信/交通/排污按灾种受损。
+	var infra_map: Dictionary = {
+		"earthquake": ["power", "water", "telecom"], "tsunami": ["power", "water", "transit"],
+		"flood": ["power", "water", "sanitation"], "typhoon": ["power", "telecom", "transit"],
+		"wildfire": ["power", "telecom"], "mudslide": ["water", "transit"],
+		"drought": ["water", "sanitation"], "blizzard": ["power", "transit", "heating"],
+		"hailstorm": ["power", "transit"], "locust": ["sanitation"],
+	}
+	for f in infra_map.get(key, ["power"]):
+		infrastructure.report_incident(_infra_city, String(f), infrastructure.CAUSE_DISASTER, severity, {"started_minutes": now_minutes()})
+	_persist_infrastructure()
 	var outage: bool = false
 	var outage_types: Array = ["earthquake", "flood", "tsunami", "typhoon", "blizzard", "hailstorm", "mudslide"]
 	if not _factory.is_empty() and key in outage_types and severity >= 0.5:
@@ -10182,6 +10229,436 @@ func _persist_transport_infra() -> void:
 	}
 
 
+# --- D16 战争与征兵 ---
+
+func war_state() -> Dictionary:
+	return _war_state
+
+func war_countries_catalog() -> Array:
+	const NAMES: Dictionary = {"CN": "中国", "US": "美国", "JP": "日本", "GB": "英国", "RU": "俄罗斯", "IN": "印度"}
+	var out: Array = []
+	for code in ["CN", "US", "JP", "GB", "RU", "IN"]:
+		out.append({"id": String(code), "name": String(NAMES.get(String(code), code))})
+	return out
+
+func _war_country(text: String) -> String:
+	var t: String = text.strip_edges().to_upper()
+	if ["CN", "US", "JP", "GB", "RU", "IN"].has(t):
+		return t
+	const NAMES: Dictionary = {"中国": "CN", "美国": "US", "日本": "JP", "英国": "GB", "俄罗斯": "RU", "印度": "IN"}
+	return String(NAMES.get(text.strip_edges(), ""))
+
+func _war_pair(text: String) -> Array:
+	var raw: String = text.replace("，", ",").replace("、", ",").replace("/", ",").strip_edges()
+	if raw.contains(","):
+		var parts: PackedStringArray = raw.split(",", false)
+		if parts.size() >= 2:
+			var a: String = _war_country(String(parts[0]))
+			var b: String = _war_country(String(parts[1]))
+			if a != "" and b != "" and a != b:
+				return [a, b]
+	var a2: String = _war_country(raw)
+	if a2 == "":
+		return []
+	for code in ["US", "JP", "GB", "RU", "IN", "CN"]:
+		if code != a2:
+			return [a2, code]
+	return []
+
+func war_relation_rows() -> Array:
+	var out: Array = []
+	for key in (_war_state.get("relations", {}) as Dictionary).keys():
+		var rel: Dictionary = (_war_state["relations"] as Dictionary)[key]
+		var parts: PackedStringArray = String(key).split("|", false)
+		if parts.size() < 2:
+			continue
+		out.append({
+			"key": String(key), "a": String(parts[0]), "b": String(parts[1]),
+			"tension": float(rel.get("tension", 0.0)),
+			"stance": war.stance(_war_state, String(parts[0]), String(parts[1])),
+			"stance_name": String(war.STANCE_NAMES.get(war.stance(_war_state, String(parts[0]), String(parts[1])), "")),
+			"at_war": bool(rel.get("at_war", false)), "alliance": bool(rel.get("alliance", false)),
+			"sanction": bool(rel.get("sanction", false)), "ceasefire": bool(rel.get("ceasefire", false)),
+		})
+	out.sort_custom(func(x, y): return String(x["key"]) < String(y["key"]))
+	return out
+
+func war_adjust_tension(a: String, b: String, delta: float) -> Dictionary:
+	if a == "" or b == "" or a == b:
+		return {"ok": false, "reason": "unknown_country"}
+	var r: Dictionary = war.adjust_tension(_war_state, a, b, delta)
+	_persist_war()
+	return {"ok": true, "a": a, "b": b, "tension": float(r.get("tension", 0.0)),
+		"stance": String(r.get("stance", "")), "stance_name": String(war.STANCE_NAMES.get(String(r.get("stance", "")), ""))}
+
+func war_declare(a: String, b: String) -> Dictionary:
+	if a == "" or b == "" or a == b:
+		return {"ok": false, "reason": "unknown_country"}
+	var r: Dictionary = war.declare_war(_war_state, a, b, now_minutes())
+	if bool(r.get("ok", false)):
+		_persist_war()
+	return r
+
+func war_ceasefire(a: String, b: String) -> Dictionary:
+	if a == "" or b == "" or a == b:
+		return {"ok": false, "reason": "unknown_country"}
+	var r: Dictionary = war.ceasefire(_war_state, a, b, now_minutes())
+	if bool(r.get("ok", false)):
+		_persist_war()
+	return r
+
+func war_mobilize(level: float) -> Dictionary:
+	var r: Dictionary = war.set_mobilization(_war_state, clampf(level, 0.0, 1.0))
+	_persist_war()
+	return r
+
+func war_draft_assess() -> Dictionary:
+	var p: Dictionary = player()
+	var age: int = int(round(float(p.get("age", 20))))
+	var opts: Dictionary = {"age": age, "only_child": _is_only_child()}
+	return war.draft_assessment(p, opts)
+
+func _is_only_child() -> bool:
+	return (player().get("family", {}) as Dictionary).get("children_ids", []).size() == 0
+
+func war_conscript(branch: String = "army") -> Dictionary:
+	var age: int = int(round(float(player().get("age", 20))))
+	var r: Dictionary = war.conscript(player(), now_minutes(), {"age": age, "branch": branch, "only_child": _is_only_child()})
+	_persist_war()
+	return r
+
+func war_refuse_draft() -> Dictionary:
+	var r: Dictionary = war.refuse_draft(player(), now_minutes())
+	_persist_war()
+	return r
+
+## 前线推进：按交战国的国力折算兵力并结算一次作战。
+func war_front(days: float = 1.0) -> Dictionary:
+	var wars: Array = _war_state.get("wars", [])
+	if wars.is_empty():
+		return {"ok": false, "reason": "not_at_war"}
+	var rng_local := RngScript.new(_seed * 4051 + WeatherScript.day_of_minute(now_minutes()))
+	var lines: Array = []
+	for w in wars:
+		var war_d: Dictionary = w
+		var attacker: String = String(war_d.get("attacker", ""))
+		var defender: String = String(war_d.get("defender", ""))
+		var scale: float = maxf(0.1, days)
+		var forces: Dictionary = {
+			"a": {"troops": 10000.0 * scale, "power": _country_power(attacker)},
+			"b": {"troops": 10000.0 * scale, "power": _country_power(defender)},
+		}
+		var r: Dictionary = war.front_tick(war_d, forces, rng_local, {"intensity": clampf(scale, 0.1, 3.0)})
+		lines.append({"attacker": attacker, "defender": defender, "loss_a": int(r.get("loss_a", 0)),
+			"loss_b": int(r.get("loss_b", 0)), "territory": float(r.get("territory", 0.0))})
+	_persist_war()
+	return {"ok": true, "battles": lines, "active_wars": wars.size()}
+
+func _country_power(code: String) -> float:
+	const POWER: Dictionary = {"CN": 1.5, "US": 1.6, "JP": 1.1, "GB": 1.0, "RU": 1.3, "IN": 1.2}
+	return float(POWER.get(code, 1.0))
+
+func war_economy_effects() -> Dictionary:
+	return war.war_economy_effects(_war_state)
+
+func _war_tick(before_minutes: int, after_minutes: int) -> void:
+	var years: float = float(maxi(0, after_minutes - before_minutes)) / MINUTES_PER_YEAR
+	if years <= 0.0:
+		return
+	war.tick_economy(_war_state, years)
+	_persist_war()
+
+func war_panel_data() -> Dictionary:
+	var conscription: Dictionary = _war_state.get("conscription", {})
+	var econ: Dictionary = _war_state.get("economy", {})
+	var p: Dictionary = player()
+	var mil: Dictionary = p.get("military", {})
+	return {
+		"relations": war_relation_rows(),
+		"wars": (_war_state.get("wars", []) as Array).duplicate(true),
+		"events": (_war_state.get("events", []) as Array).duplicate(true),
+		"conscription": {
+			"policy": String(conscription.get("policy", "")),
+			"policy_name": "抽签征兵" if String(conscription.get("policy", "")) == war.CONSCRIPTION_LOTTERY else "志愿兵役",
+			"quota": int(conscription.get("quota", 0)), "active": bool(conscription.get("active", false)),
+		},
+		"economy": {
+			"mobilization": float(econ.get("mobilization", 0.0)),
+			"rationing": bool(econ.get("rationing", false)),
+			"debt": int(econ.get("debt", 0)),
+			"inflation": float(econ.get("inflation", 0.0)),
+		},
+		"effects": war_economy_effects(),
+		"service": {
+			"status": String(mil.get("status", "")),
+			"conscripted": bool(mil.get("conscripted", false)),
+		},
+	}
+
+func _persist_war() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["war"] = war.to_dict(_war_state)
+
+
+# --- D17 流行病与公共卫生 ---
+
+func epidemic_state() -> Dictionary:
+	return _epidemic_region
+
+func epidemic_policy_catalog() -> Array:
+	const NAMES: Dictionary = {
+		"quarantine": "隔离", "lockdown": "停工", "school_closure": "停课",
+		"mask": "口罩", "travel_restriction": "出行限制", "vaccine_mandate": "疫苗强制",
+	}
+	var out: Array = []
+	for key in epidemic.POLICY_BETA_REDUCTION.keys():
+		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
+	return out
+
+func epidemic_seed_infections(count: int) -> Dictionary:
+	var r: Dictionary = epidemic.seed(_epidemic_region, float(maxi(1, count)))
+	_persist_epidemic()
+	return r
+
+func epidemic_step(days: float) -> Dictionary:
+	var r: Dictionary = epidemic.step(_epidemic_region, clampf(days, 0.0, 365.0))
+	_persist_epidemic()
+	return r
+
+func epidemic_set_policy(policy: String, enabled: bool) -> Dictionary:
+	var r: Dictionary = epidemic.set_policy(_epidemic_region, policy, enabled)
+	if bool(r.get("ok", false)):
+		_persist_epidemic()
+	return r
+
+func epidemic_vaccinate(doses: int) -> Dictionary:
+	var local_rng := RngScript.new(_seed * 6067 + WeatherScript.day_of_minute(now_minutes()))
+	var r: Dictionary = epidemic.vaccinate(_epidemic_region, maxi(0, doses), local_rng)
+	_persist_epidemic()
+	return r
+
+## 个人防护：口罩/居家/囤药/就医，消耗现金并累积防护系数。
+func epidemic_personal_action(action: String) -> Dictionary:
+	const COST: Dictionary = {"口罩": 5000, "居家": 0, "囤药": 20000, "就医": 50000}
+	const GAIN: Dictionary = {"口罩": 0.15, "居家": 0.30, "囤药": 0.10, "就医": 0.20}
+	if not COST.has(action):
+		return {"ok": false, "reason": "unknown_action"}
+	var cost: int = int(COST[action])
+	if cost > 0:
+		if int(economy.cash(account_id())) < cost:
+			return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+		economy.add_money(account_id(), -cost, "epidemic_personal:%s" % action)
+	_epidemic_personal["protection"] = clampf(float(_epidemic_personal.get("protection", 0.0)) + float(GAIN[action]), 0.0, 0.8)
+	_epidemic_personal["days"] = maxi(int(_epidemic_personal.get("days", 0)), 30)
+	_epidemic_personal["last_action"] = action
+	_persist_epidemic()
+	return {"ok": true, "action": action, "cost": cost, "protection": float(_epidemic_personal["protection"]),
+		"days": int(_epidemic_personal["days"])}
+
+func epidemic_panel_data() -> Dictionary:
+	var reg: Dictionary = _epidemic_region
+	if reg.is_empty():
+		return {}
+	var stage: String = String(reg.get("stage", ""))
+	var resources: Dictionary = reg.get("resources", {})
+	var active: Array = epidemic.active_policies(reg)
+	var names: Dictionary = {}
+	for item in epidemic_policy_catalog():
+		names[String(item.get("id", ""))] = String(item.get("name", ""))
+	var policy_rows: Array = []
+	for key in names.keys():
+		policy_rows.append({"policy": String(key), "name": String(names[key]), "enabled": active.has(String(key))})
+	return {
+		"population": int(reg.get("population", 0)),
+		"stage": stage,
+		"stage_name": String(epidemic.STAGE_NAMES.get(stage, stage)),
+		"alert_level": int(reg.get("alert_level", 0)),
+		"susceptible": int(round(float(reg.get("susceptible", 0.0)))),
+		"exposed": int(round(float(reg.get("exposed", 0.0)))),
+		"infectious": int(round(float(reg.get("infectious", 0.0)))),
+		"removed": int(round(float(reg.get("removed", 0.0)))),
+		"deaths": int(reg.get("deaths", 0)),
+		"vaccinated": int(round(float(reg.get("vaccinated", 0.0)))),
+		"hospital_occupancy": float(epidemic.hospital_occupancy(reg)),
+		"policies": policy_rows,
+		"active_policies": active,
+		"resources": {
+			"beds": int(resources.get("beds", 0)), "doctors": int(resources.get("doctors", 0)),
+			"ventilators": int(resources.get("ventilators", 0)), "vaccine_stock": int(resources.get("vaccine_stock", 0)),
+		},
+		"public_trust": float(reg.get("public_trust", 1.0)),
+		"economy_scar": float(reg.get("economy_scar", 0.0)),
+		"personal": _epidemic_personal.duplicate(true),
+	}
+
+func _epidemic_tick(before_minutes: int, after_minutes: int) -> Array:
+	var events: Array = []
+	var day: int = after_minutes / MINUTES_PER_DAY
+	if _epidemic_last_day < 0:
+		_epidemic_last_day = before_minutes / MINUTES_PER_DAY
+	var days: int = day - _epidemic_last_day
+	if days <= 0:
+		return events
+	_epidemic_last_day = day
+	var step_days: float = float(mini(days, 30))
+	var r: Dictionary = epidemic.step(_epidemic_region, step_days)
+	if _epidemic_personal.get("days", 0) is int:
+		_epidemic_personal["days"] = maxi(0, int(_epidemic_personal.get("days", 0)) - days)
+	if int(_epidemic_personal.get("days", 0)) <= 0:
+		_epidemic_personal["protection"] = 0.0
+	if int(r.get("alert_level", 0)) >= 2:
+		events.append({"type": "epidemic_alert", "level": int(r.get("alert_level", 0)), "stage": String(r.get("stage", ""))})
+		_epidemic_personal_risk(day, float(r.get("infectious", 0.0)))
+	_persist_epidemic()
+	return events
+
+func _epidemic_personal_risk(day: int, infectious: float) -> void:
+	var pop: float = maxf(1.0, float(_epidemic_region.get("population", 1)))
+	var protection: float = clampf(float(_epidemic_personal.get("protection", 0.0)), 0.0, 0.8)
+	var risk: float = clampf(infectious / pop * 2.0, 0.0, 0.6) * (1.0 - protection)
+	if risk <= 0.0:
+		return
+	var local_rng := RngScript.new(_seed * 7079 + day)
+	if local_rng.next_float() >= risk:
+		return
+	var health: Dictionary = player().get("health", {})
+	var diseases: Array = health.get("diseases", [])
+	for d in diseases:
+		if String((d as Dictionary).get("type", "")).contains("呼吸道"):
+			return
+	diseases.append({"type": "呼吸道感染", "severity": 35.0, "status": "active"})
+	health["diseases"] = diseases
+	player()["health"] = health
+	_damage_health(2.0)
+
+func _persist_epidemic() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["epidemic"] = {
+		"region": epidemic.to_dict(_epidemic_region),
+		"personal": _epidemic_personal.duplicate(true),
+		"last_day": _epidemic_last_day,
+	}
+
+
+# --- D18 基础设施与公用账单 ---
+
+func infrastructure_state() -> Dictionary:
+	return {"city": _infra_city}
+
+func infra_facilities_catalog() -> Array:
+	var out: Array = []
+	for key in infrastructure.FACILITY_TYPES:
+		out.append({"id": String(key), "name": String(infrastructure.FACILITY_NAMES.get(String(key), key))})
+	return out
+
+func infra_bill(facility: String, amount: int) -> Dictionary:
+	var r: Dictionary = infrastructure.bill(_infra_city, facility, maxi(0, amount))
+	if bool(r.get("ok", false)):
+		_persist_infrastructure()
+	return r
+
+## 缴费：按欠费额扣现金，复通另收手续费与信用损失。
+func infra_pay(facility: String, amount: int) -> Dictionary:
+	var accounts: Dictionary = _infra_city.get("accounts", {})
+	if not accounts.has(facility):
+		return {"ok": false, "reason": "unknown_facility"}
+	var due: int = int((accounts[facility] as Dictionary).get("due", 0))
+	var credited: int = mini(maxi(0, amount), due)
+	var fee: int = 0
+	if credited >= due and not bool((accounts[facility] as Dictionary).get("active", true)):
+		fee = infrastructure.RECONNECT_FEE
+	var total: int = credited + fee
+	var cash: int = int(economy.cash(account_id()))
+	if cash < total:
+		return {"ok": false, "reason": "insufficient_funds", "needed": total, "cash": cash}
+	var r: Dictionary = infrastructure.pay(_infra_city, facility, credited)
+	if total > 0:
+		economy.add_money(account_id(), -total, "infra_bill:%s" % facility)
+	_persist_infrastructure()
+	return r
+
+func infra_repair(worker_days: float) -> Dictionary:
+	var r: Dictionary = infrastructure.repair(_infra_city, maxf(0.0, worker_days))
+	_persist_infrastructure()
+	return r
+
+func infra_invest(facility: String, amount: int) -> Dictionary:
+	var cost: int = maxi(0, amount)
+	if int(economy.cash(account_id())) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	var r: Dictionary = infrastructure.invest(_infra_city, facility, cost)
+	if bool(r.get("ok", false)):
+		if cost > 0:
+			economy.add_money(account_id(), -cost, "infra_invest:%s" % facility)
+		_persist_infrastructure()
+	return r
+
+func infra_report_incident(facility: String, cause: String = "aging", severity: float = 0.5) -> Dictionary:
+	var r: Dictionary = infrastructure.report_incident(_infra_city, facility, cause, severity, {"started_minutes": now_minutes()})
+	if bool(r.get("ok", false)):
+		_persist_infrastructure()
+	return r
+
+func infrastructure_panel_data() -> Dictionary:
+	var facilities: Dictionary = _infra_city.get("facilities", {})
+	var accounts: Dictionary = _infra_city.get("accounts", {})
+	var rows: Array = []
+	for key in facilities.keys():
+		var f: Dictionary = facilities[key]
+		var acct: Dictionary = accounts.get(key, {})
+		rows.append({
+			"facility": String(key), "name": String(infrastructure.FACILITY_NAMES.get(String(key), key)),
+			"coverage": float(f.get("coverage", 0.0)), "capacity": float(f.get("capacity", 0.0)),
+			"reliability": float(f.get("reliability", 0.0)), "active": bool(f.get("active", true)),
+			"due": int(acct.get("due", 0)), "overdue_days": float(acct.get("overdue_days", 0.0)),
+			"account_active": bool(acct.get("active", true)), "price": int(f.get("price", 0)),
+		})
+	var incidents: Array = []
+	for inc in _infra_city.get("incidents", []):
+		var d: Dictionary = inc
+		if not bool(d.get("completed", false)):
+			incidents.append({"facility": String(d.get("facility", "")), "cause": String(d.get("cause", "")),
+				"severity": float(d.get("severity", 0.0)), "work_required": float(d.get("work_required", 0.0)),
+				"work_done": float(d.get("work_done", 0.0))})
+	return {
+		"facilities": rows, "incidents": incidents,
+		"credit": float(_infra_city.get("credit", 700.0)),
+		"maintenance_pressure": float(_infra_city.get("maintenance_pressure", 0.0)),
+		"population_attraction": float(_infra_city.get("population_attraction", 1.0)),
+		"effects": infrastructure.dependency_effects(_infra_city),
+	}
+
+func _infra_tick(before_minutes: int, after_minutes: int) -> Array:
+	var events: Array = []
+	var month: int = after_minutes / (MINUTES_PER_DAY * 30)
+	if _infra_last_month < 0:
+		_infra_last_month = before_minutes / (MINUTES_PER_DAY * 30)
+	var months: int = month - _infra_last_month
+	if months <= 0:
+		return events
+	_infra_last_month = month
+	var facilities: Dictionary = _infra_city.get("facilities", {})
+	for key in facilities.keys():
+		if bool((facilities[key] as Dictionary).get("active", true)):
+			infrastructure.bill(_infra_city, String(key), int((facilities[key] as Dictionary).get("price", 0)) * mini(months, 12))
+	var ticked: Dictionary = infrastructure.tick_bills(_infra_city, float(mini(months, 12) * 30))
+	for f in ticked.get("suspended", []):
+		events.append({"type": "infrastructure_suspended", "facility": String(f)})
+	infrastructure.age_maintenance(_infra_city, float(months) / 12.0)
+	_persist_infrastructure()
+	return events
+
+func _persist_infrastructure() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["infrastructure"] = {
+		"city": infrastructure.to_dict(_infra_city),
+		"last_month": _infra_last_month,
+	}
+
+
 ## 遗产净额（最小货币单位）：现金 + 存款 − 债务 + 房产估值 − 剩余房贷。
 func player_estate_minor() -> float:
 	var acct := account_id()
@@ -11334,6 +11811,12 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_advance_residency(minutes)
 		# 农业：作物按日生长、仓储按日损耗（R66）。
 		_advance_farm(before_minutes, now_minutes())
+		# 公共卫生：SEIR 按日推进，个人防护到期回收。
+		events.append_array(_epidemic_tick(before_minutes, now_minutes()))
+		# 市政：公用账单按月出账、逾期停用、设施老化。
+		events.append_array(_infra_tick(before_minutes, now_minutes()))
+		# 战时经济：国债/通胀随年代与动员度累积。
+		_war_tick(before_minutes, now_minutes())
 	# 矿业/能源：能源价格按年周期演化（离线亦结算）。
 	_mining_tick(before_minutes, now_minutes())
 	# 时尚品牌：相关度随年岁自然衰减。

@@ -481,6 +481,7 @@ func _catalogs() -> Dictionary:
 		"env_career": _sim.environment_careers_catalog(),
 		"municipal_facility": _sim.municipal_facilities_catalog(),
 		"franchise_service": _sim.municipal_franchise_catalog(),
+		"infra_facility": _sim.infra_facilities_catalog(),
 		"debt_business": _sim.debt_businesses_catalog(),
 		"funeral_method": _sim.funeral_methods_catalog(),
 		"funeral_grave": _sim.funeral_grave_types_catalog(),
@@ -1043,6 +1044,15 @@ func _panel_context() -> Dictionary:
 		var mup: Dictionary = _sim.municipal_panel_data()
 		if not mup.is_empty():
 			context["municipal"] = mup
+		var infp: Dictionary = _sim.infrastructure_panel_data()
+		if not infp.is_empty():
+			context["infrastructure"] = infp
+		var epip: Dictionary = _sim.epidemic_panel_data()
+		if not epip.is_empty():
+			context["epidemic_panel"] = epip
+		var warp: Dictionary = _sim.war_panel_data()
+		if not warp.is_empty():
+			context["war"] = warp
 		var dbp: Dictionary = _sim.debt_panel_data()
 		if not dbp.is_empty():
 			context["debt"] = dbp

@@ -633,6 +633,12 @@ static func _world(context: Dictionary) -> Dictionary:
 static func _section(title: String, rows: Array) -> Dictionary:
 	return {"title": title, "rows": rows}
 
+static func infra_facility_name(key: String) -> String:
+	const NAMES: Dictionary = {"power": "电力", "water": "供水", "gas": "燃气", "telecom": "通信网络",
+		"transit": "公共交通", "sanitation": "排污垃圾", "heating": "供暖"}
+	return String(NAMES.get(key, key))
+
+
 static func _ok(sections: Array) -> Dictionary:
 	return {"empty": false, "empty_hint": "", "sections": sections}
 
@@ -1363,6 +1369,32 @@ static func municipal(player: Dictionary, context: Dictionary, name_resolver: Ca
 			{"label": "职级序号", "value": str(int(co.get("rank_index", 0)))},
 			{"label": "月收入", "value": _money(int(co.get("income", 0)))},
 			{"label": "声誉", "value": "%.2f" % float(co.get("reputation", 0.0))},
+		]))
+	var infra: Variant = context.get("infrastructure", {})
+	if infra is Dictionary and not (infra as Dictionary).is_empty():
+		var inf: Dictionary = infra
+		var fac_rows: Array = []
+		for item in inf.get("facilities", []):
+			var f: Dictionary = item
+			var state_text: String = "正常" if bool(f.get("active", true)) else "停用"
+			fac_rows.append({"label": String(f.get("name", f.get("facility", "?"))), "value": "%s · 覆盖 %.0f%% · 可靠 %.2f · 欠费 %s" % [
+				state_text, float(f.get("coverage", 0.0)) * 100.0, float(f.get("reliability", 0.0)), _money(int(f.get("due", 0)))]})
+		if not fac_rows.is_empty():
+			sections.append(_section("公用设施", fac_rows))
+		var inc_rows: Array = []
+		for item in inf.get("incidents", []):
+			var inc: Dictionary = item
+			inc_rows.append({"label": String(infra_facility_name(String(inc.get("facility", "")))), "value": "%s · 严重度 %.2f · 进度 %.0f/%.0f" % [
+				String(inc.get("cause", "")), float(inc.get("severity", 0.0)), float(inc.get("work_done", 0.0)), float(inc.get("work_required", 0.0))]})
+		if not inc_rows.is_empty():
+			sections.append(_section("待修故障", inc_rows))
+		var effects: Dictionary = inf.get("effects", {})
+		var off: Array = effects.get("off", [])
+		sections.append(_section("服务影响", [
+			{"label": "信用", "value": "%.0f" % float(inf.get("credit", 0.0))},
+			{"label": "维护压力", "value": "%.2f" % float(inf.get("maintenance_pressure", 0.0))},
+			{"label": "人口吸引力", "value": "%.2f" % float(inf.get("population_attraction", 0.0))},
+			{"label": "停机设施", "value": ("、".join(off) if not off.is_empty() else "无")},
 		]))
 	if sections.is_empty():
 		return _empty("市政", "暂无市政事项；可从市政养护、邮政快递或特许经营入门")
@@ -2741,9 +2773,51 @@ static func epidemic(player: Dictionary, context: Dictionary, name_resolver: Cal
 	if player.is_empty():
 		return _empty("疫情与公共卫生", "尚未生成角色数据")
 	var sections: Array = []
+	var panel: Variant = context.get("epidemic_panel", {})
+	if panel is Dictionary and not (panel as Dictionary).is_empty():
+		var p: Dictionary = panel
+		var stage_name: String = String(p.get("stage_name", p.get("stage", "")))
+		sections.append(_section("疫情态势", [
+			{"label": "阶段", "value": stage_name},
+			{"label": "预警等级", "value": str(int(p.get("alert_level", 0)))},
+			{"label": "人口", "value": str(int(p.get("population", 0)))},
+			{"label": "易感", "value": str(int(p.get("susceptible", 0)))},
+			{"label": "潜伏", "value": str(int(p.get("exposed", 0)))},
+			{"label": "感染中", "value": str(int(p.get("infectious", 0)))},
+			{"label": "康复/移除", "value": str(int(p.get("removed", 0)))},
+			{"label": "累计死亡", "value": str(int(p.get("deaths", 0)))},
+			{"label": "已接种", "value": str(int(p.get("vaccinated", 0)))},
+			{"label": "医院占用", "value": "%.0f%%" % (float(p.get("hospital_occupancy", 0.0)) * 100.0)},
+			{"label": "公众信任", "value": "%.2f" % float(p.get("public_trust", 1.0))},
+			{"label": "经济伤疤", "value": "%.2f" % float(p.get("economy_scar", 0.0))},
+		]))
+		var active: Array = p.get("active_policies", [])
+		var policy_rows: Array = []
+		for item in p.get("policies", []):
+			var row: Dictionary = item
+			policy_rows.append({"label": String(row.get("name", row.get("policy", ""))), "value": ("已启用" if bool(row.get("enabled", false)) else "未启用")})
+		if not policy_rows.is_empty():
+			sections.append(_section("防控政策", policy_rows))
+		var res: Dictionary = p.get("resources", {})
+		sections.append(_section("医疗资源", [
+			{"label": "床位", "value": str(int(res.get("beds", 0)))},
+			{"label": "医生", "value": str(int(res.get("doctors", 0)))},
+			{"label": "呼吸机", "value": str(int(res.get("ventilators", 0)))},
+			{"label": "疫苗库存", "value": str(int(res.get("vaccine_stock", 0)))},
+			{"label": "已启用政策", "value": str(active.size())},
+		]))
+		var personal: Dictionary = p.get("personal", {})
+		if not personal.is_empty():
+			sections.append(_section("个人防护", [
+				{"label": "防护系数", "value": "%.2f" % float(personal.get("protection", 0.0))},
+				{"label": "剩余天数", "value": str(int(personal.get("days", 0)))},
+				{"label": "最近措施", "value": String(personal.get("last_action", "无"))},
+			]))
 	var ep: Array = _items_of(context.get("epidemic", []))
+	if panel is Array and not (panel as Array).is_empty():
+		ep = _items_of(panel)
 	if not ep.is_empty():
-		sections.append(_section("疫情态势", _rows_from(ep, ["type", "severity", "status", "region"], name_resolver)))
+		sections.append(_section("疫情通报", _rows_from(ep, ["type", "severity", "status", "region"], name_resolver)))
 	var diseases: Array = _items_of(player.get("health", {}).get("diseases", []))
 	if not diseases.is_empty():
 		sections.append(_section("感染与症状", _rows_from(diseases, ["type", "severity", "status"], name_resolver)))
@@ -2754,9 +2828,48 @@ static func epidemic(player: Dictionary, context: Dictionary, name_resolver: Cal
 static func war(player: Dictionary, name_resolver: Callable = Callable(), context: Dictionary = {}) -> Dictionary:
 	if player.is_empty():
 		return _empty("战争与军旅", "尚未生成角色数据")
+	var sections: Array = []
+	var panel: Variant = context.get("war", {})
+	if panel is Dictionary and not (panel as Dictionary).is_empty():
+		var w: Dictionary = panel
+		var wars: Array = w.get("wars", [])
+		var war_rows: Array = []
+		for item in wars:
+			var row: Dictionary = item
+			war_rows.append({"label": "%s → %s" % [String(row.get("attacker", "?")), String(row.get("defender", "?"))], "value": "第 %d 天 · 领土 %.2f" % [int(row.get("day", 0)), float(row.get("territory", 0.0))]})
+		if war_rows.is_empty():
+			war_rows.append({"label": "战事", "value": "当前无交战"})
+		sections.append(_section("战事", war_rows))
+		var rel_rows: Array = []
+		for item in w.get("relations", []):
+			var rel: Dictionary = item
+			rel_rows.append({"label": "%s - %s" % [String(rel.get("a", "?")), String(rel.get("b", "?"))], "value": "紧张 %.0f · %s%s" % [
+				float(rel.get("tension", 0.0)), String(rel.get("stance_name", rel.get("stance", ""))),
+				(" · 制裁" if bool(rel.get("sanction", false)) else "")]})
+		if not rel_rows.is_empty():
+			sections.append(_section("双边关系", rel_rows))
+		var econ: Dictionary = w.get("economy", {})
+		var eff: Dictionary = w.get("effects", {})
+		sections.append(_section("战时经济", [
+			{"label": "动员度", "value": "%.2f" % float(econ.get("mobilization", 0.0))},
+			{"label": "配给制", "value": _yes_no(econ.get("rationing", false))},
+			{"label": "国债", "value": _money(int(econ.get("debt", 0)))},
+			{"label": "通胀", "value": "%.1f%%" % (float(econ.get("inflation", 0.0)) * 100.0)},
+			{"label": "国防岗位", "value": str(int(eff.get("defense_jobs", 0)))},
+			{"label": "物价冲击", "value": "%.2f" % float(eff.get("price_shock", 0.0))},
+		]))
+		var con: Dictionary = w.get("conscription", {})
+		sections.append(_section("兵役制度", [
+			{"label": "制度", "value": String(con.get("policy_name", ""))},
+			{"label": "名额", "value": str(int(con.get("quota", 0)))},
+			{"label": "征召中", "value": _yes_no(con.get("active", false))},
+			{"label": "个人服役", "value": String((w.get("service", {}) as Dictionary).get("status", "未服役"))},
+		]))
 	var mil: Dictionary = player.get("military", {})
 	if mil.is_empty() or String(mil.get("status", "")) == "":
-		return _empty("战争与军旅", "无军籍；可查看征兵条件并参军、请战、晋升或退伍")
+		if sections.is_empty():
+			return _empty("战争与军旅", "无军籍；可查看征兵条件并参军、请战、晋升或退伍")
+		return _ok(sections)
 	var info: Variant = context.get("military", {})
 	if info is Dictionary and bool((info as Dictionary).get("enlisted", false)):
 		var m: Dictionary = info
@@ -2771,20 +2884,21 @@ static func war(player: Dictionary, name_resolver: Callable = Callable(), contex
 		if m.has("next_rank_name"):
 			rows.append({"label": "下一军衔", "value": "%s（需军功 %s）" % [String(m["next_rank_name"]), _num(m.get("next_merit_required", 0.0))]})
 		rows.append({"label": "可晋升", "value": _yes_no(m.get("eligible", false))})
-		var sections: Array = [_section("军籍", rows)]
+		sections.append(_section("军籍", rows))
 		var restricted: Array = m.get("restricted_verbs", [])
 		if not restricted.is_empty():
 			sections.append(_section("服役限制", [{"label": "受限指令", "value": "、".join(restricted)}]))
 		return _ok(sections)
-	var rows: Array = []
+	var rows2: Array = []
 	for pair in [["status", "状态"], ["branch", "军种"], ["rank", "军衔"], ["unit", "部队"]]:
 		if mil.has(String(pair[0])):
-			rows.append({"label": String(pair[1]), "value": _fmt_value(String(pair[0]), mil[pair[0]])})
+			rows2.append({"label": String(pair[1]), "value": _fmt_value(String(pair[0]), mil[pair[0]])})
 	if mil.has("service_start_minutes"):
-		rows.append({"label": "入伍", "value": "%d 分钟" % int(mil["service_start_minutes"])})
-	rows.append({"label": "勋章", "value": str(_items_of(mil.get("decorations", [])).size())})
-	rows.append({"label": "征兵入伍", "value": _yes_no(mil.get("conscripted", false))})
-	return _ok([_section("军籍", rows)])
+		rows2.append({"label": "入伍", "value": "%d 分钟" % int(mil["service_start_minutes"])})
+	rows2.append({"label": "勋章", "value": str(_items_of(mil.get("decorations", [])).size())})
+	rows2.append({"label": "征兵入伍", "value": _yes_no(mil.get("conscripted", false))})
+	sections.append(_section("军籍", rows2))
+	return _ok(sections)
 
 static func company(player: Dictionary, context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():

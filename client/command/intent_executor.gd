@@ -708,6 +708,44 @@ func _dispatch(intent) -> Dictionary:
 			return _municipal_tender(intent)
 		"项目听证":
 			return _municipal_hearing(intent)
+		"调节紧张":
+			return _war_tension(intent)
+		"宣战":
+			return _war_declare(intent)
+		"停战":
+			return _war_ceasefire(intent)
+		"动员":
+			return _war_mobilize(intent)
+		"征兵体检":
+			return _war_draft_assess(intent)
+		"应征入伍":
+			return _war_conscript(intent)
+		"拒服兵役":
+			return _war_refuse(intent)
+		"前线作战":
+			return _war_front(intent)
+		"疫情爆发":
+			return _epidemic_seed(intent)
+		"疫情推进":
+			return _epidemic_step(intent)
+		"防疫政策":
+			return _epidemic_policy(intent)
+		"解除防控":
+			return _epidemic_policy_off(intent)
+		"疫苗接种":
+			return _epidemic_vaccinate(intent)
+		"个人防护":
+			return _epidemic_protect(intent)
+		"公用账单":
+			return _infra_bill(intent)
+		"公用缴费":
+			return _infra_pay(intent)
+		"设施抢修":
+			return _infra_repair(intent)
+		"公用投资":
+			return _infra_invest(intent)
+		"设施故障":
+			return _infra_incident(intent)
 		"典当":
 			return _debt_pawn(intent)
 		"赎回":
@@ -3886,6 +3924,186 @@ func _municipal_resolve(intent) -> Dictionary:
 		return _fail("无法处理投诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["投诉已处理，扰民度 %.2f。" % float(r.get("nuisance", 0.0))], 0, "")
 
+func _war_pair_from(intent) -> Array:
+	return host._war_pair(String(intent.params.get("method", "")))
+
+func _war_tension(intent) -> Dictionary:
+	var pair: Array = _war_pair_from(intent)
+	if pair.size() < 2:
+		return _fail("无法调节（%s）。" % _reason_cn("unknown_country"))
+	var delta: float = float(_param_number(intent, "number", 10))
+	var r: Dictionary = host.war_adjust_tension(String(pair[0]), String(pair[1]), delta)
+	if not bool(r.get("ok", false)):
+		return _fail("无法调节（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s-%s 紧张度 %.0f，状态：%s。" % [String(r.get("a", "")), String(r.get("b", "")), float(r.get("tension", 0.0)), String(r.get("stance_name", ""))]], 0, "")
+
+func _war_declare(intent) -> Dictionary:
+	var pair: Array = _war_pair_from(intent)
+	if pair.size() < 2:
+		return _fail("无法宣战（%s）。" % _reason_cn("unknown_country"))
+	var r: Dictionary = host.war_declare(String(pair[0]), String(pair[1]))
+	if not bool(r.get("ok", false)):
+		return _fail("无法宣战（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s 对 %s 宣战。" % [String(pair[0]), String(pair[1])]], 0, "war")
+
+func _war_ceasefire(intent) -> Dictionary:
+	var pair: Array = _war_pair_from(intent)
+	if pair.size() < 2:
+		return _fail("无法停战（%s）。" % _reason_cn("unknown_country"))
+	var r: Dictionary = host.war_ceasefire(String(pair[0]), String(pair[1]))
+	if not bool(r.get("ok", false)):
+		return _fail("无法停战（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s 与 %s 停火。" % [String(pair[0]), String(pair[1])]], 0, "war")
+
+func _war_mobilize(intent) -> Dictionary:
+	var percent: float = float(_param_number(intent, "number", 30))
+	var r: Dictionary = host.war_mobilize(percent / 100.0)
+	if not bool(r.get("ok", false)):
+		return _fail("无法动员（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["动员度 %.0f%%，配给制：%s。" % [float(r.get("mobilization", 0.0)) * 100.0, ("是" if bool(r.get("rationing", false)) else "否")]], 0, "")
+
+func _war_draft_assess(intent) -> Dictionary:
+	var r: Dictionary = host.war_draft_assess()
+	if bool(r.get("eligible", false)):
+		return _ok(["征兵体检合格，可应征入伍。"], 0, "")
+	var reasons: Array = r.get("reasons", [])
+	var texts: Array = []
+	for code in reasons:
+		texts.append(_reason_cn(String(code)))
+	return _ok(["征兵体检不合格：%s。" % "、".join(texts)], 0, "")
+
+func _war_conscript(intent) -> Dictionary:
+	var branch := _object_id(intent, "military_branch")
+	var r: Dictionary = host.war_conscript(branch if branch != "" else "army")
+	if not bool(r.get("ok", false)):
+		return _fail("无法入伍（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if String(r.get("assigned", "")) == "military":
+		return _ok(["应征入伍，兵种：%s。" % String(r.get("branch", branch))], 0, "war")
+	return _ok(["未入军籍，转服民役 %d 个月。" % int(r.get("months", 0))], 0, "war")
+
+func _war_refuse(intent) -> Dictionary:
+	var r: Dictionary = host.war_refuse_draft()
+	if not bool(r.get("ok", false)):
+		return _fail("无法拒征（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["拒服兵役，通缉等级 %d。" % int(r.get("wanted_level", 0))], 1440, "")
+
+func _war_front(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.war_front(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法作战（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var lines: Array = []
+	for b in r.get("battles", []):
+		var item: Dictionary = b
+		lines.append("%s→%s 损失 %d/%d，领土 %.2f" % [String(item.get("attacker", "")), String(item.get("defender", "")), int(item.get("loss_a", 0)), int(item.get("loss_b", 0)), float(item.get("territory", 0.0))])
+	return _ok(lines, int(days * 1440), "war")
+
+const EPIDEMIC_POLICY_NAMES: Dictionary = {
+	"隔离": "quarantine", "停工": "lockdown", "停课": "school_closure",
+	"口罩": "mask", "出行限制": "travel_restriction", "疫苗强制": "vaccine_mandate",
+}
+
+func _epidemic_policy_key(text: String) -> String:
+	var t: String = text.strip_edges()
+	if EPIDEMIC_POLICY_NAMES.has(t):
+		return String(EPIDEMIC_POLICY_NAMES[t])
+	for item in host.epidemic_policy_catalog():
+		if String((item as Dictionary).get("id", "")) == t:
+			return t
+	return ""
+
+func _epidemic_seed(intent) -> Dictionary:
+	var count: int = int(_param_number(intent, "number", 10))
+	var r: Dictionary = host.epidemic_seed_infections(count)
+	if not bool(r.get("ok", false)):
+		return _fail("无法播撒疫情（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["新增感染 %d 人。" % count], 0, "epidemic")
+
+func _epidemic_step(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 1))
+	var r: Dictionary = host.epidemic_step(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法推进疫情（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["疫情推进 %.0f 天：感染中 %d，死亡 %d，预警 %d 级。" % [days, int(r.get("infectious", 0.0)), int(r.get("deaths", 0)), int(r.get("alert_level", 0))]], int(days * 1440), "epidemic")
+
+func _epidemic_policy(intent) -> Dictionary:
+	var policy: String = _epidemic_policy_key(String(intent.params.get("method", "")))
+	if policy == "":
+		return _fail("无法启用（%s）。" % _reason_cn("unknown_policy"))
+	var r: Dictionary = host.epidemic_set_policy(policy, true)
+	if not bool(r.get("ok", false)):
+		return _fail("无法启用（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已启用防控政策：%s。" % String(intent.params.get("method", policy))], 1440, "epidemic")
+
+func _epidemic_policy_off(intent) -> Dictionary:
+	var policy: String = _epidemic_policy_key(String(intent.params.get("method", "")))
+	if policy == "":
+		return _fail("无法解除（%s）。" % _reason_cn("unknown_policy"))
+	var r: Dictionary = host.epidemic_set_policy(policy, false)
+	if not bool(r.get("ok", false)):
+		return _fail("无法解除（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已解除防控政策：%s。" % String(intent.params.get("method", policy))], 0, "epidemic")
+
+func _epidemic_vaccinate(intent) -> Dictionary:
+	var doses: int = int(_param_number(intent, "number", 100))
+	var r: Dictionary = host.epidemic_vaccinate(doses)
+	if not bool(r.get("ok", false)):
+		return _fail("无法接种（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["接种 %d 剂，累计接种 %d 人。" % [doses, int(r.get("vaccinated", 0))]], 0, "epidemic")
+
+func _epidemic_protect(intent) -> Dictionary:
+	var action := String(intent.params.get("method", "口罩"))
+	var r: Dictionary = host.epidemic_personal_action(action)
+	if not bool(r.get("ok", false)):
+		return _fail("无法防护（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已采取%s，防护系数 %.2f，花费 %d 元。" % [action, float(r.get("protection", 0.0)), int(r.get("cost", 0)) / 100]], 0, "epidemic")
+
+func _infra_facility(intent) -> String:
+	return _object_id(intent, "infra_facility")
+
+func _infra_bill(intent) -> Dictionary:
+	var facility: String = _infra_facility(intent)
+	var amount: int = int(_param_number(intent, "number", 10000))
+	var r: Dictionary = host.infra_bill(facility, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法出账（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["%s 账单已出，累计欠费 %d 元。" % [String(facility), int(r.get("due", 0)) / 100]], 0, "municipal")
+
+func _infra_pay(intent) -> Dictionary:
+	var facility: String = _infra_facility(intent)
+	var amount: int = int(_param_number(intent, "number", 10000))
+	var r: Dictionary = host.infra_pay(facility, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法缴费（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已缴 %s，剩余欠费 %d 元%s。" % [String(facility), int(r.get("due", 0)) / 100, ("，已复通" if bool(r.get("restored", false)) else "")]], 0, "municipal")
+
+func _infra_repair(intent) -> Dictionary:
+	var days: float = float(_param_number(intent, "number", 10))
+	var r: Dictionary = host.infra_repair(days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法抢修（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["抢修完成 %d 处，剩余工日 %.1f。" % [(r.get("completed", []) as Array).size(), float(r.get("remaining_worker_days", 0.0))]], int(days * 1440), "municipal")
+
+func _infra_invest(intent) -> Dictionary:
+	var facility: String = _infra_facility(intent)
+	var amount: int = int(_param_number(intent, "number", 100000))
+	var r: Dictionary = host.infra_invest(facility, amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法投资（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已投资 %s，覆盖率 %.0f%%，可靠性 %.2f。" % [String(facility), float(r.get("coverage", 0.0)) * 100.0, float(r.get("reliability", 0.0))]], 0, "municipal")
+
+const INFRA_CAUSE_NAMES: Dictionary = {"灾害": "disaster", "战争": "war", "老化": "aging", "罢工": "strike"}
+
+func _infra_incident(intent) -> Dictionary:
+	var facility: String = _infra_facility(intent)
+	var cause_text := String(intent.params.get("method", "老化"))
+	var cause: String = String(INFRA_CAUSE_NAMES.get(cause_text, "aging"))
+	var severity: float = clampf(float(_param_number(intent, "number", 50)) / 100.0, 0.1, 1.0)
+	var r: Dictionary = host.infra_report_incident(facility, cause, severity)
+	if not bool(r.get("ok", false)):
+		return _fail("无法报修（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已登记设施故障，严重度 %.2f。" % severity], 0, "municipal")
+
 func _postal_accept(intent) -> Dictionary:
 	var id := String(intent.params.get("method", "parcel"))
 	var r: Dictionary = host.postal_accept(id, 1.0, 100.0)
@@ -6411,6 +6629,32 @@ func _reason_cn(reason: String) -> String:
 			return "二次事故处置不力"
 		"unknown_facility":
 			return "未知市政设施"
+		"unknown_country":
+			return "未知国家，请用两国代码或名称并以逗号分隔"
+		"unknown_policy":
+			return "未知防控政策"
+		"unknown_action":
+			return "未知防护动作"
+		"not_at_war":
+			return "当前没有交战中的国家"
+		"already_at_war":
+			return "两国已处于战争状态"
+		"not_at_war_pair":
+			return "两国并未交战"
+		"age":
+			return "年龄不符合征兵区间"
+		"health":
+			return "健康不达标"
+		"student":
+			return "在校学生缓征"
+		"disabled":
+			return "残障缓征"
+		"only_child":
+			return "独生子女缓征"
+		"key_job":
+			return "关键岗位缓征"
+		"insufficient_funds":
+			return "现金不足"
 		"already_under_construction":
 			return "该设施已在施工中"
 		"no_such_complaint":
@@ -6816,6 +7060,10 @@ func _resolve_by_name(type: String, text: String) -> String:
 			return _find_catalog_by_name(host.tin_modes_catalog(), text)
 		"competition":
 			return _find_catalog_by_name(host.sports_competitions_catalog(), text)
+		"war_country":
+			return _find_catalog_by_name(host.war_countries_catalog(), text)
+		"infra_facility":
+			return _find_catalog_by_name(host.infra_facilities_catalog(), text)
 		_:
 			return ""
 
