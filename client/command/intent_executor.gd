@@ -720,6 +720,8 @@ func _dispatch(intent) -> Dictionary:
 			return _civil_appeal(intent)
 		"民事执行":
 			return _civil_enforce(intent)
+		"查封拍卖":
+			return _civil_seize_auction(intent)
 		"实施犯罪":
 			return _crime_attempt(intent)
 		"刑事受审":
@@ -3863,6 +3865,14 @@ func _civil_enforce(intent) -> Dictionary:
 	if bool(r.get("execution_failure", false)):
 		return _ok(["执行不能，已回收 %d，未清偿 %d。" % [int(r.get("recovered", 0)), int(r.get("outstanding", 0))]], 0, "")
 	return _ok(["执行到位 %d。" % int(r.get("recovered", 0))], 0, "")
+
+func _civil_seize_auction(intent) -> Dictionary:
+	var r: Dictionary = host.civil_seize_auction()
+	if not bool(r.get("ok", false)):
+		return _fail("无法查封（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if int(r.get("outstanding", 0)) > 0:
+		return _ok(["拍卖回收 %d，仍欠 %d，被执行人维持失信限高。" % [int(r.get("recovered", 0)), int(r.get("outstanding", 0))]], 0, "")
+	return _ok(["拍卖回收 %d，债务清偿，解除失信限高。" % int(r.get("recovered", 0))], 0, "")
 
 func _crime_attempt(intent) -> Dictionary:
 	var crime: String = _object_id(intent, "crime")

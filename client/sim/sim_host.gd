@@ -5809,7 +5809,10 @@ func consumer_sue(evidence: float = 0.5) -> Dictionary:
 		amount *= 3
 	var claim: Dictionary = civil_sys.new_claim("consumer", amount, "player", "merchant")
 	claim["evidence"] = clampf(evidence, 0.0, 1.0)
-	_civil = {"claim": claim, "judgment": {}, "enforced": false, "appealed": false}
+	var ratio: float = 0.3 + float((amount + now_minutes()) % 80) / 100.0
+	_civil = {"claim": claim, "judgment": {}, "enforced": false, "appealed": false,
+		"debtor": {"name": "被告", "assets": int(float(amount) * ratio), "outstanding": 0,
+			"dishonest": false, "seized": false}}
 	var cid: String = "civil:%d:%d" % [now_minutes(), domain_wake.entry_count()]
 	var due: int = now_minutes() + BaselineScript.WAKE_CASE_LIMIT_DAYS * BaselineScript.WAKE_MINUTES_PER_DAY
 	domain_register(cid, DomainWakeScript.KIND_CASE, {
@@ -5861,13 +5864,51 @@ func civil_enforce() -> Dictionary:
 	if bool(_civil.get("enforced", false)):
 		return {"ok": false, "reason": "already_enforced"}
 	var award: int = int(judgment.get("award", 0))
-	var r: Dictionary = civil_sys.enforce(judgment, award)
+	var debtor: Dictionary = _civil.get("debtor", {})
+	var assets: int = int(debtor.get("assets", award))
+	var r: Dictionary = civil_sys.enforce(judgment, assets)
 	var recovered: int = int(r.get("recovered", 0))
 	if recovered > 0:
 		economy.add_money(account_id(), recovered, "civil_enforcement")
+	var outstanding: int = int(r.get("outstanding", 0))
+	if not debtor.is_empty():
+		debtor["assets"] = maxi(0, assets - recovered)
+		debtor["outstanding"] = outstanding
+		if outstanding > 0:
+			civil_sys.dishonest_restrictions(debtor, outstanding)
+		_civil["debtor"] = debtor
 	_civil["enforced"] = true
 	_persist_civil()
-	return {"ok": true, "recovered": recovered, "execution_failure": bool(r.get("execution_failure", false)), "outstanding": int(r.get("outstanding", 0))}
+	return {"ok": true, "recovered": recovered, "execution_failure": bool(r.get("execution_failure", false)),
+		"outstanding": outstanding, "dishonest": bool(debtor.get("dishonest", false))}
+
+
+## 查封拍卖被执行人财产：拍卖折价回收，仍不足则维持失信限高。
+func civil_seize_auction() -> Dictionary:
+	if _civil.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var debtor: Dictionary = _civil.get("debtor", {})
+	var outstanding: int = int(debtor.get("outstanding", 0))
+	if outstanding <= 0:
+		return {"ok": false, "reason": "nothing_outstanding"}
+	if bool(debtor.get("seized", false)):
+		return {"ok": false, "reason": "already_seized"}
+	var hidden: int = int(float(outstanding) * 0.6)
+	var r: Dictionary = civil_sys.seize_auction(hidden, outstanding)
+	var recovered: int = int(round(float(r.get("recovered", 0)) * 0.85))
+	if recovered > 0:
+		economy.add_money(account_id(), recovered, "civil_auction")
+	outstanding = maxi(0, outstanding - recovered)
+	debtor["seized"] = true
+	debtor["outstanding"] = outstanding
+	debtor["assets"] = 0
+	if outstanding <= 0:
+		debtor["dishonest"] = false
+	_civil["debtor"] = debtor
+	_civil["auction"] = {"recovered": recovered, "outstanding": outstanding, "minute": now_minutes()}
+	_persist_civil()
+	return {"ok": true, "recovered": recovered, "outstanding": outstanding,
+		"dishonest": bool(debtor.get("dishonest", true))}
 
 func civil_panel_data() -> Dictionary:
 	if _civil.is_empty():
@@ -5888,6 +5929,14 @@ func civil_panel_data() -> Dictionary:
 		"enforced": bool(_civil.get("enforced", false)),
 		"appealed": bool(_civil.get("appealed", false)),
 	}
+	var debtor: Dictionary = _civil.get("debtor", {})
+	if not debtor.is_empty():
+		out["debtor"] = {
+			"assets": int(debtor.get("assets", 0)),
+			"outstanding": int(debtor.get("outstanding", 0)),
+			"dishonest": bool(debtor.get("dishonest", false)),
+			"seized": bool(debtor.get("seized", false)),
+		}
 	var judgment: Dictionary = _civil.get("judgment", {})
 	if not judgment.is_empty():
 		out["judgment"] = {

@@ -1094,6 +1094,15 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 		crows.append({"label": "已执行", "value": _yes_no(bool(cv.get("enforced", false)))})
 		if bool(cv.get("appealed", false)):
 			crows.append({"label": "已上诉", "value": "是"})
+		var db: Dictionary = cv.get("debtor", {})
+		if not db.is_empty():
+			var drow: Array = [
+				{"label": "被执行人财产", "value": str(int(db.get("assets", 0)))},
+				{"label": "未清偿", "value": str(int(db.get("outstanding", 0)))},
+				{"label": "失信限高", "value": _yes_no(bool(db.get("dishonest", false)))},
+				{"label": "已查封", "value": _yes_no(bool(db.get("seized", false)))},
+			]
+			crows.append_array(drow)
 		sections.append(_section("民事案件", crows))
 	var pol: Dictionary = context.get("police", {})
 	if pol.has("case"):
