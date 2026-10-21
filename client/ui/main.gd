@@ -959,6 +959,9 @@ func _panel_context() -> Dictionary:
 		if not regions_view.is_empty():
 			context["regions"] = regions_view
 		context["current_region"] = _sim.current_region_id()
+		var pop_profile: Dictionary = _sim.region_population_profile()
+		if not pop_profile.is_empty():
+			context["population_profile"] = pop_profile
 		var w: Dictionary = _sim.weather_panel_data()
 		if not w.is_empty():
 			context["weather"] = w

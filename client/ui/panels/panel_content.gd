@@ -506,6 +506,21 @@ static func family(player: Dictionary, name_resolver: Callable = Callable()) -> 
 
 # --- 地图 ---
 
+## 取占比最高的若干职业，输出「职业 占比%」文本。
+static func _top_share(counts: Dictionary, limit: int) -> Array:
+	var items: Array = []
+	var total: int = 0
+	for k in counts.keys():
+		total += int(counts[k])
+	for k in counts.keys():
+		if total > 0:
+			items.append({"name": String(k), "share": float(int(counts[k])) / float(total)})
+	items.sort_custom(func(a, b): return float(a["share"]) > float(b["share"]))
+	var out: Array = []
+	for i in mini(limit, items.size()):
+		out.append("%s %.0f%%" % [String((items[i] as Dictionary)["name"]), float((items[i] as Dictionary)["share"]) * 100.0])
+	return out
+
 static func map_panel(context: Dictionary, name_resolver: Callable = Callable()) -> Dictionary:
 	var regions: Array = context.get("regions", [])
 	var current: String = String(context.get("current_region", ""))
@@ -515,6 +530,20 @@ static func map_panel(context: Dictionary, name_resolver: Callable = Callable())
 	var sections: Array = []
 	if current != "":
 		sections.append({"title": "当前区域", "rows": [{"label": _resolve(current, name_resolver), "value": "所在"}]})
+	var pp: Dictionary = context.get("population_profile", {})
+	if pp is Dictionary and not (pp as Dictionary).is_empty():
+		var occ: Dictionary = pp.get("occupation_mix", {})
+		var occ_text: String = " · ".join(_top_share(occ, 3))
+		var inc: Dictionary = pp.get("income_bands", {})
+		sections.append({"title": "人口结构", "rows": [
+			{"label": "总人口", "value": str(int(pp.get("population", 0)))},
+			{"label": "年龄结构", "value": "少儿%d / 劳动%d / 老年%d" % [int(pp.get("youth", 0)), int(pp.get("working_age", 0)), int(pp.get("elderly", 0))]},
+			{"label": "性别", "value": "男%d / 女%d" % [int((pp.get("gender", {}) as Dictionary).get("male", 0)), int((pp.get("gender", {}) as Dictionary).get("female", 0))]},
+			{"label": "主要职业", "value": occ_text if occ_text != "" else "—"},
+			{"label": "收入分层", "value": "低%d / 中%d / 高%d" % [int(inc.get("low", 0)), int(inc.get("middle", 0)), int(inc.get("high", 0))]},
+			{"label": "家庭户数", "value": "%d 户（均 %.1f 人）" % [int(pp.get("households", 0)), float(pp.get("avg_household_size", 0.0))]},
+			{"label": "失业率", "value": "%.1f%%" % (float(pp.get("unemployment_rate", 0.0)) * 100.0)},
+		]})
 	if not regions.is_empty():
 		var region_rows: Array = []
 		for r in regions:

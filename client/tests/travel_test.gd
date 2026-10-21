@@ -28,7 +28,7 @@ func run_tests() -> void:
 
 func _test_catalog() -> void:
 	var sys = TravelScript.new()
-	check_eq(sys.destinations().size(), 12, "十二个目的地")
+	check_eq(sys.destinations().size(), 26, "二十六个目的地")
 	check_eq(sys.transport_modes().size(), 5, "五种交通")
 	check_eq(sys.lodging_options().size(), 4, "四档住宿")
 	check(bool(sys.destination_info("paris")["visa_required"]), "出国需签证")

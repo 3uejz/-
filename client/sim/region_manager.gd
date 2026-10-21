@@ -71,10 +71,17 @@ class RegionState:
 	func init_snapshot() -> void:
 		economy = maxf(0.0, economy)
 		price_index = maxf(0.0, price_index)
+		var demo: Dictionary = _demographic_profile(id, population)
 		snapshot = {
 			"population": population,
-			"age_bands": _uniform_age_bands(population),
-			"occupation_mix": {},
+			"age_bands": demo["age_bands"],
+			"gender": demo["gender"],
+			"occupation_mix": demo["occupation_mix"],
+			"income_bands": demo["income_bands"],
+			"education": demo["education"],
+			"households": demo["households"],
+			"avg_household_size": demo["avg_household_size"],
+			"unemployment_rate": demo["unemployment_rate"],
 			"economy": economy,
 			"price_index": price_index,
 			"safety": safety,
@@ -119,6 +126,10 @@ class RegionState:
 		var snap: Variant = data.get("snapshot", {})
 		r.snapshot = (snap as Dictionary).duplicate(true) if snap is Dictionary else {}
 		r._coerce_snapshot()
+		if not r.snapshot.has("occupation_mix") or (r.snapshot.get("occupation_mix", {}) as Dictionary).is_empty():
+			var demo: Dictionary = RegionState._demographic_profile(r.id, r.population)
+			for k in demo.keys():
+				r.snapshot[k] = demo[k]
 		return r
 
 	## 把 JSON 载入后的 float 数值规整为 int（JSON 数字一律为 float）。
@@ -132,9 +143,82 @@ class RegionState:
 			var ages: Array = snapshot["age_bands"]
 			for i in ages.size():
 				ages[i] = int(ages[i])
+		for key in ["occupation_mix", "income_bands", "education", "gender"]:
+			if snapshot.has(key) and snapshot[key] is Dictionary:
+				var d: Dictionary = snapshot[key]
+				for k in d.keys():
+					d[k] = int(d[k])
+		for key in ["households"]:
+			if snapshot.has(key):
+				snapshot[key] = int(snapshot[key])
+		for key in ["avg_household_size", "unemployment_rate"]:
+			if snapshot.has(key):
+				snapshot[key] = float(snapshot[key])
 		for key in ["economy", "price_index", "safety", "relation_strength"]:
 			if snapshot.has(key):
 				snapshot[key] = float(snapshot[key])
+
+	## 非个体化人口快照：年龄金字塔、性别、职业、收入、学历与家庭结构（按区域 id 确定性生成）。
+	static func _demographic_profile(region_id: String, pop: int) -> Dictionary:
+		var rng := RngScript.new(str(region_id).hash() ^ 0x5f3a)
+		var p: int = maxi(0, pop)
+		var bands: Array = []
+		bands.resize(MAX_AGE + 1)
+		bands.fill(0)
+		var weights: Array = [17, 20, 23, 21, 13, 6]
+		var lo: int = 0
+		var allocated: int = 0
+		for b in weights.size():
+			var hi: int = (MAX_AGE + 1) if b == weights.size() - 1 else int(round(float((b + 1) * (MAX_AGE + 1)) / 6.0))
+			var cnt: int = int(round(float(p) * float(weights[b]) / 100.0))
+			cnt = clampi(cnt, 0, p - allocated)
+			var span: int = maxi(1, hi - lo)
+			for age in range(lo, hi):
+				bands[age] = cnt / span
+			var rem: int = cnt - (cnt / span) * span
+			for age in range(lo, mini(hi, lo + rem)):
+				bands[age] += 1
+			allocated += cnt
+			lo = hi
+		var male: int = int(round(float(p) * (0.508 + (rng.next_float() - 0.5) * 0.01)))
+		var female: int = maxi(0, p - male)
+		var occ_names: Array = ["农业", "制造业", "服务业", "政务", "教育", "医疗", "信息技术", "自由职业"]
+		var occ_base: Array = [18, 20, 26, 6, 7, 7, 8, 8]
+		var occ: Dictionary = {}
+		var left: int = p
+		for i in occ_names.size():
+			var cnt: int = int(round(float(p) * float(occ_base[i]) / 100.0))
+			if i == occ_names.size() - 1:
+				cnt = left
+			cnt = clampi(cnt, 0, left)
+			occ[occ_names[i]] = cnt
+			left -= cnt
+		var edu_names: Array = ["初中及以下", "高中", "大专", "本科", "硕士及以上"]
+		var edu_base: Array = [34, 27, 17, 18, 4]
+		var edu: Dictionary = {}
+		left = p
+		for i in edu_names.size():
+			var cnt2: int = int(round(float(p) * float(edu_base[i]) / 100.0))
+			if i == edu_names.size() - 1:
+				cnt2 = left
+			cnt2 = clampi(cnt2, 0, left)
+			edu[edu_names[i]] = cnt2
+			left -= cnt2
+		var avg_house: float = snappedf(2.6 + rng.next_float() * 0.5, 0.1)
+		var households: int = int(round(float(p) / maxf(1.0, avg_house)))
+		var low: int = int(round(float(p) * (0.42 + (rng.next_float() - 0.5) * 0.06)))
+		var high: int = int(round(float(p) * (0.12 + (rng.next_float() - 0.5) * 0.04)))
+		var mid: int = maxi(0, p - low - high)
+		return {
+			"age_bands": bands,
+			"gender": {"male": male, "female": female},
+			"occupation_mix": occ,
+			"income_bands": {"low": low, "middle": mid, "high": high},
+			"education": edu,
+			"households": households,
+			"avg_household_size": avg_house,
+			"unemployment_rate": snappedf(0.04 + rng.next_float() * 0.04, 0.01),
+		}
 
 	static func _uniform_age_bands(pop: int) -> Array:
 		var bands: Array = []

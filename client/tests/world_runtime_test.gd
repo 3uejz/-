@@ -84,6 +84,7 @@ func run_tests() -> void:
 	_test_entertainment_runtime()
 	_test_travel_runtime()
 	_test_civic_runtime()
+	_test_population_profile()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -2531,5 +2532,22 @@ func _test_transport_infra_runtime() -> void:
 	check(not reloaded.tin_panel_data().is_empty(), "交通基建面板数据非空")
 
 
-
-
+func _test_population_profile() -> void:
+	var state = GameStateScript.new()
+	state.new_game(264)
+	var host = SimHostScript.new(state, 264)
+	host.bind(state)
+	var rid: String = host.current_region_id()
+	var snap: Dictionary = host.regions.snapshot(rid)
+	check(int(snap.get("population", 0)) > 0, "区域人口快照存在")
+	check((snap.get("age_bands", []) as Array).size() == 121, "年龄带覆盖 0–120")
+	check(not (snap.get("occupation_mix", {}) as Dictionary).is_empty(), "职业构成非空")
+	check(not (snap.get("income_bands", {}) as Dictionary).is_empty(), "收入分层非空")
+	check(not (snap.get("education", {}) as Dictionary).is_empty(), "学历构成非空")
+	var prof: Dictionary = host.region_population_profile(rid)
+	check(int(prof.get("population", 0)) > 0, "人口结构导出成功")
+	check(int(prof.get("youth", 0)) + int(prof.get("working_age", 0)) + int(prof.get("elderly", 0)) > 0, "年龄分组可聚合")
+	check(int((prof.get("gender", {}) as Dictionary).get("male", 0)) + int((prof.get("gender", {}) as Dictionary).get("female", 0)) > 0, "性别统计非零")
+	check(int(prof.get("households", 0)) > 0 and float(prof.get("avg_household_size", 0.0)) >= 2.0, "家庭结构合理")
+	check(float(prof.get("unemployment_rate", 0.0)) > 0.0, "失业率有值")
+	check(host.region_population_profile("no.such.region").is_empty(), "未知区域返回空")

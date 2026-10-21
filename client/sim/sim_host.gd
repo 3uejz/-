@@ -11005,6 +11005,39 @@ func regions_view() -> Array:
 		})
 	return out
 
+## 当前区域人口结构快照（年龄/性别/职业/收入/学历/家庭）。
+func region_population_profile(region_id: String = "") -> Dictionary:
+	var rid: String = region_id if not region_id.is_empty() else current_region_id()
+	if regions == null or rid.is_empty() or not regions.has_region(rid):
+		return {}
+	var snap: Dictionary = regions.snapshot(rid)
+	if snap.is_empty():
+		return {}
+	var ages: Array = snap.get("age_bands", [])
+	var youth: int = 0
+	var working: int = 0
+	var elderly: int = 0
+	for i in ages.size():
+		var c: int = int(ages[i])
+		if i < 15:
+			youth += c
+		elif i < 60:
+			working += c
+		else:
+			elderly += c
+	return {
+		"region_id": rid,
+		"population": int(snap.get("population", 0)),
+		"youth": youth, "working_age": working, "elderly": elderly,
+		"gender": (snap.get("gender", {}) as Dictionary).duplicate(true),
+		"occupation_mix": (snap.get("occupation_mix", {}) as Dictionary).duplicate(true),
+		"income_bands": (snap.get("income_bands", {}) as Dictionary).duplicate(true),
+		"education": (snap.get("education", {}) as Dictionary).duplicate(true),
+		"households": int(snap.get("households", 0)),
+		"avg_household_size": float(snap.get("avg_household_size", 0.0)),
+		"unemployment_rate": float(snap.get("unemployment_rate", 0.0)),
+	}
+
 ## 当前区域天气快照（供天气面板）：condition/temperature/humidity/wind/phase[/warning]。
 func weather_now() -> Dictionary:
 	var rid: String = current_region_id()
