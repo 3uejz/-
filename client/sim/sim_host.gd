@@ -2475,6 +2475,30 @@ func mfg_purchase(material: String, qty: float) -> Dictionary:
 		_persist_manufacturing()
 	return r
 
+## 宏观与灾害自动驱动产线中断：高通胀限电、高失业罢工、天气灾害停电。
+func mfg_auto_disruptions() -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var events: Array = []
+	var inflation: float = float((economy.macro as Dictionary).get("inflation", 0.0))
+	var unemployment: float = float((economy.macro as Dictionary).get("unemployment", 0.0))
+	if inflation > 0.08:
+		manufacturing.set_disruption(_factory, "power_outage", true)
+		events.append({"kind": "power_outage", "source": "macro_inflation", "value": inflation})
+	if unemployment > 0.10:
+		manufacturing.set_disruption(_factory, "strike", true)
+		events.append({"kind": "strike", "source": "macro_unemployment", "value": unemployment})
+	var rid: String = current_region_id()
+	if weather != null and weather.has_region(rid):
+		var disasters: Array = weather.disasters_on(rid, WeatherScript.day_of_minute(now_minutes()))
+		if not disasters.is_empty():
+			manufacturing.set_disruption(_factory, "power_outage", true)
+			events.append({"kind": "power_outage", "source": String((disasters[0] as Dictionary).get("key", "disaster"))})
+	if not events.is_empty():
+		_persist_manufacturing()
+	return {"ok": true, "events": events, "blocked": bool(manufacturing.production_blocked(_factory))}
+
+
 func mfg_produce(recipe_key: String, batches: float = 1.0) -> Dictionary:
 	if _factory.is_empty():
 		return {"ok": false, "reason": "no_factory"}

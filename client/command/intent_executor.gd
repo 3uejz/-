@@ -333,6 +333,8 @@ func _dispatch(intent) -> Dictionary:
 			return _mfg_purchase(intent)
 		"生产":
 			return _mfg_produce(intent)
+		"产线中断":
+			return _mfg_auto_disruptions(intent)
 		"接单":
 			return _mfg_order(intent)
 		"交付订单":
@@ -2260,6 +2262,19 @@ func _mfg_purchase(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法采购原料（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["采购%s %.1f 单位，花费 %d。" % [material, float(r.get("delivered", 0.0)), int(r.get("cost", 0))]], 0, "")
+
+func _mfg_auto_disruptions(intent) -> Dictionary:
+	var r: Dictionary = host.mfg_auto_disruptions()
+	if not bool(r.get("ok", false)):
+		return _fail("无法检查产线（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var events: Array = r.get("events", [])
+	if events.is_empty():
+		return _ok(["产线运行正常，未发现宏观或灾害导致的中断。"], 0, "")
+	var lines: Array = []
+	for e in events:
+		var ed: Dictionary = e
+		lines.append("产线中断：%s（来源 %s）。" % [String(ed.get("kind", "")), String(ed.get("source", ""))])
+	return _ok(lines, 0, "")
 
 func _mfg_produce(intent) -> Dictionary:
 	var recipe := _object_id(intent, "mfg_recipe")

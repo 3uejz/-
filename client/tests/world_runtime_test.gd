@@ -1075,6 +1075,14 @@ func _test_manufacturing_runtime() -> void:
 	# 缺料时生产被原料约束。
 	var prod2: Dictionary = host.mfg_produce("circuit_board", 10.0)
 	check(bool(prod2.get("ok", false)) and String(prod2.get("bottleneck", "")) == "material", "缺料时以原料为瓶颈")
+	# 宏观高通胀自动触发限电停产。
+	host.economy.macro["inflation"] = 0.15
+	var auto: Dictionary = host.mfg_auto_disruptions()
+	check(not (auto.get("events", []) as Array).is_empty(), "宏观自动触发产线中断")
+	check(bool(host.manufacturing.production_blocked(host.manufacturing_state())), "限电期间生产受阻")
+	check_eq(String(host.mfg_produce("steel_part", 1.0).get("reason", "")), "disrupted", "中断时拒绝生产")
+	host.manufacturing.set_disruption(host.manufacturing_state(), "power_outage", false)
+	host.economy.macro["inflation"] = 0.02
 	# 持久化与读档恢复。
 	host._persist_manufacturing()
 	check(state.sim_runtime.get("manufacturing", null) is Dictionary, "制造业运行态写入 sim_runtime")
