@@ -2668,13 +2668,57 @@ func trade_risk_events_catalog() -> Array:
 		out.append({"id": String(key), "name": String(NAMES.get(String(key), key))})
 	return out
 
-## 新建出口单据：以货值建单，商品名落单据，返回序号。
+## 新建出口单据：以货值建单，商品名落单据，返回序号；宏观/灾害自动驱动风险事件。
 func export_shipment(goods: String, value: int) -> Dictionary:
 	var s: Dictionary = trade.new_shipment({"id": "shipment_%d" % _shipments.size(), "goods_value": maxi(0, value)})
 	s["goods"] = goods if goods != "" else "货物"
 	_shipments.append(s)
+	var auto_risks: Array = _trade_auto_drive(s)
 	_persist_trade()
-	return {"ok": true, "index": _shipments.size() - 1, "goods": String(s["goods"]), "goods_value": int(s["goods_value"])}
+	return {"ok": true, "index": _shipments.size() - 1, "goods": String(s["goods"]), "goods_value": int(s["goods_value"]),
+		"auto_risks": auto_risks}
+
+
+## 宏观与天气灾害自动驱动外贸风险：高通胀→贸易战、高失业→制裁、灾害→滞留延误。
+func _trade_auto_drive(shipment: Dictionary) -> Array:
+	var triggers: Array = []
+	var inflation: float = float((economy.macro as Dictionary).get("inflation", 0.0))
+	var unemployment: float = float((economy.macro as Dictionary).get("unemployment", 0.0))
+	if inflation > 0.06:
+		triggers.append({"event": "trade_war", "source": "macro_inflation"})
+	elif unemployment > 0.09:
+		triggers.append({"event": "sanction", "source": "macro_unemployment"})
+	var rid: String = current_region_id()
+	var day: int = 0
+	var disasters: Array = []
+	if weather != null:
+		day = WeatherScript.day_of_minute(now_minutes())
+		if weather.has_region(rid):
+			disasters = weather.disasters_on(rid, day)
+	if not disasters.is_empty():
+		triggers.append({"event": "weather_disaster", "source": String((disasters[0] as Dictionary).get("key", "disaster"))})
+	for t in triggers:
+		var ev: String = String((t as Dictionary).get("event", ""))
+		var line: Dictionary = (t as Dictionary).duplicate(true)
+		if ev == "weather_disaster":
+			line["delay_days"] = 3.0
+			line["extra_cost"] = 100000
+			shipment["delay_days"] = float(shipment.get("delay_days", 0.0)) + 3.0
+		elif trade.RISK_EVENTS.has(ev):
+			var r: Dictionary = trade.risk_event(shipment, ev)
+			line["delay_days"] = float(r.get("delay_days", 0.0))
+			line["extra_cost"] = int(r.get("extra_cost", 0))
+			line["detained"] = bool(r.get("detained", false))
+		else:
+			continue
+		var extra: int = int(line.get("extra_cost", 0))
+		if extra > 0 and int(economy.cash(account_id())) >= extra:
+			economy.add_money(account_id(), -extra, "trade_auto_risk:%s" % ev)
+			shipment["extra_cost"] = int(shipment.get("extra_cost", 0)) + extra
+		else:
+			line["extra_cost"] = 0
+		triggers[triggers.find(t)] = line
+	return triggers
 
 ## 规划运输：报价并写入单据运费（海运/空运/铁路/快递/管道，超载拒绝）。
 func plan_trade_transport(index: int, mode: String) -> Dictionary:

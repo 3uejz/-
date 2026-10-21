@@ -1095,11 +1095,20 @@ func _test_trade_runtime() -> void:
 	var base_fx: float = host.trade_fx_rate("CNY")
 	host.economy.macro["inflation"] = 0.1
 	check(host.trade_fx_rate("CNY") > base_fx, "贸易汇率联动当前通胀")
+	# 宏观高通胀自动驱动贸易战风险。
+	host.economy.add_money(host.account_id(), 5000000, "test")
+	var auto_ex: Dictionary = host.export_shipment("机械", 200000)
+	var auto_hit: bool = false
+	for t in (auto_ex.get("auto_risks", []) as Array):
+		if String((t as Dictionary).get("event", "")) == "trade_war":
+			auto_hit = true
+	check(auto_hit, "高通胀自动触发贸易战风险")
+	check(int((host.trade_state().get("shipments", []) as Array)[0].get("extra_cost", 0)) > 0, "自动风险成本入单")
 	host.economy.macro["inflation"] = 0.02
 	# 建出口单据
 	var ex: Dictionary = host.export_shipment("钢材", 50000)
 	check(bool(ex.get("ok", false)), "建立出口单据成功")
-	check_eq((host.trade_state().get("shipments", []) as Array).size(), 1, "外贸单据列表含 1 项")
+	check_eq((host.trade_state().get("shipments", []) as Array).size(), 2, "外贸单据列表含 2 项")
 	# 规划运输
 	var plan: Dictionary = host.plan_trade_transport(-1, "sea")
 	check(bool(plan.get("ok", false)) and int(plan.get("freight", 0)) > 0, "规划海运并报价")
@@ -1124,7 +1133,7 @@ func _test_trade_runtime() -> void:
 	check(state.sim_runtime.get("trade", null) is Dictionary, "国际贸易运行态写入 sim_runtime")
 	var reloaded = SimHostScript.new(state, 77)
 	reloaded.bind(state)
-	check_eq((reloaded.trade_state().get("shipments", []) as Array).size(), 1, "读档恢复外贸单据")
+	check_eq((reloaded.trade_state().get("shipments", []) as Array).size(), 2, "读档恢复外贸单据")
 
 
 func _test_mining_runtime() -> void:
