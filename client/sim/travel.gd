@@ -19,6 +19,20 @@ const DESTINATIONS: Dictionary = {
 	"everest_base": {"name": "珠峰大本营", "category": "adventure", "distance_km": 3000, "base_days": 12, "base_cost": 1500000, "sights": ["冰川", "星空", "雪峰"], "visa_required": true},
 	"amazon": {"name": "亚马逊雨林", "category": "adventure", "distance_km": 16000, "base_days": 14, "base_cost": 2000000, "sights": ["雨林", "野生动物", "河流"], "visa_required": true},
 	"antarctica": {"name": "南极", "category": "adventure", "distance_km": 18000, "base_days": 18, "base_cost": 6000000, "sights": ["冰川", "企鹅", "极光"], "visa_required": true},
+	"zhangjiajie": {"name": "张家界", "category": "domestic", "distance_km": 1100, "base_days": 4, "base_cost": 160000, "sights": ["天门山", "玻璃栈道", "峰林"], "visa_required": false},
+	"west_lake": {"name": "西湖", "category": "domestic", "distance_km": 1200, "base_days": 2, "base_cost": 70000, "sights": ["断桥", "苏堤", "雷峰塔"], "visa_required": false},
+	"dunhuang": {"name": "敦煌", "category": "domestic", "distance_km": 2400, "base_days": 4, "base_cost": 180000, "sights": ["莫高窟", "鸣沙山", "月牙泉"], "visa_required": false},
+	"lijiang": {"name": "丽江", "category": "domestic", "distance_km": 2100, "base_days": 4, "base_cost": 170000, "sights": ["古城", "玉龙雪山", "束河"], "visa_required": false},
+	"harbin": {"name": "哈尔滨", "category": "domestic", "distance_km": 1600, "base_days": 3, "base_cost": 130000, "sights": ["冰雪大世界", "中央大街", "索菲亚教堂"], "visa_required": false},
+	"sanya": {"name": "三亚", "category": "domestic", "distance_km": 2200, "base_days": 5, "base_cost": 260000, "sights": ["亚龙湾", "蜈支洲岛", "天涯海角"], "visa_required": false},
+	"london": {"name": "伦敦", "category": "abroad", "distance_km": 8800, "base_days": 7, "base_cost": 900000, "sights": ["大本钟", "大英博物馆", "泰晤士河"], "visa_required": true},
+	"seoul": {"name": "首尔", "category": "abroad", "distance_km": 950, "base_days": 5, "base_cost": 450000, "sights": ["景福宫", "明洞", "汉江"], "visa_required": true},
+	"bangkok": {"name": "曼谷", "category": "abroad", "distance_km": 3300, "base_days": 6, "base_cost": 400000, "sights": ["大皇宫", "湄南河", "夜市"], "visa_required": true},
+	"sydney": {"name": "悉尼", "category": "abroad", "distance_km": 8900, "base_days": 8, "base_cost": 1000000, "sights": ["歌剧院", "海港大桥", "邦迪海滩"], "visa_required": true},
+	"rome": {"name": "罗马", "category": "abroad", "distance_km": 8100, "base_days": 6, "base_cost": 750000, "sights": ["斗兽场", "许愿池", "梵蒂冈"], "visa_required": true},
+	"cairo": {"name": "开罗", "category": "abroad", "distance_km": 7500, "base_days": 6, "base_cost": 550000, "sights": ["金字塔", "尼罗河", "博物馆"], "visa_required": true},
+	"sahara": {"name": "撒哈拉沙漠", "category": "adventure", "distance_km": 9000, "base_days": 10, "base_cost": 1200000, "sights": ["沙丘", "绿洲", "星空"], "visa_required": true},
+	"arctic_circle": {"name": "北极圈", "category": "adventure", "distance_km": 7000, "base_days": 12, "base_cost": 3200000, "sights": ["极光", "冰川", "极地村落"], "visa_required": true},
 }
 
 ## 交通方式。

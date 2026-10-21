@@ -95,6 +95,69 @@ func wanted_level(state: Dictionary, region: String) -> int:
 	return int((state.get("wanted", {}) as Dictionary).get(region, {}).get("level", 0))
 
 
+## 全国协查：同国区域共享通缉，3 级以上自动升级为全国范围。
+func escalate_national(state: Dictionary, country: String) -> Dictionary:
+	var c: String = country.to_lower()
+	var wanted: Dictionary = state.get("wanted", {})
+	var hit: Array = []
+	for region in wanted.keys():
+		if String(region).split(".")[0].to_lower() != c:
+			continue
+		var entry: Dictionary = wanted[region]
+		entry["scope"] = "nation"
+		entry["level"] = clampi(int(entry.get("level", 1)) + 1, 1, 5)
+		hit.append(String(region))
+	if not hit.is_empty():
+		state["wanted"] = wanted
+	return {"ok": not hit.is_empty(), "regions": hit, "country": c}
+
+## 是否属于全国在逃。
+func is_national(state: Dictionary) -> bool:
+	for region in (state.get("wanted", {}) as Dictionary).keys():
+		if String((state.get("wanted", {}) as Dictionary)[region].get("scope", "")) == "nation":
+			return true
+	return false
+
+## 引渡条约：a 国向 b 国移交嫌犯（单向配置，未列即无条约）。
+const EXTRADITION_TREATIES: Dictionary = {
+	"cn": {"jp": true, "sg": true, "us": false, "eu": false, "gb": false, "au": false},
+	"us": {"cn": false, "gb": true, "eu": true, "au": true, "jp": true},
+	"gb": {"us": true, "eu": true, "au": true},
+	"eu": {"us": true, "gb": true, "au": true},
+	"jp": {"cn": true, "us": true},
+	"sg": {"cn": true},
+	"au": {"us": true, "gb": true, "eu": true},
+}
+
+func has_treaty(from_country: String, to_country: String) -> bool:
+	var a: String = from_country.to_lower()
+	var b: String = to_country.to_lower()
+	var row: Dictionary = EXTRADITION_TREATIES.get(a, {})
+	if bool(row.get(b, false)):
+		return true
+	return bool((EXTRADITION_TREATIES.get(b, {}) as Dictionary).get(a, false))
+
+## 引渡：把在逃人员移交回目标国，成功即撤销当地通缉并转入受审。
+func extradite(state: Dictionary, from_region: String, to_region: String, opts: Dictionary = {}) -> Dictionary:
+	var wanted: Dictionary = state.get("wanted", {})
+	if not wanted.has(from_region):
+		return {"ok": false, "reason": "not_wanted"}
+	if from_region == to_region:
+		return {"ok": false, "reason": "same_region"}
+	var a: String = from_region.split(".")[0].to_lower()
+	var b: String = to_region.split(".")[0].to_lower()
+	var treaty: bool = has_treaty(a, b)
+	state["extraditions"] = state.get("extraditions", [])
+	(state["extraditions"] as Array).append({"from": from_region, "to": to_region, "treaty": treaty,
+		"minute": int(opts.get("minute", 0)), "result": "approved" if treaty else "refused"})
+	if not treaty:
+		return {"ok": false, "reason": "no_treaty", "from_country": a, "to_country": b}
+	var entry: Dictionary = wanted[from_region]
+	wanted.erase(from_region)
+	state["wanted"] = wanted
+	return {"ok": true, "transferred": true, "crime": String(entry.get("crime", "")),
+		"from_region": from_region, "to_region": to_region, "treaty": true}
+
 func is_wanted(state: Dictionary) -> bool:
 	return not (state.get("wanted", {}) as Dictionary).is_empty()
 

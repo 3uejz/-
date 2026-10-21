@@ -166,6 +166,28 @@ func _dispatch(intent) -> Dictionary:
 			return _travel_advance(intent)
 		"结束旅行":
 			return _travel_end(intent)
+		"从政":
+			return _politics_enter(intent)
+		"竞选":
+			return _politics_campaign(intent)
+		"政治晋升":
+			return _politics_promote(intent)
+		"政策博弈":
+			return _politics_policy(intent)
+		"政治受贿":
+			return _politics_bribe(intent)
+		"宗教皈依":
+			return _religion_join(intent)
+		"宗教仪式":
+			return _religion_ritual(intent)
+		"教职晋升":
+			return _religion_promote(intent)
+		"移民":
+			return _immigration_migrate(intent)
+		"申请签证":
+			return _immigration_visa(intent)
+		"入籍":
+			return _immigration_naturalize(intent)
 		"送礼":
 			return _interact(intent, "gift")
 		"约会":
@@ -296,6 +318,12 @@ func _dispatch(intent) -> Dictionary:
 			return _security_work(intent)
 		"发布内容":
 			return _publish_content(intent)
+		"开直播":
+			return _live_start(intent)
+		"直播推进":
+			return _live_advance(intent)
+		"下播":
+			return _live_end(intent)
 		"黑客攻击":
 			return _hack_target(intent)
 		# 后期科技（D24）
@@ -760,6 +788,10 @@ func _dispatch(intent) -> Dictionary:
 			return _crime_retrial(intent)
 		"潜逃":
 			return _crime_flee(intent)
+		"全国协查":
+			return _crime_national(intent)
+		"引渡":
+			return _crime_extradition(intent)
 		"化名":
 			return _crime_alias(intent)
 		"司法行贿":
@@ -1153,7 +1185,7 @@ func _help() -> Dictionary:
 		"· 语言：学语言 <语言> [时长] / 沉浸 <语言> [天数] / 语言考试 <语言> / 适应文化 <文化>",
 		"· 残障与养老：装辅具 <辅具> / 康复训练 / 无障碍改造 / 选养老 <模式> / 临终关怀 / 指定监护 <监护人>",
 		"· 农业与乡土：承包土地 [面积] / 播种 <作物> / 收割 / 养畜 <牲畜> / 卖粮 <作物> / 农业补贴",
-		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 黑客攻击 <目标>",
+		"· 数字与平台：开账号 <平台> / 实名认证 / 网络兼职 <类型> / 发布内容 [平台] / 开直播 / 直播推进 / 下播 / 黑客攻击 <目标>",
 		"· 后期科技：解锁科技 / 应聘科技职业 <职业> / 科技任务 <任务> / 生物延寿 [投入] / 购置科技装备 <装备> / 建设科技场所 <场所>",
 		"· 知识产权与媒体：登记知识产权 <类型> / 知识产权授权 <IP> [规模] / 知识产权转让 <IP> [价格] / 知识产权质押 <IP> [金额] / 知识产权维权 <IP> / 开办媒体 <类型> / 发行作品 <标题>",
 		"· 制造业与供应链：开办工厂 [模式] / 招工 <岗位> [人数] / 采购原料 <原料> [数量] / 生产 <配方> [批次] / 接单 <配方> [数量] / 交付订单 [序号] / 改进经营模式 <模式>",
@@ -1642,6 +1674,128 @@ func _travel_end(_intent) -> Dictionary:
 		return _fail("当前没有进行中的行程。")
 	return _ok(["你结束了%s之旅，收获见闻 %d 处。" % [String(r.get("name", "")), (r.get("codex_entries", []) as Array).size()]], 0, "leisure")
 
+func _politics_enter(_intent) -> Dictionary:
+	var r: Dictionary = host.politics_enter()
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "not_eligible":
+			return _fail("声望、关系网或年龄尚不满足从政条件。")
+		return _fail("无法进入政坛。")
+	return _ok(["你进入%s，开始政治生涯。" % String(r.get("name", ""))], 0, "civic")
+
+func _politics_campaign(_intent) -> Dictionary:
+	var r: Dictionary = host.politics_campaign()
+	if not bool(r.get("ok", false)):
+		return _fail("你尚未从政。")
+	var msg: String = "选举获胜。" if bool(r.get("won", false)) else "选举失利，声望略受影响。"
+	return _ok([msg], 0, "civic")
+
+func _politics_promote(_intent) -> Dictionary:
+	var r: Dictionary = host.politics_promote()
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "requirements_not_met":
+			return _fail("声望、关系网或年龄未达下一职级要求。")
+		if reason == "top_tier":
+			return _fail("已是最高职级。")
+		return _fail("你尚未从政。")
+	var msg: String = "晋升为%s。" % String(r.get("name", "")) if bool(r.get("promoted", false)) else "晋升未通过。"
+	return _ok([msg], 0, "civic")
+
+func _politics_policy(intent) -> Dictionary:
+	var action := _object_id(intent, "policy_action")
+	if action.is_empty():
+		action = String(intent.params.get("method", ""))
+	if action.is_empty():
+		return _fail("请指定提案、投票、拉票或施压。")
+	var support: float = clampf(float(host.politics_state().get("reputation", 0.0)) / 100.0, -1.0, 1.0)
+	var r: Dictionary = host.politics_policy(action, support, 0.2)
+	if not bool(r.get("ok", false)):
+		return _fail("你尚未在任。")
+	var msg: String = "政策表决通过。" if bool(r.get("passed", false)) else "政策表决未通过。"
+	return _ok([msg], 0, "civic")
+
+func _politics_bribe(intent) -> Dictionary:
+	var amount := _amount_minor(intent)
+	if amount <= 0:
+		return _fail("请给出受贿金额。")
+	var r: Dictionary = host.politics_bribe(amount)
+	if not bool(r.get("ok", false)):
+		return _fail("无法收受该款项。")
+	var msg: String = "你收下贿赂，贪腐值升至 %.0f。" % float(r.get("corruption", 0.0))
+	if bool(r.get("criminal", false)):
+		msg += " 纪检已介入并刑事立案。"
+	return _ok([msg], 0, "civic")
+
+func _religion_join(intent) -> Dictionary:
+	var rid := _object_id(intent, "religion")
+	if rid.is_empty():
+		return _fail("请指定宗教。")
+	var r: Dictionary = host.religion_join(rid)
+	if not bool(r.get("ok", false)):
+		return _fail("无法加入该宗教。")
+	return _ok(["你皈依%s。" % String(r.get("name", rid))], 0, "civic")
+
+func _religion_ritual(intent) -> Dictionary:
+	var hours := float(intent.params.get("duration", 1.0))
+	var r: Dictionary = host.religion_ritual(hours)
+	if not bool(r.get("ok", false)):
+		return _fail("你尚未加入宗教。")
+	return _ok(["你完成仪式，虔诚升至 %.0f。" % float(r.get("devotion", 0.0))], int(hours * 60.0), "civic")
+
+func _religion_promote(_intent) -> Dictionary:
+	var r: Dictionary = host.religion_promote()
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "no_clergy":
+			return _fail("该宗教没有教职体系。")
+		if String(r.get("reason", "")) == "top_rank":
+			return _fail("已是最高教职。")
+		return _fail("虔诚不足。")
+	var msg: String = "晋升为%s。" % String(r.get("name", "")) if bool(r.get("promoted", false)) else "教职晋升未通过。"
+	return _ok([msg], 0, "civic")
+
+func _immigration_migrate(intent) -> Dictionary:
+	var code := _object_id(intent, "country")
+	if code.is_empty():
+		return _fail("请指定迁居国家。")
+	var r: Dictionary = host.immigration_migrate(code)
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "insufficient_funds":
+			return _fail("搬迁费用不足。")
+		return _fail("无法迁居该国。")
+	return _ok(["你迁居%s，融入度 %.0f。" % [String(r.get("residence", code)), float(r.get("integration", 0.0))]], 0, "civic")
+
+func _immigration_visa(intent) -> Dictionary:
+	var vtype := _object_id(intent, "visa_type")
+	var code := _object_id(intent, "country")
+	if vtype.is_empty() or code.is_empty():
+		return _fail("请指定签证类型与国家。")
+	var r: Dictionary = host.immigration_apply_visa(vtype, code)
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "insufficient_funds":
+			return _fail("资金不足，需 %.0f 元。" % (float(r.get("required", 0)) / 100.0))
+		if reason == "language_below_requirement":
+			return _fail("语言未达要求（需 %d）。" % int(r.get("required", 0)))
+		if reason == "points_below_requirement":
+			return _fail("积分未达要求（需 %d）。" % int(r.get("required", 0)))
+		return _fail("签证申请失败。")
+	var msg: String = "签证获批。" if bool(r.get("granted", false)) else "签证被拒。"
+	return _ok([msg], 0, "civic")
+
+func _immigration_naturalize(_intent) -> Dictionary:
+	var r: Dictionary = host.immigration_naturalize()
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "insufficient_residency":
+			return _fail("居住年限不足（需 %.0f 年）。" % float(r.get("required_years", 0)))
+		if reason == "integration_too_low":
+			return _fail("融入度不足 60。")
+		return _fail("无需入籍或条件不符。")
+	var msg: String = "你已入籍%s。" % String(r.get("nationality", ""))
+	if bool(r.get("dual", false)):
+		msg += " 保留原国籍。"
+	return _ok([msg], 0, "civic")
+
 func _social_publish(intent) -> Dictionary:
 	var platform: String = String(intent.params.get("social_platform", ""))
 	if platform.is_empty():
@@ -2116,6 +2270,33 @@ func _publish_content(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("发布失败（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["你在「%s」发布内容，播放 %d，涨粉 %d，收入 %d。" % [_platform_name(platform), int(r.get("views", 0)), int(r.get("fans_delta", 0)), int(r.get("income", 0))]], 0, "")
+
+func _live_start(intent) -> Dictionary:
+	var platform := _object_id(intent, "platform")
+	if platform.is_empty():
+		platform = "live"
+	var r: Dictionary = host.digital_live_start(platform, "")
+	if not bool(r.get("ok", false)):
+		return _fail("无法开播（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["直播间已开启，当前在线 %d 人。" % int(r.get("viewers", 0))], 15, "digital")
+
+
+func _live_advance(intent) -> Dictionary:
+	var minutes: int = int(intent.params.get("number", 15))
+	if minutes <= 0:
+		minutes = 15
+	var r: Dictionary = host.digital_live_advance(minutes)
+	if not bool(r.get("ok", false)):
+		return _fail("当前没有进行中的直播。")
+	return _ok(["直播事件「%s」，在线 %d 人，打赏 %.0f 元。" % [String(r.get("event", "")), int(r.get("viewers", 0)), float(int(r.get("tips", 0))) / 100.0]], minutes, "digital")
+
+
+func _live_end(intent) -> Dictionary:
+	var r: Dictionary = host.digital_live_end()
+	if not bool(r.get("ok", false)):
+		return _fail("当前没有可结束的直播。")
+	return _ok(["下播：时长 %d 分钟，峰值 %d 人，打赏 %.0f 元，涨粉 %d。" % [int(r.get("minutes", 0)), int(r.get("peak", 0)), float(int(r.get("tips", 0))) / 100.0, int(r.get("fan_gain", 0))]], 0, "digital")
+
 
 func _hack_target(intent) -> Dictionary:
 	var target := _object_id(intent, "hack_target")
@@ -4110,6 +4291,24 @@ func _crime_flee(intent) -> Dictionary:
 	return _ok(["已潜逃至 %s，通缉随行转移。" % region], 0, "")
 
 
+func _crime_national(intent) -> Dictionary:
+	var r: Dictionary = host.crime_escalate_national()
+	if not bool(r.get("ok", false)):
+		return _fail("当前无同国在逃记录，无需全国协查。")
+	return _ok(["已升级为全国协查，涉及 %d 个区域。" % (r.get("regions", []) as Array).size()], 0, "")
+
+
+func _crime_extradition(intent) -> Dictionary:
+	var target: String = String(intent.params.get("method", "")).strip_edges()
+	if target.is_empty():
+		return _fail("请指明引渡目的地。")
+	var region: String = _find_region_id(target)
+	var r: Dictionary = host.crime_extradition(region)
+	if not bool(r.get("ok", false)):
+		return _fail("引渡未成（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["引渡完成，已移交 %s 受审。" % region], 0, "civic")
+
+
 func _crime_alias(intent) -> Dictionary:
 	var r: Dictionary = host.crime_change_identity()
 	if not bool(r.get("ok", false)):
@@ -5938,6 +6137,10 @@ func _reason_cn(reason: String) -> String:
 			return "仍在服刑中"
 		"not_wanted":
 			return "当前未被通缉"
+		"no_treaty":
+			return "两国无引渡条约"
+		"same_region":
+			return "无需在同一区域引渡"
 		"unknown_crime":
 			return "未知罪名"
 		"unknown_region":

@@ -64,6 +64,7 @@ func run_tests() -> void:
 	_test_events_runtime()
 	_test_honors_runtime()
 	_test_police_runtime()
+	_test_crime_national_extradition()
 	_test_emergency_runtime()
 	_test_environment_runtime()
 	_test_municipal_runtime()
@@ -82,6 +83,7 @@ func run_tests() -> void:
 	_test_social_runtime()
 	_test_entertainment_runtime()
 	_test_travel_runtime()
+	_test_civic_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -960,12 +962,25 @@ func _test_digital_runtime() -> void:
 	var pub: Dictionary = host.publish_digital_content("short_video")
 	check(bool(pub.get("ok", false)), "发布内容成功")
 	check(not host.digital_panel_data().get("creator", {}).is_empty(), "创作者数据非空")
+	# 直播现场：开场、推进、下播与面板。
+	var lv0: Dictionary = host.digital_live_start("live", "测试直播")
+	check(bool(lv0.get("ok", false)) and bool(lv0.get("active", false)), "开直播成功")
+	check(host.digital_live_events_catalog().size() >= 5, "直播事件表非空")
+	var before_tips: int = host.economy.liquid(host.account_id())
+	var step: Dictionary = host.digital_live_advance(20)
+	check(bool(step.get("ok", false)) and not String(step.get("event", "")).is_empty(), "直播推进产生事件")
+	check(host.economy.liquid(host.account_id()) >= before_tips, "直播打赏入账")
+	var end: Dictionary = host.digital_live_end()
+	check(bool(end.get("ok", false)) and int(end.get("minutes", 0)) == 20, "下播结算时长")
+	check(int(end.get("fan_gain", 0)) > 0, "下播结算涨粉")
+	check(not (host.digital_panel_data().get("live", {}) as Dictionary).is_empty(), "数字面板含直播现场")
 	# 持久化并读档恢复。
 	host._persist_digital()
 	check(state.sim_runtime.get("digital", null) is Dictionary, "数字运行态写入 sim_runtime")
 	var reloaded = SimHostScript.new(state, 88)
 	reloaded.bind(state)
 	check(bool(reloaded.digital_state().get("real_name_verified", false)), "读档恢复实名状态")
+	check(String(reloaded.digital_live_state().get("title", "")) == "测试直播", "读档恢复直播现场")
 	check((reloaded.digital_state().get("accounts", {}) as Dictionary).has("short_video"), "读档恢复平台账号")
 
 
@@ -1524,6 +1539,30 @@ func _test_police_runtime() -> void:
 	check(not (reloaded.police_state().get("firm", {}) as Dictionary).is_empty(), "读档恢复安保公司")
 	check(not reloaded.police_panel_data().is_empty(), "警务面板数据非空")
 
+func _test_crime_national_extradition() -> void:
+	var state = GameStateScript.new()
+	state.new_game(92)
+	var host = SimHostScript.new(state, 92)
+	host.bind(state)
+	host._ensure_crime_state()
+	var home: String = host.current_region_id()
+	host.crime_sys.add_wanted(host._crime_state, "fraud", home, 3)
+	var nat: Dictionary = host.crime_escalate_national()
+	check(bool(nat.get("ok", false)), "全国协查升级成功")
+	var entry: Dictionary = (host._crime_state.get("wanted", {}) as Dictionary).get(home, {})
+	check(String(entry.get("scope", "")) == "nation", "通缉标记为全国范围")
+	check(host.crime_sys.is_national(host._crime_state), "全国在逃判定成立")
+	# 无条约：CN→US 拒绝。
+	var no: Dictionary = host.crime_extradition("us.new_york")
+	check(not bool(no.get("ok", true)) and String(no.get("reason", "")) == "no_treaty", "无引渡条约被拒")
+	# 有条约：CN→JP 移交并撤销通缉。
+	var yes: Dictionary = host.crime_extradition("jp.tokyo")
+	check(bool(yes.get("ok", false)), "有条约引渡成功")
+	check(host.current_region_id() == "jp.tokyo", "引渡后迁至目标国")
+	check((host._crime_state.get("wanted", {}) as Dictionary).is_empty(), "引渡后本地通缉撤销")
+	check(not (host._crime_state.get("surrender_case", {}) as Dictionary).is_empty(), "引渡后进入受审流程")
+	check((host._crime_state.get("extraditions", []) as Array).size() >= 2, "引渡记录留档")
+
 func _test_emergency_runtime() -> void:
 	var state = GameStateScript.new()
 	state.new_game(101)
@@ -1751,6 +1790,19 @@ func _test_consumer_runtime() -> void:
 	host.bind(state)
 	check(host.consumer_channels_catalog().size() >= 6, "维权渠道表含协商/平台/12315等")
 	check(host.consumer_incident_kinds_catalog().size() >= 2, "事故类型含食安/质量")
+	host.economy.add_money(host.account_id(), 2000000, "test")
+	# 下单扣款与消费心理（D9）。
+	var cash_before: int = host.economy.liquid(host.account_id())
+	var ord: Dictionary = host.consumer_new_order(100000, "electronics", true, false)
+	check(bool(ord.get("ok", false)), "下单成功")
+	check(host.economy.liquid(host.account_id()) == cash_before - 100000, "下单真实扣款")
+	var psy: Dictionary = host.consumer_psychology()
+	check(int(psy.get("orders", 0)) >= 1 and int(psy.get("spend", 0)) == 100000, "消费心理累计订单与支出")
+	check(float(psy.get("impulse", 0.0)) > 0.0, "冲动指数可计算")
+	check(host.consumer_panel_data().has("psychology"), "消费面板含心理段")
+	var poor = SimHostScript.new(state, 141)
+	poor.bind(state)
+	check(not bool(poor.consumer_new_order(999999999, "luxury", false, false).get("ok", true)), "余额不足拒绝下单")
 	# 下单与退换（质量原因不受窗口限制）。
 	host.consumer_new_order(100000, "electronics", true, false)
 	var ret: Dictionary = host.consumer_return(100, "quality")
@@ -2374,7 +2426,7 @@ func _test_travel_runtime() -> void:
 	var host = SimHostScript.new(state, 262)
 	host.bind(state)
 	host.economy.add_money(host.account_id(), 5000000, "test")
-	check(host.travel_destinations_catalog().size() >= 12, "旅行目的地≥12")
+	check(host.travel_destinations_catalog().size() >= 24, "旅行目的地≥24")
 	check(not host.travel_advance_day().get("ok", true), "无行程时推进被拒")
 	var r: Dictionary = host.travel_plan("city_park", "bus", "hostel", 1)
 	check(bool(r.get("ok", false)), "预订行程")
@@ -2392,6 +2444,53 @@ func _test_travel_runtime() -> void:
 	var reloaded = SimHostScript.new(state, 262)
 	reloaded.bind(state)
 	check_eq((reloaded.travel_panel_data().get("history", []) as Array).size(), 1, "读档恢复旅行历史")
+
+
+func _test_civic_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(263)
+	var host = SimHostScript.new(state, 263)
+	host.bind(state)
+	for i in 12:
+		host.relations.ensure_relation(host.player(), "npc:civic%d" % i)
+	var enter: Dictionary = host.politics_enter()
+	check(bool(enter.get("ok", false)), "人脉达标可进入政坛")
+	check(bool(host.politics_campaign().has("won")), "竞选有结果")
+	host._pol["reputation"] = 90.0
+	host._pol["network"] = 95.0
+	host._pol["achievements"] = 80.0
+	var promo: Dictionary = host.politics_promote()
+	check(bool(promo.get("ok", false)), "晋升接口可用")
+	var pol: Dictionary = host.politics_policy("propose", 0.6, 0.2)
+	check(bool(pol.get("ok", false)), "政策博弈可执行")
+	var bribe: Dictionary = host.politics_bribe(100000)
+	check(bool(bribe.get("ok", false)), "受贿入账")
+	check(not host.religion_join("buddhism").is_empty(), "宗教皈依")
+	var ritual: Dictionary = host.religion_ritual(2.0)
+	check(bool(ritual.get("ok", false)), "宗教仪式")
+	check(float(host.religion_state().get("devotion", 0.0)) > 0.0, "虔诚累积")
+	check(host.religion_catalog().size() >= 8, "宗教目录≥8")
+	host.economy.add_money(host.account_id(), 5000000, "test")
+	var mig: Dictionary = host.immigration_migrate("JP")
+	check(bool(mig.get("ok", false)), "迁居日本")
+	check(String(host.immigration_state().get("residence", "")) == "JP", "居住国切换")
+	host._advance_residency(525960)
+	check(float(host.immigration_state().get("resident_years", 0.0)) > 0.5, "居住年限累计")
+	host._imm["resident_years"] = 10.0
+	host._imm["integration"] = 80.0
+	var nat: Dictionary = host.immigration_naturalize()
+	check(bool(nat.get("ok", false)), "满足条件可入籍")
+	check(not host.immigration_panel_data().is_empty(), "从政信仰面板数据非空")
+	host._persist_politics()
+	host._persist_religion()
+	host._persist_immigration()
+	check(state.sim_runtime.get("politics", null) is Dictionary, "政治态入档")
+	check(state.sim_runtime.get("religion", null) is Dictionary, "宗教态入档")
+	check(state.sim_runtime.get("immigration", null) is Dictionary, "移民态入档")
+	var reloaded = SimHostScript.new(state, 263)
+	reloaded.bind(state)
+	check(String(reloaded.immigration_state().get("nationality", "")) == String(nat.get("nationality", "")), "读档恢复国籍")
+	check(String(reloaded.religion_state().get("religion", "")) == "buddhism", "读档恢复宗教")
 
 
 func _test_transport_infra_runtime() -> void:

@@ -90,6 +90,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = social(player, context, name_resolver)
 		"leisure":
 			data = leisure(player, context, name_resolver)
+		"civic":
+			data = civic(player, context, name_resolver)
 		"map":
 			data = map_panel(context, name_resolver)
 		"settings":
@@ -1435,6 +1437,17 @@ static func consumer(player: Dictionary, context: Dictionary, name_resolver: Cal
 				{"label": "批次", "value": String(pr.get("batch", ""))},
 				{"label": "溯源环节", "value": str(int(pr.get("trace_count", 0)))},
 			]))
+		var psy: Dictionary = cs.get("psychology", {})
+		if psy is Dictionary and not (psy as Dictionary).is_empty():
+			var pd: Dictionary = psy as Dictionary
+			sections.append(_section("消费心理", [
+				{"label": "累计订单", "value": str(int(pd.get("orders", 0)))},
+				{"label": "累计支出", "value": _money(int(pd.get("spend", 0)))},
+				{"label": "冲动指数", "value": "%.2f" % float(pd.get("impulse", 0.0))},
+				{"label": "事后后悔", "value": "%.1f" % float(pd.get("regret", 0.0))},
+				{"label": "消费满意度", "value": "%.1f" % float(pd.get("satisfaction", 60.0))},
+				{"label": "透支风险", "value": _yes_no(bool(pd.get("overspend_risk", false)))},
+			]))
 		if cs.has("merchant"):
 			var m: Dictionary = cs["merchant"]
 			sections.append(_section("涉事商家", [
@@ -2169,6 +2182,50 @@ static func leisure(player: Dictionary, context: Dictionary = {}, name_resolver:
 		sections.append(_section("旅行足迹", hrows))
 	return _ok(sections)
 
+static func civic(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("从政与信仰", "尚未生成角色数据")
+	var d: Dictionary = context.get("civic", {})
+	var career: Dictionary = d.get("career", {})
+	var rel: Dictionary = d.get("religion", {})
+	var status: Dictionary = d.get("status", {})
+	if career.is_empty() and rel.is_empty() and status.is_empty():
+		return _empty("从政与信仰", "尚未涉足公共事务；可先「从政」「宗教皈依 <宗教>」或「移民 <国家>」")
+	var sections: Array = []
+	if not career.is_empty():
+		var tier: int = int(career.get("tier", -1))
+		sections.append(_section("政治生涯", [
+			{"label": "职级", "value": String(d.get("tier_name", "平民"))},
+			{"label": "在任", "value": _yes_no(bool(career.get("in_office", false)))},
+			{"label": "声望/关系网", "value": "%.0f / %.0f" % [float(career.get("reputation", 0.0)), float(career.get("network", 0.0))]},
+			{"label": "政绩/贪腐", "value": "%.0f / %.0f" % [float(career.get("achievements", 0.0)), float(career.get("corruption", 0.0))]},
+			{"label": "派系", "value": String(career.get("faction", ""))},
+		]))
+		if tier >= 0:
+			var mods: Dictionary = d.get("modifiers", {})
+			sections.append(_section("政策修正", [
+				{"label": "税负", "value": "%+.0f%%" % (float(mods.get("tax", 0.0)) * 100.0)},
+				{"label": "福利", "value": "%+.0f%%" % (float(mods.get("welfare", 0.0)) * 100.0)},
+				{"label": "就业", "value": "%+.0f%%" % (float(mods.get("employment", 0.0)) * 100.0)},
+			]))
+	if not rel.is_empty():
+		var rank: int = int(rel.get("clergy_rank", 0))
+		var ranks: Array = ["信众", "居士/执事", "教士", "牧师/法师", "主教/方丈"]
+		sections.append(_section("宗教信仰", [
+			{"label": "宗教", "value": String(rel.get("religion", "none"))},
+			{"label": "虔诚/怀疑", "value": "%.0f / %.0f" % [float(rel.get("devotion", 0.0)), float(rel.get("doubt", 0.0))]},
+			{"label": "教职", "value": String(ranks[mini(rank, ranks.size() - 1)])},
+			{"label": "改宗自", "value": String(rel.get("converted_from", ""))},
+		]))
+	if not status.is_empty():
+		sections.append(_section("国籍与居留", [
+			{"label": "国籍", "value": String(status.get("nationality", ""))},
+			{"label": "居住国", "value": String(status.get("residence", ""))},
+			{"label": "居住年限/融入", "value": "%.1f 年 / %.0f" % [float(status.get("resident_years", 0.0)), float(status.get("integration", 0.0))]},
+			{"label": "签证", "value": "%d 项" % (status.get("visas", {}) as Dictionary).size()},
+		]))
+	return _ok(sections)
+
 static func content_industry(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
 	if player.is_empty():
 		return _empty("文娱", "尚未生成角色数据")
@@ -2618,6 +2675,19 @@ static func digital(player: Dictionary, context: Dictionary = {}, name_resolver:
 				{"label": "粉丝", "value": str(int(creator.get("fans", 0)))},
 				{"label": "打赏累计", "value": str(int(creator.get("tips_total", 0)))},
 				{"label": "带货 GMV", "value": str(int(creator.get("delivery_gmv", 0)))},
+			]))
+		var lv: Dictionary = d.get("live", {}) if d.get("live") is Dictionary else {}
+		if not lv.is_empty():
+			var evs: Array = _items_of(lv.get("events", []))
+			var last_ev: String = String((evs[-1] as Dictionary).get("name", "")) if not evs.is_empty() else "无"
+			sections.append(_section("直播现场", [
+				{"label": "状态", "value": "直播中" if bool(lv.get("active", false)) else "已下播"},
+				{"label": "平台", "value": String(lv.get("platform", ""))},
+				{"label": "标题", "value": String(lv.get("title", ""))},
+				{"label": "时长", "value": "%d 分钟" % int(lv.get("minutes", 0))},
+				{"label": "在线/峰值", "value": "%d / %d" % [int(lv.get("viewers", 0)), int(lv.get("peak", 0))]},
+				{"label": "礼物收入", "value": _money(int(lv.get("gifts", 0)))},
+				{"label": "最近事件", "value": last_ev},
 			]))
 		var esp: Dictionary = d.get("esports", {}) if d.get("esports") is Dictionary else {}
 		if not esp.is_empty():

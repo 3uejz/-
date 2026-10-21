@@ -426,6 +426,63 @@ func internet_addiction(hours: float, opts: Dictionary = {}) -> Dictionary:
 	}
 
 
+# --- 直播现场（D23） ---
+
+const LIVE_EVENTS: Array = [
+	{"id": "recommend", "name": "平台推荐", "viewer": 120, "tips": 0.0},
+	{"id": "gift_rain", "name": "礼物雨", "viewer": 60, "tips": 0.08},
+	{"id": "pk", "name": "连麦 PK", "viewer": 90, "tips": 0.05},
+	{"id": "hate", "name": "黑粉刷屏", "viewer": -40, "tips": 0.01},
+	{"id": "hot_sale", "name": "带货爆单", "viewer": 30, "tips": 0.12},
+]
+
+## 开启直播：记录平台、标题与初始在线人数。
+func start_live(creator: Dictionary, platform: String, title: String, opts: Dictionary = {}) -> Dictionary:
+	if bool(creator.get("banned", false)):
+		return {"ok": false, "reason": "banned"}
+	var p: String = platform if CONTENT_PLATFORMS.has(platform) else String(creator.get("platform", "short_video"))
+	var fans: int = int(creator.get("fans", 0))
+	var viewers: int = maxi(5, int(round(20.0 + fans * 0.02)))
+	return {
+		"ok": true, "active": true, "platform": p,
+		"title": title if not title.is_empty() else "日常直播",
+		"minutes": 0, "viewers": viewers, "peak": viewers,
+		"gifts": 0, "income": 0, "events": [],
+	}
+
+## 推进直播：随机事件改变在线人数并可能收到打赏。
+func advance_live(session: Dictionary, minutes: int, opts: Dictionary = {}, rng = null) -> Dictionary:
+	if not bool(session.get("active", false)):
+		return {"ok": false, "reason": "not_live"}
+	var m: int = maxi(1, minutes)
+	var roll: float = _roll(float(opts.get("event_roll", -1.0)), rng)
+	var ev: Dictionary = LIVE_EVENTS[clampi(int(roll * LIVE_EVENTS.size()), 0, LIVE_EVENTS.size() - 1)]
+	var viewers: int = int(session.get("viewers", 0))
+	var delta: int = int(round(float(ev["viewer"]) * (0.6 + roll * 0.8)))
+	viewers = maxi(0, viewers + delta)
+	var tips: int = int(round(float(viewers) * float(ev["tips"]) * float(m) / 10.0))
+	session["minutes"] = int(session.get("minutes", 0)) + m
+	session["viewers"] = viewers
+	session["peak"] = maxi(int(session.get("peak", 0)), viewers)
+	session["gifts"] = int(session.get("gifts", 0)) + tips
+	var log: Array = session.get("events", [])
+	log.append({"name": String(ev["name"]), "viewers": viewers, "tips": tips})
+	session["events"] = log
+	return {"ok": true, "event": String(ev["name"]), "viewers": viewers, "tips": tips}
+
+## 下播：结算粉丝增长与总收入。
+func end_live(session: Dictionary) -> Dictionary:
+	if not bool(session.get("active", false)):
+		return {"ok": false, "reason": "not_live"}
+	session["active"] = false
+	var peak: int = int(session.get("peak", 0))
+	var minutes: int = int(session.get("minutes", 0))
+	var tips: int = int(session.get("gifts", 0))
+	var fan_gain: int = int(round(float(peak) * 0.02 + float(minutes) / 60.0))
+	return {"ok": true, "minutes": minutes, "peak": peak, "tips": tips,
+		"fan_gain": fan_gain, "events": (session.get("events", []) as Array).size()}
+
+
 func to_dict(identity: Dictionary) -> Dictionary:
 	return identity.duplicate(true)
 

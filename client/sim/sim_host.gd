@@ -45,6 +45,9 @@ const IpMediaScript = preload("res://sim/ip_media.gd")
 const SocialNetworkScript = preload("res://sim/social_network.gd")
 const EntertainmentScript = preload("res://sim/entertainment.gd")
 const TravelScript = preload("res://sim/travel.gd")
+const PoliticsScript = preload("res://sim/politics.gd")
+const ReligionScript = preload("res://sim/religion.gd")
+const ImmigrationScript = preload("res://sim/immigration.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
@@ -162,6 +165,7 @@ var digital                     ## 数字生活与黑客（DigitalSystem）
 var _identity: Dictionary = {}       ## 数字身份运行时（账号/隐私/数据/数字资产），入档 sim_runtime.digital
 var _creator: Dictionary = {}        ## 内容创作者运行时（粉丝/打赏/带货），入档 sim_runtime.digital
 var _esports: Dictionary = {}        ## 电竞生涯运行时（战队/技能/伤病），入档 sim_runtime.digital
+var _live: Dictionary = {}           ## 直播现场运行时（在线人数/礼物/事件），入档 sim_runtime.digital.live
 var late_tech                   ## 后期科技（LateTechSystem）
 var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/失业/延寿），入档 sim_runtime.late_tech
 var ip_media                    ## 知识产权与媒体（IpMediaSystem）
@@ -171,6 +175,12 @@ var _fun: Dictionary = {}            ## 娱乐运行时（次数/熟练/上瘾/�
 var travel                           ## 旅行与行程（TravelSystem）
 var _trip: Dictionary = {}           ## 当前行程，入档 sim_runtime.travel.trip
 var _trip_history: Array = []        ## 历史行程，入档 sim_runtime.travel.history
+var politics                         ## 从政路径（PoliticsSystem）
+var religion                         ## 宗教归属（ReligionSystem）
+var immigration                      ## 移民与国籍（ImmigrationSystem）
+var _pol: Dictionary = {}            ## 政治生涯，入档 sim_runtime.politics
+var _rel: Dictionary = {}            ## 宗教档案，入档 sim_runtime.religion
+var _imm: Dictionary = {}            ## 移民档案，入档 sim_runtime.immigration
 var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 var manufacturing                ## 制造业与供应链（ManufacturingSystem）
@@ -233,6 +243,7 @@ var _debt_pawns: Array = []          ## 典当物，入档 sim_runtime.debt.pawn
 var consumer                     ## 消费者保护与产品质量（ConsumerProtectionSystem）
 var _consumer_order: Dictionary = {}    ## 当前消费订单，入档 sim_runtime.consumer.order
 var _consumer_product: Dictionary = {}  ## 当前商品，入档 sim_runtime.consumer.product
+var _consumer_psych: Dictionary = {"orders": 0, "spend": 0, "impulse": 0.0, "regret": 0.0, "satisfaction": 60.0}  ## 消费心理，入档 sim_runtime.consumer.psychology
 var _consumer_merchant: Dictionary = {} ## 涉事商家，入档 sim_runtime.consumer.merchant
 var social_welfare                ## 社会救助、收养寄养与慈善（SocialWelfareSystem）
 var _welfare_application: Dictionary = {}  ## 当前救助/收养申请，入档 sim_runtime.welfare.application
@@ -345,6 +356,12 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_social = SocialNetworkScript.new(seed)
 	entertainment = EntertainmentScript.new()
 	travel = TravelScript.new()
+	politics = PoliticsScript.new()
+	religion = ReligionScript.new()
+	immigration = ImmigrationScript.new()
+	_pol = politics.new_career()
+	_rel = religion.new_membership()
+	_imm = immigration.new_status("CN")
 	manufacturing = ManufacturingScript.new()
 	trade = TradeScript.new()
 	mining_energy = MiningScript.new()
@@ -499,6 +516,8 @@ func _ensure_world_geo() -> void:
 				_creator = (dd["creator"] as Dictionary).duplicate(true)
 			if dd.get("esports", null) is Dictionary:
 				_esports = (dd["esports"] as Dictionary).duplicate(true)
+			if dd.get("live", null) is Dictionary:
+				_live = (dd["live"] as Dictionary).duplicate(true)
 		# 恢复后期科技运行时（阶段/解锁/延寿）。
 		var lt: Variant = (state.sim_runtime as Dictionary).get("late_tech", {})
 		if lt is Dictionary and not (lt as Dictionary).is_empty():
@@ -516,6 +535,16 @@ func _ensure_world_geo() -> void:
 		if trv is Dictionary:
 			_trip = (trv.get("trip", {}) as Dictionary).duplicate(true)
 			_trip_history = (trv.get("history", []) as Array).duplicate(true)
+		# 恢复从政/宗教/移民档案。
+		var pol: Variant = (state.sim_runtime as Dictionary).get("politics", {})
+		if pol is Dictionary and not (pol as Dictionary).is_empty():
+			_pol = (pol as Dictionary).duplicate(true)
+		var rel: Variant = (state.sim_runtime as Dictionary).get("religion", {})
+		if rel is Dictionary and not (rel as Dictionary).is_empty():
+			_rel = (rel as Dictionary).duplicate(true)
+		var imm: Variant = (state.sim_runtime as Dictionary).get("immigration", {})
+		if imm is Dictionary and not (imm as Dictionary).is_empty():
+			_imm = (imm as Dictionary).duplicate(true)
 		# 恢复知识产权与媒体运行时（IP/媒体机构）。
 		var im: Variant = (state.sim_runtime as Dictionary).get("ip_media", {})
 		if im is Dictionary and not (im as Dictionary).is_empty():
@@ -1916,6 +1945,50 @@ func publish_digital_content(platform: String = "short_video") -> Dictionary:
 	_persist_digital()
 	return r
 
+## 开直播：首次自动开通创作者身份，初始化直播间。
+func digital_live_start(platform: String = "live", title: String = "") -> Dictionary:
+	if _creator.is_empty() or String(_creator.get("platform", "")) != platform:
+		_creator = digital.new_creator("player", platform)
+	var r: Dictionary = digital.start_live(_creator, platform, title)
+	if bool(r.get("ok", false)):
+		_live = r
+		_persist_digital()
+	return r
+
+## 推进直播：结算事件、打赏与在线人数。
+func digital_live_advance(minutes: int = 15) -> Dictionary:
+	if _live.is_empty():
+		return {"ok": false, "reason": "not_live"}
+	var r: Dictionary = digital.advance_live(_live, minutes)
+	if bool(r.get("ok", false)) and int(r.get("tips", 0)) > 0:
+		economy.add_money(account_id(), int(r["tips"]), "直播打赏")
+		_live["income"] = int(_live.get("income", 0)) + int(r["tips"])
+	_persist_digital()
+	return r
+
+## 下播：粉丝增长入账并关闭直播间。
+func digital_live_end() -> Dictionary:
+	if _live.is_empty():
+		return {"ok": false, "reason": "not_live"}
+	var r: Dictionary = digital.end_live(_live)
+	if bool(r.get("ok", false)):
+		_creator["fans"] = int(_creator.get("fans", 0)) + int(r.get("fan_gain", 0))
+		_creator["tips_total"] = int(_creator.get("tips_total", 0)) + int(r.get("tips", 0))
+		_live["active"] = false
+		_persist_digital()
+	return r
+
+## 直播实时状态。
+func digital_live_state() -> Dictionary:
+	return _live.duplicate(true)
+
+## 直播事件目录。
+func digital_live_events_catalog() -> Array:
+	var out: Array = []
+	for e in digital.LIVE_EVENTS:
+		out.append({"id": String(e["id"]), "name": String(e["name"])})
+	return out
+
 ## 上网时长结算网络成瘾。
 func digital_addiction(hours: float) -> Dictionary:
 	var r: Dictionary = digital.internet_addiction(hours)
@@ -1953,6 +2026,7 @@ func digital_panel_data() -> Dictionary:
 		"data_leaked": leaked,
 		"creator": _creator.duplicate(true),
 		"esports": _esports.duplicate(true),
+		"live": _live.duplicate(true),
 	}
 
 func _persist_digital() -> void:
@@ -1962,6 +2036,7 @@ func _persist_digital() -> void:
 		"identity": digital.to_dict(_identity),
 		"creator": _creator.duplicate(true),
 		"esports": _esports.duplicate(true),
+		"live": _live.duplicate(true),
 	}
 
 
@@ -2504,6 +2579,212 @@ func _persist_travel() -> void:
 		return
 	(state.sim_runtime as Dictionary)["travel"] = {
 		"trip": _trip.duplicate(true), "history": _trip_history.duplicate(true)}
+
+# --- 从政、宗教与移民（D13） ---
+
+func politics_state() -> Dictionary:
+	return _pol.duplicate(true)
+
+func politics_factions_catalog() -> Array:
+	var out: Array = []
+	for key in politics.FACTIONS:
+		out.append({"id": String(key), "name": String(politics.FACTION_NAMES.get(key, key))})
+	return out
+
+func politics_policy_actions_catalog() -> Array:
+	var names: Dictionary = {"propose": "提案", "vote": "投票", "campaign": "拉票", "pressure": "施压"}
+	var out: Array = []
+	for key in politics.POLICY_ACTIONS:
+		out.append({"id": String(key), "name": String(names.get(key, key))})
+	return out
+
+func politics_tiers() -> Array:
+	var out: Array = []
+	for i in politics.TIERS.size():
+		var t: Dictionary = politics.TIERS[i]
+		out.append({"index": i, "name": String(t.get("name", "")),
+			"min_status": float(t.get("min_status", 0.0)), "min_network": float(t.get("min_network", 0.0))})
+	return out
+
+## 进入基层政治：声望取人脉规模与魅力折算，关系网取熟人数量。
+func politics_enter() -> Dictionary:
+	var acq: int = relations.to_dict(player()).size()
+	var charm: float = float((player().get("attrs", {}) as Dictionary).get("ability", {}).get("charm", 50.0))
+	var status: float = clampf(float(acq) * 4.0 + charm * 0.2, 0.0, 100.0)
+	var network: float = clampf(float(acq) * 3.0, 0.0, 100.0)
+	var r: Dictionary = politics.enter(_pol, status, network, int(player().get("age", 30)))
+	if bool(r.get("ok", false)):
+		_persist_politics()
+	return r
+
+func politics_campaign() -> Dictionary:
+	var r: Dictionary = politics.campaign(_pol, rng)
+	if bool(r.get("ok", false)):
+		_persist_politics()
+	return r
+
+func politics_promote() -> Dictionary:
+	var r: Dictionary = politics.promote(_pol, int(player().get("age", 30)), rng)
+	if bool(r.get("ok", false)):
+		_persist_politics()
+	return r
+
+func politics_policy(action: String, support: float, opposition: float = 0.0) -> Dictionary:
+	var r: Dictionary = politics.policy_game(_pol, action, support, opposition, rng)
+	if bool(r.get("ok", false)):
+		_persist_politics()
+	return r
+
+## 受贿：款项入账并抬高查处风险；被查处时自动刑事立案。
+func politics_bribe(amount: int) -> Dictionary:
+	if amount <= 0:
+		return {"ok": false, "reason": "invalid_amount"}
+	economy.add_money(account_id(), amount, "政治受贿")
+	var r: Dictionary = politics.accept_bribe(_pol, amount)
+	var sc: Dictionary = politics.check_scandal(_pol, rng)
+	if bool(sc.get("criminal", false)):
+		police_start_case("受贿")
+	_persist_politics()
+	return {"ok": true, "amount": amount, "corruption": float(r.get("corruption", 0.0)),
+		"caught": bool(sc.get("caught", false)), "criminal": bool(sc.get("criminal", false))}
+
+func politics_policy_modifiers() -> Dictionary:
+	return politics.policy_modifiers(_pol)
+
+func religion_catalog() -> Array:
+	var out: Array = []
+	for key in religion.religions():
+		var d: Dictionary = religion.info(String(key))
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func religion_state() -> Dictionary:
+	return _rel.duplicate(true)
+
+func religion_join(religion_id: String) -> Dictionary:
+	var r: Dictionary = religion.join(_rel, religion_id)
+	if bool(r.get("ok", false)):
+		_persist_religion()
+	return r
+
+func religion_ritual(hours: float = 1.0) -> Dictionary:
+	var r: Dictionary = religion.ritual(_rel, hours)
+	if not bool(r.get("ok", false)):
+		return r
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	psych["stress"] = clampf(float(psych.get("stress", 40.0)) + float(r.get("stress", 0.0)), 0.0, 100.0)
+	attrs["psychological"] = psych
+	player()["attrs"] = attrs
+	_sync_mental()
+	_persist_religion()
+	return r
+
+func religion_promote() -> Dictionary:
+	var r: Dictionary = religion.clergy_promote(_rel, rng)
+	if bool(r.get("ok", false)):
+		_persist_religion()
+	return r
+
+func religion_waver(shock: float) -> Dictionary:
+	var r: Dictionary = religion.waver(_rel, shock, rng)
+	_persist_religion()
+	return r
+
+func religion_community() -> Dictionary:
+	return religion.community_effect(_rel)
+
+func religion_work_tension(religiosity: float = 0.3) -> Dictionary:
+	return religion.work_tension(_rel, religiosity)
+
+func immigration_countries_catalog() -> Array:
+	var out: Array = []
+	for code in immigration.countries():
+		var d: Dictionary = immigration.country_info(String(code))
+		out.append({"id": String(code), "name": String(d.get("name", code)),
+			"legal_system": String(d.get("legal_system", "")), "tax": float(d.get("tax", 0.0))})
+	return out
+
+func immigration_visas_catalog() -> Array:
+	var out: Array = []
+	for key in immigration.visa_types():
+		var d: Dictionary = immigration.VISAS[key]
+		out.append({"id": String(key), "name": String(d.get("name", key))})
+	return out
+
+func immigration_state() -> Dictionary:
+	return _imm.duplicate(true)
+
+func immigration_apply_visa(visa_type: String, target: String) -> Dictionary:
+	var info: Dictionary = immigration.country_info(target)
+	if info.is_empty():
+		return {"ok": false, "reason": "unknown_country"}
+	var lang_code: String = String(info.get("language", ""))
+	var lang: float = 0.0
+	if not lang_code.is_empty():
+		lang = float(language.overall(_lang_profile, lang_code))
+	var acq: int = relations.to_dict(player()).size()
+	var degree: bool = not String((player().get("education", {}) as Dictionary).get("degree", "")).is_empty()
+	var profile: Dictionary = {
+		"funds": economy.liquid(account_id()), "language": int(lang),
+		"points": mini(80, 20 + acq * 3), "degree": degree,
+		"persecution": false, "target": target,
+	}
+	var r: Dictionary = immigration.apply_visa(_imm, visa_type, profile, rng)
+	if bool(r.get("ok", false)):
+		_persist_immigration()
+	return r
+
+## 迁移居住国：扣搬迁成本，切换法域并重置融入度。
+func immigration_migrate(country: String) -> Dictionary:
+	var cost: int = 100000
+	if economy.liquid(account_id()) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	var r: Dictionary = immigration.migrate(_imm, country)
+	if not bool(r.get("ok", false)):
+		return r
+	economy.add_money(account_id(), -cost, "移民搬迁")
+	_persist_immigration()
+	return r
+
+func immigration_integrate(effort: float = 10.0) -> Dictionary:
+	var r: Dictionary = immigration.integrate(_imm, effort, rng)
+	if bool(r.get("ok", false)):
+		_persist_immigration()
+	return r
+
+func immigration_naturalize() -> Dictionary:
+	var r: Dictionary = immigration.naturalize(_imm)
+	if bool(r.get("ok", false)):
+		_persist_immigration()
+	return r
+
+func immigration_panel_data() -> Dictionary:
+	return {"career": _pol.duplicate(true), "religion": _rel.duplicate(true),
+		"status": _imm.duplicate(true), "modifiers": politics_policy_modifiers(),
+		"tier_name": politics.tier_name(int(_pol.get("tier", -1)))}
+
+func _advance_residency(minutes: int) -> void:
+	if minutes <= 0:
+		return
+	var years: float = float(minutes) / float(MINUTES_PER_YEAR)
+	immigration.advance(_imm, years)
+	_persist_immigration()
+
+func _persist_politics() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["politics"] = _pol.duplicate(true)
+
+func _persist_religion() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["religion"] = _rel.duplicate(true)
+
+func _persist_immigration() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["immigration"] = _imm.duplicate(true)
 
 # --- 知识产权与媒体（D25） ---
 
@@ -6010,13 +6291,46 @@ func consumer_incident_kinds_catalog() -> Array:
 		out.append({"id": String(key), "name": "食品安全事故" if String(key) == "food_safety" else "质量事故"})
 	return out
 
+## 下单：真实扣款并按压力/心情计算冲动消费与事后后悔。
 func consumer_new_order(amount: int, category: String, defective: bool, fake: bool) -> Dictionary:
+	if amount <= 0:
+		return {"ok": false, "reason": "invalid_amount"}
+	if economy.liquid(account_id()) < amount:
+		return {"ok": false, "reason": "insufficient_funds", "amount": amount}
+	economy.add_money(account_id(), -amount, "消费下单：%s" % category)
+	var psych: Dictionary = (player().get("attrs", {}) as Dictionary).get("psychological", {})
+	var stress: float = float(psych.get("stress", 40.0))
+	var mood: float = float(psych.get("mood", 50.0))
+	var impulse: float = clampf(stress / 100.0 * 0.6 + (100.0 - mood) / 100.0 * 0.35 + rng.next_float() * 0.1, 0.0, 1.0)
 	_consumer_order = consumer.new_order("order-%d" % Time.get_ticks_msec(), "merchant", amount, {
 		"category": category, "defective": defective, "fake": fake,
 		"placed_minutes": now_minutes(), "delivery_minutes": 3 * MINUTES_PER_DAY,
+		"impulse": impulse,
 	})
+	_consumer_order["psychology"] = {"impulse": impulse, "regret": 0.0, "satisfaction": 60.0}
+	_consumer_psych["orders"] = int(_consumer_psych.get("orders", 0)) + 1
+	_consumer_psych["spend"] = int(_consumer_psych.get("spend", 0)) + amount
+	_consumer_psych["impulse"] = impulse
+	var regret: float = clampf((impulse - 0.6) * 100.0, 0.0, 40.0)
+	_consumer_psych["regret"] = regret
+	_consumer_psych["satisfaction"] = clampf(60.0 - regret + (10.0 if defective or fake else 0.0), 0.0, 100.0)
 	_persist_consumer()
-	return {"ok": true, "order": _consumer_order}
+	return {"ok": true, "order": _consumer_order, "impulse": impulse, "regret": regret,
+		"spend_total": int(_consumer_psych["spend"])}
+
+## 消费心理概览：由订单累计与当前压力/心情派生。
+func consumer_psychology() -> Dictionary:
+	var psych: Dictionary = (player().get("attrs", {}) as Dictionary).get("psychological", {})
+	return {
+		"orders": int(_consumer_psych.get("orders", 0)),
+		"spend": int(_consumer_psych.get("spend", 0)),
+		"impulse": float(_consumer_psych.get("impulse", 0.0)),
+		"regret": float(_consumer_psych.get("regret", 0.0)),
+		"satisfaction": float(_consumer_psych.get("satisfaction", 60.0)),
+		"stress": float(psych.get("stress", 40.0)),
+		"mood": float(psych.get("mood", 50.0)),
+		"overspend_risk": int(_consumer_psych.get("spend", 0)) > economy.liquid(account_id()) * 2,
+	}
 
 func consumer_new_product(price: int, warranty_days: int) -> Dictionary:
 	_consumer_product = consumer.new_product("商品", {"merchant": "merchant", "price": price, "warranty_days": warranty_days})
@@ -6184,6 +6498,7 @@ func consumer_panel_data() -> Dictionary:
 			"batch": String(_consumer_product.get("batch", "")),
 			"trace_count": (_consumer_product.get("trace", []) as Array).size(),
 		}
+	out["psychology"] = consumer_psychology()
 	out["merchant"] = {
 		"name": String(_consumer_merchant.get("name", "")),
 		"reputation": float(_consumer_merchant.get("reputation", 0.0)),
@@ -6201,6 +6516,7 @@ func _persist_consumer() -> void:
 		"order": consumer.to_dict(_consumer_order),
 		"product": consumer.to_dict(_consumer_product),
 		"merchant": _consumer_merchant.duplicate(true),
+		"psychology": _consumer_psych.duplicate(true),
 	}
 
 
@@ -6398,6 +6714,9 @@ func crime_attempt(crime: String) -> Dictionary:
 		var level: int = clampi(1 + int(float(c.get("difficulty", 0.0)) / 4.0), 1, 5)
 		var rec: Dictionary = crime_sys.add_record(_crime_state, crime, region, now_minutes(), clampf(0.4 + skill / 40.0, 0.3, 0.95))
 		crime_sys.add_wanted(_crime_state, crime, region, level)
+		if level >= 3:
+			crime_sys.escalate_national(_crime_state, region.split(".")[0])
+			_crime_state["national"] = true
 		_crime_state["surrendered"] = false
 		_crime_state["surrender_case"] = {}
 		_crime_state["last"] = {"crime": crime, "detected": true, "record": rec}
@@ -6723,6 +7042,32 @@ func crime_flee(region: String) -> Dictionary:
 	_sync_legal()
 	return r
 
+
+## 引渡：按双边条约把在逃人员移交回目标区域，成功后由目标国受审。
+func crime_extradition(to_region: String) -> Dictionary:
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	_ensure_crime_state()
+	var from_region: String = current_region_id()
+	var r: Dictionary = crime_sys.extradite(_crime_state, from_region, to_region, {"minute": now_minutes()})
+	if bool(r.get("ok", false)):
+		set_home_region(to_region)
+		_crime_state["surrender_case"] = {"crime": String(r.get("crime", "")), "region": to_region, "level": 3}
+		_crime_state["fled"] = false
+		_crime_state["national"] = false
+	_persist_crime()
+	_sync_legal()
+	return r
+
+## 全国协查：把同国通缉升级为全国范围。
+func crime_escalate_national() -> Dictionary:
+	_ensure_crime_state()
+	var country: String = current_region_id().split(".")[0]
+	var r: Dictionary = crime_sys.escalate_national(_crime_state, country)
+	if bool(r.get("ok", false)):
+		_crime_state["national"] = true
+	_persist_crime()
+	return r
 
 ## 化名：降低追缉强度，不改动真实身份档案。
 func crime_change_identity() -> Dictionary:
@@ -10942,6 +11287,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		events.append_array(_refresh_spirit())
 		# 语言：长期未用按闲置天数衰减（R64）。
 		_decay_languages(before_minutes, now_minutes())
+		# 移民：居住年限随游戏内时间累计。
+		_advance_residency(minutes)
 		# 农业：作物按日生长、仓储按日损耗（R66）。
 		_advance_farm(before_minutes, now_minutes())
 	# 矿业/能源：能源价格按年周期演化（离线亦结算）。
