@@ -43,6 +43,7 @@ const DigitalScript = preload("res://sim/digital.gd")
 const LateTechScript = preload("res://sim/late_tech.gd")
 const IpMediaScript = preload("res://sim/ip_media.gd")
 const SocialNetworkScript = preload("res://sim/social_network.gd")
+const EntertainmentScript = preload("res://sim/entertainment.gd")
 const ManufacturingScript = preload("res://sim/manufacturing.gd")
 const TradeScript = preload("res://sim/trade.gd")
 const MiningScript = preload("res://sim/mining_energy.gd")
@@ -164,6 +165,8 @@ var late_tech                   ## 后期科技（LateTechSystem）
 var _late_tech: Dictionary = {}      ## 后期科技运行时（阶段/解锁/失业/延寿），入档 sim_runtime.late_tech
 var ip_media                    ## 知识产权与媒体（IpMediaSystem）
 var _social                          ## 网络社交平台（动态/关注/离线队列）
+var entertainment                    ## 娱乐与兴趣圈层（EntertainmentSystem）
+var _fun: Dictionary = {}            ## 娱乐运行时（次数/熟练/上瘾/圈层/副业），入档 sim_runtime.entertainment
 var _ips: Array = []                 ## 已登记知识产权，入档 sim_runtime.ip_media.ips
 var _outlets: Array = []             ## 媒体机构，入档 sim_runtime.ip_media.outlets
 var manufacturing                ## 制造业与供应链（ManufacturingSystem）
@@ -336,6 +339,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_late_tech = late_tech.new_state()
 	ip_media = IpMediaScript.new()
 	_social = SocialNetworkScript.new(seed)
+	entertainment = EntertainmentScript.new()
 	manufacturing = ManufacturingScript.new()
 	trade = TradeScript.new()
 	mining_energy = MiningScript.new()
@@ -498,6 +502,10 @@ func _ensure_world_geo() -> void:
 		var sn: Variant = (state.sim_runtime as Dictionary).get("social_network", {})
 		if sn is Dictionary and not (sn as Dictionary).is_empty():
 			_social.from_dict(sn)
+		# 恢复娱乐运行时（次数/熟练/上瘾/圈层/副业）。
+		var fun: Variant = (state.sim_runtime as Dictionary).get("entertainment", {})
+		if fun is Dictionary and not (fun as Dictionary).is_empty():
+			_fun = (fun as Dictionary).duplicate(true)
 		# 恢复知识产权与媒体运行时（IP/媒体机构）。
 		var im: Variant = (state.sim_runtime as Dictionary).get("ip_media", {})
 		if im is Dictionary and not (im as Dictionary).is_empty():
@@ -2242,6 +2250,130 @@ func social_panel_data() -> Dictionary:
 	return {"followers": social_followers(), "posts": social_feed(10),
 		"post_count": _social.post_count(), "offline": social_offline_count(),
 		"unread": _social.unread_count(), "threads": _social.recent_threads(5)}
+
+# --- 娱乐与兴趣圈层（D14） ---
+
+const FUN_CATEGORY_NAMES: Dictionary = {
+	"home": "居家", "outdoor": "户外", "culture": "文化", "sports": "竞技",
+	"nightlife": "夜生活", "collect": "收藏", "extreme": "极限",
+}
+
+func _fun_state() -> Dictionary:
+	if _fun.is_empty():
+		_fun = {"counts": {}, "proficiency": {}, "addiction": 0.0,
+			"circles": [], "side_businesses": [], "last": {}}
+	for key in ["counts", "proficiency", "last"]:
+		if not (_fun.get(key) is Dictionary):
+			_fun[key] = {}
+	if not (_fun.get("circles") is Array):
+		_fun["circles"] = []
+	if not (_fun.get("side_businesses") is Array):
+		_fun["side_businesses"] = []
+	return _fun
+
+## 娱乐活动目录：按七大类分组，供解析器与面板。
+func entertainment_catalog() -> Array:
+	var out: Array = []
+	for cid in entertainment.categories():
+		for aid in entertainment.by_category(String(cid)):
+			var d: Dictionary = entertainment.activity(String(aid))
+			out.append({"id": String(aid), "name": String(d.get("name", aid)),
+				"category": String(cid), "fee": int(d.get("fee", 0)),
+				"minutes": int(d.get("minutes", 0))})
+	return out
+
+## 参与娱乐：扣费、推进时间、改心情/健康、累积熟练与上瘾，3 次后形成同好圈层。
+func entertainment_do(activity_id: String) -> Dictionary:
+	var st: Dictionary = _fun_state()
+	var d: Dictionary = entertainment.activity(activity_id)
+	if d.is_empty():
+		return {"ok": false, "reason": "unknown_activity"}
+	var counts: Dictionary = st["counts"]
+	var prev: int = int(counts.get(activity_id, 0))
+	var r: Dictionary = entertainment.do_activity(activity_id, prev, economy.liquid(account_id()), rng)
+	if not bool(r.get("ok", false)):
+		return r
+	var fee: int = int(r.get("fee", 0))
+	if fee > 0:
+		economy.add_money(account_id(), -fee, "娱乐：%s" % String(d.get("name", activity_id)))
+	var attrs: Dictionary = player().get("attrs", {})
+	var psych: Dictionary = attrs.get("psychological", {})
+	psych["mood"] = clampf(float(psych.get("mood", 50.0)) + float(r.get("mood", 0.0)), 0.0, 100.0)
+	psych["stress"] = clampf(float(psych.get("stress", 40.0)) - maxf(0.0, float(r.get("mood", 0.0))) * 0.5, 0.0, 100.0)
+	attrs["psychological"] = psych
+	var health_delta: float = float(r.get("health", 0.0))
+	if not is_zero_approx(health_delta):
+		var phys: Dictionary = attrs.get("physiological", {})
+		phys["health"] = clampf(float(phys.get("health", 100.0)) + health_delta, 0.0, 100.0)
+		attrs["physiological"] = phys
+	player()["attrs"] = attrs
+	counts[activity_id] = prev + 1
+	var prof: Dictionary = st["proficiency"]
+	prof[activity_id] = clampf(float(prof.get(activity_id, 0.0)) + 2.0, 0.0, 100.0)
+	var add: Dictionary = entertainment.update_addiction(float(st.get("addiction", 0.0)), float(r.get("addiction_gain", 0.0)))
+	st["addiction"] = float(add.get("value", 0.0))
+	var circle_added: bool = false
+	if prev + 1 >= 3:
+		var ci: Dictionary = entertainment.interest_circle(activity_id)
+		var circle: String = String(ci.get("circle", ""))
+		var circles: Array = st["circles"]
+		if circle != "" and not circles.has(circle):
+			circles.append(circle)
+			circle_added = true
+	var risk: Dictionary = entertainment.overspend_risk(economy.debt(account_id()), float(st["addiction"]))
+	st["last"] = {"activity": activity_id, "minute": now_minutes(), "mood": float(r.get("mood", 0.0))}
+	_sync_mental()
+	_persist_entertainment()
+	return {"ok": true, "activity": activity_id, "name": String(d.get("name", activity_id)),
+		"fee": fee, "minutes": int(r.get("minutes", 0)), "mood": float(r.get("mood", 0.0)),
+		"health": health_delta, "tolerance": float(r.get("tolerance", 1.0)),
+		"addiction": float(st["addiction"]), "addicted": bool(add.get("addicted", false)),
+		"circle_added": circle_added, "proficiency": float(prof[activity_id]), "risk": risk}
+
+## 兴趣转副业：熟练度 ≥60 可签约，预付首月收入并记入副业清单。
+func entertainment_side_business(activity_id: String) -> Dictionary:
+	var st: Dictionary = _fun_state()
+	var r: Dictionary = entertainment.side_business(activity_id, float((st["proficiency"] as Dictionary).get(activity_id, 0.0)))
+	if not bool(r.get("ok", false)):
+		return r
+	if not bool(r.get("available", false)):
+		return {"ok": false, "reason": "proficiency_low", "required": float(r.get("required", 60.0))}
+	var list: Array = st["side_businesses"]
+	for item in list:
+		if String((item as Dictionary).get("activity", "")) == activity_id:
+			return {"ok": false, "reason": "already_running"}
+	var income: int = int(r.get("monthly_income", 0))
+	var d: Dictionary = entertainment.activity(activity_id)
+	list.append({"activity": activity_id, "name": String(d.get("name", activity_id)),
+		"monthly_income": income, "started_minute": now_minutes()})
+	if income > 0:
+		economy.add_money(account_id(), income, "兴趣副业：%s" % String(d.get("name", activity_id)))
+	_persist_entertainment()
+	return {"ok": true, "activity": activity_id, "monthly_income": income, "paid": income}
+
+func entertainment_panel_data() -> Dictionary:
+	var st: Dictionary = _fun_state()
+	var counts: Dictionary = st["counts"]
+	var prof: Dictionary = st["proficiency"]
+	var recent: Array = []
+	var ids: Array = counts.keys()
+	ids.sort_custom(func(a, b): return int(counts[a]) > int(counts[b]))
+	for i in mini(5, ids.size()):
+		var aid: String = String(ids[i])
+		var d: Dictionary = entertainment.activity(aid)
+		recent.append({"name": String(d.get("name", aid)), "count": int(counts[aid]),
+			"proficiency": float(prof.get(aid, 0.0))})
+	return {"times": int(counts.values().reduce(func(a, b): return int(a) + int(b), 0)),
+		"addiction": float(st.get("addiction", 0.0)),
+		"addicted": float(st.get("addiction", 0.0)) >= EntertainmentScript.ADDICTION_THRESHOLD,
+		"circles": (st["circles"] as Array).duplicate(),
+		"side_businesses": (st["side_businesses"] as Array).duplicate(true),
+		"recent": recent}
+
+func _persist_entertainment() -> void:
+	if state == null or not (state.sim_runtime is Dictionary):
+		return
+	(state.sim_runtime as Dictionary)["entertainment"] = _fun.duplicate(true)
 
 # --- 知识产权与媒体（D25） ---
 

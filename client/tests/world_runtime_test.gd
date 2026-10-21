@@ -80,6 +80,7 @@ func run_tests() -> void:
 	_test_life_services_runtime()
 	_test_transport_infra_runtime()
 	_test_social_runtime()
+	_test_entertainment_runtime()
 
 ## 逐块推进并重置基本需求，避免长周期模拟中饿死/渴死，用于隔离被测系统。
 func _advance_alive(host, days: int) -> void:
@@ -2336,6 +2337,34 @@ func _test_social_runtime() -> void:
 	var reloaded2 = SimHostScript.new(state, 251)
 	reloaded2.bind(state)
 	check_eq((reloaded2.social_dm_thread(String(npc.get("id", ""))).get("messages", []) as Array).size(), 2, "读档恢复私信线程")
+
+
+func _test_entertainment_runtime() -> void:
+	var state = GameStateScript.new()
+	state.new_game(261)
+	var host = SimHostScript.new(state, 261)
+	host.bind(state)
+	check(host.entertainment_catalog().size() >= 123, "娱乐活动≥123")
+	var moods: float = float(host.player()["attrs"]["psychological"].get("mood", 50.0))
+	var r: Dictionary = host.entertainment_do("video_game")
+	check(bool(r.get("ok", false)), "参与娱乐")
+	check(float(host.player()["attrs"]["psychological"].get("mood", 0.0)) > moods, "娱乐提振心情")
+	check(int(r.get("minutes", 0)) > 0, "娱乐推进时长")
+	host.entertainment_do("video_game")
+	var third: Dictionary = host.entertainment_do("video_game")
+	check(bool(third.get("circle_added", false)), "三次后形成兴趣圈层")
+	check((host.entertainment_panel_data().get("circles", []) as Array).size() == 1, "圈层入面板")
+	host._fun_state()["proficiency"]["running"] = 60.0
+	var side: Dictionary = host.entertainment_side_business("running")
+	check(bool(side.get("ok", false)), "熟练度达标可转副业")
+	check(int(side.get("monthly_income", 0)) > 0, "副业有月收入")
+	check(not (host.entertainment_panel_data().get("side_businesses", []) as Array).is_empty(), "副业入面板")
+	check(bool(host.entertainment_do("nope").get("reason", "") == "unknown_activity"), "未知活动被拒")
+	host._persist_entertainment()
+	check(state.sim_runtime.get("entertainment", null) is Dictionary, "娱乐运行态写入 sim_runtime")
+	var reloaded = SimHostScript.new(state, 261)
+	reloaded.bind(state)
+	check_eq(int((reloaded.entertainment_panel_data().get("side_businesses", []) as Array).size()), 1, "读档恢复副业")
 
 
 func _test_transport_infra_runtime() -> void:

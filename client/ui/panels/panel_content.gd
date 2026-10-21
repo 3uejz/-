@@ -88,6 +88,8 @@ static func build(id: String, player: Dictionary, name_resolver: Callable = Call
 			data = family(player, name_resolver)
 		"social":
 			data = social(player, context, name_resolver)
+		"leisure":
+			data = leisure(player, context, name_resolver)
 		"map":
 			data = map_panel(context, name_resolver)
 		"settings":
@@ -2115,6 +2117,40 @@ static func social(player: Dictionary, context: Dictionary = {}, name_resolver: 
 		sections.append(_section("离线队列", [{"label": "待同步", "value": "%d 条" % int(d.get("offline", 0))}]))
 	if sections.is_empty():
 		return _empty("社交动态", "尚无动态；可先「发动态 <平台>」")
+	return _ok(sections)
+
+static func leisure(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:
+	if player.is_empty():
+		return _empty("娱乐与兴趣", "尚未生成角色数据")
+	var d: Dictionary = context.get("leisure", {})
+	if d.is_empty() or int(d.get("times", 0)) == 0:
+		return _empty("娱乐与兴趣", "尚无娱乐记录；可先「娱乐 <活动>」")
+	var sections: Array = []
+	sections.append(_section("娱乐概况", [
+		{"label": "累计次数", "value": "%d 次" % int(d.get("times", 0))},
+		{"label": "上瘾值", "value": "%.0f" % float(d.get("addiction", 0.0))},
+		{"label": "上瘾风险", "value": _yes_no(bool(d.get("addicted", false)))},
+	]))
+	var recent: Array = _items_of(d.get("recent", []))
+	if not recent.is_empty():
+		var rows: Array = []
+		for item in recent:
+			var rd: Dictionary = item
+			rows.append({"label": String(rd.get("name", "")), "value": "%d 次 · 熟练 %.0f" % [int(rd.get("count", 0)), float(rd.get("proficiency", 0.0))]})
+		sections.append(_section("常玩项目", rows))
+	var circles: Array = _items_of(d.get("circles", []))
+	if not circles.is_empty():
+		var crows: Array = []
+		for c in circles:
+			crows.append({"label": String(c), "value": "已加入"})
+		sections.append(_section("兴趣圈层", crows))
+	var sides: Array = _items_of(d.get("side_businesses", []))
+	if not sides.is_empty():
+		var srows: Array = []
+		for s in sides:
+			var sd: Dictionary = s
+			srows.append({"label": String(sd.get("name", "")), "value": "月入 %s" % _money(int(sd.get("monthly_income", 0)))})
+		sections.append(_section("兴趣副业", srows))
 	return _ok(sections)
 
 static func content_industry(player: Dictionary, context: Dictionary = {}, name_resolver: Callable = Callable()) -> Dictionary:

@@ -67,7 +67,7 @@
 - 政治职级/政策/宗教归属/签证国籍无字段；宗教/教义/签证政策/法域内容缺失；政策博弈与晋升权重缺失；语言/积分移民条件未定义；无 UI。
 
 ### D14 娱乐与旅行
-- 娱乐内容不足（约 31/100）且无费用/耗时/效果/衰减/上瘾参数；旅行预订与行程无 schema；兴趣圈层/副业接口未定义；无娱乐活动面板。
+- **已接线**：`EntertainmentSystem`（`entertainment.gd`）123 种娱乐覆盖居家/户外/文化/竞技/夜生活/收藏/极限，带费用/耗时/心情/健康/重复衰减/上瘾参数；host `entertainment_do()` 扣费并推进时长、联动心情与压力、累积熟练、上瘾阈值、三次后兴趣圈层；`entertainment_side_business()` 熟练 ≥60 转副业并预付首月收入；运行时写入 `sim_runtime.entertainment`；指令「娱乐 <活动>」「娱乐副业 <活动>」「娱乐状态」；新增「娱乐与兴趣」面板（第 49 面板）。尚余旅行预订与行程 schema 及内容扩容。
 
 ### D15 世界观与精神追求
 - **已接线**：`SpiritualitySystem`（`spirituality.gd`）提供价值观三轴（利己-利他/保守-开放/物质-精神，`VALUES`）随重大选择微调（`adjust_values()`）与选择一致性评分（`value_consistency()`）；七类精神追求（冥想/修行/哲学阅读/写作/自省/志愿服务/艺术创作，`PURSUITS`）按投入小时降低压力、提升意义/幸福并驱动人格（`drift()`）与价值观漂移（`pursue()`）；信仰/哲学十派（佛教/道家/基督教/伊斯兰教/斯多葛/存在主义/人道主义/儒家/虚无主义/功利主义，`FAITHS`）与修持境界（`REALM_THRESHOLDS`/`REALM_NAMES`，`convert()`/`deepen_faith()`）；四类精神危机（中年/意义丧失/信仰动摇/存在焦虑，`CRISES`+`CRISIS_EXITS`）由意义/幸福/中年窗口与信仰动摇判定（`check_crisis()`）并以宗教/哲学/心理/志愿出口化解（`resolve_crisis()`）；邪教/极端组织卷入风险（`cult_risk()`/`maybe_join_cult()`）。运行时经 `GameState.sim_runtime.spirituality` 持久化（`to_dict()`/`from_dict()`，含人格累计漂移）；皈依后信仰境界抬升幸福/意义分量（`_update_happiness()`）。UI：新增「精神追求」面板（`spirit`，第 40 面板）渲染价值观三轴/信仰修持境界/追求深度/精神危机；指令 `修持 <法门>`/`皈依 <信仰>`/`深化信仰`/`化解危机 <出口>` 与「看精神」面板入口。

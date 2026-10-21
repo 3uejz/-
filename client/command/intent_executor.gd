@@ -154,6 +154,12 @@ func _dispatch(intent) -> Dictionary:
 			return _interact(intent, "chat")
 		"私信":
 			return _social_dm(intent)
+		"娱乐":
+			return _entertainment(intent)
+		"娱乐副业":
+			return _entertainment_side(intent)
+		"娱乐状态":
+			return _entertainment_status(intent)
 		"送礼":
 			return _interact(intent, "gift")
 		"约会":
@@ -1553,6 +1559,46 @@ func _social_dm(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法发送私信（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["已发送私信，对方回复：%s" % String(r.get("reply", ""))], 0, "social")
+
+func _entertainment(intent) -> Dictionary:
+	var aid := _object_id(intent, "entertainment")
+	if aid.is_empty():
+		return _fail("请指定娱乐活动。")
+	var r: Dictionary = host.entertainment_do(aid)
+	if not bool(r.get("ok", false)):
+		var reason := String(r.get("reason", ""))
+		if reason == "insufficient_funds":
+			return _fail("余额不足，该活动需 %.0f 元。" % (float(r.get("fee", 0)) / 100.0))
+		return _fail("无法进行该娱乐（%s）。" % _reason_cn(reason))
+	var msg: String = "你%s了 %d 分钟，心情 +%.0f，健康 %+.0f。" % [
+		String(r.get("name", aid)), int(r.get("minutes", 0)),
+		float(r.get("mood", 0.0)), float(r.get("health", 0.0))]
+	if bool(r.get("circle_added", false)):
+		msg += " 你加入了新的兴趣圈层。"
+	if bool(r.get("addicted", false)):
+		msg += " 注意：已出现上瘾倾向。"
+	return _ok([msg], int(r.get("minutes", 0)), "leisure")
+
+func _entertainment_side(intent) -> Dictionary:
+	var aid := _object_id(intent, "entertainment")
+	if aid.is_empty():
+		return _fail("请指定兴趣活动。")
+	var r: Dictionary = host.entertainment_side_business(aid)
+	if not bool(r.get("ok", false)):
+		if String(r.get("reason", "")) == "proficiency_low":
+			return _fail("熟练度不足，需达到 %.0f。" % float(r.get("required", 60.0)))
+		if String(r.get("reason", "")) == "already_running":
+			return _fail("该兴趣副业已在经营。")
+		return _fail("无法开展兴趣副业。")
+	var msg: String = "你把这门兴趣做成了副业，首月入账 %.0f 元。" % (float(r.get("paid", 0)) / 100.0)
+	return _ok([msg], 0, "leisure")
+
+func _entertainment_status(_intent) -> Dictionary:
+	var d: Dictionary = host.entertainment_panel_data()
+	var msg: String = "累计娱乐 %d 次，上瘾值 %.0f，兴趣圈层 %d 个，副业 %d 项。" % [
+		int(d.get("times", 0)), float(d.get("addiction", 0.0)),
+		(d.get("circles", []) as Array).size(), (d.get("side_businesses", []) as Array).size()]
+	return _ok([msg], 0, "leisure")
 
 func _social_publish(intent) -> Dictionary:
 	var platform: String = String(intent.params.get("social_platform", ""))
