@@ -1994,12 +1994,17 @@ static func _primary_sections(prim: Dictionary) -> Array:
 			{"label": "火灾风险", "value": "%.2f" % float(forest.get("fire_risk", 0.0))},
 		]))
 	var hunter: Dictionary = prim.get("hunter", {}) if prim.get("hunter") is Dictionary else {}
-	if not hunter.is_empty():
-		sections.append(_section("狩猎", [
+	var gp: Dictionary = prim.get("gun_policy", {}) if prim.get("gun_policy") is Dictionary else {}
+	if not hunter.is_empty() or not gp.is_empty():
+		var hrows: Array = [
 			{"label": "狩猎许可", "value": ("已取得" if bool(hunter.get("license", false)) else "未取得")},
 			{"label": "通缉等级", "value": str(int(hunter.get("wanted_level", 0)))},
 			{"label": "资金", "value": str(int(hunter.get("money", 0)))},
-		]))
+		]
+		if not gp.is_empty():
+			hrows.append({"label": "持枪政策", "value": String(gp.get("label", ""))})
+			hrows.append({"label": "额外持证", "value": _yes_no(bool(gp.get("license_required", false)))})
+		sections.append(_section("狩猎", hrows))
 	var ecology: Dictionary = prim.get("ecology", {}) if prim.get("ecology") is Dictionary else {}
 	if not ecology.is_empty():
 		sections.append(_section("生态", [

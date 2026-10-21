@@ -3994,10 +3994,18 @@ func forest_carbon_sink(years: float = 1.0, price: int = 100) -> Dictionary:
 	_persist_primary()
 	return r
 
+## 当前区域枪支政策，供狩猎许可与面板展示。
+func region_gun_policy() -> Dictionary:
+	return justice.gun_policy(current_region_id())
+
 func apply_hunting_license() -> Dictionary:
 	if _hunter.is_empty():
 		_hunter = primary_industry.new_hunter()
+	var gp: Dictionary = justice.gun_policy(current_region_id())
+	_hunter["gun_policy_allows"] = bool(gp.get("allowed", false))
 	var r: Dictionary = primary_industry.hunting_license(_hunter)
+	if not bool(r.get("ok", false)):
+		_persist_primary()
 	_persist_primary()
 	return r
 
@@ -4050,6 +4058,8 @@ func primary_panel_data() -> Dictionary:
 		}
 	if not _hunter.is_empty():
 		out["hunter"] = {"license": bool(_hunter.get("license", false)), "wanted_level": int(_hunter.get("wanted_level", 0)), "money": int(_hunter.get("money", 0))}
+	var gp: Dictionary = region_gun_policy()
+	out["gun_policy"] = {"allowed": bool(gp.get("allowed", false)), "license_required": bool(gp.get("license_required", false)), "label": String(gp.get("label", ""))}
 	if not _ecology.is_empty():
 		out["ecology"] = {"resource_ratio": float(_ecology.get("resource_ratio", 1.0)), "soil_quality": float(_ecology.get("soil_quality", 1.0)),
 			"erosion": float(_ecology.get("erosion", 0.0)), "restoration_needed": float(_ecology.get("restoration_needed", 0.0))}

@@ -132,6 +132,26 @@ func plea_bargain(case: Dictionary) -> Dictionary:
 
 
 ## 取得区域的国别法律参数；未知区域回退 CN 基线。
+## 枪支政策（按国别）：是否允许私人持枪、是否需额外持证。
+const GUN_POLICIES: Dictionary = {
+	"cn": {"allowed": false, "license_required": false, "label": "禁止私人持枪"},
+	"us": {"allowed": true, "license_required": false, "label": "允许持枪"},
+	"gb": {"allowed": true, "license_required": true, "label": "严格持证"},
+	"eu": {"allowed": true, "license_required": true, "label": "持证许可"},
+	"jp": {"allowed": false, "license_required": false, "label": "严格禁止"},
+	"sg": {"allowed": false, "license_required": false, "label": "禁止私人持枪"},
+	"au": {"allowed": true, "license_required": true, "label": "持证许可"},
+}
+
+## 取区域国别的枪支政策；未知区域按中国基线。
+func gun_policy(region: String) -> Dictionary:
+	var code: String = String(region).split(".")[0].to_lower()
+	var p: Dictionary = GUN_POLICIES.get(code, GUN_POLICIES["cn"])
+	var out: Dictionary = p.duplicate(true)
+	out["country"] = code
+	return out
+
+
 func law_profile(region: String) -> Dictionary:
 	var code: String = String(region).split(".")[0].to_lower()
 	return (LAW_PROFILES.get(code, LAW_PROFILES["cn"]) as Dictionary).duplicate(true)

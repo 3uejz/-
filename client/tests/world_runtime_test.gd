@@ -1281,8 +1281,14 @@ func _test_primary_runtime() -> void:
 	var sink: Dictionary = host.forest_carbon_sink(1.0)
 	check(bool(sink.get("ok", false)) and float(sink.get("credits", 0.0)) > 0.0, "林业碳汇核证")
 	check(int(host.economy.cash(host.account_id())) > cash_carbon, "碳汇收入入账")
-	# 狩猎。
+	# 狩猎：持枪政策按国别联动。
+	host.set_home_region("cn.beijing")
+	check(not bool(host.region_gun_policy().get("allowed", true)), "中国禁止私人持枪")
+	check(not bool(host.apply_hunting_license().get("ok", true)), "禁枪国拒绝狩猎许可")
+	host.set_home_region("us.new_york")
+	check(bool(host.region_gun_policy().get("allowed", false)), "美国允许持枪")
 	check(bool(host.apply_hunting_license().get("ok", false)), "申请狩猎许可成功")
+	check(bool(host.primary_panel_data().get("gun_policy", {}).get("allowed", false)), "面板展示持枪政策")
 	var eco0: float = float(host.primary_panel_data().get("ecology", {}).get("resource_ratio", 1.0))
 	var dev: Dictionary = host.primary_over_develop(0.5)
 	check(bool(dev.get("ok", false)), "过度开发结算")

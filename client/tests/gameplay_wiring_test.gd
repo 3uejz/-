@@ -476,10 +476,13 @@ func _test_primary_commands() -> void:
 	_main.submit("造林 50")
 	var trees_after: float = float((sim.primary_state().get("forest", {}) as Dictionary).get("trees", 0.0))
 	check(trees_after > trees_before, "「造林」补植林木")
+	var home_before: String = sim.current_region_id()
+	sim.set_home_region("us.new_york")
 	_main.submit("申请狩猎许可")
 	check(bool((sim.primary_state().get("hunter", {}) as Dictionary).get("license", false)), "「申请狩猎许可」取得许可")
 	_main.submit("狩猎 鹿 1")
 	check(int((sim.primary_state().get("hunter", {}) as Dictionary).get("money", 0)) > 0, "「狩猎」取得收益")
+	sim.set_home_region(home_before)
 
 func _test_dining_commands() -> void:
 	var sim = _main._sim
