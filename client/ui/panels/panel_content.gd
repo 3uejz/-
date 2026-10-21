@@ -1051,6 +1051,13 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 				{"label": "辩护等级", "value": str(int(jc.get("lawyer", 0)))},
 				{"label": "证据强度", "value": "%.2f" % float(jc.get("score", 0.0))},
 			]
+			var lj: Dictionary = cr.get("last_judgment", {})
+			if not lj.is_empty():
+				jrows.append({"label": "量刑系数", "value": "%.2f" % float(lj.get("multiplier", 1.0))})
+				if float(lj.get("aggravating", 0.0)) > 0.0:
+					jrows.append({"label": "加重情节", "value": "%.2f" % float(lj.get("aggravating", 0.0))})
+				if float(lj.get("mitigating", 0.0)) > 0.0:
+					jrows.append({"label": "减轻情节", "value": "%.2f" % float(lj.get("mitigating", 0.0))})
 			if bool(jc.get("wrongful", false)):
 				jrows.append({"label": "再审线索", "value": "疑似冤假错案"})
 			sections.append(_section("司法流程", jrows))

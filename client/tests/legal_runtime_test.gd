@@ -162,6 +162,8 @@ func _test_justice_flow() -> void:
 	var pros: Dictionary = host.crime_prosecute(3)
 	check(bool(pros.get("ok", false)), "正式起诉成功")
 	check_eq(String(host._crime_state.get("justice", {}).get("stage", "")), "prosecute", "案件进入起诉阶段")
+	check_eq(int(host._crime_state["justice"].get("prior_records", 0)), 1, "前科计入量刑情节")
+	check(float(host._crime_state["justice"].get("aggravating", 0.0)) > 0.0, "通缉等级作为加重情节")
 	var convicted: Dictionary = {}
 	for i in range(3):
 		host._crime_state["justice"]["stage"] = "prosecute"

@@ -6059,6 +6059,11 @@ func crime_prosecute(prosecutor_level: int = 2) -> Dictionary:
 	justice.report(case)
 	case["stage"] = "prosecute"
 	case["prosecutor_level"] = clampi(prosecutor_level, 0, 5)
+	case["prior_records"] = records.size()
+	case["aggravating"] = clampf(0.15 * float(maxi(0, int(entry.get("level", 1)) - 1)), 0.0, 0.6)
+	if bool(_crime_state.get("surrendered", false)):
+		case["mitigating"] = 0.3
+	case["restitution"] = clampf(float(economy.cash(account_id())) / 2000000.0, 0.0, 0.3)
 	_crime_state["justice"] = case
 	_persist_crime()
 	return {"ok": true, "case": case.duplicate(true), "stage": "prosecute"}
@@ -6074,11 +6079,12 @@ func crime_court_trial(lawyer_level: int = 0) -> Dictionary:
 		return {"ok": false, "reason": "wrong_stage"}
 	case["lawyer"] = clampi(lawyer_level, 0, 5)
 	var prosecutor: int = int(case.get("prosecutor_level", 2))
-	var verdict: Dictionary = justice.trial(case, prosecutor, 1.0, false, rng)
+	var region: String = String(case.get("region", current_region_id()))
+	var law: Dictionary = justice.law_profile(region)
+	var verdict: Dictionary = justice.trial(case, prosecutor, float(law.get("scale", 1.0)), bool(law.get("death", true)), rng)
 	case["stage"] = "sentence"
 	_crime_state["justice"] = case
 	var crime: String = String(case.get("crime", ""))
-	var region: String = String(case.get("region", current_region_id()))
 	var wanted: Dictionary = _crime_state.get("wanted", {})
 	wanted.erase(region)
 	_crime_state["wanted"] = wanted
@@ -6111,13 +6117,16 @@ func crime_court_trial(lawyer_level: int = 0) -> Dictionary:
 		_prison_last_day = now_minutes() / MINUTES_PER_DAY
 		_persist_prison()
 	var score: float = float(verdict.get("score", 0.0))
+	var multiplier: float = float(sentence.get("multiplier", 1.0))
 	var wrongful: bool = score < 0.4
 	case["wrongful"] = wrongful
 	_crime_state["justice"] = case
 	_crime_state["last"] = {"crime": crime, "convicted": true, "days": days, "fine": fine}
 	_crime_state["last_judgment"] = {"crime": crime, "region": region, "days": days, "fine": fine,
 		"evidence": score, "minute": now_minutes(), "appealed": false, "justice": true,
-		"outcome": kind, "wrongful": wrongful, "retried": false}
+		"outcome": kind, "wrongful": wrongful, "retried": false, "multiplier": multiplier,
+		"aggravating": float(sentence.get("aggravating", 0.0)),
+		"mitigating": float(sentence.get("mitigating", 0.0))}
 	_persist_crime()
 	_sync_legal()
 	return {"ok": true, "convicted": true, "crime": crime, "days": days, "fine": fine,

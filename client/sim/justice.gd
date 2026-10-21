@@ -19,12 +19,23 @@ const STAGES: Array = ["report", "investigate", "arrest", "interrogate", "prosec
 const SENTENCE_TYPES: Array = ["fine", "probation", "prison", "life", "death"]
 const LAWYER_FEE_PER_LEVEL: int = BaselineScript.JUSTICE_LAWYER_FEE_PER_LEVEL
 
+## 国别法律差异：量刑尺度、是否保留死刑、罚金倍率。
+const LAW_PROFILES: Dictionary = {
+	"cn": {"scale": 1.0, "death": true, "fine_scale": 1.0},
+	"us": {"scale": 1.3, "death": true, "fine_scale": 1.4},
+	"eu": {"scale": 0.8, "death": false, "fine_scale": 0.9},
+	"jp": {"scale": 0.9, "death": true, "fine_scale": 0.8},
+	"sg": {"scale": 1.2, "death": true, "fine_scale": 1.3},
+}
+
 
 func new_case(crime: String, suspect: String, region: String) -> Dictionary:
 	var ev: Dictionary = {}
 	for k in EVIDENCE_KINDS:
 		ev[k] = 0.0
-	return {"crime": crime, "suspect": suspect, "region": region, "evidence": ev, "stage": "report", "detained": false, "lawyer": 0, "public_opinion": 0.0, "plea": false, "wrongful": false}
+	return {"crime": crime, "suspect": suspect, "region": region, "evidence": ev, "stage": "report",
+		"detained": false, "lawyer": 0, "public_opinion": 0.0, "plea": false, "wrongful": false,
+		"aggravating": 0.0, "mitigating": 0.0, "prior_records": 0, "restitution": 0.0}
 
 
 func report(case: Dictionary) -> Dictionary:
@@ -120,6 +131,12 @@ func plea_bargain(case: Dictionary) -> Dictionary:
 	return {"ok": true, "plea": true, "discount": 0.3}
 
 
+## 取得区域的国别法律参数；未知区域回退 CN 基线。
+func law_profile(region: String) -> Dictionary:
+	var code: String = String(region).split(".")[0].to_lower()
+	return (LAW_PROFILES.get(code, LAW_PROFILES["cn"]) as Dictionary).duplicate(true)
+
+
 ## 庭审（R23.3）：证据、律师、舆论与认罪共同决定判决。
 func trial(case: Dictionary, prosecutor_level: int, law_scale: float = 1.0, death_penalty: bool = true, rng = null) -> Dictionary:
 	case["stage"] = "trial"
@@ -137,19 +154,27 @@ func trial(case: Dictionary, prosecutor_level: int, law_scale: float = 1.0, deat
 	return verdict
 
 
-## 量刑（R23.10）：罚金/缓刑/监禁/无期/死刑，国别 law_scale 与认罪/自首修正。
+## 量刑（R23.10）：罚金/缓刑/监禁/无期/死刑；叠加累犯、情节、认罪、退赔与国别法律。
 func sentence(case: Dictionary, score: float, law_scale: float = 1.0, death_penalty: bool = true) -> Dictionary:
 	var crime: String = str(case.get("crime", ""))
 	var c: Dictionary = CrimeScript.CRIMES.get(crime, {})
 	var penalty: Dictionary = c.get("penalty", {"days": [0, 0], "fine": [0, 0]})
 	var days_range: Array = penalty.get("days", [0, 0])
 	var fine_range: Array = penalty.get("fine", [0, 0])
-	var mid_days: float = (float(days_range[0]) + float(days_range[1])) / 2.0 * law_scale * (0.5 + score)
-	var mid_fine: float = (float(fine_range[0]) + float(fine_range[1])) / 2.0 * (0.5 + score)
+	var aggravating: float = clampf(float(case.get("aggravating", 0.0)), 0.0, 1.0)
+	var mitigating: float = clampf(float(case.get("mitigating", 0.0)), 0.0, 1.0)
+	var priors: int = maxi(0, int(case.get("prior_records", 0)))
+	var restitution: float = clampf(float(case.get("restitution", 0.0)), 0.0, 1.0)
+	var multiplier: float = 1.0 + 0.8 * aggravating - 0.5 * mitigating - 0.15 * restitution
+	multiplier += minf(0.3, 0.06 * float(priors))
+	multiplier = clampf(multiplier, 0.35, 2.0)
+	var mid_days: float = (float(days_range[0]) + float(days_range[1])) / 2.0 * law_scale * (0.5 + score) * multiplier
+	var mid_fine: float = (float(fine_range[0]) + float(fine_range[1])) / 2.0 * (0.5 + score) * multiplier
 	if bool(case.get("plea", false)):
 		mid_days *= 0.7
 		mid_fine *= 0.8
-	var s: Dictionary = {"type": "fine", "days": 0, "fine": int(round(mid_fine))}
+	var s: Dictionary = {"type": "fine", "days": 0, "fine": int(round(mid_fine)),
+		"multiplier": multiplier, "aggravating": aggravating, "mitigating": mitigating, "prior_records": priors}
 	if mid_days <= 0.0:
 		return s
 	if mid_days <= 30.0:

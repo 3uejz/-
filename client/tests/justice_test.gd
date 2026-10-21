@@ -25,6 +25,7 @@ func run_tests() -> void:
 	_test_interrogate()
 	_test_trial()
 	_test_sentence_types()
+	_test_sentencing_modifiers()
 	_test_appeal_retrial()
 
 
@@ -88,6 +89,20 @@ func _test_sentence_types() -> void:
 	check_eq(str(life["type"]), "life", "无期")
 	var death: Dictionary = sys.sentence({"crime": "robbery"}, 1.0, 3.0, true)
 	check_eq(str(death["type"]), "death", "死刑（国别允许）")
+
+
+func _test_sentencing_modifiers() -> void:
+	var sys = JusticeScript.new()
+	var base: Dictionary = sys.sentence({"crime": "robbery"}, 1.0, 1.0, true)
+	var agg: Dictionary = sys.sentence({"crime": "robbery", "aggravating": 1.0, "prior_records": 3}, 1.0, 1.0, true)
+	var mit: Dictionary = sys.sentence({"crime": "robbery", "mitigating": 1.0, "restitution": 1.0}, 1.0, 1.0, true)
+	check(int(agg["days"]) > int(base["days"]), "加重与累犯提高刑期")
+	check(int(mit["days"]) < int(base["days"]), "自首退赔降低刑期")
+	var us: Dictionary = sys.law_profile("us.ny")
+	var eu: Dictionary = sys.law_profile("eu.de")
+	check(float(us["scale"]) > float(eu["scale"]), "国别量刑尺度不同")
+	check(not bool(eu["death"]), "欧盟不保留死刑")
+	check(bool(us["death"]), "美国保留死刑")
 
 
 func _test_appeal_retrial() -> void:
