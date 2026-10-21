@@ -1043,6 +1043,17 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 				recrows.append({"label": String(rd.get("name", "")), "value": "%s · 证据 %.2f" % [String(rd.get("region", "")), float(rd.get("evidence", 0.0))]})
 		if not recrows.is_empty():
 			sections.append(_section("案底", recrows))
+		var jc: Dictionary = cr.get("justice", {}) if cr.get("justice") is Dictionary else {}
+		if not jc.is_empty():
+			var jrows: Array = [
+				{"label": "罪名", "value": String(jc.get("crime", ""))},
+				{"label": "阶段", "value": String(jc.get("stage", ""))},
+				{"label": "辩护等级", "value": str(int(jc.get("lawyer", 0)))},
+				{"label": "证据强度", "value": "%.2f" % float(jc.get("score", 0.0))},
+			]
+			if bool(jc.get("wrongful", false)):
+				jrows.append({"label": "再审线索", "value": "疑似冤假错案"})
+			sections.append(_section("司法流程", jrows))
 	var pr: Dictionary = law.get("prison", {}) if law.get("prison") is Dictionary else {}
 	if not pr.is_empty():
 		var prows: Array = [

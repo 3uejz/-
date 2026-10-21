@@ -24,6 +24,7 @@ func run_tests() -> void:
 	_test_persistence()
 	_test_commands()
 	_test_surrender_then_trial()
+	_test_justice_flow()
 
 
 func _test_attempt_to_trial() -> void:
@@ -149,3 +150,32 @@ func _test_surrender_then_trial() -> void:
 	check(bool(ap.get("acquitted", false)), "刑事上诉可改判无罪")
 	check(not host._prison_active(), "改判后释放出狱")
 	check_eq(int(host.player().get("legal", {}).get("wanted_level", 0)), 0, "改判后仍无通缉")
+
+
+func _test_justice_flow() -> void:
+	var env: Dictionary = _setup(21)
+	var host = env["host"]
+	host._crime_state = host._crime_new_state()
+	host.crime_sys.add_record(host._crime_state, "theft", host.current_region_id(), host.now_minutes(), 0.9)
+	host.crime_sys.add_wanted(host._crime_state, "theft", host.current_region_id(), 3)
+	host._sync_legal()
+	var pros: Dictionary = host.crime_prosecute(3)
+	check(bool(pros.get("ok", false)), "正式起诉成功")
+	check_eq(String(host._crime_state.get("justice", {}).get("stage", "")), "prosecute", "案件进入起诉阶段")
+	var convicted: Dictionary = {}
+	for i in range(3):
+		host._crime_state["justice"]["stage"] = "prosecute"
+		for k in (host._crime_state["justice"]["evidence"] as Dictionary).keys():
+			host._crime_state["justice"]["evidence"][k] = 1.0
+		host.crime_sys.add_wanted(host._crime_state, "theft", host.current_region_id(), 3)
+		convicted = host.crime_court_trial(0)
+		if bool(convicted.get("convicted", false)):
+			break
+	check(bool(convicted.get("convicted", false)), "庭审证据充分时定罪")
+	check(int(convicted.get("days", 0)) > 0, "庭审判决产生刑期")
+	host._crime_state["justice"]["wrongful"] = true
+	host._crime_state["last_judgment"]["wrongful"] = true
+	var retrial: Dictionary = host.crime_retrial(1.0)
+	check(bool(retrial.get("exonerated", false)), "再审新证据改判无罪")
+	check(not host._prison_active(), "再审无罪后释放")
+	check(not bool(host.player().get("legal", {}).get("in_prison", false)), "法律状态解除在押")

@@ -728,6 +728,12 @@ func _dispatch(intent) -> Dictionary:
 			return _crime_surrender(intent)
 		"刑事上诉":
 			return _crime_appeal(intent)
+		"正式起诉":
+			return _crime_prosecute(intent)
+		"庭审博弈":
+			return _crime_court_trial(intent)
+		"申请再审":
+			return _crime_retrial(intent)
 		"潜逃":
 			return _crime_flee(intent)
 		"化名":
@@ -3897,6 +3903,31 @@ func _crime_appeal(intent) -> Dictionary:
 	if bool(r.get("acquitted", false)):
 		return _ok(["二审改判无罪，罚金退还 %d。" % int(r.get("refund", 0))], 0, "")
 	return _ok(["二审维持原判。"], 0, "")
+
+func _crime_prosecute(intent) -> Dictionary:
+	var r: Dictionary = host.crime_prosecute(3)
+	if not bool(r.get("ok", false)):
+		return _fail("无法提起公诉（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已正式起诉，案件进入庭审阶段。"], 0, "")
+
+func _crime_court_trial(intent) -> Dictionary:
+	var lawyer: int = int(_param_number(intent, "number", 0))
+	var r: Dictionary = host.crime_court_trial(lawyer)
+	if not bool(r.get("ok", false)):
+		return _fail("无法开庭（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("acquitted", false)):
+		return _ok(["庭审结束，宣告无罪，通缉解除。"], 0, "")
+	return _ok(["庭审判决：%s，刑期 %d 日，罚金 %d。" % [String(r.get("sentence_type", "")), int(r.get("days", 0)), int(r.get("fine", 0))]], 0, "")
+
+func _crime_retrial(intent) -> Dictionary:
+	var raw: float = float(_param_number(intent, "number", 60))
+	var evidence: float = raw / 100.0 if raw > 1.0 else raw
+	var r: Dictionary = host.crime_retrial(evidence)
+	if not bool(r.get("ok", false)):
+		return _fail("无法申请再审（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	if bool(r.get("exonerated", false)):
+		return _ok(["再审改判无罪，罚金退还 %d，已释放。" % int(r.get("refund", 0))], 0, "")
+	return _ok(["再审维持原判。"], 0, "")
 
 func _crime_surrender(intent) -> Dictionary:
 	var r: Dictionary = host.crime_self_surrender()

@@ -54,6 +54,7 @@ const HonorsScript = preload("res://sim/honors.gd")
 const PoliceScript = preload("res://sim/police.gd")
 const CrimeScript = preload("res://sim/crime.gd")
 const PrisonScript = preload("res://sim/prison.gd")
+const JusticeScript = preload("res://sim/justice.gd")
 ## 犯罪罪名 → 判定技能（犯罪技能树）。
 const CRIME_SKILLS: Dictionary = {
 	"theft": "theft", "robbery": "robbery", "fraud": "fraud", "assault": "crime_disguise",
@@ -197,6 +198,7 @@ var _police_case: Dictionary = {}     ## 当前经办案件，入档 sim_runtime
 var _security_firm: Dictionary = {}   ## 民营安保公司，入档 sim_runtime.police.firm
 var crime_sys                    ## 玩家犯罪、案底与通缉（CrimeSystem）
 var prison_sys                   ## 监狱生活与社会融入（PrisonSystem）
+var justice                      ## 刑事司法全流程（JusticeSystem）
 var _crime_state: Dictionary = {}  ## 玩家犯罪运行态（records/wanted/aliases），入档 sim_runtime.crime
 var _prison: Dictionary = {}       ## 在押/出狱运行态，入档 sim_runtime.prison
 var _prison_last_day: int = -1     ## 上次监狱刑期结算日
@@ -346,6 +348,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	_hall = honors.new_hall()
 	police = PoliceScript.new()
 	crime_sys = CrimeScript.new()
+	justice = JusticeScript.new()
 	prison_sys = PrisonScript.new()
 	emergency = EmergencyScript.new()
 	environment_sys = EnvironmentScript.new()
@@ -5947,6 +5950,158 @@ func crime_attempt(crime: String) -> Dictionary:
 		"success": bool(r.get("success", false)), "detected": bool(r.get("detected", false)),
 		"probability": float(r.get("probability", 0.0)), "wanted_level": crime_sys.wanted_level(_crime_state, region),
 	}
+
+
+## 正式起诉：把通缉案件移交司法流程，生成起诉/庭审状态机。
+func crime_prosecute(prosecutor_level: int = 2) -> Dictionary:
+	if _prison_active():
+		return {"ok": false, "reason": "in_prison"}
+	_ensure_crime_state()
+	var entry: Dictionary = _crime_pending_entry()
+	if entry.is_empty():
+		return {"ok": false, "reason": "not_wanted"}
+	var crime: String = String(entry.get("crime", ""))
+	if not CrimeScript.CRIMES.has(crime):
+		return {"ok": false, "reason": "unknown_crime"}
+	var region: String = String(entry.get("region", current_region_id()))
+	var case: Dictionary = justice.new_case(crime, String(player().get("name", "我")), region)
+	var records: Array = _crime_state.get("records", [])
+	var base: float = clampf(0.25 + float(records.size()) * 0.05 + float(entry.get("level", 1)) * 0.06, 0.0, 0.9)
+	justice.add_evidence(case, "physical", base * 0.5)
+	justice.add_evidence(case, "witness", base * 0.3)
+	justice.add_evidence(case, "digital", base * 0.2)
+	justice.report(case)
+	case["stage"] = "prosecute"
+	case["prosecutor_level"] = clampi(prosecutor_level, 0, 5)
+	_crime_state["justice"] = case
+	_persist_crime()
+	return {"ok": true, "case": case.duplicate(true), "stage": "prosecute"}
+
+
+## 庭审博弈：控辩双方按证据与律师水平对抗，判决结果落地为刑期/罚金。
+func crime_court_trial(lawyer_level: int = 0) -> Dictionary:
+	_ensure_crime_state()
+	var case: Dictionary = _crime_state.get("justice", {})
+	if case.is_empty():
+		return {"ok": false, "reason": "no_prosecution"}
+	if String(case.get("stage", "")) != "prosecute":
+		return {"ok": false, "reason": "wrong_stage"}
+	case["lawyer"] = clampi(lawyer_level, 0, 5)
+	var prosecutor: int = int(case.get("prosecutor_level", 2))
+	var verdict: Dictionary = justice.trial(case, prosecutor, 1.0, false, rng)
+	case["stage"] = "sentence"
+	_crime_state["justice"] = case
+	var crime: String = String(case.get("crime", ""))
+	var region: String = String(case.get("region", current_region_id()))
+	var wanted: Dictionary = _crime_state.get("wanted", {})
+	wanted.erase(region)
+	_crime_state["wanted"] = wanted
+	_crime_state["surrendered"] = false
+	_crime_state["surrender_case"] = {}
+	if not bool(verdict.get("guilty", false)):
+		_crime_state["last_judgment"] = {"crime": crime, "region": region, "days": 0, "fine": 0,
+			"evidence": float(verdict.get("score", 0.0)), "minute": now_minutes(), "appealed": false,
+			"justice": true, "outcome": "acquitted", "wrongful": false, "retried": false}
+		_persist_crime()
+		_sync_legal()
+		return {"ok": true, "convicted": false, "acquitted": true, "crime": crime, "verdict": verdict}
+	var sentence: Dictionary = verdict.get("sentence", {})
+	var fine: int = maxi(0, int(sentence.get("fine", 0)))
+	fine = mini(fine, economy.cash(account_id()))
+	if fine > 0:
+		economy.add_money(account_id(), -fine, "crime_fine")
+		sync_finances()
+	var kind: String = String(sentence.get("type", "fine"))
+	var days: int = 0
+	if kind == "prison":
+		days = maxi(1, int(sentence.get("days", 0)))
+	elif kind == "life":
+		days = 18250
+	elif kind == "death":
+		days = 36500
+	if days > 0:
+		_prison = prison_sys.new_inmate(String(player().get("name", "我")), crime, days)
+		_prison["convicted_minute"] = now_minutes()
+		_prison_last_day = now_minutes() / MINUTES_PER_DAY
+		_persist_prison()
+	var score: float = float(verdict.get("score", 0.0))
+	var wrongful: bool = score < 0.4
+	case["wrongful"] = wrongful
+	_crime_state["justice"] = case
+	_crime_state["last"] = {"crime": crime, "convicted": true, "days": days, "fine": fine}
+	_crime_state["last_judgment"] = {"crime": crime, "region": region, "days": days, "fine": fine,
+		"evidence": score, "minute": now_minutes(), "appealed": false, "justice": true,
+		"outcome": kind, "wrongful": wrongful, "retried": false}
+	_persist_crime()
+	_sync_legal()
+	return {"ok": true, "convicted": true, "crime": crime, "days": days, "fine": fine,
+		"evidence": score, "sentence_type": kind, "wrongful": wrongful, "verdict": verdict}
+
+
+## 申请再审：冤假错案在新证据下重新审理，可改判无罪并退罚金、释放。
+func crime_retrial(new_evidence: float = 0.6) -> Dictionary:
+	_ensure_crime_state()
+	var judgment: Dictionary = _crime_state.get("last_judgment", {})
+	if judgment.is_empty():
+		return {"ok": false, "reason": "no_judgment"}
+	if not bool(judgment.get("wrongful", false)):
+		return {"ok": false, "reason": "not_wrongful"}
+	if bool(judgment.get("retried", false)):
+		return {"ok": false, "reason": "already_retried"}
+	var case: Dictionary = _crime_state.get("justice", {})
+	if case.is_empty():
+		return {"ok": false, "reason": "no_prosecution"}
+	case["wrongful"] = true
+	var r: Dictionary = justice.retrial(case, clampf(new_evidence, 0.0, 1.0), rng)
+	judgment["retried"] = true
+	if not bool(r.get("exonerated", false)):
+		_crime_state["last_judgment"] = judgment
+		_persist_crime()
+		_sync_legal()
+		return {"ok": true, "exonerated": false, "judgment": judgment}
+	var refund: int = maxi(0, int(judgment.get("fine", 0)))
+	if refund > 0:
+		economy.add_money(account_id(), refund, "crime_retrial_refund")
+		sync_finances()
+	var crime: String = String(judgment.get("crime", ""))
+	var kept: Array = []
+	var removed: bool = false
+	for rec in (_crime_state.get("records", []) as Array):
+		if not removed and rec is Dictionary and String((rec as Dictionary).get("crime", "")) == crime:
+			removed = true
+			continue
+		kept.append(rec)
+	_crime_state["records"] = kept
+	if not _prison.is_empty() and not bool(_prison.get("released", false)):
+		_prison["released"] = true
+		_prison["released_minute"] = now_minutes()
+		_prison["days_remaining"] = 0
+		_persist_prison()
+	judgment["outcome"] = "retrial_acquitted"
+	judgment["exonerated"] = true
+	_crime_state["last_judgment"] = judgment
+	_persist_crime()
+	_sync_legal()
+	return {"ok": true, "exonerated": true, "refund": refund, "judgment": judgment}
+
+
+## 取出当前待诉案件（优先本地通缉，其次自首案件）。
+func _crime_pending_entry() -> Dictionary:
+	var wanted: Dictionary = _crime_state.get("wanted", {})
+	var surrender_case: Dictionary = _crime_state.get("surrender_case", {})
+	if wanted.is_empty() and surrender_case.is_empty():
+		return {}
+	var region: String = current_region_id()
+	if not wanted.is_empty():
+		if not wanted.has(region):
+			region = String((wanted.keys() as Array)[0])
+		var entry: Dictionary = (wanted.get(region, {}) as Dictionary).duplicate(true)
+		entry["region"] = region
+		return entry
+	var s: Dictionary = surrender_case.duplicate(true)
+	if not s.has("region"):
+		s["region"] = region
+	return s
 
 
 ## 刑事受审：按案底证据与通缉等级定罪量刑，刑期入监、罚金从现金扣除。
