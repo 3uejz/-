@@ -15,6 +15,7 @@ const JobsScript = preload("res://sim/jobs.gd")
 const ItemsScript = preload("res://sim/items.gd")
 const EconomyScript = preload("res://sim/economy.gd")
 const RelationsScript = preload("res://sim/relations.gd")
+const NpcMemoryScript = preload("res://sim/npc_memory.gd")
 const HappinessScript = preload("res://sim/happiness.gd")
 const WeatherScript = preload("res://sim/weather.gd")
 const BankScript = preload("res://sim/bank.gd")
@@ -126,6 +127,7 @@ var jobs
 var items
 var economy
 var relations
+var memory_sys
 var happiness
 var weather
 var bank
@@ -301,6 +303,7 @@ func _init(state_obj = null, seed: int = 0) -> void:
 	items = ItemsScript.new()
 	economy = EconomyScript.new()
 	relations = RelationsScript.new()
+	memory_sys = NpcMemoryScript.new()
 	happiness = HappinessScript.new()
 	weather = WeatherScript.new(seed)
 	bank = BankScript.new(seed)
@@ -2200,9 +2203,45 @@ func social_flush_offline() -> Array:
 	_persist_social()
 	return out
 
+## 私信：记录对话、写入 NPC 记忆并推进关系互动计数。
+func social_dm(target_id: String, text: String) -> Dictionary:
+	var npc: Dictionary = find_person(target_id)
+	if npc.is_empty():
+		return {"ok": false, "reason": "unknown_person"}
+	var r: Dictionary = _social.send_direct(target_id, text, now_minutes())
+	if not bool(r.get("ok", false)):
+		return r
+	var p: Dictionary = player()
+	var rel: Dictionary = relations.ensure_relation(p, target_id)
+	rel["interactions"] = int(rel.get("interactions", 0)) + 1
+	rel["last_interaction_minute"] = now_minutes()
+	var favor: float = float(rel.get("favor", 0.0))
+	var weight: float = clampf(10.0 + favor * 0.2, -30.0, 40.0)
+	memory_sys.add_memory(npc, {
+		"type": "shared_experience", "content": "收到私信：%s" % text.strip_edges(),
+		"minute": now_minutes(), "subjects": [account_id()], "weight": weight,
+		"severity": 10.0, "visibility": "private",
+	})
+	var reply: String = "收到你的消息了。" if favor >= 0.0 else "有事直说。"
+	_social.receive_direct(target_id, reply, now_minutes())
+	_persist_social()
+	return {"ok": true, "target": target_id, "reply": reply, "unread": _social.unread_count()}
+
+## 查看与某人的私信线程。
+func social_dm_thread(target_id: String) -> Dictionary:
+	var npc: Dictionary = find_person(target_id)
+	if npc.is_empty():
+		return {"ok": false, "reason": "unknown_person"}
+	var list: Array = _social.thread(target_id)
+	for m in list:
+		(m as Dictionary)["read"] = true
+	_persist_social()
+	return {"ok": true, "name": String(npc.get("name", "")), "messages": list}
+
 func social_panel_data() -> Dictionary:
 	return {"followers": social_followers(), "posts": social_feed(10),
-		"post_count": _social.post_count(), "offline": social_offline_count()}
+		"post_count": _social.post_count(), "offline": social_offline_count(),
+		"unread": _social.unread_count(), "threads": _social.recent_threads(5)}
 
 # --- 知识产权与媒体（D25） ---
 

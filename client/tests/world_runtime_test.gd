@@ -2325,6 +2325,17 @@ func _test_social_runtime() -> void:
 	reloaded.bind(state)
 	check(reloaded.social_feed(5).size() == 1, "读档恢复动态")
 	check(not reloaded.social_panel_data().is_empty(), "社交面板数据非空")
+	var npc: Dictionary = host.acquaintances()[0]
+	var dm: Dictionary = host.social_dm(String(npc.get("id", "")), "最近怎么样？")
+	check(bool(dm.get("ok", false)), "发送私信")
+	check(String(dm.get("reply", "")) != "", "对方自动回复")
+	var th: Dictionary = host.social_dm_thread(String(npc.get("id", "")))
+	check_eq((th.get("messages", []) as Array).size(), 2, "私信线程含收发两条")
+	check(host.memory_sys.count(npc) >= 1, "私信写入 NPC 记忆")
+	host._persist_social()
+	var reloaded2 = SimHostScript.new(state, 251)
+	reloaded2.bind(state)
+	check_eq((reloaded2.social_dm_thread(String(npc.get("id", ""))).get("messages", []) as Array).size(), 2, "读档恢复私信线程")
 
 
 func _test_transport_infra_runtime() -> void:

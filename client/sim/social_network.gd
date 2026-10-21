@@ -34,6 +34,7 @@ var _posts: Dictionary = {}
 var _followers: Dictionary = {}   # "author|platform" -> int
 var _seq: int = 0
 var _offline_queue: Array = []
+var _threads: Dictionary = {}   # target_id -> [{from,to,text,minute,read}]
 
 
 func _init(seed: int = 0) -> void:
@@ -193,6 +194,7 @@ func to_dict() -> Dictionary:
 		"posts": _posts.duplicate(true),
 		"followers": _followers.duplicate(true),
 		"offline_queue": _offline_queue.duplicate(true),
+		"threads": _threads.duplicate(true),
 		"seq": _seq,
 	}
 
@@ -204,7 +206,69 @@ func from_dict(data: Dictionary) -> void:
 		_followers = (data["followers"] as Dictionary).duplicate(true)
 	if data.get("offline_queue", null) is Array:
 		_offline_queue = (data["offline_queue"] as Array).duplicate(true)
+	if data.get("threads", null) is Dictionary:
+		_threads = (data["threads"] as Dictionary).duplicate(true)
 	_seq = int(data.get("seq", 0))
+
+
+# --- 私信（D10） ---
+
+## 发送私信：写入对话线程，超长裁剪保留最近 200 条。
+func send_direct(target_id: String, text: String, minute: int = 0, from_id: String = "player") -> Dictionary:
+	var tid: String = target_id.strip_edges()
+	if tid.is_empty():
+		return {"ok": false, "reason": "unknown_target"}
+	var content: String = text.strip_edges()
+	if content.is_empty():
+		return {"ok": false, "reason": "empty_message"}
+	var list: Array = _threads.get(tid, [])
+	list.append({"from": from_id, "to": tid, "text": content, "minute": minute, "read": true})
+	if list.size() > 200:
+		list = list.slice(list.size() - 200)
+	_threads[tid] = list
+	return {"ok": true, "target": tid, "message": {"from": from_id, "to": tid, "text": content, "minute": minute}}
+
+
+## 接收私信：NPC 回复写入同一线程。
+func receive_direct(target_id: String, text: String, minute: int = 0) -> Dictionary:
+	var tid: String = target_id.strip_edges()
+	if tid.is_empty():
+		return {"ok": false, "reason": "unknown_target"}
+	var list: Array = _threads.get(tid, [])
+	list.append({"from": tid, "to": "player", "text": text.strip_edges(), "minute": minute, "read": false})
+	_threads[tid] = list
+	return {"ok": true, "target": tid}
+
+
+## 单条对话线程。
+func thread(target_id: String) -> Array:
+	return (_threads.get(target_id, []) as Array).duplicate(true)
+
+
+## 未读私信数。
+func unread_count() -> int:
+	var total: int = 0
+	for tid in _threads.keys():
+		for m in (_threads[tid] as Array):
+			if not bool((m as Dictionary).get("read", true)) and String((m as Dictionary).get("to", "")) == "player":
+				total += 1
+	return total
+
+
+## 最近私信摘要。
+func recent_threads(limit: int = 5) -> Array:
+	var out: Array = []
+	for tid in _threads.keys():
+		var list: Array = _threads[tid]
+		if list.is_empty():
+			continue
+		var last: Dictionary = list[list.size() - 1]
+		out.append({"target": String(tid), "last": String(last.get("text", "")),
+			"minute": int(last.get("minute", 0)), "count": list.size()})
+	out.sort_custom(func(a, b): return int(a.get("minute", 0)) > int(b.get("minute", 0)))
+	if out.size() > limit:
+		out = out.slice(0, limit)
+	return out
 
 
 # --- 断网离线队列（R50.10）---

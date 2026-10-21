@@ -53,7 +53,7 @@
 - 物品内容字段与 1000 目标脱节；房产**已接线**看房/买房/卖房/出租（`SimHost.property_*()`，房源按（种子, 区域）确定性生成、名下房产随 `player.assets` 持久化），持有按月结算（`advance()` 跨月触发 `property.monthly_settle()` 还贷/物业/租金/折旧/断供法拍），贷款余额/利率/月供/租约/租客/产权年限/装修已入「资产与财务」面板（`property_panel_data`），租约按月递减；订单物流已接（`consumer_protection.advance_logistics`，下单→揽收→运输→派送→签收，面板展示轨迹，动词 `查物流`/`确认收货`，`order.schema.json` 已有结构）；**尚余**消费心理数值与真实下单扣款。
 
 ### D10 网络社交、NPC 记忆与区域全人口
-`npc.memory` 已接入、`npc.relations` 为数组；社交平台已接线（发布动态/动态流/关注数/离线队列/「社交动态」面板与 `social_network` 运行态持久化）；非个体化人口快照细化与私信/直播 UI 仍待补。
+`npc.memory` 已接入、`npc.relations` 为数组；社交平台已接线（发布动态/动态流/关注数/离线队列/「社交动态」面板与 `social_network` 运行态持久化）；私信已接（`social_dm`/`social_dm_thread`，NPC 记忆与回复，面板未读与最近会话，读档持久化）；**尚余**非个体化人口快照细化与直播 UI。
 
 ### D11 育儿、继承与宠物
 - `player.family` **已接线**：`spouse_id`（婚恋）、`children_ids`（生育，子女 NPC 落 `world_delta.npcs`）、`pregnancy`（`怀孕` 写入，到期由 `advance()` 分娩）、`parent_ids`（子女反查父母）、`sibling_ids`（分娩时子女间互链）、`guardian_ids`（`指定监护人 <人物>` 写入单值监护人）、`adopted_ids`（`收养` 动词生成收养子女 NPC，落独立 id 序号段 `ADOPT_SEQ_BASE` 并计入法定子女，记 `legacy.history` 收养条目）、`player.will`（`立遗嘱`）；死亡触发 `settle_inheritance()` 按遗嘱或法定顺序分配并记 `legacy.history`，并解析未成年子女监护归属（`legal_guardian()`：指定监护人 95 > 父母 88 > 配偶 85 > 成年子女 75 > 兄弟姐妹 65 > 熟人 45）写入结算；`death_summary()` 输出人生结算。子女成长**已接线**：`advance()` 调用 `_grow_children()` 做年度成长结算（`ParentingSystem.raise_child()`，属性 = 基因×0.5 + 照护×0.2 + 教育×0.2 + 随机×0.1）并更新阶段/成年独立，`_check_child_mortality()` 按 `PARENT_EARLY_DEATH_RATE` 年化折算做早夭判定。宠物**已接线** `领养`/`喂养`/`训练宠物`（`player.pets` 运行时字段 + 「家庭与宠物」面板 + 随日推进）、「家族史与传承」与「家庭与宠物」面板展示养子女/监护人。

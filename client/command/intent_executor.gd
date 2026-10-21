@@ -152,6 +152,8 @@ func _dispatch(intent) -> Dictionary:
 		# 社交
 		"聊天":
 			return _interact(intent, "chat")
+		"私信":
+			return _social_dm(intent)
 		"送礼":
 			return _interact(intent, "gift")
 		"约会":
@@ -1539,6 +1541,18 @@ func _feed_pets(_intent) -> Dictionary:
 	if done.is_empty():
 		return _fail("你没有需要喂养的宠物。")
 	return _ok(["你喂饱了：%s。" % ", ".join(done)], 0, "")
+
+func _social_dm(intent) -> Dictionary:
+	var target := _object_id(intent, "person")
+	if target.is_empty():
+		return _fail("请指定私信对象。")
+	var text: String = String(intent.params.get("method", "")).strip_edges()
+	if text.is_empty():
+		text = "在吗？"
+	var r: Dictionary = host.social_dm(target, text)
+	if not bool(r.get("ok", false)):
+		return _fail("无法发送私信（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已发送私信，对方回复：%s" % String(r.get("reply", ""))], 0, "social")
 
 func _social_publish(intent) -> Dictionary:
 	var platform: String = String(intent.params.get("social_platform", ""))
