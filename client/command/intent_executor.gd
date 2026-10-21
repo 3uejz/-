@@ -698,6 +698,10 @@ func _dispatch(intent) -> Dictionary:
 			return _debt_abscond(intent)
 		"消费订单":
 			return _consumer_order(intent)
+		"查物流":
+			return _consumer_logistics(intent)
+		"确认收货":
+			return _consumer_confirm(intent)
 		"商品退换":
 			return _consumer_return(intent)
 		"三包退换":
@@ -3809,6 +3813,25 @@ func _consumer_order(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法下单（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["消费订单已登记，金额 %d。" % amount], 0, "")
+
+func _consumer_logistics(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_logistics()
+	if not bool(r.get("ok", false)):
+		return _fail("无法查询物流（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	var msg: String = "%s %s：%s，当前位置 %s，预计 %s。" % [
+		String(r.get("carrier", "")), String(r.get("tracking", "")),
+		String(r.get("status", "")), String(r.get("location", "")),
+		_eta_text(int(r.get("eta_minutes", 0)))]
+	return _ok([msg], 0, "")
+
+func _eta_text(minute: int) -> String:
+	return "第 %d 分钟" % minute
+
+func _consumer_confirm(intent) -> Dictionary:
+	var r: Dictionary = host.consumer_confirm_receipt()
+	if not bool(r.get("ok", false)):
+		return _fail("无法确认收货（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已确认收货，订单完成。"], 0, "")
 
 func _consumer_return(intent) -> Dictionary:
 	var days: int = int(_param_number(intent, "number", 1))

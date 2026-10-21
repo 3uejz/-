@@ -5712,6 +5712,7 @@ func consumer_incident_kinds_catalog() -> Array:
 func consumer_new_order(amount: int, category: String, defective: bool, fake: bool) -> Dictionary:
 	_consumer_order = consumer.new_order("order-%d" % Time.get_ticks_msec(), "merchant", amount, {
 		"category": category, "defective": defective, "fake": fake,
+		"placed_minutes": now_minutes(), "delivery_minutes": 3 * MINUTES_PER_DAY,
 	})
 	_persist_consumer()
 	return {"ok": true, "order": _consumer_order}
@@ -5827,6 +5828,39 @@ func consumer_malicious_claim() -> Dictionary:
 		return {"ok": false, "reason": "no_order"}
 	return consumer.malicious_claim(_consumer_order, _consumer_merchant, {}, rng)
 
+## 查物流：按当前时刻推进并返回物流轨迹状态。
+func consumer_logistics() -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var r: Dictionary = consumer.advance_logistics(_consumer_order, now_minutes())
+	_persist_consumer()
+	var lg: Dictionary = _consumer_order.get("logistics", {})
+	return {"ok": true, "changed": bool(r.get("changed", false)), "status": String(lg.get("status", "")),
+		"carrier": String(lg.get("carrier", "")), "tracking": String(lg.get("tracking", "")),
+		"location": String(lg.get("last_location", "")), "eta_minutes": int(lg.get("eta_minutes", 0))}
+
+## 签收：未到 ETA 也可手动确认收货。
+func consumer_confirm_receipt() -> Dictionary:
+	if _consumer_order.is_empty():
+		return {"ok": false, "reason": "no_order"}
+	var lg: Dictionary = _consumer_order.get("logistics", {})
+	if lg.is_empty():
+		return {"ok": false, "reason": "no_logistics"}
+	lg["status"] = "delivered"
+	lg["last_location"] = "收货地址"
+	lg["updated_minutes"] = now_minutes()
+	_consumer_order["logistics"] = lg
+	_consumer_order["status"] = "delivered"
+	_persist_consumer()
+	return {"ok": true, "status": "delivered"}
+
+func _consumer_logistics_tick(now_minute: int) -> void:
+	if _consumer_order.is_empty():
+		return
+	var r: Dictionary = consumer.advance_logistics(_consumer_order, now_minute)
+	if bool(r.get("changed", false)):
+		_persist_consumer()
+
 func consumer_panel_data() -> Dictionary:
 	var out: Dictionary = {}
 	if not _consumer_order.is_empty():
@@ -5838,6 +5872,7 @@ func consumer_panel_data() -> Dictionary:
 			"status": String(_consumer_order.get("status", "")),
 			"refunded": int(_consumer_order.get("refunded", 0)),
 			"complaints": (_consumer_order.get("complaints", []) as Array).size(),
+			"logistics": (_consumer_order.get("logistics", {}) as Dictionary).duplicate(true),
 		}
 	if not _consumer_product.is_empty():
 		out["product"] = {
@@ -10582,6 +10617,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 		_prison_tick(before_minutes, now_minutes())
 		# 送检鉴定到期出结果并写入证据链。
 		_police_forensics_tick(now_minutes())
+		# 消费订单物流按时序推进。
+		_consumer_logistics_tick(now_minutes())
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
 		# 工厂工资按月结算（资金不足拖欠并罢工）。

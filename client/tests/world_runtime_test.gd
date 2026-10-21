@@ -328,6 +328,13 @@ func _test_consumer_civil_bindings() -> void:
 	host.economy.add_money(host.account_id(), 100000000, "test")
 	# 消费纠纷立案：缺陷商品按三倍标的。
 	check(bool(host.consumer_new_order(100000, "general", true, false).get("ok", false)), "创建消费订单")
+	var lg0: Dictionary = host.consumer_logistics()
+	check(bool(lg0.get("ok", false)), "订单生成物流单")
+	check_eq(String(lg0.get("status", "")), "label_created", "初始物流状态为已建单")
+	host.state.clock["absolute_minutes"] = host.now_minutes() + 3 * SimHostScript.MINUTES_PER_DAY + 1
+	host._consumer_logistics_tick(host.now_minutes())
+	var lg1: Dictionary = host.consumer_logistics()
+	check_eq(String(lg1.get("status", "")), "delivered", "到期物流签收")
 	var cash0: int = int(host.economy.cash(host.account_id()))
 	var sr: Dictionary = host.consumer_sue(0.8)
 	check(bool(sr.get("ok", false)), "消费起诉立案")

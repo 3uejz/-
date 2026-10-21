@@ -1414,6 +1414,15 @@ static func consumer(player: Dictionary, context: Dictionary, name_resolver: Cal
 				{"label": "已退款", "value": _money(int(o.get("refunded", 0)))},
 				{"label": "投诉次数", "value": str(int(o.get("complaints", 0)))},
 			]))
+			var lg: Dictionary = o.get("logistics", {})
+			if not lg.is_empty():
+				sections.append(_section("物流", [
+					{"label": "承运商", "value": String(lg.get("carrier", ""))},
+					{"label": "运单号", "value": String(lg.get("tracking", ""))},
+					{"label": "状态", "value": String(lg.get("status", ""))},
+					{"label": "位置", "value": String(lg.get("last_location", ""))},
+					{"label": "预计送达", "value": "%d 分钟" % int(lg.get("eta_minutes", 0))},
+				]))
 		if cs.has("product"):
 			var pr: Dictionary = cs["product"]
 			sections.append(_section("商品", [

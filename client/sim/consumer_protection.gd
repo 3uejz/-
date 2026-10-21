@@ -33,6 +33,7 @@ const CHANNEL_NAMES: Dictionary = {
 
 ## 渠道权重：越靠后强制力越强。数值真源：shared/consistency/baseline/consumer_protection.json。
 const CHANNEL_WEIGHTS: Dictionary = BaselineScript.CP_CHANNEL_WEIGHTS
+const DELIVERY_MINUTES: int = 4320
 
 const RETURN_WINDOW_DAYS: int = BaselineScript.CP_RETURN_WINDOW_DAYS       # 七日无理由退货
 const THREE_GUARANTEE_DAYS: int = BaselineScript.CP_THREE_GUARANTEE_DAYS    # 三包退换
@@ -73,6 +74,8 @@ func incident_kinds() -> Array:
 # --- 订单与商品 ---
 
 func new_order(order_id: String, merchant: String, amount: int, opts: Dictionary = {}) -> Dictionary:
+	var placed: int = int(opts.get("placed_minutes", 0))
+	var eta: int = placed + int(opts.get("delivery_minutes", DELIVERY_MINUTES))
 	return {
 		"order_id": order_id,
 		"merchant": merchant,
@@ -82,6 +85,17 @@ func new_order(order_id: String, merchant: String, amount: int, opts: Dictionary
 		"defective": bool(opts.get("defective", false)),
 		"fake": bool(opts.get("fake", false)),
 		"status": "paid",
+		"payment_status": "paid",
+		"placed_minutes": placed,
+		"promised_minutes": eta,
+		"logistics": {
+			"carrier": str(opts.get("carrier", "顺达物流")),
+			"tracking": "LT%d" % abs(order_id.hash()),
+			"status": "label_created",
+			"eta_minutes": eta,
+			"updated_minutes": placed,
+			"last_location": "商家仓库",
+		},
 		"refunded": 0,
 		"complaints": [],
 	}
@@ -100,6 +114,42 @@ func new_product(name: String, opts: Dictionary = {}) -> Dictionary:
 		"batch": str(opts.get("batch", "")),
 		"trace": [],
 	}
+
+
+# --- 订单物流（D9） ---
+
+## 推进物流状态：下单→揽收→运输→派送→签收，按 ETA 与时序自动流转。
+func advance_logistics(order: Dictionary, now_minute: int) -> Dictionary:
+	var logistics: Dictionary = order.get("logistics", {})
+	if logistics.is_empty():
+		return {"ok": false, "reason": "no_logistics"}
+	var placed: int = int(order.get("placed_minutes", 0))
+	var eta: int = int(logistics.get("eta_minutes", int(order.get("promised_minutes", placed + DELIVERY_MINUTES))))
+	var current: String = str(logistics.get("status", "label_created"))
+	var nxt: String = current
+	var location: String = str(logistics.get("last_location", "商家仓库"))
+	if now_minute >= eta:
+		nxt = "delivered"
+		location = "收货地址"
+	elif now_minute >= eta - 120:
+		nxt = "out_for_delivery"
+		location = "本地派送站"
+	elif now_minute >= placed + int(float(eta - placed) * 0.4):
+		nxt = "in_transit"
+		location = "区域转运中心"
+	elif now_minute >= placed + int(float(eta - placed) * 0.1):
+		nxt = "picked_up"
+		location = "商家仓库"
+	if nxt != current:
+		var rank: Dictionary = {"label_created": 0, "picked_up": 1, "in_transit": 2, "out_for_delivery": 3, "delivered": 4}
+		if int(rank.get(nxt, 0)) > int(rank.get(current, 0)):
+			logistics["status"] = nxt
+			logistics["last_location"] = location
+			logistics["updated_minutes"] = now_minute
+			order["logistics"] = logistics
+			order["status"] = "delivered" if nxt == "delivered" else nxt
+			return {"ok": true, "changed": true, "from": current, "to": nxt, "location": location}
+	return {"ok": true, "changed": false, "status": current}
 
 
 # --- 退换货、三包与保修 ---
