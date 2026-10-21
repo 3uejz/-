@@ -126,14 +126,24 @@ func new_case(crime: String, region: String, opts: Dictionary = {}) -> Dictionar
 		"informants": [],
 		"undercover": {},
 		"tech": [],
+		"evidence_log": [],
+		"forensics": [],
+		"joint": {},
 	}
 
 
-func add_evidence(case: Dictionary, kind: String, strength: float) -> Dictionary:
+func add_evidence(case: Dictionary, kind: String, strength: float, opts: Dictionary = {}) -> Dictionary:
 	if not EVIDENCE_KINDS.has(kind):
 		return {"ok": false, "reason": "unknown_kind"}
+	if not case.has("evidence_log"):
+		case["evidence_log"] = []
 	var ev: Dictionary = case["evidence"]
-	ev[kind] = clampf(float(ev.get(kind, 0.0)) + maxf(0.0, strength), 0.0, 1.0)
+	var added: float = maxf(0.0, strength)
+	ev[kind] = clampf(float(ev.get(kind, 0.0)) + added, 0.0, 1.0)
+	(case["evidence_log"] as Array).append({
+		"kind": kind, "added": added, "value": float(ev[kind]),
+		"minute": int(opts.get("minute", 0)), "source": String(opts.get("source", "collect")),
+	})
 	return {"ok": true, "kind": kind, "value": float(ev[kind]), "score": evidence_score(case)}
 
 
@@ -174,7 +184,7 @@ func collect(case: Dictionary, kind: String, strength: float, opts: Dictionary =
 	# 角色专业化加成。
 	var bonus: float = float((ROLES.get(str(case.get("role", "")), {}) as Dictionary).get("evidence_bonus", {}).get(kind, 0.0))
 	var added: float = maxf(0.0, strength) * (1.0 + bonus)
-	add_evidence(case, kind, added)
+	add_evidence(case, kind, added, {"minute": int(opts.get("minute", 0)), "source": "collect"})
 	return {"ok": true, "kind": kind, "added": added, "score": evidence_score(case)}
 
 
@@ -253,8 +263,70 @@ func solve_probability(case: Dictionary) -> float:
 	var leads: float = clampf(float(case.get("leads", 0.0)), 0.0, 1.0)
 	var skill: float = clampf(float(case.get("officer_skill", 0.0)) / 20.0, 0.0, 1.0)
 	var base: float = 0.10 + 0.60 * ev + 0.15 * leads + 0.15 * skill
+	var joint: float = clampf(float((case.get("joint", {}) as Dictionary).get("bonus", 0.0)), 0.0, 0.2)
 	var penalty: float = 0.25 * (1.0 - legality_score(case))
-	return clampf(base - penalty, 0.02, 0.98)
+	return clampf(base + joint - penalty, 0.02, 0.98)
+
+
+## 送检鉴定：鉴定周期按天排队，到期由 advance_forensics 出结果并写入证据链。
+func submit_forensics(case: Dictionary, kind: String, days: int, opts: Dictionary = {}) -> Dictionary:
+	if not EVIDENCE_KINDS.has(kind):
+		return {"ok": false, "reason": "unknown_kind"}
+	if not case.has("forensics"):
+		case["forensics"] = []
+	var pending: Array = case["forensics"]
+	for f in pending:
+		if String((f as Dictionary).get("kind", "")) == kind:
+			return {"ok": false, "reason": "already_submitted"}
+	var now: int = int(opts.get("minute", 0))
+	var cycle: int = maxi(1, days) * int(opts.get("minutes_per_day", 1440))
+	pending.append({"kind": kind, "days": maxi(1, days), "due_minute": now + cycle,
+		"submitted_minute": now, "strength": clampf(float(opts.get("strength", 0.25)), 0.05, 0.6)})
+	case["stage"] = STAGE_FORENSICS
+	return {"ok": true, "kind": kind, "due_minute": now + cycle, "days": maxi(1, days), "pending": pending.size()}
+
+
+## 到期鉴定出结果；返回本次完成的鉴定列表。
+func advance_forensics(case: Dictionary, now_minute: int) -> Array:
+	var done: Array = []
+	var pending: Array = case.get("forensics", [])
+	if pending.is_empty():
+		return done
+	var kept: Array = []
+	for f in pending:
+		var item: Dictionary = f
+		if int(item.get("due_minute", 0)) <= now_minute:
+			var r: Dictionary = add_evidence(case, String(item.get("kind", "")), float(item.get("strength", 0.2)),
+				{"minute": now_minute, "source": "forensics"})
+			(done as Array).append({"kind": String(item.get("kind", "")), "added": float(item.get("added", item.get("strength", 0.0))),
+				"score": float(r.get("score", 0.0))})
+		else:
+			kept.append(item)
+	case["forensics"] = kept
+	return done
+
+
+## 跨区域协同侦办：联合专案组共享线索，按参战区域数提升侦破加成。
+func request_joint(case: Dictionary, regions: Array, opts: Dictionary = {}) -> Dictionary:
+	var unique: Array = []
+	for r in regions:
+		var rid: String = String(r).strip_edges()
+		if not rid.is_empty() and not unique.has(rid):
+			unique.append(rid)
+	var home: String = String(case.get("region", ""))
+	if not home.is_empty() and not unique.has(home):
+		unique.push_front(home)
+	if unique.size() < 2:
+		return {"ok": false, "reason": "need_more_regions"}
+	var cost: int = int(opts.get("cost", 50000)) * (unique.size() - 1)
+	var funding: int = int(opts.get("funding", 0))
+	if funding > 0 and funding < cost:
+		return {"ok": false, "reason": "insufficient_funding", "cost": cost}
+	var bonus: float = clampf(0.05 + 0.04 * float(unique.size() - 1), 0.05, 0.2)
+	case["joint"] = {"regions": unique, "bonus": bonus, "cost": cost, "minute": int(opts.get("minute", 0))}
+	var r2: Dictionary = add_evidence(case, "witness", 0.05 * float(unique.size() - 1),
+		{"minute": int(opts.get("minute", 0)), "source": "joint"})
+	return {"ok": true, "regions": unique, "bonus": bonus, "cost": cost, "score": float(r2.get("score", 0.0))}
 
 
 ## 推进一步状态机；追查阶段尝试侦破。

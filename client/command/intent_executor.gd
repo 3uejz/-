@@ -556,6 +556,10 @@ func _dispatch(intent) -> Dictionary:
 			return _police_undercover(intent)
 		"技侦":
 			return _police_tech(intent)
+		"送检鉴定":
+			return _police_forensics(intent)
+		"跨区协同":
+			return _police_joint(intent)
 		"侦破":
 			return _police_advance(intent)
 		"开安保公司":
@@ -3202,6 +3206,30 @@ func _police_collect(intent) -> Dictionary:
 	if not bool(r.get("ok", false)):
 		return _fail("无法取证（%s）。" % _reason_cn(String(r.get("reason", ""))))
 	return _ok(["已采集%s，证据强度 %.2f。" % [String(r.get("kind", "")), float(r.get("score", 0.0))]], 0, "")
+
+func _police_forensics(intent) -> Dictionary:
+	var kind := _object_id(intent, "evidence_kind")
+	if kind.is_empty():
+		return _fail("请指明鉴定证据种类。")
+	var days: int = maxi(1, int(_param_number(intent, "number", 2)))
+	var r: Dictionary = host.police_forensics(kind, days)
+	if not bool(r.get("ok", false)):
+		return _fail("无法送检（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已送检%s，%d 日后出结果。" % [kind, int(r.get("days", days))]], 0, "")
+
+func _police_joint(intent) -> Dictionary:
+	var raw: String = String(intent.params.get("method", "")).strip_edges()
+	if raw.is_empty():
+		return _fail("请指明协同区域。")
+	var regions: Array = []
+	for part in raw.replace("，", ",").split(",", false):
+		var rid: String = _find_region_id(String(part).strip_edges())
+		if not rid.is_empty():
+			regions.append(rid)
+	var r: Dictionary = host.police_joint_operation(regions)
+	if not bool(r.get("ok", false)):
+		return _fail("无法协同办案（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["联合专案组成立，侦破加成 %.2f，经费 %d。" % [float(r.get("bonus", 0.0)), int(r.get("cost", 0))]], 0, "")
 
 func _police_warrant(intent) -> Dictionary:
 	var r: Dictionary = host.police_warrant()

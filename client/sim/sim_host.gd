@@ -4593,6 +4593,40 @@ func police_tech() -> Dictionary:
 	_persist_police()
 	return r
 
+## 送检鉴定：按鉴定种类排队，到期自动写入证据链。
+func police_forensics(kind: String, days: int = 2, strength: float = 0.3) -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.submit_forensics(_police_case, kind, days, {
+		"minute": now_minutes(), "strength": strength, "minutes_per_day": MINUTES_PER_DAY,
+	})
+	_persist_police()
+	return r
+
+## 跨区域协同侦办：支付联合办案经费，换取线索共享与侦破加成。
+func police_joint_operation(regions: Array) -> Dictionary:
+	if _police_case.is_empty():
+		return {"ok": false, "reason": "no_case"}
+	var r: Dictionary = police.request_joint(_police_case, regions, {
+		"minute": now_minutes(), "funding": int(economy.cash(account_id())),
+	})
+	if not bool(r.get("ok", false)):
+		return r
+	var cost: int = int(r.get("cost", 0))
+	if cost > 0:
+		economy.add_money(account_id(), -cost, "police_joint")
+		sync_finances()
+	_persist_police()
+	return r
+
+## 鉴定到期结算：由时间推进调用。
+func _police_forensics_tick(now_minute: int) -> void:
+	if _police_case.is_empty():
+		return
+	var done: Array = police.advance_forensics(_police_case, now_minute)
+	if not done.is_empty():
+		_persist_police()
+
 func police_advance() -> Dictionary:
 	if _police_case.is_empty():
 		return {"ok": false, "reason": "no_case"}
@@ -4643,6 +4677,9 @@ func police_panel_data() -> Dictionary:
 			"legality": police.legality_score(_police_case),
 			"solve_probability": police.solve_probability(_police_case),
 			"wrongful": bool(_police_case.get("wrongful", false)),
+			"forensics_pending": (_police_case.get("forensics", []) as Array).size(),
+			"joint_regions": (_police_case.get("joint", {}) as Dictionary).get("regions", []),
+			"joint_bonus": float((_police_case.get("joint", {}) as Dictionary).get("bonus", 0.0)),
 		}
 	if not _security_firm.is_empty():
 		var contracts: Array = _security_firm.get("contracts", [])
@@ -10496,6 +10533,8 @@ func advance(minutes: int, opts: Dictionary = {}) -> Dictionary:
 			events.append({"type": "birth", "name": String(born.get("name", ""))})
 		# 监狱刑期按日推进（刑满/假释/越狱后同步法律状态）。
 		_prison_tick(before_minutes, now_minutes())
+		# 送检鉴定到期出结果并写入证据链。
+		_police_forensics_tick(now_minutes())
 		# 持有房产按月结算（贷款/物业/租金/折旧/断供法拍）。
 		_maybe_settle_property(before_minutes, now_minutes())
 		# 工厂工资按月结算（资金不足拖欠并罢工）。

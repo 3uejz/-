@@ -1116,6 +1116,12 @@ static func legal(player: Dictionary, context: Dictionary, name_resolver: Callab
 			{"label": "程序合法度", "value": "%.2f" % float(pc.get("legality", 0.0))},
 			{"label": "侦破概率", "value": "%.2f" % float(pc.get("solve_probability", 0.0))},
 		]
+		if int(pc.get("forensics_pending", 0)) > 0:
+			rows.append({"label": "待出鉴定", "value": str(int(pc.get("forensics_pending", 0)))})
+		var jregions: Array = pc.get("joint_regions", [])
+		if not jregions.is_empty():
+			rows.append({"label": "协同区域", "value": "、".join(jregions)})
+			rows.append({"label": "协同加成", "value": "%.2f" % float(pc.get("joint_bonus", 0.0))})
 		if bool(pc.get("wrongful", false)):
 			rows.append({"label": "警示", "value": "疑似冤假错案"})
 		sections.append(_section("经办案件", rows))
