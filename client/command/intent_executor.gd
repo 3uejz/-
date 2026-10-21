@@ -335,6 +335,10 @@ func _dispatch(intent) -> Dictionary:
 			return _mfg_produce(intent)
 		"产线中断":
 			return _mfg_auto_disruptions(intent)
+		"对接上游":
+			return _mfg_link_upstream(intent)
+		"上游订货":
+			return _mfg_upstream_order(intent)
 		"接单":
 			return _mfg_order(intent)
 		"交付订单":
@@ -2275,6 +2279,28 @@ func _mfg_auto_disruptions(intent) -> Dictionary:
 		var ed: Dictionary = e
 		lines.append("产线中断：%s（来源 %s）。" % [String(ed.get("kind", "")), String(ed.get("source", ""))])
 	return _ok(lines, 0, "")
+
+func _mfg_link_upstream(intent) -> Dictionary:
+	var name := String(intent.params.get("method", "")) if intent.params is Dictionary else ""
+	if name == "":
+		return _fail("未指定上游工厂名称。")
+	var material := _object_id(intent, "mfg_material")
+	if material == "":
+		material = "steel"
+	var r: Dictionary = host.mfg_link_upstream(name, material, 2)
+	if not bool(r.get("ok", false)):
+		return _fail("无法对接上游（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["已对接上游「%s」，供应 %s，物流 2 天。" % [name, material]], 0, "")
+
+func _mfg_upstream_order(intent) -> Dictionary:
+	var material := _object_id(intent, "mfg_material")
+	if material == "":
+		return _fail("未指定原料。")
+	var qty: float = float(_param_number(intent, "number", 100))
+	var r: Dictionary = host.mfg_upstream_order(material, qty)
+	if not bool(r.get("ok", false)):
+		return _fail("无法向上游订货（%s）。" % _reason_cn(String(r.get("reason", ""))))
+	return _ok(["向上游订 %s %.1f，花费 %d，预计 %d 天到货。" % [material, qty, int(r.get("cost", 0)), int(r.get("lead_days", 0))]], 0, "")
 
 func _mfg_produce(intent) -> Dictionary:
 	var recipe := _object_id(intent, "mfg_recipe")

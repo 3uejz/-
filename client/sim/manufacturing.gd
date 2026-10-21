@@ -254,6 +254,31 @@ func add_supplier(factory: Dictionary, supplier: Dictionary) -> Dictionary:
 	return {"ok": true, "supplier": rec}
 
 
+## 对接上游工厂：以优惠价与高可靠度供货，按 lead_days 计物流时效。
+func add_upstream(factory: Dictionary, name: String, material: String, opts: Dictionary = {}) -> Dictionary:
+	var supplier: Dictionary = {
+		"id": "up_%s" % name,
+		"name": name,
+		"materials": [material],
+		"price_factor": clampf(float(opts.get("price_factor", 0.85)), 0.1, 5.0),
+		"reliability": clampf(float(opts.get("reliability", 0.95)), 0.0, 1.0),
+		"upstream": true,
+		"lead_days": maxi(1, int(opts.get("lead_days", 2))),
+	}
+	var r: Dictionary = add_supplier(factory, supplier)
+	r["supplier"]["upstream"] = true
+	r["supplier"]["lead_days"] = int(supplier["lead_days"])
+	return r
+
+
+## 查找覆盖某原料的上游供应商。
+func upstream_supplier(factory: Dictionary, material: String) -> Dictionary:
+	for s in (factory.get("suppliers", []) as Array):
+		if bool((s as Dictionary).get("upstream", false)) and ((s as Dictionary).get("materials", []) as Array).has(material):
+			return s
+	return {}
+
+
 ## 采购：从覆盖该原料的供应商中下单；无供应商则断料。断料/涨价由此结算。
 func purchase(factory: Dictionary, material: String, qty: float, opts: Dictionary = {}) -> Dictionary:
 	var amount: float = maxf(0.0, qty)

@@ -1083,6 +1083,16 @@ func _test_manufacturing_runtime() -> void:
 	check_eq(String(host.mfg_produce("steel_part", 1.0).get("reason", "")), "disrupted", "中断时拒绝生产")
 	host.manufacturing.set_disruption(host.manufacturing_state(), "power_outage", false)
 	host.economy.macro["inflation"] = 0.02
+	# 上游工厂对接与延迟到货。
+	host._factory["money"] = 5000000
+	var link: Dictionary = host.mfg_link_upstream("精钢厂", "steel", 1)
+	check(bool(link.get("ok", false)), "对接上游工厂")
+	host._factory["materials"]["steel"] = {"qty": 0.0, "unit_cost": 0}
+	var up: Dictionary = host.mfg_upstream_order("steel", 50.0)
+	check(bool(up.get("ok", false)) and int(up.get("lead_days", 0)) == 1, "上游订货登记物流时效")
+	check_near(float(host._factory["materials"]["steel"]["qty"]), 0.0, 1e-6, "未到货前库存为零")
+	host._mfg_tick(host.now_minutes(), host.now_minutes() + SimHostScript.MINUTES_PER_DAY + 60)
+	check(float(host._factory["materials"]["steel"]["qty"]) >= 45.0, "上游订货按日到货")
 	# 持久化与读档恢复。
 	host._persist_manufacturing()
 	check(state.sim_runtime.get("manufacturing", null) is Dictionary, "制造业运行态写入 sim_runtime")

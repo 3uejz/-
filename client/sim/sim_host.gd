@@ -2459,6 +2459,38 @@ func mfg_add_supplier(material: String) -> Dictionary:
 	_persist_manufacturing()
 	return r
 
+## 对接上游工厂：登记优惠供货关系，供后续上游订货。
+func mfg_link_upstream(name: String, material: String, lead_days: int = 2) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var r: Dictionary = manufacturing.add_upstream(_factory, name, material, {"lead_days": lead_days})
+	if bool(r.get("ok", false)):
+		_persist_manufacturing()
+	return r
+
+## 上游订货：扣工厂资金，按物流时效延迟到货。
+func mfg_upstream_order(material: String, qty: float) -> Dictionary:
+	if _factory.is_empty():
+		return {"ok": false, "reason": "no_factory"}
+	var supplier: Dictionary = manufacturing.upstream_supplier(_factory, material)
+	if supplier.is_empty():
+		return {"ok": false, "reason": "no_upstream"}
+	var amount: float = maxf(0.0, qty)
+	if amount <= 0.0:
+		return {"ok": false, "reason": "bad_quantity"}
+	var unit_cost: int = int(round(1000.0 * float(supplier.get("price_factor", 0.85))))
+	var cost: int = int(round(amount * float(unit_cost)))
+	if int(_factory.get("money", 0)) < cost:
+		return {"ok": false, "reason": "insufficient_funds", "cost": cost}
+	_factory["money"] = int(_factory.get("money", 0)) - cost
+	var orders: Array = _factory.get("upstream_orders", [])
+	var lead: int = maxi(1, int(supplier.get("lead_days", 2)))
+	orders.append({"material": material, "qty": amount, "unit_cost": unit_cost, "cost": cost,
+		"due_minute": now_minutes() + lead * MINUTES_PER_DAY, "supplier": String(supplier.get("name", ""))})
+	_factory["upstream_orders"] = orders
+	_persist_manufacturing()
+	return {"ok": true, "material": material, "qty": amount, "cost": cost, "lead_days": lead, "pending": orders.size()}
+
 func mfg_purchase(material: String, qty: float) -> Dictionary:
 	if _factory.is_empty():
 		return {"ok": false, "reason": "no_factory"}
@@ -2636,6 +2668,8 @@ func factory_panel_data() -> Dictionary:
 		"materials": materials,
 		"products": products,
 		"orders": orders,
+		"upstream": (_factory.get("upstream_orders", []) as Array).duplicate(true),
+		"upstream_count": (_factory.get("upstream_orders", []) as Array).size(),
 	}
 
 func _persist_manufacturing() -> void:
@@ -3221,6 +3255,19 @@ func _mfg_tick(before_minutes: int, after_minutes: int) -> void:
 		_factory["power_outage_until"] = 0
 		manufacturing.set_disruption(_factory, "power_outage", false)
 		_persist_manufacturing()
+	# 上游物流到货：按约定分钟数延迟入库。
+	var pending: Array = _factory.get("upstream_orders", [])
+	if not pending.is_empty():
+		var remain: Array = []
+		for o in pending:
+			var order: Dictionary = o
+			if after_minutes >= int(order.get("due_minute", 0)):
+				manufacturing.add_material(_factory, String(order.get("material", "")), float(order.get("qty", 0.0)), int(order.get("unit_cost", 1000)))
+			else:
+				remain.append(order)
+		if remain.size() != pending.size():
+			_factory["upstream_orders"] = remain
+			_persist_manufacturing()
 	var months: int = _month_ordinal(after_minutes) - _month_ordinal(before_minutes)
 	if months <= 0:
 		return
