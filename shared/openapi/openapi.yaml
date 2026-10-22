@@ -274,6 +274,32 @@ paths:
               schema: { $ref: "../schemas/content-manifest.schema.json" }
         "304": { description: "未修改" }
 
+  /content/packs/{name}:
+    get:
+      tags: [content]
+      summary: 下载内容包
+      operationId: downloadContentPack
+      description: 从对象存储流式下载内容包，支持 HTTP Range 断点续传。
+      parameters:
+        - { $ref: "#/components/parameters/PackName" }
+        - { $ref: "#/components/parameters/Range" }
+      responses:
+        "200":
+          description: 内容包二进制
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "206":
+          description: 内容包分片
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /config:
     get:
       tags: [content]
@@ -1032,6 +1058,15 @@ components:
       name: If-None-Match
       in: header
       schema: { type: string }
+    PackName:
+      name: name
+      in: path
+      required: true
+      schema: { type: string, pattern: "^[a-z0-9][a-z0-9._-]{0,95}$" }
+    Range:
+      name: Range
+      in: header
+      schema: { type: string, description: "字节区间，如 bytes=0-1048575。" }
 
   headers:
     ETag:

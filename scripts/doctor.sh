@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 工具链自检：打印关键组件版本与路径
 set -u
-GODOT_BIN="${GODOT_BIN:-/workspace/.toolchain/godot}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GODOT_BIN="${GODOT_BIN:-$ROOT/.toolchain/godot}"
 line() { printf "%-14s %s\n" "$1" "$2"; }
 
 line "os" "$( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-unknown}" )"
@@ -17,6 +18,6 @@ line "protoc" "$(protoc --version 2>/dev/null || echo MISSING)"
 line "psql" "$(psql --version 2>/dev/null || echo MISSING)"
 line "redis" "$(redis-server --version 2>/dev/null | head -1 || echo MISSING)"
 line "godot" "$("$GODOT_BIN" --headless --version 2>/dev/null || echo MISSING)"
-BLENDER_BIN="${BLENDER_BIN:-$(ls -d /workspace/.toolchain/blender-*/blender 2>/dev/null | head -n1 || true)}"
+BLENDER_BIN="${BLENDER_BIN:-$(ls -d "$ROOT"/.toolchain/blender-*/blender 2>/dev/null | head -n1 || true)}"
 line "blender" "$([ -n "$BLENDER_BIN" ] && "$BLENDER_BIN" --version 2>/dev/null | head -1 || echo MISSING)"
-line "meshgen-venv" "$([ -x /workspace/.toolchain/meshgen-venv/bin/python ] && echo OK || echo MISSING)"
+line "meshgen-venv" "$([ -x "$ROOT"/.toolchain/meshgen-venv/bin/python ] && echo OK || echo MISSING)"

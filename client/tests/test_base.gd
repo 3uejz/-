@@ -1,7 +1,7 @@
 class_name TestBase
 extends SceneTree
 ## headless 测试基类。子类覆写 _suite_name() 与 run_tests()。
-## 运行：/workspace/.toolchain/godot --headless --path client --script res://tests/<suite>.gd
+## 运行：./.toolchain/godot --headless --path client --script res://tests/<suite>.gd
 ## 说明：以 --script 运行时 Autoload 仍会挂载（root 下有 GameState/WorldClock 等），
 ## 测试既可经 root.get_node_or_null() 复用，也可用 preload(...).new() 直接实例化。
 

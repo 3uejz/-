@@ -3,6 +3,7 @@ package blob
 import (
 	"context"
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -53,6 +54,27 @@ func (s *LocalStore) Get(_ context.Context, key string) ([]byte, error) {
 		return nil, ErrNotFound
 	}
 	return data, err
+}
+
+// Open 以可随机读取的流打开对象，供 HTTP Range 下载使用。
+func (s *LocalStore) Open(_ context.Context, key string) (io.ReadSeekCloser, int64, error) {
+	p, err := s.path(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	f, err := os.Open(p)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, 0, ErrNotFound
+	}
+	if err != nil {
+		return nil, 0, err
+	}
+	info, err := f.Stat()
+	if err != nil {
+		_ = f.Close()
+		return nil, 0, err
+	}
+	return f, info.Size(), nil
 }
 
 // Delete 删除对象。

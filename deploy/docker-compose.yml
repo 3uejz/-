@@ -1,4 +1,5 @@
 # 私有服务器部署（本开发容器内不可用 Docker，请在私有服务器执行）
+# MinIO 社区版已停止在 Docker Hub 分发，镜像固定到 quay.io 的最后一个社区版标签。
 services:
   postgres:
     image: postgres:16-alpine
@@ -27,17 +28,35 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-10-15T17-29-55Z
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-life}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?必须在 .env 中提供 MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?必须在 .env 中提供 MINIO_ROOT_PASSWORD}
     volumes:
-      - miniodata:/data
+      - ${MINIO_DATA_DIR:-/srv/lifetext/minio/data}:/data
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
     restart: unless-stopped
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?必须在 .env 中提供 MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?必须在 .env 中提供 MINIO_ROOT_PASSWORD}
+      OBJECT_BUCKET: ${OBJECT_BUCKET:-lifetext}
+      OBJECT_ACCESS_KEY: ${OBJECT_ACCESS_KEY:?必须在 .env 中提供 OBJECT_ACCESS_KEY}
+      OBJECT_SECRET_KEY: ${OBJECT_SECRET_KEY:?必须在 .env 中提供 OBJECT_SECRET_KEY}
+      CI_ACCESS_KEY: ${CI_ACCESS_KEY:-ci-rw}
+      CI_SECRET_KEY: ${CI_SECRET_KEY:?必须在 .env 中提供 CI_SECRET_KEY}
+    volumes:
+      - ./minio-init.sh:/init.sh:ro
+      - ./minio-policies:/policies:ro
+    entrypoint: ["/bin/sh", "/init.sh"]
+    restart: "no"
 
   server:
     build:
@@ -49,9 +68,12 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       DATABASE_URL: postgres://${POSTGRES_USER:-life}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-life}?sslmode=disable
       REDIS_URL: redis://redis:6379
-      OBJECT_ENDPOINT: minio:9000
-      OBJECT_ACCESS_KEY: ${MINIO_ROOT_USER:-life}
-      OBJECT_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me}
+      OBJECT_ENDPOINT: ${OBJECT_ENDPOINT:-minio:9000}
+      OBJECT_REGION: ${OBJECT_REGION:-}
+      OBJECT_USE_SSL: ${OBJECT_USE_SSL:-false}
+      OBJECT_CREATE_BUCKET: ${OBJECT_CREATE_BUCKET:-true}
+      OBJECT_ACCESS_KEY: ${OBJECT_ACCESS_KEY:?必须在 .env 中提供 OBJECT_ACCESS_KEY}
+      OBJECT_SECRET_KEY: ${OBJECT_SECRET_KEY:?必须在 .env 中提供 OBJECT_SECRET_KEY}
       OBJECT_BUCKET: ${OBJECT_BUCKET:-lifetext}
       DATA_DIR: /app/data
       BACKUP_DIR: /app/backups
@@ -63,14 +85,16 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
-      - postgres
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
 volumes:
   pgdata:
   redisdata:
-  miniodata:
   serverdata:
   backups:

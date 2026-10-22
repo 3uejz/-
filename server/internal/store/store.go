@@ -27,6 +27,7 @@ type Deps struct {
 	Legacy    legacy.Store
 	Telemetry telemetry.Store
 	Admin     admin.Store
+	Blobs     blob.Store
 	Limiter   httpx.Limiter
 	Close     func()
 }
@@ -34,6 +35,11 @@ type Deps struct {
 // Build 依据配置构建存储。
 func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, error) {
 	limiter, closeCache := buildLimiter(ctx, cfg, logger)
+	blobs, err := buildBlobs(ctx, cfg, logger)
+	if err != nil {
+		closeCache()
+		return Deps{}, err
+	}
 
 	if cfg.DatabaseURL == "" {
 		return Deps{
@@ -42,6 +48,7 @@ func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, e
 			Legacy:    legacy.NewMemoryStore(),
 			Telemetry: telemetry.NewMemoryStore(),
 			Admin:     admin.NewMemoryStore(),
+			Blobs:     blobs,
 			Limiter:   limiter,
 			Close:     closeCache,
 		}, nil
@@ -49,30 +56,13 @@ func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, e
 
 	database, err := db.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
+		closeCache()
 		return Deps{}, err
 	}
 	if err := database.Migrate(ctx); err != nil {
 		database.Close()
+		closeCache()
 		return Deps{}, err
-	}
-
-	var blobs blob.Store
-	if cfg.HasObjectStore() {
-		m, err := blob.NewMinIOStore(ctx, cfg.ObjectEndpoint, cfg.ObjectKey, cfg.ObjectSecret, cfg.ObjectBucket, false)
-		if err != nil {
-			database.Close()
-			return Deps{}, err
-		}
-		blobs = m
-		logger.Info("对象存储: MinIO", "endpoint", cfg.ObjectEndpoint, "bucket", cfg.ObjectBucket)
-	} else {
-		local, err := blob.NewLocalStore(filepath.Join(cfg.DataDir, "objects"))
-		if err != nil {
-			database.Close()
-			return Deps{}, err
-		}
-		blobs = local
-		logger.Info("对象存储: 本地目录", "dir", filepath.Join(cfg.DataDir, "objects"))
 	}
 
 	logger.Info("持久化: PostgreSQL")
@@ -82,12 +72,39 @@ func Build(ctx context.Context, cfg config.Config, logger *slog.Logger) (Deps, e
 		Legacy:    legacy.NewPGStore(database.Pool),
 		Telemetry: telemetry.NewPGStore(database.Pool),
 		Admin:     admin.NewPGStore(database.Pool),
+		Blobs:     blobs,
 		Limiter:   limiter,
 		Close: func() {
 			closeCache()
 			database.Close()
 		},
 	}, nil
+}
+
+// buildBlobs 优先使用 S3 兼容对象存储；未配置时回退本地目录。
+func buildBlobs(ctx context.Context, cfg config.Config, logger *slog.Logger) (blob.Store, error) {
+	if cfg.HasObjectStore() {
+		m, err := blob.NewMinIOStore(ctx, blob.MinIOOptions{
+			Endpoint:     cfg.ObjectEndpoint,
+			AccessKey:    cfg.ObjectKey,
+			SecretKey:    cfg.ObjectSecret,
+			Bucket:       cfg.ObjectBucket,
+			Region:       cfg.ObjectRegion,
+			UseSSL:       cfg.ObjectUseSSL,
+			CreateBucket: cfg.ObjectCreate,
+		})
+		if err != nil {
+			return nil, err
+		}
+		logger.Info("对象存储: S3 兼容", "endpoint", cfg.ObjectEndpoint, "bucket", cfg.ObjectBucket, "region", cfg.ObjectRegion)
+		return m, nil
+	}
+	local, err := blob.NewLocalStore(filepath.Join(cfg.DataDir, "objects"))
+	if err != nil {
+		return nil, err
+	}
+	logger.Info("对象存储: 本地目录", "dir", filepath.Join(cfg.DataDir, "objects"))
+	return local, nil
 }
 
 // buildLimiter 优先使用 Redis 共享限流；未配置或连接失败时回退进程内限流。

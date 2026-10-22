@@ -26,7 +26,7 @@
         "version": { "type": "string" },
         "hash": { "type": "string", "description": "sha256:<hex>。" },
         "size": { "type": "integer", "minimum": 0, "description": "字节数。" },
-        "url": { "type": "string", "description": "私有服务器托管的下载地址。" },
+        "url": { "type": "string", "description": "内容包下载地址；后端托管时使用 /api/v1/content/packs/<name>。" },
         "patch_of": { "type": ["string", "null"], "description": "若为差量包，指向基础包名。" },
         "region_key": { "$ref": "common.schema.json#/$defs/content_key" },
         "depends_on": { "type": "array", "items": { "type": "string" } }

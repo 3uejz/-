@@ -25,6 +25,28 @@ func TestLoadRejectsShortSecret(t *testing.T) {
 	}
 }
 
+func TestLoadObjectStoreOptions(t *testing.T) {
+	secret := strings.Repeat("a", 40)
+	cfg, err := Load(env(map[string]string{
+		"JWT_SECRET":           secret,
+		"OBJECT_ENDPOINT":      "https://account.r2.cloudflarestorage.com",
+		"OBJECT_ACCESS_KEY":    "key",
+		"OBJECT_SECRET_KEY":    "secret",
+		"OBJECT_REGION":        "auto",
+		"OBJECT_USE_SSL":       "true",
+		"OBJECT_CREATE_BUCKET": "false",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.HasObjectStore() {
+		t.Error("应识别为已配置对象存储")
+	}
+	if !cfg.ObjectUseSSL || cfg.ObjectRegion != "auto" || cfg.ObjectCreate {
+		t.Errorf("对象存储配置错误: %+v", cfg)
+	}
+}
+
 func TestLoadDefaultsAndOverrides(t *testing.T) {
 	secret := strings.Repeat("a", 40)
 	cfg, err := Load(env(map[string]string{

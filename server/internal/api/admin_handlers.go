@@ -411,9 +411,16 @@ func (s *Server) handleAdminContentPackUpload(w http.ResponseWriter, r *http.Req
 		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "内容包非法")
 		return
 	}
-	if pack.Name == "" || pack.Kind == "" || pack.Version == "" || pack.Hash == "" || pack.URL == "" {
+	if pack.Name == "" || pack.Kind == "" || pack.Version == "" || pack.Hash == "" {
 		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "内容包必填字段缺失")
 		return
+	}
+	if !content.ValidPackName(pack.Name) || !content.ValidPackName(pack.Version) {
+		httpx.WriteError(w, r, http.StatusBadRequest, httpx.CodeValidationFailed, "内容包名或版本非法")
+		return
+	}
+	if pack.URL == "" {
+		pack.URL = "/api/v1/content/packs/" + pack.Name
 	}
 	doc, _ := s.deps.Content.Manifest()
 	var manifest map[string]any

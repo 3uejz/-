@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GODOT_BIN="${GODOT_BIN:-/workspace/.toolchain/godot}"
-GO_BIN="${GO_BIN:-/usr/local/go/bin/go}"
+GODOT_BIN="${GODOT_BIN:-$ROOT/.toolchain/godot}"
+GO_BIN="${GO_BIN:-go}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 echo "== 数值基线生成物校验 =="

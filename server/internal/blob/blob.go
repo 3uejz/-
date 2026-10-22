@@ -4,6 +4,7 @@ package blob
 import (
 	"context"
 	"errors"
+	"io"
 )
 
 // ErrNotFound 表示对象不存在。
@@ -13,5 +14,6 @@ var ErrNotFound = errors.New("blob not found")
 type Store interface {
 	Put(ctx context.Context, key string, data []byte) error
 	Get(ctx context.Context, key string) ([]byte, error)
+	Open(ctx context.Context, key string) (io.ReadSeekCloser, int64, error)
 	Delete(ctx context.Context, key string) error
 }

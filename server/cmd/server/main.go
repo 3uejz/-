@@ -65,6 +65,7 @@ func main() {
 		Telemetry: telemetry.NewService(stores.Telemetry, cfg.TelemetryDays),
 		World:     worldsim.NewSimulator(1, 8_000_000_000),
 		Admin:     admin.NewService(stores.Admin),
+		Blobs:     stores.Blobs,
 		Backup:    backup.New(cfg.DatabaseURL, cfg.BackupDir, 7),
 		Limiter:   stores.Limiter,
 	})

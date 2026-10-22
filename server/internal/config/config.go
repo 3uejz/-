@@ -31,6 +31,9 @@ type Config struct {
 	ObjectKey      string
 	ObjectSecret   string
 	ObjectBucket   string
+	ObjectRegion   string
+	ObjectUseSSL   bool
+	ObjectCreate   bool
 	DataDir        string
 	BackupDir      string
 	AdminDir       string
@@ -57,6 +60,9 @@ func Load(getenv func(string) string) (Config, error) {
 		ObjectKey:      getenv("OBJECT_ACCESS_KEY"),
 		ObjectSecret:   getenv("OBJECT_SECRET_KEY"),
 		ObjectBucket:   getOr(getenv, "OBJECT_BUCKET", "lifetext"),
+		ObjectRegion:   strings.TrimSpace(getenv("OBJECT_REGION")),
+		ObjectUseSSL:   boolval(getenv, "OBJECT_USE_SSL", false),
+		ObjectCreate:   boolval(getenv, "OBJECT_CREATE_BUCKET", true),
 		DataDir:        getOr(getenv, "DATA_DIR", "data"),
 		BackupDir:      getOr(getenv, "BACKUP_DIR", "backups"),
 		AdminDir:       getOr(getenv, "ADMIN_DIR", "admin/dist"),
@@ -105,6 +111,18 @@ func int64val(getenv func(string) string, key string, def int64) int64 {
 		return def
 	}
 	return n
+}
+
+func boolval(getenv func(string) string, key string, def bool) bool {
+	v := strings.TrimSpace(strings.ToLower(getenv(key)))
+	switch v {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return def
+	}
 }
 
 func dur(getenv func(string) string, key string, def time.Duration) time.Duration {

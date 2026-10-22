@@ -30,6 +30,7 @@ dump.rdb
 # 环境与密钥
 .env
 .env.local
+.storage.env
 *.local
 
 # 系统
@@ -38,3 +39,10 @@ dump.rdb
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 本地开发数据（MinIO/后端/备份）
+.data/
+
+# 本地打包与传输
+*.tar.gz
+lifetext-*.sha256

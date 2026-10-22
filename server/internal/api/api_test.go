@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"lifetextsandbox/server/internal/auth"
+	"lifetextsandbox/server/internal/blob"
 	"lifetextsandbox/server/internal/config"
 	"lifetextsandbox/server/internal/content"
 	"lifetextsandbox/server/internal/legacy"
@@ -24,6 +25,10 @@ import (
 func newTestServer(t *testing.T) (*Server, http.Handler) {
 	t.Helper()
 	authSvc := auth.NewService(auth.NewMemoryStore(), "test-secret-at-least-32-bytes-long!!", 15*time.Minute, 24*time.Hour)
+	blobs, err := blob.NewLocalStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	deps := Deps{
 		Config:    config.Config{RateLimitRPS: 0, SaveMaxBytes: 10 << 20},
 		Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
@@ -33,6 +38,7 @@ func newTestServer(t *testing.T) (*Server, http.Handler) {
 		Legacy:    legacy.NewService(legacy.NewMemoryStore()),
 		Telemetry: telemetry.NewService(telemetry.NewMemoryStore(), 90),
 		World:     worldsim.NewSimulator(7, 8_000_000_000),
+		Blobs:     blobs,
 	}
 	srv := New(deps)
 	return srv, srv.Router()
@@ -182,6 +188,35 @@ func TestTelemetryAndAdmin(t *testing.T) {
 	rec = doJSON(t, h, http.MethodGet, "/api/v1/admin/accounts", adminTokens.AccessToken, nil, nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("管理员期望 200，得到 %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestContentPackDownloadSupportsRange(t *testing.T) {
+	srv, h := newTestServer(t)
+	pack := []byte("LTPK-payload")
+	if err := srv.deps.Blobs.Put(t.Context(), "packs/jobs/v1.ltpack", pack); err != nil {
+		t.Fatal(err)
+	}
+	manifest := `{"manifest_version":1,"generated_at":"2026-01-01T00:00:00Z","packs":[{"name":"jobs","kind":"data","version":"v1","hash":"sha256:test","size":12,"url":"/api/v1/content/packs/jobs"}]}`
+	if _, err := srv.deps.Content.PublishManifest([]byte(manifest)); err != nil {
+		t.Fatal(err)
+	}
+
+	rec := doJSON(t, h, http.MethodGet, "/api/v1/content/packs/jobs", "", nil, nil)
+	if rec.Code != http.StatusOK || rec.Body.String() != string(pack) {
+		t.Fatalf("下载内容包失败: %d %q", rec.Code, rec.Body.String())
+	}
+	if got := rec.Header().Get("ETag"); got != "sha256:test" {
+		t.Fatalf("ETag=%q", got)
+	}
+
+	rec = doJSON(t, h, http.MethodGet, "/api/v1/content/packs/jobs", "", nil, map[string]string{"Range": "bytes=0-3"})
+	if rec.Code != http.StatusPartialContent || rec.Body.String() != "LTPK" {
+		t.Fatalf("Range 下载失败: %d %q", rec.Code, rec.Body.String())
+	}
+
+	if rec := doJSON(t, h, http.MethodGet, "/api/v1/content/packs/missing", "", nil, nil); rec.Code != http.StatusNotFound {
+		t.Fatalf("缺失包期望 404，得到 %d", rec.Code)
 	}
 }
 

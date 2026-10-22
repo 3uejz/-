@@ -10,6 +10,7 @@ import (
 	"lifetextsandbox/server/internal/admin"
 	"lifetextsandbox/server/internal/auth"
 	"lifetextsandbox/server/internal/backup"
+	"lifetextsandbox/server/internal/blob"
 	"lifetextsandbox/server/internal/config"
 	"lifetextsandbox/server/internal/content"
 	"lifetextsandbox/server/internal/httpx"
@@ -30,6 +31,8 @@ type Deps struct {
 	Telemetry *telemetry.Service
 	World     *worldsim.Simulator
 	Admin     *admin.Service
+	// Blobs 为内容包与存档共用的对象存储；为 nil 时内容包下载返回未启用。
+	Blobs blob.Store
 	// Backup 为可选的备份执行器；为 nil 时后台备份接口返回未启用。
 	Backup *backup.Runner
 	// Limiter 为可选限流后端；为 nil 时使用进程内默认实现。
@@ -93,6 +96,7 @@ func (s *Server) Router() http.Handler {
 	mux.Handle("POST /api/v1/saves/{slot}/resolve", s.requireAuth(s.handleResolve))
 
 	mux.HandleFunc("GET /api/v1/content/manifest", s.handleContentManifest)
+	mux.HandleFunc("GET /api/v1/content/packs/{name}", s.handleContentPackDownload)
 	mux.HandleFunc("GET /api/v1/config", s.handleRemoteConfig)
 	mux.HandleFunc("GET /api/v1/announcements", s.handleAnnouncements)
 

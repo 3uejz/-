@@ -2,8 +2,8 @@
 
 Godot 4.7.2-stable 桌面端工程。玩法由中文文字指令驱动，表现层为局部 3D 场景（切换加载，当前以程序化占位为主）。
 
-- 引擎二进制：`/workspace/.toolchain/godot`
-- headless：`/workspace/.toolchain/godot --headless --path client ...`
+- 引擎二进制：`./.toolchain/godot`
+- headless：`./.toolchain/godot --headless --path client ...`
 - 约定与命令见技能 `godot-client`。
 
 ## 骨架
@@ -138,10 +138,10 @@ _process(delta) → TimeDriver.consume(SpeedController.get_speed(), delta)
 
 ```bash
 # 运行全部客户端测试（含跨语言一致性）
-/workspace/.toolchain/godot --headless --path client --script res://tests/consistency_test.gd
+./.toolchain/godot --headless --path client --script res://tests/consistency_test.gd
 
 # 单套件
-/workspace/.toolchain/godot --headless --path client --script res://tests/intent_executor_test.gd
+./.toolchain/godot --headless --path client --script res://tests/intent_executor_test.gd
 ```
 
 共享数值规格见 `shared/consistency/`；两端一致性由 `scripts/test.sh` 统一运行。

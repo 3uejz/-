@@ -29,6 +29,7 @@ Godot 4 桌面端 + Go 后端的开放式人生文字沙盒。本文件面向在
 | Redis | 已装（apt，本地服务） |
 | Docker | 本容器内不可用；部署用 `deploy/` 下的 compose 文件在私有服务器执行 |
 
+- 本地开发：仓库根目录可以不在 `/workspace`；脚本按自身位置解析根目录，Godot 默认 `$ROOT/.toolchain/godot`。完整步骤见 `LOCAL_DEV.md`。
 - 工具链自检：`bash scripts/doctor.sh`
 - 本地服务管理：`bash scripts/services.sh start|stop|status`
 

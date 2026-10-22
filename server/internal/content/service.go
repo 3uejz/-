@@ -24,6 +24,19 @@ type Announcement struct {
 	EndAt   string `json:"end_at,omitempty"`
 }
 
+// Pack 对应 content-manifest.schema.json 的内容包条目。
+type Pack struct {
+	Name      string   `json:"name"`
+	Kind      string   `json:"kind"`
+	Version   string   `json:"version"`
+	Hash      string   `json:"hash"`
+	Size      int64    `json:"size"`
+	URL       string   `json:"url"`
+	PatchOf   *string  `json:"patch_of,omitempty"`
+	RegionKey string   `json:"region_key,omitempty"`
+	DependsOn []string `json:"depends_on,omitempty"`
+}
+
 // Service 管理内容清单、远程配置与公告（单实例，内存权威，后续可落 PG/MinIO）。
 type Service struct {
 	mu            sync.Mutex
@@ -53,6 +66,47 @@ func (s *Service) Manifest() ([]byte, string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.manifest, s.manifestTag
+}
+
+// Packs 返回当前清单中的内容包，保持清单顺序。
+func (s *Service) Packs() []Pack {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var doc struct {
+		Packs []Pack `json:"packs"`
+	}
+	if err := json.Unmarshal(s.manifest, &doc); err != nil {
+		return nil
+	}
+	return doc.Packs
+}
+
+// Pack 按名称查找内容包。
+func (s *Service) Pack(name string) (Pack, bool) {
+	for _, p := range s.Packs() {
+		if p.Name == name {
+			return p, true
+		}
+	}
+	return Pack{}, false
+}
+
+// ValidPackName 限制内容包名只能使用小写字母、数字、点、下划线与连字符。
+func ValidPackName(name string) bool {
+	if name == "" || len(name) > 96 {
+		return false
+	}
+	first := name[0]
+	if !(first >= 'a' && first <= 'z' || first >= '0' && first <= '9') {
+		return false
+	}
+	for _, r := range name[1:] {
+		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '.' || r == '_' || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // PublishManifest 发布新内容清单（admin），返回 ETag。
